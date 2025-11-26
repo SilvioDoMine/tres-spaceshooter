@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@nuxt/eslint": "^1.9.0",
+    "@pinia/nuxt": "^0.11.3",
     "@tailwindcss/vite": "^4.1.17",
     "@tresjs/cientos": "latest",
     "@tresjs/leches": "latest",
@@ -21,6 +22,7 @@
     "@tresjs/post-processing": "latest",
     "eslint": "^9.36.0",
     "nuxt": "^4.1.2",
+    "pinia": "^3.0.4",
     "tailwindcss": "^4.1.17",
     "three": "^0.180.0",
     "vue": "latest",
