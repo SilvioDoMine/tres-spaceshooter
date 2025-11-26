@@ -14,20 +14,22 @@
   },
   "dependencies": {
     "@nuxt/eslint": "^1.9.0",
+    "@tailwindcss/vite": "^4.1.17",
+    "@tresjs/cientos": "latest",
+    "@tresjs/leches": "latest",
     "@tresjs/nuxt": "5.0.0",
+    "@tresjs/post-processing": "latest",
     "eslint": "^9.36.0",
     "nuxt": "^4.1.2",
+    "tailwindcss": "^4.1.17",
     "three": "^0.180.0",
     "vue": "latest",
-    "vue-router": "latest",
-    "@tresjs/cientos": "latest",
-    "@tresjs/post-processing": "latest",
-    "@tresjs/leches": "latest"
+    "vue-router": "latest"
   },
   "devDependencies": {
-    "@types/three": "latest",
-    "typescript": "latest",
     "@tresjs/eslint-config": "^1.1.0",
-    "eslint": "^9.16.0"
+    "@types/three": "latest",
+    "eslint": "^9.16.0",
+    "typescript": "latest"
   }
 }
