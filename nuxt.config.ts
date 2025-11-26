@@ -4,5 +4,5 @@ export default defineNuxtConfig({
     '@tresjs/nuxt',
     '@nuxt/devtools'
   ],
-  compatibilityDate: '2025-01-01',
+  compatibilityDate: '2025-11-01',
 })

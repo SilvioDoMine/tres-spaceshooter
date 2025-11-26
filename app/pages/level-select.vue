@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Page metadata
 useHead({
-  title: 'TresJS Nuxt - {{projectName}}',
+  title: 'Level Select',
   meta: [
     { name: 'description', content: 'A TresJS Nuxt application' }
   ]
@@ -10,7 +10,7 @@ useHead({
 
 <template>
   <TresCanvas
-    clear-color="#020420"
+    clear-color="#420220"
     window-size
   >
     <TheExperience />
