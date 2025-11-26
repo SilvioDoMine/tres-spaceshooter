@@ -1,0 +1,23 @@
+node_modules
+*.log*
+.nuxt
+.nitro
+.cache
+.output
+.env
+sw.*
+dist
+.DS_Store
+.fleet
+.idea
+.vscode
+.gitattributes
+bun.lock
+
+# lock files
+yarn.lock
+pnpm-lock.yaml
+
+# docker
+Dockerfile.dev
+docker-compose.dev.yml
