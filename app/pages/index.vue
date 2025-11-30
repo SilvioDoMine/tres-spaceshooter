@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { LEVEL_1 } from '~/games/levels/LevelOneConfig';
+
 // Page metadata
 useHead({
   title: 'Home',
@@ -6,11 +8,19 @@ useHead({
     { name: 'description', content: 'A TresJS Nuxt application' }
   ]
 })
+
+const currentRunStore = useCurrentRunStore();
+
+function startGame() {
+  console.log('Iniciando o jogo...');
+
+  currentRunStore.initializeLevel(LEVEL_1);
+}
 </script>
 
 <template>
   <TresCanvas
-    clear-color="#020420"
+    clear-color="#420420"
     window-size
   >
     <TheExperience />
@@ -18,11 +28,12 @@ useHead({
 
   <!-- Button start game hud absolute -->
   <div class="absolute top-4 left-4 z-10">
-    <NuxtLink to="/level-select">
+    <NuxtLink to="/play">
       <button
         class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+        @click="startGame"
       >
-        Selecionar nível
+        Iniciar jogo
       </button>
     </NuxtLink>
   </div>

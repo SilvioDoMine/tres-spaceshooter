@@ -10,10 +10,17 @@ useHead({
 
 <template>
   <TresCanvas
-    clear-color="#820420"
+    clear-color="#020420"
     window-size
   >
-    <TheExperience />
+    <GameOrchestrator>
+      <GameDoorManager />
+      <GamePlayerCharacter />
+      <GameEnemyManager />
+      
+      <GameWorld />
+      <!-- <OrbitControls /> -->
+    </GameOrchestrator>
   </TresCanvas>
 
   <!-- Button start game hud absolute -->
@@ -22,8 +29,14 @@ useHead({
       <button
         class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
       >
-        Finalizar
+        Voltar
       </button>
     </NuxtLink>
   </div>
+
+  <!-- Leches -->
+  <!-- <TresLeches /> -->
+
+  <!-- Hud -->
+  <!-- <UiVirtualJoystick /> -->
 </template>
