@@ -1,7 +1,10 @@
 import { useEnemyManagerStore } from '~/stores/enemyManagerStore';
 import { useCurrentRunStore } from '~/stores/currentRun';
+import { storeToRefs } from 'pinia';
+import { useEnemyManager } from '~/composables/useEnemyManager';
 
 export function useEnemyAI() {
+    const enemyManager = useEnemyManager();
     const enemyManagerStore = useEnemyManagerStore();
     const currentRunStore = useCurrentRunStore();
     
@@ -18,6 +21,16 @@ export function useEnemyAI() {
                 enemy.position.z += (directionZ / length) * enemy.speed * deltaTime;
                 enemy.position.x += (directionX / length) * enemy.speed * deltaTime;
             }
+
+            // detecta colisão com o jogador e dá dano
+            if (length <= 1) {
+                // Aqui você pode implementar a lógica de dano ao jogador
+                console.log(`Asteroid ${enemy.id} colidiu com o jogador!`);
+
+                currentRunStore.takeDamage(enemy.onHitDamage);
+                // destrói o asteroide após a colisão
+                enemyManager.takeDamage(enemy.id, enemy.health);
+            }
         },
         ufo: (enemy, deltaTime) => {
             // Move-se em direção ao jogador, mas param a uma certa distância.
@@ -30,6 +43,15 @@ export function useEnemyAI() {
             if (length > desiredDistance) {
                 enemy.position.z += (directionZ / length) * enemy.speed * deltaTime;
                 enemy.position.x += (directionX / length) * enemy.speed * deltaTime;
+            }
+
+            // detecta colisão com o jogador e dá dano
+            if (length <= 1) {
+                // Aqui você pode implementar a lógica de dano ao jogador
+                console.log(`UFO ${enemy.id} colidiu com o jogador!`);
+
+                currentRunStore.takeDamage(enemy.onHitDamage);
+                enemyManager.takeDamage(enemy.id, enemy.health);
             }
         },
     }

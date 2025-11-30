@@ -19,8 +19,8 @@ export function useEnemyManager() {
   const spawnEnemyWave = (waveConfig) => {
     // Status base dos inimigos
     const baseStats = {
-      asteroid: { speed: 3, health: 3, onHitDamage: 1 },
-      ufo: { speed: 2, health: 5, onHitDamage: 1, distanceKeep: 10},
+      asteroid: { speed: 3, health: 50, onHitDamage: 90 },
+      ufo: { speed: 2, health: 100, onHitDamage: 1, distanceKeep: 10},
     };
 
     // Spawna inimigos conforme a configuração da wave
@@ -51,6 +51,26 @@ export function useEnemyManager() {
         activeEnemies.value.push(newEnemy);
       }
     });
+  }
+
+  /**
+   * Quando um inimigo toma dano
+   */
+  function takeDamage(enemyId, damage) {
+    // Lógica para aplicar dano ao inimigo
+    const enemy = activeEnemies.value.find(e => e.id === enemyId);
+
+    if (! enemy) {
+      console.warn(`Enemy Manager: No enemy found with ID "${enemyId}" to take damage.`);
+      return;
+    }
+
+    enemy.health -= damage;
+
+    // Se a saúde do inimigo chegar a zero ou menos, removê-lo
+    if (enemy.health <= 0) {
+      activeEnemies.value = activeEnemies.value.filter(e => e.id !== enemyId);
+    }
   }
 
   /**
@@ -98,6 +118,7 @@ export function useEnemyManager() {
 
   return {
     activeEnemies,
+    takeDamage,
     update,
     spawnEnemyWave,
     cleanup,

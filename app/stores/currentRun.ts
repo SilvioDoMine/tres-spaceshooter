@@ -26,6 +26,10 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   // Velocidade atual (ref simples é ok, muda raramente)
   const currentMoveSpeed = ref(5.0); // Exemplo: 5 unidades por segundo
 
+  const initialHealth = 250;
+  const maxHealth = ref(initialHealth);
+  const currentHealth = ref(initialHealth);
+
   // ... (Outros estados como currentHealth, enemiesRemaining, etc.)
   // -- ESTADO DO NÍVEL
   const levelTimer = ref(0); // Tempo decorrido no nível atual
@@ -66,6 +70,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     isDoorActive.value = false;
     roomCurrentWaveIndex.value = 0;
     isWaveInProgress.value = false;
+    currentHealth.value = initialHealth;
+    maxHealth.value = initialHealth;
   }
 
   function loadStage(stage: any) {
@@ -116,6 +122,16 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     return moveVector.value;
   }
 
+  function takeDamage(amount: number) {
+    currentHealth.value = Math.max(0, currentHealth.value - amount);
+
+    if (currentHealth.value <= 0) {
+      console.log('Jogador morreu!');
+      endRun();
+      // Lógica adicional de morte do jogador pode ser adicionada aqui
+    }
+  }
+
   // ... (Outras funções)
 
   return {
@@ -126,6 +142,9 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     setMoveVector,
     getPlayerPosition,
     getMoveVector,
+    takeDamage,
+    currentHealth,
+    maxHealth,
 
     // Portas
     doorPosition,
