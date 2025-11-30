@@ -3,6 +3,7 @@ import { useLoop } from '@tresjs/core';
 import { usePlayerControls } from '~/composables/usePlayerControls';
 import { useGameDirector } from '~/composables/useGameDirector';
 import { useEnemyManager } from '~/composables/useEnemyManager';
+import { useEnemyAI } from '~/composables/useEnemyAI';
 
 /**
  * Funções para controlar o loop de renderização.
@@ -16,6 +17,7 @@ const { onRender, onBeforeRender } = useLoop();
 const playerControls = usePlayerControls();
 const gameDirector = useGameDirector();
 const enemyManager = useEnemyManager();
+const enemyAI = useEnemyAI();
 
 /**
  * Função central de atualização do jogo.
@@ -33,8 +35,8 @@ playerControls.update(safeDelta);
 
 // Lógica de Combate e AI
 enemyManager.update(safeDelta);
+enemyAI.update(safeDelta);
 // playerCombat.update(safeDelta);
-// enemyAI.update(safeDelta);
 
 // Gerenciamento de Partida
 gameDirector.update(safeDelta);

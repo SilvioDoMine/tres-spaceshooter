@@ -45,6 +45,7 @@ export const LEVEL_1 = {
         {
           enemies: [
             { enemyType: 'asteroid', count: 4 },
+            { enemyType: 'ufo', count: 2 },
           ]
         },
         {
