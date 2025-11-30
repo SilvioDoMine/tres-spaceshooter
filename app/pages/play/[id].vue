@@ -30,6 +30,7 @@ onMounted(async () => {
 
   if (!levels[currentId]) {
     console.error('Level not found:', route.params.id );
+    navigateTo('/');
     return;
   }
 
