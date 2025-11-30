@@ -38,7 +38,6 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   const isStageCompleted = ref(false);
 
   // -- ESTADO DA SALA
-  const activeEnemies = ref([]); // Enemy instances ativas na sala
   const doorPosition = ref(null);
   const isDoorActive = ref(false);
   const doorSize = ref(null);
@@ -51,6 +50,22 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     levelTimer.value = 0;
 
     loadStage(levelConfiguration.stages[0]);
+  }
+
+  function endRun() {
+    console.log('Encerrando a partida atual.');
+    // Resetar todos os estados relacionados à partida
+    levelConfig.value = null;
+    currentStageIndex.value = 0;
+    currentStage.value = null;
+    levelTimer.value = 0;
+    stageTimer.value = 0;
+    isStageCompleted.value = false;
+    doorPosition.value = null;
+    doorSize.value = null;
+    isDoorActive.value = false;
+    roomCurrentWaveIndex.value = 0;
+    isWaveInProgress.value = false;
   }
 
   function loadStage(stage: any) {
@@ -107,7 +122,6 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     playerPosition,
     moveVector,
     currentMoveSpeed,
-    activeEnemies,
     setPlayerPosition,
     setMoveVector,
     getPlayerPosition,
@@ -125,6 +139,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     completeStage,
     loadStage,
     initializeLevel,
+    endRun,
     currentStage,
     currentStageIndex,
     levelConfig,
@@ -133,3 +148,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     isWaveInProgress,
   };
 });
+
+// make sure to pass the right store definition, `useAuth` in this case.
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useCurrentRunStore, import.meta.hot))
+}

@@ -27,6 +27,8 @@ export const LEVEL_1 = {
     // {
     //   stageId: 'S1_Intro',
     //   type: 'intro',
+    //   width: 10,
+    //   height: 20,
     //   waves: [],
     //   devDescription: 'Sala de introdução ao nível, sem inimigos. Basta andar para a próxima sala.',
     //   door: {
@@ -37,6 +39,8 @@ export const LEVEL_1 = {
     {
       stageId: 'S2_Combat_Intro',
       type: 'combat',
+      width: 40,
+      height: 40,
       waves: [
         {
           enemies: [
@@ -58,6 +62,8 @@ export const LEVEL_1 = {
     {
       stageId: 'S3_Combat_Intro',
       type: 'combat',
+      width: 10,
+      height: 20,
       waves: [
         {
           enemies: [
@@ -79,6 +85,8 @@ export const LEVEL_1 = {
       },
     },
     {
+      width: 10,
+      height: 20,
       stageId: 'S4_Upgrade_Select',
       type: 'upgrade',
       devDescription: 'Sala de seleção de upgrade após a segunda sala de combate.',
@@ -90,6 +98,8 @@ export const LEVEL_1 = {
     {
       stageId: 'S5_Combat_More',
       type: 'combat',
+      width: 10,
+      height: 20,
       waves: [
         { enemies: [ { enemyType: 'ufo', count: 4 }, { enemyType: 'asteroid', count: 6 } ] },
         { enemies: [ { enemyType: 'ufo', count: 6 }, { enemyType: 'asteroid', count: 8 } ] }
@@ -103,6 +113,8 @@ export const LEVEL_1 = {
     {
       stageId: 'S6_Boss',
       type: 'boss',
+      width: 10,
+      height: 20,
       waves: [
         { enemies: [ { enemyType: 'boss', count: 1 } ] }
       ],

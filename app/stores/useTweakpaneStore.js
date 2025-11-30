@@ -27,3 +27,8 @@ export const useTweakpaneStore = defineStore('tweakpane', () => {
     },
   };
 });
+
+// make sure to pass the right store definition, `useAuth` in this case.
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useTweakpaneStore, import.meta.hot))
+}

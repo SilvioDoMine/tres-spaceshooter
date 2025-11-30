@@ -1,12 +1,27 @@
 <script setup lang="js">
+const currentRun = useCurrentRunStore();
 
+const stageWidth = ref(1);
+const stageHeight = ref(1);
+
+watch(
+  () => currentRun.currentStage,
+  (newStage) => {
+    if (newStage) {
+      stageWidth.value = newStage.width || 1;
+      stageHeight.value = newStage.height || 1;
+      console.log('Updated stage dimensions:', stageWidth.value, stageHeight.value);
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
   <TresGroup>
     <TresMesh :rotation="[-Math.PI / 2, 0, 0]" name="GameWorld">
-      <TresPlaneGeometry :args="[10, 20]" />
-      <TresMeshStandardMaterial color="black" />
+      <TresPlaneGeometry :args="[stageWidth, stageHeight]" />
+      <TresMeshStandardMaterial wireframe color="white" />
       <Stars />
     </TresMesh>
 

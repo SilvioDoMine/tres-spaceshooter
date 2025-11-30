@@ -82,7 +82,9 @@ export function usePlayerControls() {
   };
 
   // O composable é responsável por configurar e limpar os listeners
-  onMounted(() => {
+  onMounted(async () => {
+    await nextTick();
+
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
   });

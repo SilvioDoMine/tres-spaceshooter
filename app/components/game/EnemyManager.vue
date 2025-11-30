@@ -7,6 +7,7 @@ const enemyManager = useEnemyManager();
 const activeEnemies = enemyManager.activeEnemies;
 
 const getEnemyColor = (enemyType) => {
+  console.log('Getting color for enemy type:', enemyType);
   switch (enemyType) {
     case 'asteroid':
       return 'gray';
@@ -18,6 +19,10 @@ const getEnemyColor = (enemyType) => {
       return 'pink';
   }
 };
+
+onUnmounted(() => {
+  enemyManager.cleanup();
+});
 </script>
 
 <template>
@@ -26,11 +31,10 @@ const getEnemyColor = (enemyType) => {
       v-for="(enemy, index) in activeEnemies"
       :key="index"
       :name="`enemy-${index}`"
-      :position="enemy.position"
+      :position="[enemy.position.x, enemy.position.y, enemy.position.z]"
     >
       <TresMeshStandardMaterial :color="getEnemyColor(enemy.type)" />
       <TresBoxGeometry :args="[1, 1, 1]" />
-      <TresMeshStandardMaterial color="pink" />
     </TresMesh>
   </TresGroup>
 </template>
