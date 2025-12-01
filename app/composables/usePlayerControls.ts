@@ -9,7 +9,7 @@
  * @param joystickId O ID do elemento HTML que servirá como joystick.
  * @returns Um objeto reativo com o vetor de entrada e o estado de movimento.
  */
-import { useCurrentRunStore } from '~/stores/currentRun';
+import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { onMounted, onUnmounted } from 'vue';
 
 export function usePlayerControls() {

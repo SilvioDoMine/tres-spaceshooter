@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, shallowReactive } from 'vue';
-import { useCurrentRunStore } from '~/stores/currentRun';
+import { useCurrentRunStore } from '~/stores/currentRunStore';
 
 const currentRun = useCurrentRunStore();
 

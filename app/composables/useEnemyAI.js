@@ -1,5 +1,5 @@
 import { useEnemyManagerStore } from '~/stores/enemyManagerStore';
-import { useCurrentRunStore } from '~/stores/currentRun';
+import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { storeToRefs } from 'pinia';
 import { useEnemyManager } from '~/composables/useEnemyManager';
 

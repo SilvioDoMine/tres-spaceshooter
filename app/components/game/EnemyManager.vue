@@ -1,5 +1,5 @@
 <script setup lang="js">
-import { useCurrentRunStore } from '~/stores/currentRun';
+import { useCurrentRunStore } from '~/stores/currentRunStore';
 
 const currentRun = useCurrentRunStore();
 const enemyManager = useEnemyManager();
@@ -7,7 +7,6 @@ const enemyManager = useEnemyManager();
 const activeEnemies = enemyManager.activeEnemies;
 
 const getEnemyColor = (enemyType) => {
-  console.log('Getting color for enemy type:', enemyType);
   switch (enemyType) {
     case 'asteroid':
       return 'gray';

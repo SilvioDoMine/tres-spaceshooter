@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { TresLeches, useControls } from '@tresjs/leches';
-import { useCurrentRunStore } from '~/stores/currentRun';
+import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { useEnemyManager } from '~/composables/useEnemyManager';
 import { useTweakpaneStore } from './stores/useTweakpaneStore';
 import { Pane } from 'tweakpane';

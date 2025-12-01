@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { shallowRef } from 'vue';
 import { useLoop, useTres } from '@tresjs/core';
-import { useCurrentRunStore } from '~/stores/currentRun';
+import { useCurrentRunStore } from '~/stores/currentRunStore';
 import type { TresInstance } from '@tresjs/core';
 import { Edges } from '@tresjs/cientos';
 
