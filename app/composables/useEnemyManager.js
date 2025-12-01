@@ -21,6 +21,7 @@ export function useEnemyManager() {
     const baseStats = {
       asteroid: { speed: 3, health: 50, onHitDamage: 100 },
       ufo: { speed: 2, health: 100, onHitDamage: 150, distanceKeep: 10, shotDamage: 50, cooldownTotalShot: 2},
+      boss: { speed: 1, health: 400, onHitDamage: 999, distanceKeep: 20, shotDamage: 200, cooldownTotalShot: 2 }
     };
 
     // Spawna inimigos conforme a configuração da wave

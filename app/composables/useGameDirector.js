@@ -23,7 +23,7 @@ export function useGameDirector() {
       return;
     };
 
-    if (stage.type === 'combat') {
+    if (stage.type === 'combat' || stage.type === 'boss') {
       handleCombatStage(delta, stage);
     } else if (stage.type === 'intro') {
       handleIntroStage(delta, stage);

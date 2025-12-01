@@ -13,9 +13,9 @@ const getEnemyColor = (enemyType) => {
     case 'ufo':
       return 'green';
     case 'boss':
-      return 'red';
-    default:
       return 'pink';
+    default:
+      return 'red';
   }
 };
 

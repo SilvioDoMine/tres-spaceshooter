@@ -18,6 +18,13 @@ export const projectilesType = {
     size: 0.25,
     range: 10,
     color: 'green',
+  },
+  boss: {
+    speed: 12,
+    damage: 200,
+    size: 0.5,
+    range: 20,
+    color: 'pink',
   }
 };
 
