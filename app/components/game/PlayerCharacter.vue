@@ -100,8 +100,11 @@ onBeforeRender(() => {
     <TresMeshStandardMaterial color="red" :side="2" />
   </TresMesh>
   <TresMesh
-  ref="hpMeshRef"
+    ref="hpMeshRef"
+    name="PlayerHPIndicator"
   >
+    <TresMeshStandardMaterial  :visible="false" color="pink" />
+    <TresBoxGeometry :args="[1, 1, 1]" />
     <!-- HP -->
     <Suspense>
       <Text3D
