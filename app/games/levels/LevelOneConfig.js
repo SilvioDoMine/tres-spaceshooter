@@ -41,7 +41,7 @@ export const LEVEL_1 = {
       stageId: 'S2_Combat_Intro',
       type: 'combat',
       width: 40,
-      height: 40,
+      height: 30,
       waves: [
         {
           enemies: [
@@ -65,7 +65,7 @@ export const LEVEL_1 = {
     {
       stageId: 'S3_Combat_Intro',
       type: 'combat',
-      width: 10,
+      width: 30,
       height: 20,
       waves: [
         {
@@ -103,8 +103,8 @@ export const LEVEL_1 = {
     {
       stageId: 'S5_Combat_More',
       type: 'combat',
-      width: 10,
-      height: 20,
+      width: 20,
+      height: 30,
       waves: [
         { enemies: [ { enemyType: 'ufo', count: 4 }, { enemyType: 'asteroid', count: 6 } ] },
         { enemies: [ { enemyType: 'ufo', count: 6 }, { enemyType: 'asteroid', count: 8 } ] }
@@ -119,8 +119,8 @@ export const LEVEL_1 = {
     {
       stageId: 'S6_Boss',
       type: 'boss',
-      width: 10,
-      height: 20,
+      width: 40,
+      height: 40,
       waves: [
         { enemies: [ { enemyType: 'boss', count: 1 } ] }
       ],

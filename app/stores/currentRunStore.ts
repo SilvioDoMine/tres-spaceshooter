@@ -9,6 +9,23 @@ interface Vector3 {
   z: number;
 }
 
+export const PlayerBaseStats = {
+  id: 'player',
+  color: 'yellow',
+  maxHealth: 250,
+  moveSpeed: 5.0, // unidades por segundo
+  projectiles: {
+    shotCooldown: 1.25,
+    shotSpeed: 20.0,
+    size: 0.2,
+    damage: 50,
+    range: 10,
+  },
+  position: { x: 0, y: 0, z: 0 },
+  rotation: { x: 0, y: 0, z: 0 },
+  moveVector: { x: 0, y: 0, z: 0 },
+}
+
 /**
  * Guardar dados que persistem após o fim da partida.
  * Estado da partida atual (Habilidades pegas)
@@ -23,23 +40,21 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   // -- ESTADO DO JOGADOR
   // ✅ ShallowRef: Apenas .value é reativo, mutations internas são ignoradas
   // Objetos internos simples para manipulação direta no game loop
-  const playerPosition = shallowRef<Vector3>({ x: 0, y: 0, z: 0 });
+  const playerPosition = shallowRef<Vector3>({ ...PlayerBaseStats.position });
 
   // Rotation
-  const playerRotation = shallowRef<Vector3>({ x: 0, y: 0, z: 0 });
+  const playerRotation = shallowRef<Vector3>({ ...PlayerBaseStats.rotation });
 
   // Vetor de movimento (direção) normalizado, de -1 a 1, calculado pelos controles
-  const moveVector = shallowRef<Vector3>({ x: 0, y: 0, z: 0 });
+  const moveVector = shallowRef<Vector3>({ ...PlayerBaseStats.moveVector });
 
   // Velocidade atual (ref simples é ok, muda raramente)
-  const currentMoveSpeed = ref(5.0); // Exemplo: 5 unidades por segundo
+  const currentMoveSpeed = ref(PlayerBaseStats.moveSpeed); // Exemplo: 5 unidades por segundo
 
-  const shotCooldownTotal = ref(1.25); // Meio segundo entre tiros
-  const shotCooldown = ref(1.25); // Tempo restante para o próximo tiro
-
-  const initialHealth = 250;
-  const maxHealth = ref(initialHealth);
-  const currentHealth = ref(initialHealth);
+  const shotCooldownTotal = ref(PlayerBaseStats.projectiles.shotCooldown); // Meio segundo entre tiros
+  const shotCooldown = ref(PlayerBaseStats.projectiles.shotCooldown); // Tempo restante para o próximo tiro
+  const maxHealth = ref(PlayerBaseStats.maxHealth);
+  const currentHealth = ref(PlayerBaseStats.maxHealth);
 
   // ... (Outros estados como currentHealth, enemiesRemaining, etc.)
   // -- ESTADO DO NÍVEL
@@ -87,8 +102,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     isDoorActive.value = false;
     roomCurrentWaveIndex.value = 0;
     isWaveInProgress.value = false;
-    currentHealth.value = initialHealth;
-    maxHealth.value = initialHealth;
+    currentHealth.value = PlayerBaseStats.maxHealth;
+    maxHealth.value = PlayerBaseStats.maxHealth;
     playerPosition.value = { x: 0, y: 0, z: 0 };
     moveVector.value = { x: 0, y: 0, z: 0 };
 

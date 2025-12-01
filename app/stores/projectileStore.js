@@ -1,15 +1,15 @@
 import { defineStore } from 'pinia';
 import { ref, shallowRef } from 'vue';
 import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
-import { useCurrentRunStore } from '~/stores/currentRunStore';
+import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
 
 export const projectilesType = {
   player: {
-    speed: 15,
-    damage: 50,
-    size: 0.2,
-    range: 10,
-    color: 'red',
+    speed: PlayerBaseStats.projectiles.shotSpeed,
+    damage: PlayerBaseStats.projectiles.damage,
+    size: PlayerBaseStats.projectiles.size,
+    range: PlayerBaseStats.projectiles.range,
+    color: PlayerBaseStats.color,
   },
   ufo: {
     speed: 12,

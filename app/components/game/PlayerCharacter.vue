@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { shallowRef } from 'vue';
 import { useLoop } from '@tresjs/core';
-import { useCurrentRunStore } from '~/stores/currentRunStore';
+import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
 import type { TresInstance } from '@tresjs/core';
 import * as THREE from 'three';
 
@@ -115,7 +115,7 @@ onBeforeRender(() => {
     name="PlayerCharacter"
     :geometry="geometry"
   >
-    <TresMeshStandardMaterial color="red" :side="2" />
+    <TresMeshStandardMaterial :color="PlayerBaseStats.color" :side="2" />
   </TresMesh>
   <TresMesh
     ref="hpMeshRef"
