@@ -16,11 +16,13 @@ const currentRunStore = useCurrentRunStore();
                 >
                     Resume
                 </button>
-                <button
-                    class="px-4 py-2 bg-red-600 rounded hover:bg-red-700 transition"
-                >
-                    Quit
-                </button>
+                <NuxtLink to="/">
+                    <button
+                        class="px-4 py-2 bg-red-600 rounded hover:bg-red-700 transition"
+                    >
+                        Quit
+                    </button>
+                </NuxtLink>
             </div>
         </div>
     </div>
