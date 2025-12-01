@@ -104,6 +104,7 @@ export function usePlayerControls() {
   const update = (delta: number) => {
     // Acessa os valores diretamente da store
     const position = currentRun.getPlayerPosition();
+    const rotation = currentRun.getPlayerRotation();
     const movement = currentRun.getMoveVector();
     const speed = currentRun.currentMoveSpeed;
 
@@ -117,6 +118,12 @@ export function usePlayerControls() {
     position.x += dx;
     position.y += dy;
     position.z += dz;
+    
+    // mira para a posição que o jogador está se movendo. Se parou de mover, mantém a que estava.
+    // Precisa ser uma transição menos dura, com uma suavidade de virada
+    if (dx !== 0 || dy !== 0 || dz !== 0) {
+      rotation.y = Math.atan2(-movement.x, -movement.z);
+    }
 
     // Atualiza o cooldown do tiro
     if (currentRun.shotCooldown > 0) {
@@ -128,10 +135,21 @@ export function usePlayerControls() {
 
     // Se o jogador tiver parado, vamos atirar um projetil se estiver dentro do cd correto
     if ((dx !== 0 || dy !== 0 || dz !== 0) === false) {
+      // Aponta para o inimigo mais próximo e rotaciona o personagem nessa direção
+      const rotation = currentRun.getPlayerRotation();
+      const nearestEnemy = projectileStore.nearestEnemyFromPlayer();
+
+      if (nearestEnemy && nearestEnemy.position) {
+        const dirX = nearestEnemy.position.x - position.x;
+        const dirZ = nearestEnemy.position.z - position.z;
+        
+        // Calcula o ângulo usando atan2
+        const angle = Math.atan2(-dirX, -dirZ); // Negativo para alinhar com o sistema de coordenadas
+        rotation.y = angle;
+      }
+
       // Verifica se o cooldown do tiro terminou
       if (currentRun.shotCooldown <= 0) {
-        const nearestEnemy = projectileStore.nearestEnemyFromPlayer();
-
         if (nearestEnemy && nearestEnemy.position) {
           // Calcula o vetor de direção do jogador para o inimigo
           const dirX = nearestEnemy.position.x - position.x;

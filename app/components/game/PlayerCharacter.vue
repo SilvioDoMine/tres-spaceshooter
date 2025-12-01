@@ -58,11 +58,17 @@ onBeforeRender(() => {
   if (playerMeshRef.value) {
     // Lê posição atualizada do store (atualizada por usePlayerControls)
     const position = currentRun.getPlayerPosition();
+    const rotation = currentRun.getPlayerRotation();
 
     // ✅ Mutação direta da propriedade Three.js - SEM reatividade
     playerMeshRef.value.position.x = position.x;
     playerMeshRef.value.position.y = position.y;
     playerMeshRef.value.position.z = position.z;
+
+    // Mutação direta da rotação
+    playerMeshRef.value.rotation.x = rotation.x;
+    playerMeshRef.value.rotation.y = rotation.y;
+    playerMeshRef.value.rotation.z = rotation.z;
 
     currentPosition.value = { x: position.x, y: position.y, z: position.z };
 
@@ -84,7 +90,6 @@ onBeforeRender(() => {
   -->
   <TresMesh
     ref="playerMeshRef"
-    :position="[initialPosition.x, initialPosition.y, initialPosition.z]"
     name="PlayerCharacter"
     :geometry="geometry"
   >

@@ -25,6 +25,9 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   // Objetos internos simples para manipulação direta no game loop
   const playerPosition = shallowRef<Vector3>({ x: 0, y: 0, z: 0 });
 
+  // Rotation
+  const playerRotation = shallowRef<Vector3>({ x: 0, y: 0, z: 0 });
+
   // Vetor de movimento (direção) normalizado, de -1 a 1, calculado pelos controles
   const moveVector = shallowRef<Vector3>({ x: 0, y: 0, z: 0 });
 
@@ -136,6 +139,14 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     return playerPosition.value;
   }
 
+  function getPlayerRotation() {
+    return playerRotation.value;
+  }
+
+  function setPlayerRotation(x: number, y: number, z: number) {
+    playerRotation.value = { x, y, z };
+  }
+
   function getMoveVector() {
     return moveVector.value;
   }
@@ -185,12 +196,15 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
   return {
     playerPosition,
+    getPlayerRotation,
+    setPlayerRotation,
     moveVector,
     currentMoveSpeed,
     setPlayerPosition,
     setMoveVector,
     getPlayerPosition,
     getMoveVector,
+
     takeDamage,
     currentHealth,
     maxHealth,
