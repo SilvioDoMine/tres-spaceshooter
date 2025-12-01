@@ -3,7 +3,7 @@ import { shallowRef } from 'vue';
 import { useLoop } from '@tresjs/core';
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 import type { TresInstance } from '@tresjs/core';
-import { Edges } from '@tresjs/cientos';
+import * as THREE from 'three';
 
   // | Efeito desejado                           | Altura | FOV   |
   // |-------------------------------------------|--------|-------|
@@ -30,6 +30,25 @@ const currentPosition = shallowRef({ x: initialPosition.x, y: initialPosition.y,
 // Opcional: Se você estiver usando um modelo GLTF
 // const { nodes, materials } = await useGLTF('/models/player.gltf', { draco: true });
 
+// Geometria do triângulo no plano XZ (horizontal)
+// O triângulo aponta para Z- (para frente)
+const geometry = new THREE.BufferGeometry();
+const vertices = new Float32Array([
+  0.0, 0.0, -0.8,   // Ponta (frente)
+  -0.5, 0.0, 0.5,   // Base esquerda (trás)
+  0.5, 0.0, 0.5,    // Base direita (trás)
+]);
+
+// Define os índices para formar o triângulo (ambos os lados visíveis)
+const indices = [
+  0, 1, 2,  // Lado de cima
+  0, 2, 1,  // Lado de baixo (invertido para ver dos dois lados)
+];
+
+geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+geometry.setIndex(indices);
+geometry.computeVertexNormals(); // Calcula as normais para iluminação correta
+
 /**
  * ✅ PADRÃO RECOMENDADO: Acessa mesh diretamente via template ref
  * Mutação direta sem overhead reativo - 25x mais rápido
@@ -47,12 +66,12 @@ onBeforeRender(() => {
 
     currentPosition.value = { x: position.x, y: position.y, z: position.z };
 
-    // Opcional: Rotacionar o personagem na direção do movimento horizontal
-    // Sistema: Norte=Z+, Sul=Z-, Esquerda=X+, Direita=X-
+    // Rotaciona o triângulo na direção do movimento
     // const movement = currentRun.getMoveVector();
     // if (movement.x !== 0 || movement.z !== 0) {
-    //   // atan2(-x, z) porque X+ é esquerda e X- é direita
-    //   playerMeshRef.value.rotation.y = Math.atan2(-movement.x, movement.z);
+    //   // atan2 calcula o ângulo para onde o triângulo deve apontar
+    //   // movement.x, movement.z formam um vetor de direção no plano XZ
+    //   playerMeshRef.value.rotation.y = Math.atan2(-movement.x, -movement.z);
     // }
   }
 });
@@ -67,10 +86,9 @@ onBeforeRender(() => {
     ref="playerMeshRef"
     :position="[initialPosition.x, initialPosition.y, initialPosition.z]"
     name="PlayerCharacter"
+    :geometry="geometry"
   >
-    <TresBoxGeometry :args="[1, 1, 1]" />
-    <TresMeshStandardMaterial color="red" />
-    <Edges :threshold="15" color="black" />
+    <TresMeshStandardMaterial color="red" :side="2" />
 
     <!-- HP -->
     <Suspense>
