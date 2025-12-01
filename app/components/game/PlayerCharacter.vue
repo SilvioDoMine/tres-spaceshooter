@@ -25,6 +25,7 @@ const initialPosition = currentRun.getPlayerPosition();
  * Elimina completamente o overhead reativo em loops de 60 FPS
  */
 const playerMeshRef = shallowRef<TresInstance | null>(null);
+const hpMeshRef = shallowRef<TresInstance | null>(null);
 const currentPosition = shallowRef({ x: initialPosition.x, y: initialPosition.y, z: initialPosition.z });
 
 // Opcional: Se você estiver usando um modelo GLTF
@@ -55,7 +56,7 @@ geometry.computeVertexNormals(); // Calcula as normais para iluminação correta
  */
 const { onBeforeRender } = useLoop();
 onBeforeRender(() => {
-  if (playerMeshRef.value) {
+  if (playerMeshRef.value && hpMeshRef.value) {
     // Lê posição atualizada do store (atualizada por usePlayerControls)
     const position = currentRun.getPlayerPosition();
     const rotation = currentRun.getPlayerRotation();
@@ -64,6 +65,9 @@ onBeforeRender(() => {
     playerMeshRef.value.position.x = position.x;
     playerMeshRef.value.position.y = position.y;
     playerMeshRef.value.position.z = position.z;
+    hpMeshRef.value.position.x = position.x;
+    hpMeshRef.value.position.y = position.y + 2;
+    hpMeshRef.value.position.z = position.z;
 
     // Mutação direta da rotação
     playerMeshRef.value.rotation.x = rotation.x;
@@ -94,7 +98,10 @@ onBeforeRender(() => {
     :geometry="geometry"
   >
     <TresMeshStandardMaterial color="red" :side="2" />
-
+  </TresMesh>
+  <TresMesh
+  ref="hpMeshRef"
+  >
     <!-- HP -->
     <Suspense>
       <Text3D
