@@ -57,7 +57,7 @@ geometry.computeVertexNormals(); // Calcula as normais para iluminação correta
 const { onBeforeRender } = useLoop();
 onBeforeRender(() => {
   if (playerMeshRef.value && hpMeshRef.value) {
-    // Lê posição atualizada do store (atualizada por usePlayerControls)
+    // Lê posição e rotação atualizada do store (atualizada por usePlayerControls)
     const position = currentRun.getPlayerPosition();
     const rotation = currentRun.getPlayerRotation();
 
@@ -65,24 +65,16 @@ onBeforeRender(() => {
     playerMeshRef.value.position.x = position.x;
     playerMeshRef.value.position.y = position.y;
     playerMeshRef.value.position.z = position.z;
-    hpMeshRef.value.position.x = position.x;
-    hpMeshRef.value.position.y = position.y + 2;
-    hpMeshRef.value.position.z = position.z;
 
-    // Mutação direta da rotação
     playerMeshRef.value.rotation.x = rotation.x;
     playerMeshRef.value.rotation.y = rotation.y;
     playerMeshRef.value.rotation.z = rotation.z;
 
-    currentPosition.value = { x: position.x, y: position.y, z: position.z };
+    hpMeshRef.value.position.x = position.x;
+    hpMeshRef.value.position.y = position.y + 2;
+    hpMeshRef.value.position.z = position.z;
 
-    // Rotaciona o triângulo na direção do movimento
-    // const movement = currentRun.getMoveVector();
-    // if (movement.x !== 0 || movement.z !== 0) {
-    //   // atan2 calcula o ângulo para onde o triângulo deve apontar
-    //   // movement.x, movement.z formam um vetor de direção no plano XZ
-    //   playerMeshRef.value.rotation.y = Math.atan2(-movement.x, -movement.z);
-    // }
+    currentPosition.value = { x: position.x, y: position.y, z: position.z };
   }
 });
 </script>

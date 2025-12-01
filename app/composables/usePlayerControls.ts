@@ -118,11 +118,24 @@ export function usePlayerControls() {
     position.x += dx;
     position.y += dy;
     position.z += dz;
-    
-    // mira para a posição que o jogador está se movendo. Se parou de mover, mantém a que estava.
-    // Precisa ser uma transição menos dura, com uma suavidade de virada
+
+    // Rotação suave na direção do movimento
     if (dx !== 0 || dy !== 0 || dz !== 0) {
-      rotation.y = Math.atan2(-movement.x, -movement.z);
+      // Calcula o ângulo desejado baseado na direção do movimento
+      const targetRotation = Math.atan2(-movement.x, -movement.z);
+
+      // Interpolação suave da rotação atual para a rotação desejada
+      const rotationSpeed = 8; // Quanto maior, mais rápido gira (ajuste ao gosto)
+
+      // Calcula a diferença angular (shortest path)
+      let diff = targetRotation - rotation.y;
+
+      // Normaliza a diferença para [-PI, PI] (caminho mais curto)
+      while (diff > Math.PI) diff -= 2 * Math.PI;
+      while (diff < -Math.PI) diff += 2 * Math.PI;
+
+      // Aplica a interpolação suave
+      rotation.y += diff * rotationSpeed * delta;
     }
 
     // Atualiza o cooldown do tiro
@@ -136,16 +149,27 @@ export function usePlayerControls() {
     // Se o jogador tiver parado, vamos atirar um projetil se estiver dentro do cd correto
     if ((dx !== 0 || dy !== 0 || dz !== 0) === false) {
       // Aponta para o inimigo mais próximo e rotaciona o personagem nessa direção
-      const rotation = currentRun.getPlayerRotation();
       const nearestEnemy = projectileStore.nearestEnemyFromPlayer();
 
       if (nearestEnemy && nearestEnemy.position) {
         const dirX = nearestEnemy.position.x - position.x;
         const dirZ = nearestEnemy.position.z - position.z;
-        
-        // Calcula o ângulo usando atan2
-        const angle = Math.atan2(-dirX, -dirZ); // Negativo para alinhar com o sistema de coordenadas
-        rotation.y = angle;
+
+        // Calcula o ângulo desejado usando atan2
+        const targetRotation = Math.atan2(-dirX, -dirZ);
+
+        // Interpolação suave da rotação atual para a rotação do inimigo
+        const rotationSpeed = 20;
+
+        // Calcula a diferença angular (shortest path)
+        let diff = targetRotation - rotation.y;
+
+        // Normaliza a diferença para [-PI, PI] (caminho mais curto)
+        while (diff > Math.PI) diff -= 2 * Math.PI;
+        while (diff < -Math.PI) diff += 2 * Math.PI;
+
+        // Aplica a interpolação suave
+        rotation.y += diff * rotationSpeed * delta;
       }
 
       // Verifica se o cooldown do tiro terminou
