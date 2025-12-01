@@ -31,6 +31,9 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   // Velocidade atual (ref simples é ok, muda raramente)
   const currentMoveSpeed = ref(5.0); // Exemplo: 5 unidades por segundo
 
+  const shotCooldownTotal = ref(1.5); // Meio segundo entre tiros
+  const shotCooldown = ref(1.5); // Tempo restante para o próximo tiro
+
   const initialHealth = 250;
   const maxHealth = ref(initialHealth);
   const currentHealth = ref(initialHealth);
@@ -191,6 +194,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     takeDamage,
     currentHealth,
     maxHealth,
+    shotCooldownTotal,
+    shotCooldown,
 
     // Estado do jogo
     gameState,

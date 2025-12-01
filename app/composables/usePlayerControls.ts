@@ -10,10 +10,12 @@
  * @returns Um objeto reativo com o vetor de entrada e o estado de movimento.
  */
 import { useCurrentRunStore } from '~/stores/currentRunStore';
+import { useProjectileStore } from '~/stores/projectileStore';
 import { onMounted, onUnmounted } from 'vue';
 
 export function usePlayerControls() {
   const currentRun = useCurrentRunStore();
+  const projectileStore = useProjectileStore();
 
   // Estado interno para rastrear quais teclas estão pressionadas
   const keysPressed = {
@@ -115,6 +117,51 @@ export function usePlayerControls() {
     position.x += dx;
     position.y += dy;
     position.z += dz;
+
+    // Atualiza o cooldown do tiro
+    if (currentRun.shotCooldown > 0) {
+      currentRun.shotCooldown -= delta;
+      if (currentRun.shotCooldown < 0) {
+        currentRun.shotCooldown = 0;
+      }
+    }
+
+    // Se o jogador tiver parado, vamos atirar um projetil se estiver dentro do cd correto
+    if ((dx !== 0 || dy !== 0 || dz !== 0) === false) {
+      // Verifica se o cooldown do tiro terminou
+      if (currentRun.shotCooldown <= 0) {
+        const nearestEnemy = projectileStore.nearestEnemyFromPlayer();
+
+        if (nearestEnemy && nearestEnemy.position) {
+          // Calcula o vetor de direção do jogador para o inimigo
+          const dirX = nearestEnemy.position.x - position.x;
+          const dirZ = nearestEnemy.position.z - position.z;
+
+          // Normaliza o vetor (magnitude = 1)
+          const magnitude = Math.sqrt(dirX * dirX + dirZ * dirZ);
+
+          if (magnitude > 0) {
+            const direction = {
+              x: dirX / magnitude,
+              y: 0, // Y fixo, plano X-Z
+              z: dirZ / magnitude
+            };
+
+            // Atira um projetil na direção do inimigo mais próximo
+            projectileStore.spawnProjectile(
+              'player', // type
+              { x: position.x, y: position.y, z: position.z }, // position
+              direction, // direção normalizada
+              'player',
+              'player',
+            );
+
+            // Reseta o cooldown do tiro
+            currentRun.shotCooldown = currentRun.shotCooldownTotal;
+          }
+        }
+      }
+    }
 
     // NOTA: Se precisar sincronizar com UI/debug (ex: mostrar posição na tela),
     // chame periodicamente (ex: a cada 10 frames):

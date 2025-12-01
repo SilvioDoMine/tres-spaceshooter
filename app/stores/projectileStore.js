@@ -8,8 +8,8 @@ export const projectilesType = {
   player: {
     speed: 15,
     damage: 50,
-    size: 0.1,
-    range: 5,
+    size: 0.2,
+    range: 7,
     color: 'blue',
   },
   ufo: {
@@ -50,7 +50,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
     projectiles.value.forEach((projectile, pIndex) => {
       if (projectile.ownerType === 'player') {
         // Verifica colisão com inimigos
-        enemyManager.activeEnemies.forEach((enemy, eIndex) => {
+        enemyManager.activeEnemies.value.forEach((enemy, eIndex) => {
           if (
             isColliding(
               projectile.position,
@@ -106,6 +106,26 @@ export const useProjectileStore = defineStore('projectileStore', () => {
     projectiles.value = [];
   }
 
+  function nearestEnemyFromPlayer() {
+    const playerPos = currentRunStore.getPlayerPosition();
+    let nearestEnemy = null;
+    let minDistance = Infinity;
+
+    enemyManager.activeEnemies.value.forEach(enemy => {
+      const dist = Math.hypot(
+        enemy.position.x - playerPos.x,
+        enemy.position.z - playerPos.z
+      );
+
+      if (dist < minDistance) {
+        minDistance = dist;
+        nearestEnemy = enemy;
+      }
+    });
+
+    return nearestEnemy;
+  }
+
   return {
     update,
     cleanup,
@@ -113,6 +133,8 @@ export const useProjectileStore = defineStore('projectileStore', () => {
     spawnProjectile,
     checkCollisions,
     projectiles,
+
+    nearestEnemyFromPlayer,
   };
 });
 
