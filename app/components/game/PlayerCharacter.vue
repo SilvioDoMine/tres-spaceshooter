@@ -26,6 +26,7 @@ const initialPosition = currentRun.getPlayerPosition();
  */
 const playerMeshRef = shallowRef<TresInstance | null>(null);
 const hpMeshRef = shallowRef<TresInstance | null>(null);
+const rangeCircleRef = shallowRef<TresInstance | null>(null);
 const currentPosition = shallowRef({ x: initialPosition.x, y: initialPosition.y, z: initialPosition.z });
 
 // Opcional: Se você estiver usando um modelo GLTF
@@ -50,13 +51,33 @@ geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
 geometry.setIndex(indices);
 geometry.computeVertexNormals(); // Calcula as normais para iluminação correta
 
+// Círculo mostrando o range de tiro do jogador
+const rangeCircleGeometry = new THREE.BufferGeometry();
+const rangeRadius = projectilesType.player.range;
+const segments = 64; // Mais segmentos = círculo mais suave
+const circleVertices: number[] = [];
+
+for (let i = 0; i <= segments; i++) {
+  const theta = (i / segments) * Math.PI * 2;
+  circleVertices.push(
+    Math.cos(theta) * rangeRadius, // x
+    0, // y (no plano XZ)
+    Math.sin(theta) * rangeRadius  // z
+  );
+}
+
+rangeCircleGeometry.setAttribute(
+  'position',
+  new THREE.BufferAttribute(new Float32Array(circleVertices), 3)
+);
+
 /**
  * ✅ PADRÃO RECOMENDADO: Acessa mesh diretamente via template ref
  * Mutação direta sem overhead reativo - 25x mais rápido
  */
 const { onBeforeRender } = useLoop();
 onBeforeRender(() => {
-  if (playerMeshRef.value && hpMeshRef.value) {
+  if (playerMeshRef.value && hpMeshRef.value && rangeCircleRef.value) {
     // Lê posição e rotação atualizada do store (atualizada por usePlayerControls)
     const position = currentRun.getPlayerPosition();
     const rotation = currentRun.getPlayerRotation();
@@ -73,6 +94,11 @@ onBeforeRender(() => {
     hpMeshRef.value.position.x = position.x;
     hpMeshRef.value.position.y = position.y + 2;
     hpMeshRef.value.position.z = position.z;
+
+    // Atualiza a posição do círculo de range
+    rangeCircleRef.value.position.x = position.x;
+    rangeCircleRef.value.position.y = position.y + 0.1; // Levemente acima do chão
+    rangeCircleRef.value.position.z = position.z;
 
     currentPosition.value = { x: position.x, y: position.y, z: position.z };
   }
@@ -112,6 +138,16 @@ onBeforeRender(() => {
       </Text3D>
     </Suspense>
   </TresMesh>
+
+  <!-- Círculo mostrando o range de tiro -->
+  <primitive
+    ref="rangeCircleRef"
+    :object="new THREE.Line(
+      rangeCircleGeometry,
+      new THREE.LineBasicMaterial({ color: 0x00ff00, opacity: 0.3, transparent: true })
+    )"
+    name="RangeCircle"
+  />
 
   <TresPerspectiveCamera
     :position="[currentPosition.x, currentPosition.y + 75, currentPosition.z]"
