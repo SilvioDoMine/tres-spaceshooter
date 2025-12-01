@@ -105,8 +105,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     doorSize.value = stage.door.size || null;
     isDoorActive.value = false;
     playerPosition.value = { ...stage.playerStartPosition };
-
-    console.log(doorPosition, stage.door.position);
+    isWaveInProgress.value = false;
+    roomCurrentWaveIndex.value = 0;
   }
 
   function completeStage() {
@@ -118,7 +118,9 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   function nextStage() {
     if (levelConfig.value && currentStageIndex.value + 1 < levelConfig.value.stages.length) {
       currentStageIndex.value += 1;
-      loadStage(levelConfig.value.stages[currentStageIndex.value]);
+      const stage = levelConfig.value.stages[currentStageIndex.value];
+      // console.log('Indo para o próximo estágio:', currentStageIndex.value, stage);
+      loadStage(stage);
     } else {
       console.log('Todos os estágios completos! Vitória!');
       gameVictory();
