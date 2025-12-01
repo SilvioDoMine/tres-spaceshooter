@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia';
 import { ref, shallowRef } from 'vue';
 
+// @TODO
+// IMPLEMENTAR GAMEOFVER FULL
+
 // Define o formato básico do vetor de posição 3D
 interface Vector3 {
   x: number;
@@ -16,6 +19,7 @@ interface Vector3 {
  * seguindo as boas práticas do TresJS para evitar overhead reativo.
  */
 export const useCurrentRunStore = defineStore('currentRun', () => {
+  // -- ESTADO DO JOGADOR
   // ✅ ShallowRef: Apenas .value é reativo, mutations internas são ignoradas
   // Objetos internos simples para manipulação direta no game loop
   const playerPosition = shallowRef<Vector3>({ x: 0, y: 0, z: 0 });
@@ -33,6 +37,12 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   // ... (Outros estados como currentHealth, enemiesRemaining, etc.)
   // -- ESTADO DO NÍVEL
   const levelTimer = ref(0); // Tempo decorrido no nível atual
+  const gameState = ref('init'); // 'init', 'playing', 'paused', 'gameover', 'victory'.
+  const isPlaying = computed(() => gameState.value === 'playing');
+  const isPaused = computed(() => gameState.value === 'paused');
+  const isGameOver = computed(() => gameState.value === 'gameover');
+  const isVictory = computed(() => gameState.value === 'victory');
+  const isInit = computed(() => gameState.value === 'init');
 
   // -- PROGRESSÃO DE SALAS
   const levelConfig = ref(null); // Configuração do nível atual
@@ -132,6 +142,37 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     }
   }
 
+  function gameStart(levelConfiguration: any) {
+    endRun(); // Reseta qualquer estado de jogo anterior
+
+    initializeLevel(levelConfiguration);
+
+    gameState.value = 'playing';
+  }
+
+  function gamePause() {
+    console.log(isPlaying.value);
+    if (isPlaying.value) {
+      gameState.value = 'paused';
+    }
+  }
+
+  function gameResume() {
+    if (isPaused.value) {
+      gameState.value = 'playing';
+    }
+  }
+
+  function gameOver(message: string = 'You have been defeated.') {
+    console.log('Game Over:', message);
+    gameState.value = 'gameover';
+  }
+
+  function gameVictory(message: string = 'Congratulations! You have won.') {
+    console.log('Victory:', message);
+    gameState.value = 'victory';
+  }
+
   // ... (Outras funções)
 
   return {
@@ -145,6 +186,19 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     takeDamage,
     currentHealth,
     maxHealth,
+
+    // Estado do jogo
+    gameState,
+    isPlaying,
+    isPaused,
+    isGameOver,
+    isVictory,
+    isInit,
+    gameStart,
+    gamePause,
+    gameResume,
+    gameOver,
+    gameVictory,
 
     // Portas
     doorPosition,

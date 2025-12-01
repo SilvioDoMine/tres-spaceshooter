@@ -4,6 +4,7 @@ import { usePlayerControls } from '~/composables/usePlayerControls';
 import { useGameDirector } from '~/composables/useGameDirector';
 import { useEnemyManager } from '~/composables/useEnemyManager';
 import { useEnemyAI } from '~/composables/useEnemyAI';
+import { useCurrentRunStore } from '~/stores/currentRunStore';
 
 /**
  * Funções para controlar o loop de renderização.
@@ -18,6 +19,7 @@ const playerControls = usePlayerControls();
 const gameDirector = useGameDirector();
 const enemyManager = useEnemyManager();
 const enemyAI = useEnemyAI();
+const currentRunStore = useCurrentRunStore();
 
 /**
  * Função central de atualização do jogo.
@@ -27,6 +29,10 @@ const enemyAI = useEnemyAI();
 const gameTick = ({ delta }: { delta: number }) => {
 // Evita cálculos excessivos se o delta for muito grande (e.g., aba inativa)
 const safeDelta = Math.min(delta, 0.1); 
+
+if (! currentRunStore.isPlaying ) {
+    return;
+}
 
 // 2. Atualiza todos os Subsistemas
 // Processamento de Input e Movimento

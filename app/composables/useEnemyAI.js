@@ -9,7 +9,7 @@ export function useEnemyAI() {
     const currentRunStore = useCurrentRunStore();
     
     const { activeEnemies } = storeToRefs(enemyManagerStore);
-    const { playerPosition } = storeToRefs(currentRunStore);
+    const { playerPosition, isPlaying } = storeToRefs(currentRunStore);
 
     const behaviors = {
         asteroid: (enemy, deltaTime) => {

@@ -35,7 +35,7 @@ onMounted(async () => {
   }
 
   // Inicia uma nova partida ao montar a página
-  currentRunStore.initializeLevel(levels[route.params.id ]);
+  currentRunStore.gameStart(levels[route.params.id ]);
 });
 
 onUnmounted(() => {
@@ -46,7 +46,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div>
+  <div class="relative w-full h-screen">
     <TresCanvas
       clear-color="#020420"
       window-size
@@ -70,6 +70,13 @@ onUnmounted(() => {
           Voltar
         </button>
       </NuxtLink>
+
+      <button
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          @click="currentRunStore.gamePause()"
+        >
+        Pause
+      </button>
     </div>
 
     <!-- Modals -->
