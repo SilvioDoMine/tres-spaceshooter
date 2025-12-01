@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia';
-import { distance } from 'three/tsl';
 import { ref, shallowRef } from 'vue';
-import { useEnemyManager } from '~/composables/useEnemyManager';
+import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 
 export const projectilesType = {
@@ -10,21 +9,21 @@ export const projectilesType = {
     damage: 50,
     size: 0.2,
     range: 10,
-    color: 'blue',
+    color: 'red',
   },
   ufo: {
     speed: 12,
     damage: 100,
     size: 0.25,
     range: 10,
-    color: 'green',
+    color: baseStats.ufo.color,
   },
   boss: {
     speed: 12,
     damage: 200,
     size: 0.5,
     range: 20,
-    color: 'pink',
+    color: baseStats.boss.color,
   }
 };
 
