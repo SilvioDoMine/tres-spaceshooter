@@ -123,6 +123,12 @@ export const useProjectileStore = defineStore('projectileStore', () => {
       }
     });
 
+    // Se o inimigo mais próximo estiver longe do range do tiro, retorna null
+    // NOTA: Essa mecanica pode ser removida.
+    if (minDistance > projectilesType.player.range) {
+      return null;
+    }
+
     return nearestEnemy;
   }
 
