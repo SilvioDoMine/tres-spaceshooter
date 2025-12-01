@@ -22,7 +22,16 @@ watch(
     <TresMesh :rotation="[-Math.PI / 2, 0, 0]" name="GameWorld">
       <TresPlaneGeometry :args="[stageWidth, stageHeight]" />
       <TresMeshStandardMaterial wireframe color="white" />
-      <Stars />
+      <Stars
+        :size="1"
+        :rotation="[0, Math.PI / 4, 0]"
+        :count="5000"
+      />
+      <Stars
+        :size="0.5"
+        :rotation="[0, Math.PI / 4, 0]"
+        :count="5000"
+      />
     </TresMesh>
 
     <TresAmbientLight :intensity="0.5" />
