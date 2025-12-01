@@ -122,12 +122,15 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     playerPosition.value = { ...stage.playerStartPosition };
     isWaveInProgress.value = false;
     roomCurrentWaveIndex.value = 0;
+    currentMoveSpeed.value = PlayerBaseStats.moveSpeed;
   }
 
   function completeStage() {
     console.log('Estágio completo!');
     isStageCompleted.value = true;
     isDoorActive.value = true;
+    // aumenta a velocidade do jogador 3x até ele ir pra próxima sala
+    currentMoveSpeed.value = PlayerBaseStats.moveSpeed * 3;
   }
 
   function nextStage() {
