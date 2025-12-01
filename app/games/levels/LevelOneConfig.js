@@ -45,13 +45,13 @@ export const LEVEL_1 = {
       waves: [
         {
           enemies: [
-            { enemyType: 'asteroid', count: 4 },
+            { enemyType: 'asteroid', count: 4, delay: 1.5 },
           ]
         },
         {
           enemies: [
-            { enemyType: 'ufo', count: 2 },
-            { enemyType: 'asteroid', count: 6 },
+            { enemyType: 'ufo', count: 2, delay: 1.5 },
+            { enemyType: 'asteroid', count: 6, delay: 1.5 },
           ]
         },
       ],
@@ -70,14 +70,14 @@ export const LEVEL_1 = {
       waves: [
         {
           enemies: [
-            { enemyType: 'asteroid', count: 4 },
-            { enemyType: 'ufo', count: 2 },
+            { enemyType: 'asteroid', count: 4, delay: 1.5 },
+            { enemyType: 'ufo', count: 2, delay: 1.5 },
           ]
         },
         {
           enemies: [
-            { enemyType: 'asteroid', count: 6 },
-            { enemyType: 'ufo', count: 2 },
+            { enemyType: 'asteroid', count: 6, delay: 1.5 },
+            { enemyType: 'ufo', count: 2, delay: 1.5 },
           ]
         },
       ],
@@ -106,8 +106,8 @@ export const LEVEL_1 = {
       width: 20,
       height: 30,
       waves: [
-        { enemies: [ { enemyType: 'ufo', count: 4 }, { enemyType: 'asteroid', count: 6 } ] },
-        { enemies: [ { enemyType: 'ufo', count: 6 }, { enemyType: 'asteroid', count: 8 } ] }
+        { enemies: [ { enemyType: 'ufo', count: 4 }, { enemyType: 'asteroid', count: 6, delay: 1.5 } ] },
+        { enemies: [ { enemyType: 'ufo', count: 6 }, { enemyType: 'asteroid', count: 8, delay: 1.5 } ] }
       ],
       devDescription: 'Terceira sala lança 4 UFOs + 6 asteroides, depois 6 UFOs + 8 asteroides e então é liberado para a próxima sala.',
       door: {
@@ -122,7 +122,7 @@ export const LEVEL_1 = {
       width: 40,
       height: 40,
       waves: [
-        { enemies: [ { enemyType: 'boss', count: 1 } ] }
+        { enemies: [ { enemyType: 'boss', count: 1, delay: 3 } ] }
       ],
       devDescription: 'Sala do chefe final do nível. Após vencer, o nível é concluído após eu sair da portinha.',
       door: {

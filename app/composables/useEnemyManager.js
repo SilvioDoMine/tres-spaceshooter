@@ -40,17 +40,30 @@ export function useEnemyManager() {
   const { activeEnemies } = storeToRefs(enemyManagerStore);
   
   const update = (delta) => {
-    // Lógica para gerenciar inimigos:
-    // - Spawnear inimigos conforme instruções do GameDirector
-    // - Atualizar estado dos inimigos (posição, vida, etc.)
-    // - Remover inimigos derrotados
+    // Atualiza o timer de spawn dos inimigos
+    activeEnemies.value.forEach(enemy => {
+      if (enemy.state === 'spawning') {
+        enemy.spawnTimer -= delta;
+
+        // Calcula o progresso do spawn (0 a 1)
+        enemy.spawnProgress = 1 - (enemy.spawnTimer / enemy.totalSpawnTime);
+        enemy.spawnProgress = Math.max(0, Math.min(1, enemy.spawnProgress)); // Clamp entre 0 e 1
+
+        // Quando o timer acabar, muda para ativo
+        if (enemy.spawnTimer <= 0) {
+          enemy.state = 'active';
+          enemy.spawnTimer = 0;
+          enemy.spawnProgress = 1;
+        }
+      }
+    });
   };
 
   const spawnEnemyWave = (waveConfig) => {
     // Spawna inimigos conforme a configuração da wave
     waveConfig.enemies.forEach(enemyGroup => {
-      // Desestruturação para obter tipo e quantidade
-      const { enemyType, count } = enemyGroup;
+      // Desestruturação para obter tipo, quantidade e delay
+      const { enemyType, count, delay = 1.5 } = enemyGroup;
 
       // Spawna a quantidade especificada de inimigos do tipo dado
       for (let i = 0; i < count; i++) {
@@ -69,6 +82,10 @@ export function useEnemyManager() {
           type: enemyType,
           position: generateRandomSpawnPosition(),
           cooldownShot: enemyStats.cooldownTotalShot, // tempo inicial para o inimigo poder atirar
+          state: 'spawning', // Estado inicial: spawning (invulnerável)
+          spawnTimer: delay, // Tempo em segundos até ficar ativo (vem da configuração da wave)
+          totalSpawnTime: delay, // Armazena o tempo total para calcular o progresso
+          spawnProgress: 0, // 0 a 1, usado para efeitos visuais
           ...enemyStats,
         };
 
@@ -87,6 +104,11 @@ export function useEnemyManager() {
 
     if (! enemy) {
       console.warn(`Enemy Manager: No enemy found with ID "${enemyId}" to take damage.`);
+      return;
+    }
+
+    // Inimigos em spawning são invulneráveis
+    if (enemy.state === 'spawning') {
       return;
     }
 

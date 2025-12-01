@@ -143,6 +143,11 @@ export function useEnemyAI() {
 
     const update = (deltaTime) => {
         activeEnemies.value.forEach(enemy => {
+            // Inimigos em spawning não se movem nem atacam
+            if (enemy.state === 'spawning') {
+                return;
+            }
+
             const behavior = behaviors[enemy.type];
 
             if (! behavior) {
