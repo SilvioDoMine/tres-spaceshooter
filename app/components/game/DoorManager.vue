@@ -7,6 +7,8 @@ const currentRun = useCurrentRunStore();
 // Se o jogador estiver sob a porta ativa, devemos completar o estágio
 // Isso pode ser verificado em um loop de jogo ou via colisão
 onBeforeRender(() => {
+  if (!currentRun.isPlaying) return;
+
   if (currentRun.isDoorActive && currentRun.doorPosition) {
     const playerPos = currentRun.getPlayerPosition();
     const doorPos = currentRun.doorPosition;
