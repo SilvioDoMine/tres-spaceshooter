@@ -9,7 +9,7 @@ export const projectilesType = {
     speed: 15,
     damage: 50,
     size: 0.2,
-    range: 7,
+    range: 10,
     color: 'blue',
   },
   ufo: {

@@ -58,7 +58,15 @@ export function useGameDirector() {
       return;
     }
 
-    if (currentRunStore.isWaveInProgress && enemyManager.activeEnemies.length === 0) {
+    // console.log(
+    //   'Onda atual:', currentWaveIndex,
+    //   'Inimigos ativos:', enemyManager.activeEnemies.value.length,
+    //   'isWaveInProgress:', currentRunStore.isWaveInProgress,
+    //   'cond2', enemyManager.activeEnemies.value.length === 0,
+    //   'condition', currentRunStore.isWaveInProgress && enemyManager.activeEnemies.value.length === 0, 
+    // );
+
+    if (currentRunStore.isWaveInProgress && enemyManager.activeEnemies.value.length === 0) {
       currentRunStore.isWaveInProgress = false;
       
       // if there are more waves, advance to the next wave
@@ -71,8 +79,6 @@ export function useGameDirector() {
 
       return;
     }
-
-    // console.log('Onda atual:', currentWaveIndex, 'Inimigos ativos:', enemyManager.activeEnemies.value.length);
   }
 
   const handleIntroStage = (delta, stage) => {

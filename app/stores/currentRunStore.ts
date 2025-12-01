@@ -34,8 +34,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   // Velocidade atual (ref simples é ok, muda raramente)
   const currentMoveSpeed = ref(5.0); // Exemplo: 5 unidades por segundo
 
-  const shotCooldownTotal = ref(1.5); // Meio segundo entre tiros
-  const shotCooldown = ref(1.5); // Tempo restante para o próximo tiro
+  const shotCooldownTotal = ref(1.25); // Meio segundo entre tiros
+  const shotCooldown = ref(1.25); // Tempo restante para o próximo tiro
 
   const initialHealth = 250;
   const maxHealth = ref(initialHealth);
@@ -104,12 +104,25 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     doorPosition.value = stage.door.position || null;
     doorSize.value = stage.door.size || null;
     isDoorActive.value = false;
+    playerPosition.value = { ...stage.playerStartPosition };
+
+    console.log(doorPosition, stage.door.position);
   }
 
   function completeStage() {
     console.log('Estágio completo!');
     isStageCompleted.value = true;
     isDoorActive.value = true;
+  }
+
+  function nextStage() {
+    if (levelConfig.value && currentStageIndex.value + 1 < levelConfig.value.stages.length) {
+      currentStageIndex.value += 1;
+      loadStage(levelConfig.value.stages[currentStageIndex.value]);
+    } else {
+      console.log('Todos os estágios completos! Vitória!');
+      gameVictory();
+    }
   }
 
   /**
@@ -230,6 +243,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     isDoorActive,
     isStageCompleted,
     levelTimer,
+    nextStage,
     // ... (Outros retornos)
 
     // stage management
