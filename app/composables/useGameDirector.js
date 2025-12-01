@@ -3,13 +3,7 @@
  */
 export function useGameDirector() {
   const enemyManager = useEnemyManager();
-  const currentRunStore = useCurrentRunStore();
-
-  const startRun = () => {
-    console.log('Game Director: Iniciando nova run e preparando primeira sala.');
-    currentRunStore.isDoorActive = false;
-    currentRunStore.isStageCompleted = false;
-  }
+  const currentRunStore = useCurrentRunStore()
 
   const update = (delta) => {
     // Lógica para gerenciar a progressão do jogo:
@@ -18,7 +12,6 @@ export function useGameDirector() {
     // - Spawnear inimigos conforme a configuração do nível
     const stage = currentRunStore.currentStage;
 
-    
     if (! stage ) {
       return;
     };
