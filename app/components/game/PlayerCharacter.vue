@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import { shallowRef } from 'vue';
-import { useLoop, useTres } from '@tresjs/core';
+import { useLoop } from '@tresjs/core';
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 import type { TresInstance } from '@tresjs/core';
 import { Edges } from '@tresjs/cientos';
+
+  // | Efeito desejado                           | Altura | FOV   |
+  // |-------------------------------------------|--------|-------|
+  // | Mais "plano" (quase ortográfico)          | 70-100 | 15-20 |
+  // | Balanceado (recomendo)                    | 40-60  | 20-30 |
+  // | Mais "cinematográfico" (mais perspectiva) | 20-30  | 40-50 |
 
 // Opcional: Para carregar um modelo 3D GLTF (assumindo que você o tem)
 // import { TresLeches } from '@tresjs/leches';
@@ -83,8 +89,9 @@ onBeforeRender(() => {
   </TresMesh>
 
   <TresPerspectiveCamera
-    :position="[currentPosition.x, currentPosition.y + 20, currentPosition.z]"
+    :position="[currentPosition.x, currentPosition.y + 75, currentPosition.z]"
     :look-at="[currentPosition.x, currentPosition.y, currentPosition.z]"
+    :fov="25"
     name="PlayerCamera"
   />
 </template>
