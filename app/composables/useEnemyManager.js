@@ -2,6 +2,36 @@ import { useEnemyManagerStore } from '~/stores/enemyManagerStore';
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { storeToRefs } from 'pinia';
 
+export const baseStats = {
+  asteroid: {
+    color: 'gray',
+    speed: 3,
+    health: 50,
+    onHitDamage: 100,
+    size: 1.25,
+  },
+  ufo: {
+    color: 'green',
+    size: 1,
+    speed: 2,
+    health: 100,
+    onHitDamage: 150,
+    distanceKeep: 10,
+    shotDamage: 50,
+    cooldownTotalShot: 2,
+  },
+  boss: {
+    color: 'hotpink',
+    size: 3,
+    speed: 1,
+    health: 400,
+    onHitDamage: 999,
+    distanceKeep: 20,
+    shotDamage: 200,
+    cooldownTotalShot: 2
+  },
+};
+
 // Lógica para gerenciar inimigos: spawn, atualização, remoção, etc.
 export function useEnemyManager() {
   const enemyManagerStore = useEnemyManagerStore();
@@ -17,13 +47,6 @@ export function useEnemyManager() {
   };
 
   const spawnEnemyWave = (waveConfig) => {
-    // Status base dos inimigos
-    const baseStats = {
-      asteroid: { speed: 3, health: 50, onHitDamage: 100 },
-      ufo: { speed: 2, health: 100, onHitDamage: 150, distanceKeep: 10, shotDamage: 50, cooldownTotalShot: 2},
-      boss: { speed: 1, health: 400, onHitDamage: 999, distanceKeep: 20, shotDamage: 200, cooldownTotalShot: 2 }
-    };
-
     // Spawna inimigos conforme a configuração da wave
     waveConfig.enemies.forEach(enemyGroup => {
       // Desestruturação para obter tipo e quantidade

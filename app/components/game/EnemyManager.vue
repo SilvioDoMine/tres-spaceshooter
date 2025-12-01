@@ -1,23 +1,11 @@
 <script setup lang="js">
 import { useCurrentRunStore } from '~/stores/currentRunStore';
+import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
 
 const currentRun = useCurrentRunStore();
 const enemyManager = useEnemyManager();
 
 const activeEnemies = enemyManager.activeEnemies;
-
-const getEnemyColor = (enemyType) => {
-  switch (enemyType) {
-    case 'asteroid':
-      return 'gray';
-    case 'ufo':
-      return 'green';
-    case 'boss':
-      return 'pink';
-    default:
-      return 'red';
-  }
-};
 
 onUnmounted(() => {
   enemyManager.cleanup();
@@ -32,12 +20,12 @@ onUnmounted(() => {
       :name="`enemy-${index}`"
       :position="[enemy.position.x, enemy.position.y, enemy.position.z]"
     >
-      <TresMeshStandardMaterial :color="getEnemyColor(enemy.type)" />
-      <TresBoxGeometry :args="[1, 1, 1]" />
+      <TresMeshStandardMaterial :color="baseStats[enemy.type].color" />
+      <TresBoxGeometry :args="[baseStats[enemy.type].size, baseStats[enemy.type].size, baseStats[enemy.type].size]" />
       <!-- HP -->
       <Suspense>
         <Text3D
-          :position="[0, 0, 1]"
+          :position="[0, 0, baseStats[enemy.type].size * 0.80]"
           :rotation="[ -Math.PI / 2, 0, 0 ]"
           :size="0.25"
           :bevel-enabled="false"
