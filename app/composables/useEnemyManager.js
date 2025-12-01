@@ -19,8 +19,8 @@ export function useEnemyManager() {
   const spawnEnemyWave = (waveConfig) => {
     // Status base dos inimigos
     const baseStats = {
-      asteroid: { speed: 3, health: 50, onHitDamage: 90 },
-      ufo: { speed: 2, health: 100, onHitDamage: 1, distanceKeep: 10},
+      asteroid: { speed: 3, health: 50, onHitDamage: 100 },
+      ufo: { speed: 2, health: 100, onHitDamage: 150, distanceKeep: 10},
     };
 
     // Spawna inimigos conforme a configuração da wave

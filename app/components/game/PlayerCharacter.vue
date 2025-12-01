@@ -65,12 +65,21 @@ onBeforeRender(() => {
     <TresBoxGeometry :args="[1, 1, 1]" />
     <TresMeshStandardMaterial color="red" />
     <Edges :threshold="15" color="black" />
-    <Text3D
-      text="TresJS"
-      font="/fonts/FiraCodeRegular.json"
-    >
-      <TresMeshNormalMaterial />
-    </Text3D>
+
+    <!-- HP -->
+    <Suspense>
+      <Text3D
+        :position="[0, 0, 1]"
+        :rotation="[ -Math.PI / 2, 0, 0 ]"
+        :scale="[0.5, 0.5, 0.5]"
+        :text="`HP: ${currentRun.currentHealth}`"
+        font="/fonts/PoppinsBold.json"
+        need-updates
+        center
+      >
+        <TresMeshNormalMaterial />
+      </Text3D>
+    </Suspense>
   </TresMesh>
 
   <TresPerspectiveCamera

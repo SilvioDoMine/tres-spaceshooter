@@ -34,6 +34,22 @@ onUnmounted(() => {
     >
       <TresMeshStandardMaterial :color="getEnemyColor(enemy.type)" />
       <TresBoxGeometry :args="[1, 1, 1]" />
+      <!-- HP -->
+      <Suspense>
+        <Text3D
+          :position="[0, 0, 1]"
+          :rotation="[ -Math.PI / 2, 0, 0 ]"
+          :size="0.25"
+          bevelEnabled="false"
+          :text="`HP: ${enemy.health}`"
+          color="black"
+          font="/fonts/PoppinsBold.json"
+          need-updates
+          center
+        >
+          <TresMeshNormalMaterial />
+        </Text3D>
+      </Suspense>
     </TresMesh>
   </TresGroup>
 </template>
