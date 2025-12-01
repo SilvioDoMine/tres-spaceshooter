@@ -41,7 +41,7 @@ onMounted(async () => {
 onUnmounted(() => {
   console.log('Play page unmounted');
 
-  currentRunStore.endRun();
+  // currentRunStore.endRun();
 });
 </script>
 
@@ -81,6 +81,7 @@ onUnmounted(() => {
 
     <!-- Modals -->
     <GamePauseModal />
+    <GameOverModal />
 
     <!-- Leches -->
     <!-- <TresLeches /> -->

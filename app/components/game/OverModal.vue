@@ -12,7 +12,7 @@ const currentRunStore = useCurrentRunStore();
             <div class="flex justify-between">
                 <button
                     class="px-4 py-2 bg-green-600 rounded hover:bg-green-700 transition"
-                    @click="currentRunStore.gameStart()"
+                    @click="currentRunStore.gameStart(currentRunStore.levelConfig)"
                 >
                     Try again
                 </button>

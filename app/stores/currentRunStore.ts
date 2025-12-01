@@ -1,8 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, shallowRef } from 'vue';
-
-// @TODO
-// IMPLEMENTAR GAMEOFVER FULL
+import { useEnemyManager } from '~/composables/useEnemyManager';
 
 // Define o formato básico do vetor de posição 3D
 interface Vector3 {
@@ -19,6 +17,9 @@ interface Vector3 {
  * seguindo as boas práticas do TresJS para evitar overhead reativo.
  */
 export const useCurrentRunStore = defineStore('currentRun', () => {
+  // -- COMPOSABLES
+  const enemyManager = useEnemyManager();
+
   // -- ESTADO DO JOGADOR
   // ✅ ShallowRef: Apenas .value é reativo, mutations internas são ignoradas
   // Objetos internos simples para manipulação direta no game loop
@@ -82,6 +83,10 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     isWaveInProgress.value = false;
     currentHealth.value = initialHealth;
     maxHealth.value = initialHealth;
+    playerPosition.value = { x: 0, y: 0, z: 0 };
+    moveVector.value = { x: 0, y: 0, z: 0 };
+
+    enemyManager.cleanup();
   }
 
   function loadStage(stage: any) {
@@ -137,7 +142,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
     if (currentHealth.value <= 0) {
       console.log('Jogador morreu!');
-      endRun();
+      gameOver('You have been defeated.');
       // Lógica adicional de morte do jogador pode ser adicionada aqui
     }
   }
