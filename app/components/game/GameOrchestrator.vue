@@ -5,6 +5,7 @@ import { useGameDirector } from '~/composables/useGameDirector';
 import { useEnemyManager } from '~/composables/useEnemyManager';
 import { useEnemyAI } from '~/composables/useEnemyAI';
 import { useCurrentRunStore } from '~/stores/currentRunStore';
+import { useProjectileStore } from '~/stores/projectileStore';
 
 /**
  * Funções para controlar o loop de renderização.
@@ -20,6 +21,7 @@ const gameDirector = useGameDirector();
 const enemyManager = useEnemyManager();
 const enemyAI = useEnemyAI();
 const currentRunStore = useCurrentRunStore();
+const projectileStore = useProjectileStore();
 
 /**
  * Função central de atualização do jogo.
@@ -42,6 +44,7 @@ playerControls.update(safeDelta);
 // Lógica de Combate e AI
 enemyManager.update(safeDelta);
 enemyAI.update(safeDelta);
+projectileStore.update(safeDelta);
 // playerCombat.update(safeDelta);
 
 // Gerenciamento de Partida

@@ -20,7 +20,7 @@ export function useEnemyManager() {
     // Status base dos inimigos
     const baseStats = {
       asteroid: { speed: 3, health: 50, onHitDamage: 100 },
-      ufo: { speed: 2, health: 100, onHitDamage: 150, distanceKeep: 10},
+      ufo: { speed: 2, health: 100, onHitDamage: 150, distanceKeep: 10, shotDamage: 1, cooldownTotalShot: 2},
     };
 
     // Spawna inimigos conforme a configuração da wave
@@ -44,6 +44,7 @@ export function useEnemyManager() {
           id: `${enemyType}_${Date.now()}_${i}`,
           type: enemyType,
           position: generateRandomSpawnPosition(),
+          cooldownShot: enemyStats.cooldownTotalShot, // tempo inicial para o inimigo poder atirar
           ...enemyStats,
         };
 

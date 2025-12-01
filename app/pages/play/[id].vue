@@ -55,6 +55,7 @@ onUnmounted(() => {
         <GameDoorManager />
         <GamePlayerCharacter />
         <GameEnemyManager />
+        <GameProjectileManager />
         
         <GameWorld />
         <!-- <OrbitControls /> -->

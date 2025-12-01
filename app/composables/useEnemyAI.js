@@ -2,11 +2,13 @@ import { useEnemyManagerStore } from '~/stores/enemyManagerStore';
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { storeToRefs } from 'pinia';
 import { useEnemyManager } from '~/composables/useEnemyManager';
+import { useProjectileStore, projectilesType } from '~/stores/projectileStore';
 
 export function useEnemyAI() {
     const enemyManager = useEnemyManager();
     const enemyManagerStore = useEnemyManagerStore();
     const currentRunStore = useCurrentRunStore();
+    const projectileStore = useProjectileStore();
     
     const { activeEnemies } = storeToRefs(enemyManagerStore);
     const { playerPosition, isPlaying } = storeToRefs(currentRunStore);
@@ -40,9 +42,45 @@ export function useEnemyAI() {
             const length = Math.sqrt(directionZ * directionZ + directionX * directionX);
             const desiredDistance = enemy.distanceKeep; // Distância que o UFO quer manter do jogador
 
+            // Atualiza o cooldown do tiro - Essa lógica precisa acontecer antes
+            if (enemy.cooldownShot !== undefined) {
+                enemy.cooldownShot -= deltaTime;
+                if (enemy.cooldownShot < 0) {
+                    enemy.cooldownShot = 0;
+                }
+            }
+
+            // Move-se em direção ao jogador se estiver além da distância desejada
             if (length > desiredDistance) {
                 enemy.position.z += (directionZ / length) * enemy.speed * deltaTime;
                 enemy.position.x += (directionX / length) * enemy.speed * deltaTime;
+            } else {
+                // Verifica se o enemy pode atirar
+                if (enemy.cooldownShot === undefined) {
+                    console.log(`Enemy AI: UFO enemy ${enemy.id} missing cooldownShot property`);
+                    return;
+                }
+
+                if (enemy.cooldownShot > 0) {
+                    return;
+                }
+
+                // Atira um projétil em direção ao jogador
+                const directionNorm = {
+                    x: directionX / length,
+                    z: directionZ / length,
+                };
+
+                projectileStore.spawnProjectile(
+                    'ufo',
+                    { ...enemy.position },
+                    directionNorm,
+                    enemy.id,
+                    'enemy',
+                );
+
+                // Reseta o cooldown do tiro
+                enemy.cooldownShot = enemy.cooldownTotalShot;
             }
 
             // detecta colisão com o jogador e dá dano
