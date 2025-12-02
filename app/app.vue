@@ -12,6 +12,8 @@ const tweakpaneStore = useTweakpaneStore();
 const enemyManager = useEnemyManager();
 const currentRunStore = useCurrentRunStore();
 
+currentRunStore.initializePermanentState();
+
 // watchOnce(paneContainer, (newVal) => {
 //   console.log('Pane container changed:', newVal);
 // }, { immediate: true });

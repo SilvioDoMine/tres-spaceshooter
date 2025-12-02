@@ -15,11 +15,11 @@ export const PlayerBaseStats = {
   maxHealth: 250,
   moveSpeed: 5.0, // unidades por segundo
   projectiles: {
-    shotCooldown: 1.25,
-    shotSpeed: 20.0,
+    shotCooldown: 0.25,
+    shotSpeed: 99.0,
     size: 0.2,
     damage: 50,
-    range: 10,
+    range: 30,
   },
   position: { x: 0, y: 0, z: 0 },
   rotation: { x: 0, y: 0, z: 0 },
@@ -36,6 +36,9 @@ export const PlayerBaseStats = {
 export const useCurrentRunStore = defineStore('currentRun', () => {
   // -- COMPOSABLES
   const enemyManager = useEnemyManager();
+
+  // -- ESTADO PERSISTENTE ENTRE PARTIDAS
+  const totalGold = ref(0); // Gold total persistente entre partidas
 
   // -- ESTADO DO JOGADOR
   // ✅ ShallowRef: Apenas .value é reativo, mutations internas são ignoradas
@@ -65,6 +68,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   const isGameOver = computed(() => gameState.value === 'gameover');
   const isVictory = computed(() => gameState.value === 'victory');
   const isInit = computed(() => gameState.value === 'init');
+  const currentExp = ref(0);
+  const currentGold = ref(0);
 
   // -- PROGRESSÃO DE SALAS
   const levelConfig = ref(null); // Configuração do nível atual
@@ -79,6 +84,11 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   const doorSize = ref(null);
   const roomCurrentWaveIndex = ref(0);
   const isWaveInProgress = ref(false);
+
+  function initializePermanentState() {
+    totalGold.value = loadGold();
+    console.log('Permanent state initialized. Total Gold:', totalGold.value);
+  }
 
   function initializeLevel(levelConfiguration: any) {
     levelConfig.value = levelConfiguration;
@@ -106,6 +116,11 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     maxHealth.value = PlayerBaseStats.maxHealth;
     playerPosition.value = { x: 0, y: 0, z: 0 };
     moveVector.value = { x: 0, y: 0, z: 0 };
+    currentMoveSpeed.value = PlayerBaseStats.moveSpeed;
+    shotCooldownTotal.value = PlayerBaseStats.projectiles.shotCooldown;
+    shotCooldown.value = PlayerBaseStats.projectiles.shotCooldown;
+    currentGold.value = 0;
+    currentExp.value = 0;
 
     enemyManager.cleanup();
   }
@@ -140,7 +155,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
       // console.log('Indo para o próximo estágio:', currentStageIndex.value, stage);
       loadStage(stage);
     } else {
-      console.log('Todos os estágios completos! Vitória!');
+      gameVictoryRewards();
       gameVictory();
     }
   }
@@ -220,12 +235,50 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     gameState.value = 'gameover';
   }
 
+  function gameVictoryRewards() {
+    console.log('Calculating victory rewards...');
+
+    saveGold(Number(totalGold.value) + Number(currentGold.value));
+    totalGold.value += currentGold.value;
+  }
+
   function gameVictory(message: string = 'Congratulations! You have won.') {
     console.log('Victory:', message);
+
     gameState.value = 'victory';
   }
 
-  // ... (Outras funções)
+  function loadGold(): number {
+    if (import.meta.server) {
+      return 0;
+    }
+
+    const savedGold = localStorage.getItem('playerGold');
+
+    if (! savedGold) {
+      console.log('No saved gold found, starting at 0.');
+      return 0;
+    }
+
+    return parseInt(savedGold, 10);
+  }
+
+  function saveGold(goldAmount: number) {
+    localStorage.setItem('playerGold', goldAmount.toString());
+  }
+
+  function addGold(amount: number) {
+    currentGold.value += amount;
+    saveGold(currentGold.value);
+  }
+
+  function addExp(amount: number) {
+    currentExp.value += amount;
+  }
+
+  function resetExp() {
+    currentExp.value = 0;
+  }
 
   return {
     playerPosition,
@@ -238,11 +291,15 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     getPlayerPosition,
     getMoveVector,
 
-    takeDamage,
-    currentHealth,
-    maxHealth,
-    shotCooldownTotal,
-    shotCooldown,
+    takeDamage, // Função para o jogador receber dano
+    currentHealth, // Saúde atual do jogador
+    maxHealth, // Saúde máxima do jogador
+    shotCooldownTotal, // Cooldown total do tiro
+    shotCooldown, // Cooldown restante do tiro
+
+    totalGold, // Gold total persistente
+    currentGold, // Gold na partida atual
+    currentExp, // Experiência na partida atual
 
     // Estado do jogo
     gameState,
@@ -277,6 +334,9 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     stageTimer,
     roomCurrentWaveIndex,
     isWaveInProgress,
+
+    // permanent state
+    initializePermanentState,
   };
 });
 

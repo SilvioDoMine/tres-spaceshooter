@@ -9,6 +9,10 @@ export const baseStats = {
     health: 50,
     onHitDamage: 100,
     size: 1.25,
+    drops: {
+      exp: {min: 10, max: 10},
+      gold: {min: 0, max: 10}
+    }
   },
   ufo: {
     color: 'green',
@@ -19,6 +23,10 @@ export const baseStats = {
     distanceKeep: 10,
     shotDamage: 50,
     cooldownTotalShot: 2,
+    drops: {
+      exp: {min: 30, max: 30},
+      gold: {min: 5, max: 15}
+    }
   },
   boss: {
     color: 'hotpink',
@@ -28,7 +36,11 @@ export const baseStats = {
     onHitDamage: 999,
     distanceKeep: 20,
     shotDamage: 200,
-    cooldownTotalShot: 2
+    cooldownTotalShot: 2,
+    drops: {
+      exp: {min: 200, max: 300},
+      gold: {min: 100, max: 200}
+    }
   },
 };
 
@@ -117,6 +129,12 @@ export function useEnemyManager() {
     // Se a saúde do inimigo chegar a zero ou menos, removê-lo
     if (enemy.health <= 0) {
       activeEnemies.value = activeEnemies.value.filter(e => e.id !== enemyId);
+
+      // Drop dos inimigos no chão
+      const minGold = enemy.drops?.gold?.min || 0;
+      const maxGold = enemy.drops?.gold?.max || 0;
+      const goldDropped = Math.floor(Math.random() * (maxGold - minGold + 1)) + minGold;
+      useCurrentRun.currentGold += goldDropped;
     }
   }
 

@@ -24,19 +24,19 @@ export const LEVEL_1 = {
   width: 10,
   height: 20,
   stages: [
-    // {
-    //   stageId: 'S1_Intro',
-    //   type: 'intro',
-    //   width: 10,
-    //   height: 20,
-    //   waves: [],
-    //   devDescription: 'Sala de introdução ao nível, sem inimigos. Basta andar para a próxima sala.',
-    //   door: {
-    //     position: { x: 0, y: 0, z: -9 },
-    //     size: { width: 4, height: 8 },
-    //   },
-    //   playerStartPosition: { x: 0, y: 0, z: 0 },
-    // },
+    {
+      stageId: 'S1_Intro',
+      type: 'intro',
+      width: 10,
+      height: 20,
+      waves: [],
+      devDescription: 'Sala de introdução ao nível, sem inimigos. Basta andar para a próxima sala.',
+      door: {
+        position: { x: 0, y: 0, z: -9 },
+        size: { width: 4, height: 8 },
+      },
+      playerStartPosition: { x: 0, y: 0, z: 0 },
+    },
     {
       stageId: 'S2_Combat_Intro',
       type: 'combat',

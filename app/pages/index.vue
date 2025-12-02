@@ -13,7 +13,6 @@ const currentRunStore = useCurrentRunStore();
 
 function startGame() {
   console.log('Iniciando o jogo...');
-
   currentRunStore.initializeLevel(LEVEL_1);
 }
 </script>
