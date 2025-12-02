@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { exp } from 'three/tsl';
 import { ref, shallowRef } from 'vue';
 import { useEnemyManager } from '~/composables/useEnemyManager';
 
@@ -69,7 +70,10 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   const isVictory = computed(() => gameState.value === 'victory');
   const isInit = computed(() => gameState.value === 'init');
   const currentExp = ref(0);
+  const currentLevel = ref(1);
   const currentGold = ref(0);
+
+  const expToNextLevel = ref(getExpForLevel(currentLevel.value));
 
   // -- PROGRESSÃO DE SALAS
   const levelConfig = ref(null); // Configuração do nível atual
@@ -274,10 +278,31 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
   function addExp(amount: number) {
     currentExp.value += amount;
+
+    while (currentExp.value >= expToNextLevel.value) {
+      levelUp();
+    }
+  }
+
+  function levelUp() {
+    currentLevel.value += 1;
+    currentExp.value = currentExp.value - expToNextLevel.value;
+    expToNextLevel.value = getExpForLevel(currentLevel.value + 1);
+    console.log(`Parabéns! Você alcançou o nível ${currentLevel.value}!`);
+    // Aqui você pode adicionar lógica adicional para recompensas de nível, etc.
   }
 
   function resetExp() {
     currentExp.value = 0;
+  }
+
+  function getExpForLevel(level: number): number {
+    const baseExp = 100;
+    const exponent = 1.5;
+
+    console.log(`Calculating EXP for level ${level}:`, Math.floor(baseExp * Math.pow(level, exponent)));
+
+    return Math.floor(baseExp * Math.pow(level, exponent));
   }
 
   return {
@@ -300,6 +325,10 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     totalGold, // Gold total persistente
     currentGold, // Gold na partida atual
     currentExp, // Experiência na partida atual
+    getExpForLevel, // Função para obter o nível atual do jogador (baseado em EXP)
+    expToNextLevel, // EXP necessária para o próximo nível
+    currentLevel, // Nível atual do jogador (baseado em EXP)
+    addExp, // Função para adicionar EXP
 
     // Estado do jogo
     gameState,

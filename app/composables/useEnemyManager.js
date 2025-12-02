@@ -135,6 +135,11 @@ export function useEnemyManager() {
       const maxGold = enemy.drops?.gold?.max || 0;
       const goldDropped = Math.floor(Math.random() * (maxGold - minGold + 1)) + minGold;
       useCurrentRun.currentGold += goldDropped;
+
+      const minExp = enemy.drops?.exp?.min || 0;
+      const maxExp = enemy.drops?.exp?.max || 0;
+      const expDropped = Math.floor(Math.random() * (maxExp - minExp + 1)) + minExp;
+      useCurrentRun.addExp(expDropped);
     }
   }
 
