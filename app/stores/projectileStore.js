@@ -118,6 +118,9 @@ export const useProjectileStore = defineStore('projectileStore', () => {
     let minDistance = Infinity;
 
     enemyManager.activeEnemies.value.forEach(enemy => {
+      // if enemy is spawning, ignore
+      if (enemy.state === 'spawning') return;
+
       const dist = Math.hypot(
         enemy.position.x - playerPos.x,
         enemy.position.z - playerPos.z
