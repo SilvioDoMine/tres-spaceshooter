@@ -6,7 +6,7 @@ const torusKnotRef = shallowRef<TresObject | null>(null)
 onBeforeRender(({ elapsed }) => {
   if (torusKnotRef.value) {
     torusKnotRef.value.rotation.y = elapsed
-    torusKnotRef.value.rotation.z = elapsed
+    // torusKnotRef.value.rotation.z = elapsed
   }
 })
 </script>
@@ -22,8 +22,14 @@ onBeforeRender(({ elapsed }) => {
     ref="torusKnotRef"
     :position="[0, 2, 0]"
   >
-    <TresTorusKnotGeometry :args="[1, 0.4, 100, 32]" />
-    <TresMeshToonMaterial color="#00dc82" />
+    <Suspense>
+      <Text3D
+        :text="`Gold: ${useCurrentRunStore().totalGold}`"
+        font="/fonts/PoppinsBold.json"
+      >
+        <TresMeshNormalMaterial />
+      </Text3D>
+    </Suspense>
   </TresMesh>
   <TresDirectionalLight
     :position="[0, 2, 4]"
