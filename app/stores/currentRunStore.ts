@@ -287,7 +287,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   function levelUp() {
     currentLevel.value += 1;
     currentExp.value = currentExp.value - expToNextLevel.value;
-    expToNextLevel.value = getExpForLevel(currentLevel.value + 1);
+    expToNextLevel.value = getExpForLevel(currentLevel.value);
     console.log(`Parabéns! Você alcançou o nível ${currentLevel.value}!`);
     // Aqui você pode adicionar lógica adicional para recompensas de nível, etc.
   }
