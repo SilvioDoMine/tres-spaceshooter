@@ -148,8 +148,11 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     console.log('Estágio completo!');
     isStageCompleted.value = true;
     isDoorActive.value = true;
-    // aumenta a velocidade do jogador 3x até ele ir pra próxima sala
-    currentMoveSpeed.value = PlayerBaseStats.moveSpeed * 3;
+
+    // Mesmo se tiver completado, se for uma sala de introdução, mantém a velocidade normal
+    if (currentStage.value.type !== 'intro') {
+      currentMoveSpeed.value = PlayerBaseStats.moveSpeed * 3;
+    }
   }
 
   function nextStage() {
