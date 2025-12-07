@@ -61,6 +61,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   const maxHealth = ref(PlayerBaseStats.maxHealth);
   const currentHealth = ref(PlayerBaseStats.maxHealth);
 
+  const skillRerollCount = ref(1);
+
   // ... (Outros estados como currentHealth, enemiesRemaining, etc.)
   // -- ESTADO DO NÍVEL
   const levelTimer = ref(0); // Tempo decorrido no nível atual
@@ -348,6 +350,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     expToNextLevel, // EXP necessária para o próximo nível
     currentLevel, // Nível atual do jogador (baseado em EXP)
     addExp, // Função para adicionar EXP
+
+    skillRerollCount, // Quantidade de rerolls disponíveis
 
     // Estado do jogo
     gameState,

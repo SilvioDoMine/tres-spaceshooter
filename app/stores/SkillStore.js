@@ -212,6 +212,10 @@ export const useSkillStore = defineStore('SkillStore', () => {
                 }
                 skillCopy.currentLevel = currentlevel;
 
+                // add re-roll quantity
+                skillCopy.reRolls = useCurrentRunStore().skillRerollCount;
+                console.log('Habilidade sorteada com re-rolls:', skillCopy);
+
                 selectedSkills.push(skillCopy);
             }
         }
@@ -225,6 +229,7 @@ export const useSkillStore = defineStore('SkillStore', () => {
     }
 
     function refreshSkill(skill) {
+
         // Index é a posição da skill a ser atualizada
         const index = skillOptions.value.findIndex(s => s.id === skill.id);
 
@@ -235,8 +240,14 @@ export const useSkillStore = defineStore('SkillStore', () => {
 
             if (! newSkill || newSkill.length === 0) {
                 console.log('Não foi possível sortear uma nova skill para refresh.');
+                skill.reRolls -= 1;
+                skillOptions.value.splice(index, 1, skill);
                 return;
             }
+
+            newSkill[0].reRolls = skill.reRolls - 1;
+
+            console.log('Skill atualizada:', newSkill[0]);
 
             skillOptions.value.splice(index, 1, newSkill[0]);
         }
@@ -256,6 +267,13 @@ export const useSkillStore = defineStore('SkillStore', () => {
 
         // Limpa as opções de skills
         skillOptions.value = [];
+    }
+
+    // Finish Implementing Rerolls
+    function playerCanReroll(skill) {
+        const rerollCount = useCurrentRunStore().skillRerollCount.value;
+
+        return skill.reRolls > 0;
     }
 
     return {
