@@ -66,6 +66,7 @@ onUnmounted(() => {
     <GamePauseModal />
     <GameOverModal />
     <GameVictoryModal />
+    <GameSkillSelectModal />
 
     <!-- Leches -->
     <!-- <TresLeches /> -->

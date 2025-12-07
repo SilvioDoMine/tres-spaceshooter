@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
-import { exp } from 'three/tsl';
 import { ref, shallowRef } from 'vue';
 import { useEnemyManager } from '~/composables/useEnemyManager';
+import { useSkillStore } from '~/stores/SkillStore';
 
 // Define o formato básico do vetor de posição 3D
 interface Vector3 {
@@ -37,6 +37,7 @@ export const PlayerBaseStats = {
 export const useCurrentRunStore = defineStore('currentRun', () => {
   // -- COMPOSABLES
   const enemyManager = useEnemyManager();
+  const skillStore = useSkillStore();
 
   // -- ESTADO PERSISTENTE ENTRE PARTIDAS
   const totalGold = ref(0); // Gold total persistente entre partidas
@@ -63,7 +64,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   // ... (Outros estados como currentHealth, enemiesRemaining, etc.)
   // -- ESTADO DO NÍVEL
   const levelTimer = ref(0); // Tempo decorrido no nível atual
-  const gameState = ref('init'); // 'init', 'playing', 'paused', 'gameover', 'victory'.
+  const gameState = ref('init'); // 'init', 'playing', 'paused', 'gameover', 'victory'
   const isPlaying = computed(() => gameState.value === 'playing');
   const isPaused = computed(() => gameState.value === 'paused');
   const isGameOver = computed(() => gameState.value === 'gameover');
@@ -89,6 +90,9 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   const roomCurrentWaveIndex = ref(0);
   const isWaveInProgress = ref(false);
 
+  // -- MENU DE PAUSA
+  const menuPauseState = ref('closed'); // 'closed', 'general', 'settings', etc.
+
   function initializePermanentState() {
     totalGold.value = loadGold();
     console.log('Permanent state initialized. Total Gold:', totalGold.value);
@@ -103,6 +107,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   }
 
   function endRun() {
+    // import inside here projectilestore and use it the cleanup because of circular dependency issues
+
     console.log('Encerrando a partida atual.');
     // Resetar todos os estados relacionados à partida
     levelConfig.value = null;
@@ -142,6 +148,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     isWaveInProgress.value = false;
     roomCurrentWaveIndex.value = 0;
     currentMoveSpeed.value = PlayerBaseStats.moveSpeed;
+    menuPauseState.value = 'closed';
   }
 
   function completeStage() {
@@ -225,14 +232,15 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   }
 
   function gamePause() {
-    console.log(isPlaying.value);
     if (isPlaying.value) {
       gameState.value = 'paused';
+      menuPauseState.value = 'general';
     }
   }
 
   function gameResume() {
     if (isPaused.value) {
+      menuPauseState.value = 'closed';
       gameState.value = 'playing';
     }
   }
@@ -253,6 +261,11 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     console.log('Victory:', message);
 
     gameState.value = 'victory';
+  }
+
+  function gameLevelSelect() {
+    gameState.value = 'paused';
+    skillStore.startSkillSelection();
   }
 
   function loadGold(): number {
@@ -293,6 +306,9 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     expToNextLevel.value = getExpForLevel(currentLevel.value);
     console.log(`Parabéns! Você alcançou o nível ${currentLevel.value}!`);
     // Aqui você pode adicionar lógica adicional para recompensas de nível, etc.
+
+    // Abre o modal de level up
+    gameLevelSelect();
   }
 
   function resetExp() {
@@ -345,6 +361,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     gameResume,
     gameOver,
     gameVictory,
+    gameLevelSelect,
 
     // Portas
     doorPosition,
@@ -366,6 +383,9 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     stageTimer,
     roomCurrentWaveIndex,
     isWaveInProgress,
+
+    // Pause menu
+    menuPauseState,
 
     // permanent state
     initializePermanentState,

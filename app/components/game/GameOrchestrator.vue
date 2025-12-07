@@ -22,6 +22,7 @@ const enemyManager = useEnemyManager();
 const enemyAI = useEnemyAI();
 const currentRunStore = useCurrentRunStore();
 const projectileStore = useProjectileStore();
+const skillStore = useSkillStore();
 
 /**
  * Função central de atualização do jogo.
@@ -31,6 +32,8 @@ const projectileStore = useProjectileStore();
 const gameTick = ({ delta }: { delta: number }) => {
 // Evita cálculos excessivos se o delta for muito grande (e.g., aba inativa)
 const safeDelta = Math.min(delta, 0.1); 
+
+skillStore.update(safeDelta);
 
 if (! currentRunStore.isPlaying ) {
     return;
