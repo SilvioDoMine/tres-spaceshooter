@@ -256,11 +256,16 @@ export const useSkillStore = defineStore('SkillStore', () => {
     function selectSkill(skill) {
         let currentSkill = skill;
         skill.currentLevel += 1;
-        
-        console.log('Skill selecionada:', currentSkill);
 
-        // Adiciona a skill selecionada às skills atuais do jogador
-        currentSkills.value.push(skill);
+        // Se já existe a skill, apenas atualiza o nível
+        const existingSkillIndex = currentSkills.value.findIndex(s => s.id === skill.id);
+
+        if (existingSkillIndex !== -1) {
+            currentSkills.value[existingSkillIndex].currentLevel += 1;
+        } else {
+            // Adiciona a nova skill ao array de skills atuais
+            currentSkills.value.push(skill);   
+        }
 
         // Fecha o modal de seleção de skills
         isModalOpen.value = false;
