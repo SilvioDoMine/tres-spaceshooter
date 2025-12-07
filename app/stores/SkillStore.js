@@ -254,7 +254,6 @@ export const useSkillStore = defineStore('SkillStore', () => {
     }
 
     function selectSkill(skill) {
-        let currentSkill = skill;
         skill.currentLevel += 1;
 
         // Se já existe a skill, apenas atualiza o nível
