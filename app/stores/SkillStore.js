@@ -206,10 +206,11 @@ export const useSkillStore = defineStore('SkillStore', () => {
 
     function cleanup() {
         // Lógica de limpeza das skills, se necessário
-        isModalOpen.value = false;
-        skillOptions.value = [];
-        isUpgrading.value = false;
-        upgradeQueueCount.value = 0;
+        isModalOpen.value = false; // Fecha o modal de seleção de skills
+        skillOptions.value = []; // Reseta as opções de skills
+        isUpgrading.value = false; // Reseta o estado de atualização
+        upgradeQueueCount.value = 0; // Reseta a fila de upgrades
+        currentSkills.value = []; // Reseta as skills atuais
     }
 
     /**

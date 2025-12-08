@@ -6,6 +6,8 @@ import { useEnemyManager } from '~/composables/useEnemyManager';
 import { useEnemyAI } from '~/composables/useEnemyAI';
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { useProjectileStore } from '~/stores/projectileStore';
+import { useSkillStore } from '~/stores/SkillStore';
+import { usePlayerStats } from '~/stores/playerStats';
 
 /**
  * Funções para controlar o loop de renderização.
@@ -23,6 +25,7 @@ const enemyAI = useEnemyAI();
 const currentRunStore = useCurrentRunStore();
 const projectileStore = useProjectileStore();
 const skillStore = useSkillStore();
+const playerStats = usePlayerStats();
 
 /**
  * Função central de atualização do jogo.
@@ -34,6 +37,7 @@ const gameTick = ({ delta }: { delta: number }) => {
 const safeDelta = Math.min(delta, 0.1); 
 
 skillStore.update(safeDelta);
+playerStats.update(safeDelta);
 
 if (! currentRunStore.isPlaying ) {
     return;

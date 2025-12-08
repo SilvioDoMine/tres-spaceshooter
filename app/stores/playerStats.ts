@@ -1,34 +1,43 @@
+import { useSkillStore } from "~/stores/SkillStore";
+
 /**
  * Atributos permanentes (Dano, Vida)
 */
-export function usePlayerCombat() {
-  // const currentRun = useCurrentRunStore();
-  // const playerStats = usePlayerStatsStore();
+export const usePlayerStats = defineStore('playerStats', () => {
+  const skillStore = useSkillStore();
 
-  const update = (delta: number) => {
-    // // 1. Lógica de Cooldown de Ataque
-    // currentRun.timeToNextAttack -= delta; // timeToNextAttack é um valor reativo em Pinia
+  function update (delta: number) {
+    // Atualizações contínuas dos atributos do jogador, se necessário
+    // Exemplo: Regeneração de vida ao longo do tempo, buffs temporários, etc.
+  };
 
-    // if (currentRun.timeToNextAttack <= 0) {
-    //   // 2. Executa Ataque
-    //   performAttack();
-      
-    //   // 3. Reseta Cooldown (com base em stats de playerStats/currentRun)
-    //   currentRun.timeToNextAttack = playerStats.baseAttackRate / (1 + currentRun.attackSpeedBonus);
-    // }
-  };
-  
-  const performAttack = () => {
-    // Lógica completa de tiro (Passo 1-3 do seu Fluxo de Lógica)
-    
-    // ... Calcular dano final, aplicar upgrades
-    
-    // Exemplo: Criar um projétil no sistema de Renderização
-    // useProjectileSystem().spawnProjectile(finalConfig); 
-  };
-  
+  function getDamageMultiplier(): number {
+    let damageMultiplier = 1.0;
+
+    // No futuro mudar por efeitos de skills
+    skillStore.currentSkills.forEach((skill: any) => {
+      if (skill.id === 'damage_percentage') {
+        const skillLevel = skill.levels[skill.currentLevel];
+
+        if (! skillLevel) {
+          throw new Error(`Skill level ${skill.currentLevel} not found for skill ${skill.id}`);
+        }
+
+        const multiplier = skillLevel.value;
+        damageMultiplier += damageMultiplier * multiplier;
+      }
+    });
+
+    return damageMultiplier;
+  }
+
   return {
     update, // Essencial para ser chamado pelo useGameLoop
-    performAttack,
+
+    getDamageMultiplier,
   };
+});
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(usePlayerStats, import.meta.hot));
 }

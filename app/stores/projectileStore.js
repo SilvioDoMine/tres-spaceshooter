@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, shallowRef } from 'vue';
 import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
 import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
+import { usePlayerStats } from '~/stores/playerStats';
 
 export const projectilesType = {
   player: {
@@ -30,6 +31,7 @@ export const projectilesType = {
 export const useProjectileStore = defineStore('projectileStore', () => {
   const enemyManager = useEnemyManager();
   const currentRunStore = useCurrentRunStore();
+  const playerStats = usePlayerStats();
 
   const projectiles = ref([]);
 
@@ -64,7 +66,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
               1 // threshold de colisão - AINDA chumbado porque o tamanho dos inimigos não está definido
             )
           ) {
-            enemyManager.takeDamage(enemy.id, projectile.damage);
+            enemyManager.takeDamage(enemy.id, projectile.damage * playerStats.getDamageMultiplier());
             projectiles.value.splice(pIndex, 1); // Remove o projétil
           }
         });
