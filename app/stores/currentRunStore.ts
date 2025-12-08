@@ -127,6 +127,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     currentHealth.value = PlayerBaseStats.maxHealth;
     maxHealth.value = PlayerBaseStats.maxHealth;
     playerPosition.value = { x: 0, y: 0, z: 0 };
+    playerRotation.value = { x: 0, y: 0, z: 0 };
     moveVector.value = { x: 0, y: 0, z: 0 };
     currentMoveSpeed.value = PlayerBaseStats.moveSpeed;
     shotCooldownTotal.value = PlayerBaseStats.projectiles.shotCooldown;
