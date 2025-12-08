@@ -180,16 +180,16 @@ export const useSkillStore = defineStore('SkillStore', () => {
     function update(safeDelta) {
       // Lógica de atualização das skills, se necessário
       if (isUpgrading.value) {
-          console.log('Atualização de skill em progresso...', upgradeQueueCount.value);
+          // console.log('Atualização de skill em progresso...', upgradeQueueCount.value);
           return;
       }
 
       if (upgradeQueueCount.value <= 0) {
-        console.log('Nenhuma atualização de skill pendente.');
+        // console.log('Nenhuma atualização de skill pendente.');
         return;
       }
 
-      console.log('Iniciando atualização de skill...', upgradeQueueCount.value);
+      // console.log('Iniciando atualização de skill...', upgradeQueueCount.value);
 
       // Processa uma skill da fila
       upgradeQueueCount.value -= 1;
@@ -197,7 +197,7 @@ export const useSkillStore = defineStore('SkillStore', () => {
       isModalOpen.value = true;
       isUpgrading.value = true;
 
-      console.log('Modal de seleção de skill aberto.');
+      // console.log('Modal de seleção de skill aberto.');
 
       useCurrentRunStore().gameState = 'paused';
 
