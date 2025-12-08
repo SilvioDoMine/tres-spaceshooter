@@ -1,4 +1,28 @@
 export const SkillsList ={
+  flat_gold: {
+    id: 'flat_gold',
+    name: 'Ouro Bônus',
+    description: 'Concede uma quantidade fixa de ouro caso complete a fase.',
+    icon: '💰',
+    rarity: 'poor',
+    levels: {
+      1: { value: 100, description: '+100 de ouro' },
+      2: { value: 200, description: '+100 de ouro' },
+      3: { value: 300, description: '+100 de ouro' },
+      4: { value: 400, description: '+100 de ouro' },
+      5: { value: 500, description: '+100 de ouro' },
+      6: { value: 600, description: '+100 de ouro' },
+      7: { value: 700, description: '+100 de ouro' },
+      8: { value: 800, description: '+100 de ouro' },
+      9: { value: 900, description: '+100 de ouro' },
+      10: { value: 1000, description: '+100 de ouro' },
+      11: { value: 1100, description: '+100 de ouro' },
+      12: { value: 1200, description: '+100 de ouro' },
+      13: { value: 1300, description: '+100 de ouro' },
+      14: { value: 1400, description: '+100 de ouro' },
+      15: { value: 1500, description: '+100 de ouro' },
+    }
+  },
   damage_percentage: {
     id: 'damage_percentage',
     name: 'Dano Aumentado',
@@ -149,8 +173,35 @@ export const useSkillStore = defineStore('SkillStore', () => {
     // Armazena as skills atualmente ativas no jogador
     const currentSkills = ref([]);
 
+    // Fila de atualização das skills
+    const upgradeQueueCount = ref(0);
+    const isUpgrading = ref(false);
+
     function update(safeDelta) {
-        // Lógica de atualização das skills, se necessário
+      // Lógica de atualização das skills, se necessário
+      if (isUpgrading.value) {
+          console.log('Atualização de skill em progresso...', upgradeQueueCount.value);
+          return;
+      }
+
+      if (upgradeQueueCount.value <= 0) {
+        console.log('Nenhuma atualização de skill pendente.');
+        return;
+      }
+
+      console.log('Iniciando atualização de skill...', upgradeQueueCount.value);
+
+      // Processa uma skill da fila
+      upgradeQueueCount.value -= 1;
+      skillOptions.value = skillSelectRandom();
+      isModalOpen.value = true;
+      isUpgrading.value = true;
+
+      console.log('Modal de seleção de skill aberto.');
+
+      useCurrentRunStore().gameState = 'paused';
+
+      // startSkillSelection();
     }
 
     function cleanup() {
@@ -173,7 +224,11 @@ export const useSkillStore = defineStore('SkillStore', () => {
         let rarities = ['common', 'rare', 'epic', 'legendary'];
 
         if (rarity) {
+          if (Array.isArray(rarity)) {
+            rarities = rarity;
+          } else {
             rarities = [rarity];
+          }
         }
 
         let rarityPool = rarities;
@@ -184,15 +239,52 @@ export const useSkillStore = defineStore('SkillStore', () => {
         }
 
         let availableSkills = allSkills.filter((skill) => {
+            // check current skill levels to avoid maxed out skills
+            const currentSkill = currentSkills.value.find(s => s.id === skill.id);
+
+            let isMaxedOut = false;
+
+            if (currentSkill) {
+                console.log('Current Skill Level for', skill.id, ':', currentSkill.currentLevel, 'Max Level:', Object.keys(skill.levels).length);
+                isMaxedOut = currentSkill.currentLevel >= Object.keys(skill.levels).length;
+            }
+
+            console.log(
+              'rarityPool:', rarityPool,
+              'skill.rarity:', skill.rarity,
+              'Rarity Includes', rarityPool.includes(skill.rarity),
+              'Already Selected', skillOptions.value.some(s => s.id === skill.id),
+              'Is Maxed Out', isMaxedOut
+            );
+
             return rarityPool.includes(skill.rarity)
-                && !skillOptions.value.some(s => s.id === skill.id);
+                && !skillOptions.value.some(s => s.id === skill.id)
+                && !isMaxedOut;
         });
 
-        if (availableSkills.length < qty) {
-            qty = availableSkills.length;
+        console.log('Skills disponíveis para seleção:', availableSkills);
+
+        let newQty = qty;
+
+        if (availableSkills.length < newQty) {
+            newQty = availableSkills.length;
         }
 
-        while (selectedSkills.length < qty) {
+        // check if all skills from rarityPool are maxed out
+        if (availableSkills.length === 0) {
+            console.log('Todas as skills da raridade selecionada estão no nível máximo ou não há skills disponíveis.', rarityPool);
+            // call itself with removing current rarityPool rarity
+            const newRarityPool = rarities.filter(r => !rarityPool.includes(r));
+            if (newRarityPool.length === 0) {
+                console.log('Nenhuma skill disponível para seleção.');
+                return [];
+            }
+
+            console.log('Tentando nova raridade:', qty, newRarityPool);
+            return skillSelectRandom(qty, true, newRarityPool);
+        }
+
+        while (selectedSkills.length < newQty) {
             const randomSkill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
 
             // check if exists in selectedSkills already
@@ -224,8 +316,7 @@ export const useSkillStore = defineStore('SkillStore', () => {
     }
 
     function startSkillSelection() {
-        skillOptions.value = skillSelectRandom();
-        isModalOpen.value = true;
+      upgradeQueueCount.value += 1;
     }
 
     function refreshSkill(skill) {
@@ -268,6 +359,7 @@ export const useSkillStore = defineStore('SkillStore', () => {
 
         // Fecha o modal de seleção de skills
         isModalOpen.value = false;
+        isUpgrading.value = false;
 
         // Limpa as opções de skills
         skillOptions.value = [];
@@ -292,6 +384,11 @@ export const useSkillStore = defineStore('SkillStore', () => {
         isModalOpen,
         refreshSkill,
         selectSkill,
+        
+        // Queue
+        upgradeQueueCount,
+        isUpgrading,
+        
 
         // Player skills
         currentSkills,
