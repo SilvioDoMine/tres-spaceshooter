@@ -277,7 +277,10 @@ export const useSkillStore = defineStore('SkillStore', () => {
             const newRarityPool = rarities.filter(r => !rarityPool.includes(r));
             if (newRarityPool.length === 0) {
                 console.log('Nenhuma skill disponível para seleção.');
-                return [];
+
+                // Retorna todas as skills de rarity poor como fallback
+                // Aqui tem uma chance de dar loop infinito se não tiver skills poor disponíveis
+                return skillSelectRandom(qty, true, ['poor']);
             }
 
             console.log('Tentando nova raridade:', qty, newRarityPool);
