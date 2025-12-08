@@ -206,6 +206,10 @@ export const useSkillStore = defineStore('SkillStore', () => {
 
     function cleanup() {
         // Lógica de limpeza das skills, se necessário
+        isModalOpen.value = false;
+        skillOptions.value = [];
+        isUpgrading.value = false;
+        upgradeQueueCount.value = 0;
     }
 
     /**

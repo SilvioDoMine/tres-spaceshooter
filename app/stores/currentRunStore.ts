@@ -133,8 +133,14 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     shotCooldown.value = PlayerBaseStats.projectiles.shotCooldown;
     currentGold.value = 0;
     currentExp.value = 0;
+    currentLevel.value = 1;
+    expToNextLevel.value = getExpForLevel(currentLevel.value);
+    skillRerollCount.value = 1;
+    gameState.value = 'init';
+    menuPauseState.value = 'closed';
 
     enemyManager.cleanup();
+    skillStore.cleanup();
   }
 
   function loadStage(stage: any) {
