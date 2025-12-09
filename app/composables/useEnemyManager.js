@@ -10,7 +10,7 @@ export const baseStats = {
     onHitDamage: 100,
     size: 1.25,
     drops: {
-      exp: {min: 10, max: 10},
+      exp: {min: 10, max: 30},
       gold: {min: 0, max: 10}
     }
   },
@@ -24,19 +24,33 @@ export const baseStats = {
     shotDamage: 50,
     cooldownTotalShot: 2,
     drops: {
-      exp: {min: 30, max: 30},
+      exp: {min: 30, max: 150},
       gold: {min: 5, max: 15}
+    }
+  },
+  miniboss: {
+    color: 'green',
+    size: 3,
+    speed: 1.1,
+    health: 200,
+    onHitDamage: 999,
+    distanceKeep: 20,
+    shotDamage: 200,
+    cooldownTotalShot: 2,
+    drops: {
+      exp: {min: 0, max: 0},
+      gold: {min: 100, max: 200}
     }
   },
   boss: {
     color: 'hotpink',
     size: 3,
-    speed: 1,
+    speed: 1.1,
     health: 400,
     onHitDamage: 999,
     distanceKeep: 20,
-    shotDamage: 200,
-    cooldownTotalShot: 2,
+    shotDamage: 300,
+    cooldownTotalShot: 1,
     drops: {
       exp: {min: 0, max: 0},
       gold: {min: 100, max: 200}
@@ -90,7 +104,7 @@ export function useEnemyManager() {
 
         // Crio um novo inimigo com posição aleatória
         const newEnemy = {
-          id: `${enemyType}_${Date.now()}_${i}`,
+          id: `${enemyType}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${i}`,
           type: enemyType,
           position: generateRandomSpawnPosition(),
           cooldownShot: enemyStats.cooldownTotalShot, // tempo inicial para o inimigo poder atirar

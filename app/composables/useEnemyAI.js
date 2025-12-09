@@ -139,6 +139,53 @@ export function useEnemyAI() {
             // Reseta o cooldown do tiro
             enemy.cooldownShot = enemy.cooldownTotalShot;
         },
+        miniboss: (enemy, deltaTime) => {
+            // Comportamento do boss: Move-se lentamente em direção ao jogador e atira frequentemente
+            const directionZ = playerPosition.value.z - enemy.position.z;
+            const directionX = playerPosition.value.x - enemy.position.x;
+            const length = Math.sqrt(directionZ * directionZ + directionX * directionX);
+
+            // Atualiza o cooldown do tiro
+            if (enemy.cooldownShot !== undefined) {
+                enemy.cooldownShot -= deltaTime;
+                if (enemy.cooldownShot < 0) {
+                    enemy.cooldownShot = 0;
+                }
+            }
+
+            // Move-se em direção ao jogador
+            if (length > 1) {
+                enemy.position.z += (directionZ / length) * enemy.speed * deltaTime;
+                enemy.position.x += (directionX / length) * enemy.speed * deltaTime;
+            }
+
+            // Verifica se o boss pode atirar
+            if (enemy.cooldownShot === undefined) {
+                console.log(`Enemy AI: Boss enemy ${enemy.id} missing cooldownShot property`);
+                return;
+            }
+
+            if (enemy.cooldownShot > 0) {
+                return;
+            }
+
+            // Atira um projétil em direção ao jogador
+            const directionNorm = {
+                x: directionX / length,
+                z: directionZ / length,
+            };
+
+            projectileStore.spawnProjectile(
+                'miniboss',
+                { ...enemy.position },
+                directionNorm,
+                enemy.id,
+                'enemy',
+            );
+
+            // Reseta o cooldown do tiro
+            enemy.cooldownShot = enemy.cooldownTotalShot;
+        },
     }
 
     const update = (deltaTime) => {

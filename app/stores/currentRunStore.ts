@@ -16,11 +16,11 @@ export const PlayerBaseStats = {
   maxHealth: 250,
   moveSpeed: 5.0, // unidades por segundo
   projectiles: {
-    shotCooldown: 0.25,
-    shotSpeed: 99.0,
+    shotCooldown: 1.25,
+    shotSpeed: 50.0,
     size: 0.2,
     damage: 50,
-    range: 30,
+    range: 8,
   },
   position: { x: 0, y: 0, z: 0 },
   rotation: { x: 0, y: 0, z: 0 },
