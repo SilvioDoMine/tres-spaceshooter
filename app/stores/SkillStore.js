@@ -30,11 +30,11 @@ export const SkillsList ={
     icon: '⚔️',
     rarity: 'common',
     levels: {
-      1: { value: 0.4, description: '+40% de dano' }, // +40% dano
-      2: { value: 0.6, description: '+60% de dano' }, // +60% dano
-      3: { value: 0.8, description: '+80% de dano' }, // +80% dano
-      4: { value: 1.2, description: '+120% de dano' }, // +120% dano
-      5: { value: 2.0, description: '+200% de dano' }, // +200% dano
+      1: { value: 0.5, description: '+50% de dano base' }, // +50% dano
+      2: { value: 1.0, description: '+50% de dano base' }, // +60% dano
+      3: { value: 1.5, description: '+50% de dano base' }, // +150% dano
+      4: { value: 2.0, description: '+50% de dano base' }, // +200% dano
+      5: { value: 3.0, description: '+100% de dano base' }, // +300% dano
     }
   },
   health_percentage: {
@@ -44,11 +44,11 @@ export const SkillsList ={
     icon: '❤️',
     rarity: 'common',
     levels: {
-      1: { value: 0.4, description: '+40% de vida máxima' }, // +40% vida - valor base pré estacada
-      2: { value: 0.5, description: '+50% de vida máxima' }, // +50% vida - (valor base + 40%) + 50% = +90%
-      3: { value: 0.6, description: '+60% de vida máxima' }, // +60% vida - (valor base + 90%) + 60% = +150%
-      4: { value: 0.7, description: '+70% de vida máxima' }, // +70% vida - (valor base + 150%) + 70% = +220%
-      5: { value: 0.8, description: '+80% de vida máxima' }, // +80% vida - (valor base + 220%) + 80% = +300%
+      1: { value: 0.4, description: '+40% de vida máxima base' }, // +40% vida - valor base pré estacada
+      2: { value: 0.9, description: '+50% de vida máxima base' }, // +50% vida - (valor base + 40%) + 50% = +90%
+      3: { value: 1.5, description: '+60% de vida máxima base' }, // +60% vida - (valor base + 90%) + 60% = +150%
+      4: { value: 2.2, description: '+70% de vida máxima base' }, // +70% vida - (valor base + 150%) + 70% = +220%
+      5: { value: 3.0, description: '+80% de vida máxima base' }, // +80% vida - (valor base + 220%) + 80% = +300%
     }
   },
   health_regeneration: {

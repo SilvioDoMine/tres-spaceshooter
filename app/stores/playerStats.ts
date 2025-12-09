@@ -31,10 +31,30 @@ export const usePlayerStats = defineStore('playerStats', () => {
     return damageMultiplier;
   }
 
+  function getHealthMultiplier(): number {
+    let healthMultiplier = 1.0;
+
+    skillStore.currentSkills.forEach((skill: any) => {
+      if (skill.id === 'health_percentage') {
+        const skillLevel = skill.levels[skill.currentLevel];
+
+        if (! skillLevel) {
+          throw new Error(`Skill level ${skill.currentLevel} not found for skill ${skill.id}`);
+        }
+
+        const multiplier = skillLevel.value;
+        healthMultiplier += healthMultiplier * multiplier;
+      }
+    });
+
+    return healthMultiplier;
+  }
+
   return {
     update, // Essencial para ser chamado pelo useGameLoop
 
     getDamageMultiplier,
+    getHealthMultiplier,
   };
 });
 
