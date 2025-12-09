@@ -25,6 +25,13 @@ export const projectilesType = {
     size: 0.5,
     range: 20,
     color: baseStats.boss.color,
+  },
+  miniboss: {
+    speed: 12,
+    damage: 200,
+    size: 0.5,
+    range: 20,
+    color: baseStats.miniboss.color,
   }
 };
 
