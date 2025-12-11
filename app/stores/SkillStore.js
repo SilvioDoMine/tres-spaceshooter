@@ -226,7 +226,12 @@ export const useSkillStore = defineStore('SkillStore', () => {
     function skillSelectRandom(qty = 3, sameRarity = true, rarity = null) {
         const allSkills = Object.values(SkillsList);
         let selectedSkills = [];
-        let rarities = ['common', 'rare', 'epic', 'legendary'];
+        let rarities = [
+          'common',
+          'rare',
+          'epic',
+          'legendary'
+        ];
 
         if (rarity) {
           if (Array.isArray(rarity)) {
@@ -408,6 +413,10 @@ export const useSkillStore = defineStore('SkillStore', () => {
         return skill.reRolls > 0;
     }
 
+    function hasSkill(skillId) {
+        return currentSkills.value.some(skill => skill.id === skillId && skill.currentLevel > 0);
+    }
+
     return {
         update,
         cleanup,
@@ -428,6 +437,7 @@ export const useSkillStore = defineStore('SkillStore', () => {
 
         // Player skills
         currentSkills,
+        hasSkill,
     };
 });
 

@@ -198,6 +198,58 @@ export function usePlayerControls() {
               'player',
             );
 
+            // Se tem a skill de tiro traseiro, atira pra trás também
+            const { hasSkill } = useSkillStore();
+
+            if (hasSkill('back_shot')) {
+              const backDirection = {
+                x: -direction.x,
+                y: 0,
+                z: -direction.z
+              };
+
+              projectileStore.spawnProjectile(
+                'player', // type
+                { x: position.x, y: position.y, z: position.z }, // position
+                backDirection, // direção normalizada
+                'player',
+                'player',
+              );
+            }
+
+            if (hasSkill('diagonal_shot')) {
+              // Tiro em cone diagonal na frente do player
+              const angleOffset = Math.PI / 12; // 15 graus em radianos
+
+              const leftDirection = {
+                x: direction.x * Math.cos(angleOffset) - direction.z * Math.sin(angleOffset),
+                y: 0,
+                z: direction.x * Math.sin(angleOffset) + direction.z * Math.cos(angleOffset)
+              };
+
+              const rightDirection = {
+                x: direction.x * Math.cos(-angleOffset) - direction.z * Math.sin(-angleOffset),
+                y: 0,
+                z: direction.x * Math.sin(-angleOffset) + direction.z * Math.cos(-angleOffset)
+              };
+
+              projectileStore.spawnProjectile(
+                'player',
+                { x: position.x, y: position.y, z: position.z },
+                leftDirection,
+                'player',
+                'player',
+              );
+
+              projectileStore.spawnProjectile(
+                'player',
+                { x: position.x, y: position.y, z: position.z },
+                rightDirection,
+                'player',
+                'player',
+              );
+            }
+
             // Reseta o cooldown do tiro
             currentRun.shotCooldown = currentRun.shotCooldownTotal;
           }
