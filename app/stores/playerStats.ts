@@ -89,6 +89,44 @@ export const usePlayerStats = defineStore('playerStats', () => {
     return healthMultiplier;
   });
 
+  const getSpeedMultiplier = computed((): number => {
+    let speedMultiplier = 1.0;
+
+    skillStore.currentSkills.forEach((skill: any) => {
+      if (skill.id === 'general_speed') {
+        const skillLevel = skill.levels[skill.currentLevel];
+
+        if (! skillLevel) {
+          throw new Error(`Skill level ${skill.currentLevel} not found for skill ${skill.id}`);
+        }
+
+        const multiplier = skillLevel.value;
+        speedMultiplier += speedMultiplier * multiplier;
+      }
+    });
+
+    return speedMultiplier;
+  });
+
+  const getProjectileSpeedMultiplier = computed((): number => {
+    let projectileSpeedMultiplier = 1.0;
+
+    skillStore.currentSkills.forEach((skill: any) => {
+      if (skill.id === 'general_speed') {
+        const skillLevel = skill.levels[skill.currentLevel];
+
+        if (! skillLevel) {
+          throw new Error(`Skill level ${skill.currentLevel} not found for skill ${skill.id}`);
+        }
+
+        const multiplier = skillLevel.value;
+        projectileSpeedMultiplier += projectileSpeedMultiplier * multiplier;
+      }
+    });
+
+    return projectileSpeedMultiplier;
+  });
+
   function addRegenRate(amount: number) {
     regenRate.value += amount;
   }
@@ -124,6 +162,8 @@ export const usePlayerStats = defineStore('playerStats', () => {
     getDamageMultiplier,
     getHealthMultiplier,
     getRegenRate,
+    getSpeedMultiplier,
+    getProjectileSpeedMultiplier,
   };
 });
 

@@ -48,7 +48,13 @@ export const useProjectileStore = defineStore('projectileStore', () => {
 
     projectiles.value.forEach((projectile, index) => {
       // Move o projétil na direção especificada
-      const distance = projectile.speed * deltaTime;
+      let distance = projectile.speed * deltaTime;
+
+      // If if player projectile, apply projectile speed multiplier
+      if (projectile.ownerType === 'player') {
+        distance *= playerStats.getProjectileSpeedMultiplier;
+      }
+
       projectile.position.x += projectile.direction.x * distance;
       projectile.position.z += projectile.direction.z * distance;
       projectile.distanceTraveled += distance;

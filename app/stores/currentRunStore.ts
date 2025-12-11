@@ -247,6 +247,10 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     }
   }
 
+  function setMoveSpeed(newMoveSpeed: number) {
+    currentMoveSpeed.value = newMoveSpeed;
+  }
+
   function gameStart(levelConfiguration: any) {
     endRun(); // Reseta qualquer estado de jogo anterior
 
@@ -358,6 +362,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     setMoveVector,
     getPlayerPosition,
     getMoveVector,
+    setMoveSpeed,
 
     takeDamage, // Função para o jogador receber dano
     healPlayer, // Função para curar o jogador

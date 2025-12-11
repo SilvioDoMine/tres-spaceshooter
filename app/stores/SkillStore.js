@@ -384,6 +384,12 @@ export const useSkillStore = defineStore('SkillStore', () => {
           usePlayerStats().addRegenRate(regenAmount * 100); // Converter para porcentagem
           console.log(`Aumentada a regeneração de vida em ${regenAmount * 100}% por segundo.`);
           break;
+        case 'general_speed':
+          console.log('Aplicando aumento de velocidade geral da skill.');
+          const speedIncrease = skill.levels[skill.currentLevel].value;
+          useCurrentRunStore().setMoveSpeed(PlayerBaseStats.moveSpeed * usePlayerStats().getSpeedMultiplier);
+          console.log(`Aumentada a velocidade do jogador em ${speedIncrease * 100}%.`);
+          break;
         case 'flat_gold':
           const goldAmount = skill.levels[skill.currentLevel].value;
           console.log(`Concedido ${goldAmount} de ouro ao jogador pela skill Flat Gold.`);
