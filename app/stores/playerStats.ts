@@ -7,6 +7,9 @@ import { useCurrentRunStore } from "~/stores/currentRunStore";
 export const usePlayerStats = defineStore('playerStats', () => {
   const skillStore = useSkillStore();
   const amountToHeal = ref(0);
+  const regenRate = ref(0); // Porcentagem da vida por segundo
+
+  const timePassedSinceLastRegen = ref(0);
 
   function update (delta: number) {
     // Atualizações contínuas dos atributos do jogador, se necessário
@@ -24,6 +27,26 @@ export const usePlayerStats = defineStore('playerStats', () => {
 
       // Exemplo: currentHealth.value = Math.min(currentHealth.value + amountToHeal.value * delta, maxHealth.value);
       amountToHeal.value = 0; // Reseta a cura após aplicar
+    }
+
+    // Regeneração de vida ao longo do tempo
+    if (regenRate.value > 0) {
+
+      if (timePassedSinceLastRegen.value >= 1.0) { // Aplica a regeneração a cada segundo
+        const currentHealth = useCurrentRunStore().currentHealth;
+        const maxHealth = useCurrentRunStore().maxHealth;
+        const regenAmount = (regenRate.value / 100) * maxHealth * timePassedSinceLastRegen.value;
+
+        const heal = Math.min(Math.ceil(regenAmount), maxHealth - currentHealth);
+
+        useCurrentRunStore().healPlayer(heal);
+
+        console.log('Regenerated', heal, 'health for player', 'currentHealth:', currentHealth, 'maxHealth:', maxHealth);
+
+        timePassedSinceLastRegen.value = 0;
+      } else {
+        timePassedSinceLastRegen.value += delta;
+      }
     }
   };
 
@@ -66,6 +89,18 @@ export const usePlayerStats = defineStore('playerStats', () => {
     return healthMultiplier;
   });
 
+  function addRegenRate(amount: number) {
+    regenRate.value += amount;
+  }
+
+  function removeRegenRate(amount: number) {
+    regenRate.value -= amount;
+  }
+
+  function getRegenRate(): number {
+    return PlayerBaseStats.regenRate + regenRate.value;
+  }
+
   function healthAfterSkillUpgrade(maxHealthBefore: number): void {
     let newMaxHealth = PlayerBaseStats.maxHealth * getHealthMultiplier.value;
     const amountToHeal = newMaxHealth - maxHealthBefore;
@@ -83,8 +118,12 @@ export const usePlayerStats = defineStore('playerStats', () => {
     healthAfterSkillUpgrade,
     heal,
 
+    addRegenRate,
+    removeRegenRate,
+
     getDamageMultiplier,
     getHealthMultiplier,
+    getRegenRate,
   };
 });
 

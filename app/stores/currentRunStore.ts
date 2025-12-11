@@ -16,6 +16,7 @@ export const PlayerBaseStats = {
   color: 'yellow',
   maxHealth: 250,
   moveSpeed: 5.0, // unidades por segundo
+  regenRate: 0, // porcentagem da vida por segundo
   projectiles: {
     shotCooldown: 1.25,
     shotSpeed: 50.0,

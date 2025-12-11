@@ -37,7 +37,6 @@ const gameTick = ({ delta }: { delta: number }) => {
 const safeDelta = Math.min(delta, 0.1); 
 
 skillStore.update(safeDelta);
-playerStats.update(safeDelta);
 
 if (! currentRunStore.isPlaying ) {
     return;
@@ -53,6 +52,7 @@ enemyManager.update(safeDelta);
 enemyAI.update(safeDelta);
 projectileStore.update(safeDelta);
 // playerCombat.update(safeDelta);
+playerStats.update(safeDelta);
 
 // Gerenciamento de Partida
 gameDirector.update(safeDelta);

@@ -379,6 +379,11 @@ export const useSkillStore = defineStore('SkillStore', () => {
           useCurrentRunStore().setMaxHealth( PlayerBaseStats.maxHealth * usePlayerStats().getHealthMultiplier );
           usePlayerStats().healthAfterSkillUpgrade(maxHealthBefore);
           break;
+        case 'health_regeneration':
+          const regenAmount = skill.levels[skill.currentLevel].value;
+          usePlayerStats().addRegenRate(regenAmount * 100); // Converter para porcentagem
+          console.log(`Aumentada a regeneração de vida em ${regenAmount * 100}% por segundo.`);
+          break;
         case 'flat_gold':
           const goldAmount = skill.levels[skill.currentLevel].value;
           console.log(`Concedido ${goldAmount} de ouro ao jogador pela skill Flat Gold.`);
