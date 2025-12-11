@@ -353,24 +353,41 @@ export const useSkillStore = defineStore('SkillStore', () => {
     }
 
     function selectSkill(skill) {
-        skill.currentLevel += 1;
+      // Pré adição do nível da skill
+      const maxHealthBefore = useCurrentRunStore().maxHealth; // Necessário pra calcular a cura pós o upgrade
+      
+      // Incrementa o nível da skill
+      skill.currentLevel += 1;
 
-        // Se já existe a skill, apenas atualiza o nível
-        const existingSkillIndex = currentSkills.value.findIndex(s => s.id === skill.id);
+      // Se já existe a skill, apenas atualiza o nível
+      const existingSkillIndex = currentSkills.value.findIndex(s => s.id === skill.id);
 
-        if (existingSkillIndex !== -1) {
-            currentSkills.value[existingSkillIndex].currentLevel += 1;
-        } else {
-            // Adiciona a nova skill ao array de skills atuais
-            currentSkills.value.push(skill);   
-        }
+      if (existingSkillIndex !== -1) {
+          currentSkills.value[existingSkillIndex].currentLevel += 1;
+      } else {
+          // Adiciona a nova skill ao array de skills atuais
+          currentSkills.value.push(skill);   
+      }
 
-        // Fecha o modal de seleção de skills
-        isModalOpen.value = false;
-        isUpgrading.value = false;
+      // Fecha o modal de seleção de skills
+      isModalOpen.value = false;
+      isUpgrading.value = false;
 
-        // Limpa as opções de skills
-        skillOptions.value = [];
+      // Após a adição do nível da skill
+      switch (skill.id) {
+        case 'health_percentage':
+          useCurrentRunStore().setMaxHealth( PlayerBaseStats.maxHealth * usePlayerStats().getHealthMultiplier );
+          usePlayerStats().healthAfterSkillUpgrade(maxHealthBefore);
+          break;
+        case 'flat_gold':
+          const goldAmount = skill.levels[skill.currentLevel].value;
+          console.log(`Concedido ${goldAmount} de ouro ao jogador pela skill Flat Gold.`);
+          useCurrentRunStore().currentGold += goldAmount;
+          break;
+      }
+
+      // Limpa as opções de skills
+      skillOptions.value = [];
     }
 
     // Finish Implementing Rerolls

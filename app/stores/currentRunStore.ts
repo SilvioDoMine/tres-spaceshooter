@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, shallowRef } from 'vue';
 import { useEnemyManager } from '~/composables/useEnemyManager';
 import { useSkillStore } from '~/stores/SkillStore';
+import { usePlayerStats } from '~/stores/playerStats';
 
 // Define o formato básico do vetor de posição 3D
 interface Vector3 {
@@ -38,6 +39,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   // -- COMPOSABLES
   const enemyManager = useEnemyManager();
   const skillStore = useSkillStore();
+  const playerStats = usePlayerStats();
 
   // -- ESTADO PERSISTENTE ENTRE PARTIDAS
   const totalGold = ref(0); // Gold total persistente entre partidas
@@ -58,8 +60,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
   const shotCooldownTotal = ref(PlayerBaseStats.projectiles.shotCooldown); // Meio segundo entre tiros
   const shotCooldown = ref(PlayerBaseStats.projectiles.shotCooldown); // Tempo restante para o próximo tiro
-  const maxHealth = ref(PlayerBaseStats.maxHealth);
-  const currentHealth = ref(PlayerBaseStats.maxHealth);
+  const maxHealth = ref(PlayerBaseStats.maxHealth * playerStats.getHealthMultiplier);
+  const currentHealth = ref(PlayerBaseStats.maxHealth * playerStats.getHealthMultiplier);
 
   const skillRerollCount = ref(1);
 
@@ -232,6 +234,18 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     }
   }
 
+  function healPlayer(amount: number) {
+    currentHealth.value = Math.min(currentHealth.value + amount, maxHealth.value);
+  }
+
+  function setMaxHealth(newMaxHealth: number) {
+    maxHealth.value = newMaxHealth;
+    // Ajusta a saúde atual se necessário
+    if (currentHealth.value > maxHealth.value) {
+      currentHealth.value = maxHealth.value;
+    }
+  }
+
   function gameStart(levelConfiguration: any) {
     endRun(); // Reseta qualquer estado de jogo anterior
 
@@ -345,6 +359,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     getMoveVector,
 
     takeDamage, // Função para o jogador receber dano
+    healPlayer, // Função para curar o jogador
+    setMaxHealth, // Função para definir a saúde máxima do jogador
     currentHealth, // Saúde atual do jogador
     maxHealth, // Saúde máxima do jogador
     shotCooldownTotal, // Cooldown total do tiro
