@@ -234,6 +234,13 @@ export const useSkillStore = defineStore('SkillStore', () => {
           // 'legendary'
         ];
 
+        let rarityChances = {
+          common: 0.5, // 50%
+          rare: 0.25, // 25%
+          epic: 0.17, // 17%
+          legendary: 0.08, // 8%
+        }
+
         if (rarity) {
           if (Array.isArray(rarity)) {
             rarities = rarity;
@@ -245,8 +252,20 @@ export const useSkillStore = defineStore('SkillStore', () => {
         let rarityPool = rarities;
 
         if (sameRarity) {
-            const randomRarity = rarities[Math.floor(Math.random() * rarities.length)];
-            rarityPool = [randomRarity];
+            // Weighted random selection baseado em rarityChances
+            const random = Math.random();
+            let cumulative = 0;
+            let selectedRarity = rarities[0];
+
+            for (const r of rarities) {
+                cumulative += rarityChances[r] || 0;
+                if (random <= cumulative) {
+                    selectedRarity = r;
+                    break;
+                }
+            }
+
+            rarityPool = [selectedRarity];
         }
 
         let availableSkills = allSkills.filter((skill) => {

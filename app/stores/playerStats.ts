@@ -8,6 +8,7 @@ export const usePlayerStats = defineStore('playerStats', () => {
   const skillStore = useSkillStore();
   const amountToHeal = ref(0);
   const regenRate = ref(0); // Porcentagem da vida por segundo
+  const bonusDamageFlat = ref(50);
 
   const timePassedSinceLastRegen = ref(0);
 
@@ -169,6 +170,10 @@ export const usePlayerStats = defineStore('playerStats', () => {
     return rangeMultiplier;
   });
 
+  const getBonusDamageFlat = computed((): number => {
+    return bonusDamageFlat.value;
+  });
+
   return {
     update, // Essencial para ser chamado pelo useGameLoop
 
@@ -184,6 +189,7 @@ export const usePlayerStats = defineStore('playerStats', () => {
     getSpeedMultiplier,
     getProjectileSpeedMultiplier,
     getRangeMultiplier,
+    getBonusDamageFlat,
   };
 });
 
