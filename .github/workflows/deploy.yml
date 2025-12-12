@@ -1,0 +1,63 @@
+name: CI + CD – Tres Spaceshooter
+
+on:
+  push:
+    branches: [ main, staging ]
+  workflow_dispatch:
+
+jobs:
+  # ────────────────────────────────────────────────────────────────────
+  # 2) CD  –  Deploy
+  # ────────────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy Frontend Web to VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Execute SSH commands
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            echo ">>> Starting deployment on VPS"
+            echo "Current branch: ${{ github.ref_name }}"
+            echo "Current commit: ${{ github.sha }}"
+
+            echo ">>> Selecting application directory based on branch"
+            if [[ "${{ github.ref_name }}" == "main" ]]; then
+              echo "Deploying to production"
+              APP_DIR="/home/ubuntu/tres-spaceshooter"
+            elif [[ "${{ github.ref_name }}" == "staging" ]]; then
+              echo "Deploying to staging"
+              APP_DIR="/home/ubuntu/staging.tres-spaceshooter"
+            fi
+
+            echo ">>> Changing to application directory: $APP_DIR"
+            cd $APP_DIR || { echo "Failed to change directory to $APP_DIR"; exit 1; }
+
+            echo ">>> Git pull"
+            git pull origin ${{ github.ref_name }} || { echo "Git pull failed"; exit 1; }
+            
+            echo ">>> Removing node_modules and package-lock.json"
+            rm -rf node_modules package-lock.json || { echo "Failed to remove node_modules and package-lock.json"; exit 1; }
+
+            echo ">>> Executing nvm and installing node"
+            export NVM_DIR="$HOME/.nvm"
+            source "$NVM_DIR/nvm.sh"
+            nvm use 22
+
+            echo ">>> Installing node modules"
+            npm install || { echo "npm install failed"; exit 1; }
+
+            echo ">>> Building the application"
+            npm run generate || { echo "npm run generate failed"; exit 1; }
+
+            echo ">>> Restarting PM2"
+            pm2 restart ecosystem.config.cjs || { echo "Failed to restart PM2"; exit 1; }
+
+            echo ">>> Deployment finished at $(date)"
+            echo "────────────────────────────────"
