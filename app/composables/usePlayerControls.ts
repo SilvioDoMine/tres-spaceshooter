@@ -288,40 +288,75 @@ export function usePlayerControls() {
             }
 
             if (hasSkill('diagonal_shot')) {
-              // Tiro em cone diagonal na frente do player
-              const angleOffset = Math.PI / 12; // 15 graus em radianos
+              const skillLevel = getSkillLevel('diagonal_shot');
 
-              const leftDirection = {
-                x: direction.x * Math.cos(angleOffset) - direction.z * Math.sin(angleOffset),
-                y: 0,
-                z: direction.x * Math.sin(angleOffset) + direction.z * Math.cos(angleOffset)
-              };
+              if (skillLevel === 1) {
+                // Tiro em cone diagonal na frente do player
+                const angleOffset = Math.PI / 4; // 45 graus em radianos
 
-              const rightDirection = {
-                x: direction.x * Math.cos(-angleOffset) - direction.z * Math.sin(-angleOffset),
-                y: 0,
-                z: direction.x * Math.sin(-angleOffset) + direction.z * Math.cos(-angleOffset)
-              };
+                const leftDirection = {
+                  x: direction.x * Math.cos(angleOffset) - direction.z * Math.sin(angleOffset),
+                  y: 0,
+                  z: direction.x * Math.sin(angleOffset) + direction.z * Math.cos(angleOffset)
+                };
 
-              projectileStore.spawnProjectile(
-                'player',
-                { x: position.x, y: position.y, z: position.z },
-                leftDirection,
-                'player',
-                'player',
-                hits,
-                bounces,
-              );
+                const rightDirection = {
+                  x: direction.x * Math.cos(-angleOffset) - direction.z * Math.sin(-angleOffset),
+                  y: 0,
+                  z: direction.x * Math.sin(-angleOffset) + direction.z * Math.cos(-angleOffset)
+                };
 
-              projectileStore.spawnProjectile(
-                'player',
-                { x: position.x, y: position.y, z: position.z },
-                rightDirection,
-                'player',
-                'player',
-                hits,
-                bounces,
-              );
+                projectileStore.spawnProjectile(
+                  'player',
+                  { x: position.x, y: position.y, z: position.z },
+                  leftDirection,
+                  'player',
+                  'player',
+                  hits,
+                  bounces,
+                );
+
+                projectileStore.spawnProjectile(
+                  'player',
+                  { x: position.x, y: position.y, z: position.z },
+                  rightDirection,
+                  'player',
+                  'player',
+                  hits,
+                  bounces,
+                );
+
+              }
+
+              if (skillLevel >= 2) {
+                // Disparamos 4 tiros em cone diagonal na frente do player
+                // 2 para esquerda e direita a 90 graus
+                // 2 para esquerda e direita a 45 graus
+                const angles = [
+                  Math.PI / 2,    // direita
+                  Math.PI / 4,    // nordeste
+                  -Math.PI / 4,   // noroeste
+                  -Math.PI / 2    // esquerda
+                ];
+
+                angles.forEach((angleOffset) => {
+                  const diagonalDirection = {
+                    x: direction.x * Math.cos(angleOffset) - direction.z * Math.sin(angleOffset),
+                    y: 0,
+                    z: direction.x * Math.sin(angleOffset) + direction.z * Math.cos(angleOffset)
+                  };
+
+                  projectileStore.spawnProjectile(
+                    'player',
+                    { x: position.x, y: position.y, z: position.z },
+                    diagonalDirection,
+                    'player',
+                    'player',
+                    hits,
+                    bounces,
+                  );
+                });
+              }
             }
 
             // Reseta o cooldown do tiro
