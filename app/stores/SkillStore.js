@@ -227,10 +227,10 @@ export const useSkillStore = defineStore('SkillStore', () => {
         const allSkills = Object.values(SkillsList);
         let selectedSkills = [];
         let rarities = [
-          'common',
+          // 'common',
           'rare',
-          'epic',
-          'legendary'
+          // 'epic',
+          // 'legendary'
         ];
 
         if (rarity) {

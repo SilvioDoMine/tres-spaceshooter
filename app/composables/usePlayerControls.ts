@@ -194,10 +194,18 @@ export function usePlayerControls() {
 
             // contagem de hits que o projetil pode dar
             let hits = 1;
+            // contagem de ricochetes que o projetil pode dar
+            let bounces = 0;
             
             if (hasSkill('piercing_shot')) {
               const skillLevel = getSkillLevel('piercing_shot');
               hits += skillLevel; // Cada nível adicional adiciona 1 hit extra
+            }
+
+            if (hasSkill('ricochet_shot')) {
+              const skillLevel = getSkillLevel('ricochet_shot');
+              bounces += skillLevel; // Cada nível adicional adiciona 1 bounce extra
+              console.log('Ricochet shots bounces:', bounces);
             }
 
             // Atira um projetil na direção do inimigo mais próximo
@@ -208,6 +216,7 @@ export function usePlayerControls() {
               'player',
               'player',
               hits,
+              bounces,
             );
 
             if (hasSkill('back_shot')) {
@@ -224,6 +233,7 @@ export function usePlayerControls() {
                 'player',
                 'player',
                 hits,
+                bounces,
               );
             }
 
@@ -250,6 +260,7 @@ export function usePlayerControls() {
                 'player',
                 'player',
                 hits,
+                bounces,
               );
 
               projectileStore.spawnProjectile(
@@ -259,6 +270,7 @@ export function usePlayerControls() {
                 'player',
                 'player',
                 hits,
+                bounces,
               );
             }
 

@@ -81,10 +81,54 @@ export const useProjectileStore = defineStore('projectileStore', () => {
           ) {
             enemyManager.takeDamage(enemy.id, projectile.damage * playerStats.getDamageMultiplier, 'shot');
             
-            if (projectile.hits <= 1) {
+            if (projectile.currentHits <= 1) {
               projectiles.value.splice(pIndex, 1); // Remove o projétil
             } else {
-              projectile.hits -= 1;
+              projectile.currentHits -= 1;
+            }
+
+            // if ricochet skill, calculate new direction towards nearest enemy
+            const { hasSkill, getSkillLevel } = useSkillStore();
+            if (hasSkill('ricochet_shot')) {
+              const skillLevel = getSkillLevel('ricochet_shot');
+              // o range do ricochete é igual ao do projetil normal. Nível aumenta a quantidade de bounces depois.
+              const nearestEnemy = nearestEnemyFromPlayer();
+
+              if (! nearestEnemy) {
+                return; // sem inimigos próximos, não faz ricochete
+              }
+
+              // se o inimigo mais próximo for o mesmo que foi atingido, não faz ricochete
+              if (nearestEnemy.id === enemy.id) {
+                return;
+              }
+
+              if (projectile.bounces <= 0) {
+                return; // Não tem bounces restantes
+              }
+
+              const newBounces = projectile.bounces - 1;
+
+              // Calcula a direção do projétil para o inimigo mais próximo
+              const dirX = nearestEnemy.position.x - projectile.position.x;
+              const dirZ = nearestEnemy.position.z - projectile.position.z;
+              const length = Math.hypot(dirX, dirZ);
+
+              // Cria um novo projétil na direção do inimigo mais próximo
+              const newDirection = {
+                x: dirX / length,
+                z: dirZ / length,
+              };
+              
+              spawnProjectile(
+                projectile.type,
+                { ...projectile.position },
+                newDirection,
+                projectile.ownerId,
+                projectile.ownerType,
+                projectile.originalHits, // mantém a contagem original de hits
+                newBounces,
+              )
             }
           }
         });
@@ -99,10 +143,10 @@ export const useProjectileStore = defineStore('projectileStore', () => {
         ) {
           currentRunStore.takeDamage(projectile.damage);
           
-          if (projectile.hits <= 1) {
+          if (projectile.currentHits <= 1) {
             projectiles.value.splice(pIndex, 1); // Remove o projétil
           } else {
-            projectile.hits -= 1;
+            projectile.currentHits -= 1;
           }
         }
       }
@@ -113,7 +157,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
     return Math.hypot(pos1.x - pos2.x, pos1.z - pos2.z) < threshold;
   }
 
-  function spawnProjectile(type, position, direction, ownerId, ownerType, hits = 1) {
+  function spawnProjectile(type, position, direction, ownerId, ownerType, hits = 1, bounces = 0) {
     const config = projectilesType[type];
 
     if (! config) {
@@ -129,7 +173,9 @@ export const useProjectileStore = defineStore('projectileStore', () => {
       position: { ...position },
       direction: { ...direction },
       distanceTraveled: 0,
-      hits: hits,
+      originalHits: hits,
+      currentHits: hits,
+      bounces: bounces,
       ...config, // speed, damage, size, range, color
     });
   }
