@@ -34,6 +34,10 @@ export const usePlayerStats = defineStore('playerStats', () => {
     if (regenRate.value > 0) {
 
       if (timePassedSinceLastRegen.value >= 1.0) { // Aplica a regeneração a cada segundo
+        if (! useCurrentRunStore().isWaveInProgress) {
+          return;
+        }
+
         const currentHealth = useCurrentRunStore().currentHealth;
         const maxHealth = useCurrentRunStore().maxHealth;
         const regenAmount = (regenRate.value / 100) * maxHealth * timePassedSinceLastRegen.value;
