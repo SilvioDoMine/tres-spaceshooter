@@ -38,7 +38,7 @@ export const baseStats = {
     shotDamage: 200,
     cooldownTotalShot: 2,
     drops: {
-      exp: {min: 0, max: 0},
+      exp: {min: 400, max: 600},
       gold: {min: 100, max: 200}
     }
   },
