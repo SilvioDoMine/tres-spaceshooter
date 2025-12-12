@@ -72,8 +72,8 @@ onUnmounted(() => {
     <!-- <TresLeches /> -->
 
     <!-- Hud -->
-    <!-- <UiVirtualJoystick /> -->
     <ClientOnly>
+      <UiVirtualJoystick />
       <UiResources />
       <UiLevel />
     </ClientOnly>

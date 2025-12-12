@@ -64,6 +64,29 @@ function handleEnd() {
   // Zera o vetor de movimento para o jogador parar
   currentRun.setMoveVector(0, 0, 0); 
 }
+
+function isAnyOfAllMobileDevices() {
+  const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
+
+  // Verifica vários dispositivos móveis comuns
+  if (/android/i.test(ua)) {
+    return true;
+  }
+
+  if (/iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream) {
+    return true;
+  }
+
+  if (/windows phone/i.test(ua)) {
+    return true;
+  }
+
+  if (/blackberry/i.test(ua)) {
+    return true;
+  }
+
+  return false;
+}
 </script>
 
 <template>
@@ -75,6 +98,7 @@ function handleEnd() {
     @mousedown="handleStart"
     @mousemove="handleMove"
     @mouseup="handleEnd"
+    v-if="isAnyOfAllMobileDevices()"
   >
     <div class="joystick-base" :style="{ opacity: isDragging ? 1 : 0.5 }">
       <div 
@@ -89,14 +113,24 @@ function handleEnd() {
 .joystick-container {
   /* Posiciona no canto inferior esquerdo da tela */
   position: absolute;
-  bottom: 20px; 
-  left: 20px; 
+  bottom: 20px;
+  /** left 1/2 da tela */
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 100; /* Acima da cena 3D */
   width: 150px; /* Área de toque */
   height: 150px;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+/** if screen is bigger than 768px */
+@media (min-width: 768px) {
+  .joystick-container {
+    left: 20px;
+    transform: none;
+  }
 }
 
 .joystick-base {
