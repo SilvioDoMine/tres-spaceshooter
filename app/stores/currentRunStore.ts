@@ -19,7 +19,7 @@ export const PlayerBaseStats = {
   regenRate: 0, // porcentagem da vida por segundo
   projectiles: {
     shotCooldown: 1.25,
-    shotSpeed: 50.0,
+    shotSpeed: 10.0,
     size: 0.2,
     damage: 50,
     range: 8,
