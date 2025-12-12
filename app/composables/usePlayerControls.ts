@@ -175,6 +175,9 @@ export function usePlayerControls() {
       // Verifica se o cooldown do tiro terminou
       if (currentRun.shotCooldown <= 0) {
         if (nearestEnemy && nearestEnemy.position) {
+          // Se tem a skill de tiro traseiro, atira pra trás também
+          const { hasSkill, getSkillLevel } = useSkillStore();
+
           // Calcula o vetor de direção do jogador para o inimigo
           const dirX = nearestEnemy.position.x - position.x;
           const dirZ = nearestEnemy.position.z - position.z;
@@ -189,6 +192,14 @@ export function usePlayerControls() {
               z: dirZ / magnitude
             };
 
+            // contagem de hits que o projetil pode dar
+            let hits = 1;
+            
+            if (hasSkill('piercing_shot')) {
+              const skillLevel = getSkillLevel('piercing_shot');
+              hits += skillLevel; // Cada nível adicional adiciona 1 hit extra
+            }
+
             // Atira um projetil na direção do inimigo mais próximo
             projectileStore.spawnProjectile(
               'player', // type
@@ -196,10 +207,8 @@ export function usePlayerControls() {
               direction, // direção normalizada
               'player',
               'player',
+              hits,
             );
-
-            // Se tem a skill de tiro traseiro, atira pra trás também
-            const { hasSkill } = useSkillStore();
 
             if (hasSkill('back_shot')) {
               const backDirection = {
@@ -214,6 +223,7 @@ export function usePlayerControls() {
                 backDirection, // direção normalizada
                 'player',
                 'player',
+                hits,
               );
             }
 
@@ -239,6 +249,7 @@ export function usePlayerControls() {
                 leftDirection,
                 'player',
                 'player',
+                hits,
               );
 
               projectileStore.spawnProjectile(
@@ -247,6 +258,7 @@ export function usePlayerControls() {
                 rightDirection,
                 'player',
                 'player',
+                hits,
               );
             }
 

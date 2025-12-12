@@ -80,7 +80,12 @@ export const useProjectileStore = defineStore('projectileStore', () => {
             )
           ) {
             enemyManager.takeDamage(enemy.id, projectile.damage * playerStats.getDamageMultiplier, 'shot');
-            projectiles.value.splice(pIndex, 1); // Remove o projétil
+            
+            if (projectile.hits <= 1) {
+              projectiles.value.splice(pIndex, 1); // Remove o projétil
+            } else {
+              projectile.hits -= 1;
+            }
           }
         });
       } else if (projectile.ownerType === 'enemy') {
@@ -93,7 +98,12 @@ export const useProjectileStore = defineStore('projectileStore', () => {
           )
         ) {
           currentRunStore.takeDamage(projectile.damage);
-          projectiles.value.splice(pIndex, 1); // Remove o projétil
+          
+          if (projectile.hits <= 1) {
+            projectiles.value.splice(pIndex, 1); // Remove o projétil
+          } else {
+            projectile.hits -= 1;
+          }
         }
       }
     });
@@ -103,7 +113,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
     return Math.hypot(pos1.x - pos2.x, pos1.z - pos2.z) < threshold;
   }
 
-  function spawnProjectile(type, position, direction, ownerId, ownerType) {
+  function spawnProjectile(type, position, direction, ownerId, ownerType, hits = 1) {
     const config = projectilesType[type];
 
     if (! config) {
@@ -119,6 +129,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
       position: { ...position },
       direction: { ...direction },
       distanceTraveled: 0,
+      hits: hits,
       ...config, // speed, damage, size, range, color
     });
   }

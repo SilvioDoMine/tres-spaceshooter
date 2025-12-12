@@ -417,6 +417,11 @@ export const useSkillStore = defineStore('SkillStore', () => {
         return currentSkills.value.some(skill => skill.id === skillId && skill.currentLevel > 0);
     }
 
+    function getSkillLevel(skillId) {
+        const skill = currentSkills.value.find(skill => skill.id === skillId);
+        return skill ? skill.currentLevel : 0;
+    }
+
     return {
         update,
         cleanup,
@@ -438,6 +443,7 @@ export const useSkillStore = defineStore('SkillStore', () => {
         // Player skills
         currentSkills,
         hasSkill,
+        getSkillLevel,
     };
 });
 
