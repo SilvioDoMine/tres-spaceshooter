@@ -25,7 +25,7 @@ export function useEnemyAI() {
             }
 
             // detecta colisão com o jogador e dá dano
-            if (length <= 1) {
+            if (length <= enemy.size) {
                 // Aqui você pode implementar a lógica de dano ao jogador
                 console.log(`Asteroid ${enemy.id} colidiu com o jogador!`);
 
@@ -84,7 +84,7 @@ export function useEnemyAI() {
             }
 
             // detecta colisão com o jogador e dá dano
-            if (length <= 1) {
+            if (length <= enemy.size) {
                 // Aqui você pode implementar a lógica de dano ao jogador
                 console.log(`UFO ${enemy.id} colidiu com o jogador!`);
 
@@ -107,9 +107,16 @@ export function useEnemyAI() {
             }
 
             // Move-se em direção ao jogador
-            if (length > 1) {
+            if (length > enemy.size) {
                 enemy.position.z += (directionZ / length) * enemy.speed * deltaTime;
                 enemy.position.x += (directionX / length) * enemy.speed * deltaTime;
+            } else {
+                // detecta colisão com o jogador e dá dano
+                console.log(`Boss ${enemy.id} colidiu com o jogador!`);
+
+                currentRunStore.takeDamage(enemy.onHitDamage);
+                enemyManager.takeDamage(enemy.id, enemy.health, 'collision');
+                return;
             }
 
             // Verifica se o boss pode atirar
@@ -154,9 +161,16 @@ export function useEnemyAI() {
             }
 
             // Move-se em direção ao jogador
-            if (length > 1) {
+            if (length > enemy.size) {
                 enemy.position.z += (directionZ / length) * enemy.speed * deltaTime;
                 enemy.position.x += (directionX / length) * enemy.speed * deltaTime;
+            } else {
+                // detecta colisão com o jogador e dá dano
+                console.log(`Miniboss ${enemy.id} colidiu com o jogador!`);
+
+                currentRunStore.takeDamage(enemy.onHitDamage);
+                enemyManager.takeDamage(enemy.id, enemy.health, 'collision');
+                return;
             }
 
             // Verifica se o boss pode atirar
