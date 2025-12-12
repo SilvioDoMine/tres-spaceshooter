@@ -6,12 +6,10 @@ useHead({
   title: 'Home',
   meta: [
     { name: 'description', content: 'A TresJS Nuxt application' },
-    { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+    { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+    { name: 'theme-color', content: '#020420' },
+    { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
   ],
-  // Colors for mobile browsers
-  themeColor: '#020420',
-  msTileColor: '#020420',
-  appleMobileWebAppStatusBarStyle: '#020420',
 })
 
 const route = useRoute();

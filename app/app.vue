@@ -87,3 +87,18 @@ currentRunStore.initializePermanentState();
     </ClientOnly>
   </div>
 </template>
+
+<style>
+/* Cor de fundo para dead zones no mobile (iPhone, etc) */
+html,
+body {
+  background-color: #020420;
+  margin: 0;
+  padding: 0;
+}
+
+/* Suporte para safe area no iOS */
+.game-root {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+</style>
