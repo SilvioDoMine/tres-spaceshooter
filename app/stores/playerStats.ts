@@ -150,6 +150,25 @@ export const usePlayerStats = defineStore('playerStats', () => {
     amountToHeal.value += amount;
   }
 
+  const getRangeMultiplier = computed((): number => {
+    let rangeMultiplier = 1.0;
+
+    skillStore.currentSkills.forEach((skill: any) => {
+      if (skill.id === 'range_extension') {
+        const skillLevel = skill.levels[skill.currentLevel];
+
+        if (! skillLevel) {
+          throw new Error(`Skill level ${skill.currentLevel} not found for skill ${skill.id}`);
+        }
+
+        const multiplier = skillLevel.value;
+        rangeMultiplier += rangeMultiplier * multiplier;
+      }
+    });
+
+    return rangeMultiplier;
+  });
+
   return {
     update, // Essencial para ser chamado pelo useGameLoop
 
@@ -164,6 +183,7 @@ export const usePlayerStats = defineStore('playerStats', () => {
     getRegenRate,
     getSpeedMultiplier,
     getProjectileSpeedMultiplier,
+    getRangeMultiplier,
   };
 });
 

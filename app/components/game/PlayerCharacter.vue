@@ -2,6 +2,7 @@
 import { shallowRef } from 'vue';
 import { useLoop } from '@tresjs/core';
 import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
+import { usePlayerStats } from '~/stores/playerStats';
 import type { TresInstance } from '@tresjs/core';
 import * as THREE from 'three';
 
@@ -16,6 +17,7 @@ import * as THREE from 'three';
 // import { useGLTF } from '@tresjs/cientos';
 
 const currentRun = useCurrentRunStore();
+const playerStats = usePlayerStats();
 
 // Posição inicial (reativa - só dispara quando componente monta)
 const initialPosition = currentRun.getPlayerPosition();
@@ -99,6 +101,10 @@ onBeforeRender(() => {
     rangeCircleRef.value.position.x = position.x;
     rangeCircleRef.value.position.y = position.y + 0.1; // Levemente acima do chão
     rangeCircleRef.value.position.z = position.z;
+
+    // Atualiza a escala do círculo de acordo com o multiplicador de range
+    const rangeMultiplier = playerStats.getRangeMultiplier;
+    rangeCircleRef.value.scale.setScalar(rangeMultiplier);
 
     currentPosition.value = { x: position.x, y: position.y, z: position.z };
   }

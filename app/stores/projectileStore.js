@@ -60,7 +60,13 @@ export const useProjectileStore = defineStore('projectileStore', () => {
       projectile.distanceTraveled += distance;
 
       // Verifica se o projétil atingiu seu alcance máximo
-      if (projectile.distanceTraveled >= projectile.range) {
+      let projectileRange = projectile.range;
+
+      if (projectile.ownerType === 'player') {
+        projectileRange *= playerStats.getRangeMultiplier;
+      }
+
+      if (projectile.distanceTraveled >= projectileRange) {
         projectiles.value.splice(index, 1); // Remove o projétil
         return;
       }
@@ -206,7 +212,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
 
     // Se o inimigo mais próximo estiver longe do range do tiro, retorna null
     // NOTA: Essa mecanica pode ser removida.
-    if (minDistance > projectilesType.player.range) {
+    if (minDistance > (projectilesType.player.range * playerStats.getRangeMultiplier)) {
       return null;
     }
 
