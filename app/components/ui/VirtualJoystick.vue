@@ -49,12 +49,6 @@ function getClientCoords(event: MouseEvent | TouchEvent): { clientX: number, cli
 function handleStart(event: MouseEvent | TouchEvent) {
   const coords = getClientCoords(event);
 
-  // Verifica se o clique foi na metade inferior da tela
-  const screenHeight = window.innerHeight;
-  if (coords.clientY < screenHeight / 2) {
-    return; // Ignora cliques na metade superior
-  }
-
   // Move a base do joystick para onde o usuário clicou
   startX = coords.clientX;
   startY = coords.clientY;
@@ -134,13 +128,13 @@ function handleEnd() {
 
 <style scoped>
 .joystick-container {
-  /* Cobre toda a tela para capturar cliques */
+  /* Cobre apenas a metade inferior da tela para capturar cliques */
   position: fixed;
-  top: 0;
+  top: 50%;
   left: 0;
   width: 100vw;
-  height: 100vh;
-  z-index: 100; /* Acima da cena 3D */
+  height: 50vh;
+  z-index: 10; /* Acima da cena 3D, mas abaixo dos modais (z-50) */
   pointer-events: all;
   touch-action: none;
 }
@@ -163,7 +157,7 @@ function handleEnd() {
   justify-content: center;
   align-items: center;
   transform: translate(-50%, -50%); /* Centraliza o joystick no ponto clicado */
-  pointer-events: none;
+  pointer-events: none; /* Não bloqueia eventos - o container captura */
   transition: opacity 0.2s ease; /* Animação apenas na opacidade */
 }
 
