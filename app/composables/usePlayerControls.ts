@@ -177,6 +177,9 @@ export function usePlayerControls() {
         if (nearestEnemy && nearestEnemy.position) {
           // Se tem a skill de tiro traseiro, atira pra trás também
           const { hasSkill, getSkillLevel } = useSkillStore();
+          const hasMultishot = hasSkill('multishot');
+          const skillLevelMultishot = getSkillLevel('multishot');
+          const multishotTimeout = 50; // ms entre os tiros do multishot
 
           // Calcula o vetor de direção do jogador para o inimigo
           const dirX = nearestEnemy.position.x - position.x;
@@ -219,6 +222,24 @@ export function usePlayerControls() {
               bounces,
             );
 
+            if (hasMultishot) {
+              let localDelay = 0;
+              for (let i = 1; i <= skillLevelMultishot; i++) {
+                setTimeout(() => {
+                  projectileStore.spawnProjectile(
+                    'player', // type
+                    { x: position.x, y: position.y, z: position.z }, // position
+                    direction, // direção normalizada
+                    'player',
+                    'player',
+                    hits,
+                    bounces,
+                  );
+                }, localDelay + multishotTimeout);
+                localDelay += multishotTimeout;
+              }
+            }
+
             if (hasSkill('back_shot')) {
               // If level 1, shoots one backwards middle centered
               // Level 2, shoots two backwards side by side
@@ -241,6 +262,24 @@ export function usePlayerControls() {
                   hits,
                   bounces,
                 );
+
+                if (hasMultishot) {
+                  let localDelay = 0;
+                  for (let i = 1; i <= skillLevelMultishot; i++) {
+                    setTimeout(() => {
+                      projectileStore.spawnProjectile(
+                        'player', // type
+                        { x: position.x, y: position.y, z: position.z }, // position
+                        backDirection, // direção normalizada
+                        'player',
+                        'player',
+                        hits,
+                        bounces,
+                      );
+                    }, localDelay + multishotTimeout);
+                    localDelay += multishotTimeout;
+                  }
+                }
               }
 
               if (skillLevel >= 2) {
@@ -284,6 +323,34 @@ export function usePlayerControls() {
                   hits,
                   bounces,
                 );
+
+                if (hasMultishot) {
+                  let localDelay = 0;
+                  for (let i = 1; i <= skillLevelMultishot; i++) {
+                    setTimeout(() => {
+                      projectileStore.spawnProjectile(
+                        'player', // type
+                        leftBackPosition, // position
+                        backDirection, // direção normalizada
+                        'player',
+                        'player',
+                        hits,
+                        bounces,
+                      );
+
+                      projectileStore.spawnProjectile(
+                        'player', // type
+                        rightBackPosition, // position
+                        backDirection, // direção normalizada
+                        'player',
+                        'player',
+                        hits,
+                        bounces,
+                      );
+                    }, localDelay + multishotTimeout);
+                    localDelay += multishotTimeout;
+                  }
+                }
               }
             }
 
@@ -326,6 +393,33 @@ export function usePlayerControls() {
                   bounces,
                 );
 
+                if (hasMultishot) {
+                  let localDelay = 0;
+                  for (let i = 1; i <= skillLevelMultishot; i++) {
+                    setTimeout(() => {
+                      projectileStore.spawnProjectile(
+                        'player', // type
+                        { x: position.x, y: position.y, z: position.z }, // position
+                        leftDirection, // direção normalizada
+                        'player',
+                        'player',
+                        hits,
+                        bounces,
+                      );
+
+                      projectileStore.spawnProjectile(
+                        'player', // type
+                        { x: position.x, y: position.y, z: position.z }, // position
+                        rightDirection, // direção normalizada
+                        'player',
+                        'player',
+                        hits,
+                        bounces,
+                      );
+                    }, localDelay + multishotTimeout);
+                    localDelay += multishotTimeout;
+                  }
+                }
               }
 
               if (skillLevel >= 2) {
@@ -355,6 +449,24 @@ export function usePlayerControls() {
                     hits,
                     bounces,
                   );
+
+                  if (hasMultishot) {
+                    let localDelay = 0;
+                    for (let i = 1; i <= skillLevelMultishot; i++) {
+                      setTimeout(() => {
+                        projectileStore.spawnProjectile(
+                          'player', // type
+                          { x: position.x, y: position.y, z: position.z }, // position
+                          diagonalDirection, // direção normalizada
+                          'player',
+                          'player',
+                          hits,
+                          bounces,
+                        );
+                      }, localDelay + multishotTimeout);
+                      localDelay += multishotTimeout;
+                    }
+                  }
                 });
               }
             }

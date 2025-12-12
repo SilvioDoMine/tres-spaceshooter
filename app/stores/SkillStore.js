@@ -230,7 +230,7 @@ export const useSkillStore = defineStore('SkillStore', () => {
         let rarities = [
           'common',
           'rare',
-          // 'epic',
+          'epic',
           // 'legendary'
         ];
 
