@@ -109,6 +109,7 @@ function handleEnd() {
     @mousemove="handleMove"
     @mouseup="handleEnd"
     @mouseleave="handleEnd"
+    v-if="currentRun.isPlaying"
   >
     <div
       class="joystick-base"
