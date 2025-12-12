@@ -82,15 +82,15 @@ export const SkillsList ={
   ricochet_shot: {
     id: 'ricochet_shot',
     name: 'Tiro Ricochete',
-    description: 'Seus projéteis ricocheteiam nas paredes uma vez, com 70% da eficiência.',
+    description: 'Seus projéteis ricocheteiam nos inimigos, com 60% do dano.',
     icon: '💥',
     rarity: 'rare',
     levels: {
-      1: { value: 1, description: 'Projéteis ricocheteiam 1 vez.' },
-      2: { value: 2, description: 'Projéteis ricocheteiam 2 vezes.'},
-      3: { value: 3, description: 'Projéteis ricocheteiam 3 vezes.'},
-      4: { value: 4, description: 'Projéteis ricocheteiam 4 vezes.'},
-      5: { value: 5, description: 'Projéteis ricocheteiam 5 vezes.'},
+      1: { value: 0.6, description: 'Projéteis ricocheteiam 1 vez.' },
+      2: { value: 0.6, description: 'Projéteis ricocheteiam 2 vezes.'},
+      3: { value: 0.6, description: 'Projéteis ricocheteiam 3 vezes.'},
+      4: { value: 0.6, description: 'Projéteis ricocheteiam 4 vezes.'},
+      5: { value: 0.6, description: 'Projéteis ricocheteiam 5 vezes.'},
     },
   },
   diagonal_shot: {
@@ -100,8 +100,8 @@ export const SkillsList ={
     icon: '➗',
     rarity: 'rare',
     levels: {
-      1: { value: 2, description: 'Dispara +2 projéteis diagonais.' },
-      2: { value: 4, description: 'Dispara +2 projéteis diagonais.' },
+      1: { value: 0.5, description: 'Dispara +2 projéteis diagonais.' },
+      2: { value: 0.5, description: 'Dispara +2 projéteis diagonais.' },
     },
   },
   back_shot: {
@@ -111,8 +111,8 @@ export const SkillsList ={
     icon: '🔙',
     rarity: 'rare',
     levels: {
-      1: { value: 1, description: 'Dispara +1 projétil para trás.' },
-      2: { value: 2, description: 'Dispara +1 projétil para trás.' },
+      1: { value: 0.9, description: 'Dispara +1 projétil para trás.' },
+      2: { value: 0.9, description: 'Dispara +1 projétil para trás.' },
     },
   },
   piercing_shot: {
@@ -149,8 +149,8 @@ export const SkillsList ={
     icon: '🔫',
     rarity: 'epic',
     levels: {
-      1: { value: 2, description: 'Dispara 2 projéteis.' },
-      2: { value: 3, description: 'Dispara 3 projéteis.' },
+      1: { value: 0.6, description: 'Dispara 2 projéteis.' },
+      2: { value: 0.6, description: 'Dispara 3 projéteis.' },
     },
   },
   short_range_shot: {

@@ -1,8 +1,8 @@
 import { useEnemyManagerStore } from '~/stores/enemyManagerStore';
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { storeToRefs } from 'pinia';
-import { useEnemyManager } from '~/composables/useEnemyManager';
-import { useProjectileStore, projectilesType } from '~/stores/projectileStore';
+import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
+import { useProjectileStore } from '~/stores/projectileStore';
 
 export function useEnemyAI() {
     const enemyManager = useEnemyManager();
@@ -77,6 +77,9 @@ export function useEnemyAI() {
                     directionNorm,
                     enemy.id,
                     'enemy',
+                    1,
+                    1,
+                    baseStats.ufo.shotDamage
                 );
 
                 // Reseta o cooldown do tiro
@@ -141,6 +144,9 @@ export function useEnemyAI() {
                 directionNorm,
                 enemy.id,
                 'enemy',
+                1,
+                1,
+                baseStats.boss.shotDamage,
             );
 
             // Reseta o cooldown do tiro
@@ -195,6 +201,9 @@ export function useEnemyAI() {
                 directionNorm,
                 enemy.id,
                 'enemy',
+                1,
+                1,
+                baseStats.miniboss.shotDamage
             );
 
             // Reseta o cooldown do tiro

@@ -180,6 +180,7 @@ export function usePlayerControls() {
           const hasMultishot = hasSkill('multishot');
           const skillLevelMultishot = getSkillLevel('multishot');
           const multishotTimeout = 50; // ms entre os tiros do multishot
+          const damage = PlayerBaseStats.projectiles.damage * usePlayerStats().getDamageMultiplier;
 
           // Calcula o vetor de direção do jogador para o inimigo
           const dirX = nearestEnemy.position.x - position.x;
@@ -220,6 +221,7 @@ export function usePlayerControls() {
               'player',
               hits,
               bounces,
+              damage
             );
 
             if (hasMultishot) {
@@ -234,6 +236,7 @@ export function usePlayerControls() {
                     'player',
                     hits,
                     bounces,
+                    damage * SkillsList.multishot.levels[skillLevelMultishot].value
                   );
                 }, localDelay + multishotTimeout);
                 localDelay += multishotTimeout;
@@ -261,6 +264,7 @@ export function usePlayerControls() {
                   'player',
                   hits,
                   bounces,
+                  damage * SkillsList.back_shot.levels[skillLevel].value
                 );
 
                 if (hasMultishot) {
@@ -275,6 +279,7 @@ export function usePlayerControls() {
                         'player',
                         hits,
                         bounces,
+                        damage * SkillsList.back_shot.levels[skillLevel].value * SkillsList.multishot.levels[skillLevelMultishot].value
                       );
                     }, localDelay + multishotTimeout);
                     localDelay += multishotTimeout;
@@ -312,6 +317,7 @@ export function usePlayerControls() {
                   'player',
                   hits,
                   bounces,
+                  damage * SkillsList.back_shot.levels[skillLevel].value
                 );
 
                 projectileStore.spawnProjectile(
@@ -322,6 +328,7 @@ export function usePlayerControls() {
                   'player',
                   hits,
                   bounces,
+                  damage * SkillsList.back_shot.levels[skillLevel].value
                 );
 
                 if (hasMultishot) {
@@ -336,6 +343,7 @@ export function usePlayerControls() {
                         'player',
                         hits,
                         bounces,
+                        damage * SkillsList.back_shot.levels[skillLevel].value * SkillsList.multishot.levels[skillLevelMultishot].value
                       );
 
                       projectileStore.spawnProjectile(
@@ -346,6 +354,7 @@ export function usePlayerControls() {
                         'player',
                         hits,
                         bounces,
+                        damage * SkillsList.back_shot.levels[skillLevel].value * SkillsList.multishot.levels[skillLevelMultishot].value
                       );
                     }, localDelay + multishotTimeout);
                     localDelay += multishotTimeout;
@@ -381,6 +390,7 @@ export function usePlayerControls() {
                   'player',
                   hits,
                   bounces,
+                  damage * SkillsList.diagonal_shot.levels[skillLevel].value
                 );
 
                 projectileStore.spawnProjectile(
@@ -391,6 +401,7 @@ export function usePlayerControls() {
                   'player',
                   hits,
                   bounces,
+                  damage * SkillsList.diagonal_shot.levels[skillLevel].value
                 );
 
                 if (hasMultishot) {
@@ -405,6 +416,7 @@ export function usePlayerControls() {
                         'player',
                         hits,
                         bounces,
+                        damage * SkillsList.diagonal_shot.levels[skillLevel].value * SkillsList.multishot.levels[skillLevelMultishot].value
                       );
 
                       projectileStore.spawnProjectile(
@@ -415,6 +427,7 @@ export function usePlayerControls() {
                         'player',
                         hits,
                         bounces,
+                        damage * SkillsList.diagonal_shot.levels[skillLevel].value * SkillsList.multishot.levels[skillLevelMultishot].value
                       );
                     }, localDelay + multishotTimeout);
                     localDelay += multishotTimeout;
@@ -448,6 +461,7 @@ export function usePlayerControls() {
                     'player',
                     hits,
                     bounces,
+                    damage * SkillsList.diagonal_shot.levels[skillLevel].value
                   );
 
                   if (hasMultishot) {
@@ -462,6 +476,7 @@ export function usePlayerControls() {
                           'player',
                           hits,
                           bounces,
+                          damage * SkillsList.diagonal_shot.levels[skillLevel].value * SkillsList.multishot.levels[skillLevelMultishot].value
                         );
                       }, localDelay + multishotTimeout);
                       localDelay += multishotTimeout;

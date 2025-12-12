@@ -85,7 +85,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
               1 // threshold de colisão - AINDA chumbado porque o tamanho dos inimigos não está definido
             )
           ) {
-            enemyManager.takeDamage(enemy.id, projectile.damage * playerStats.getDamageMultiplier, 'shot');
+            enemyManager.takeDamage(enemy.id, projectile.damage, 'shot');
             
             if (projectile.currentHits <= 1) {
               projectiles.value.splice(pIndex, 1); // Remove o projétil
@@ -114,6 +114,8 @@ export const useProjectileStore = defineStore('projectileStore', () => {
               }
 
               const newBounces = projectile.bounces - 1;
+              // Calcula o dano do projétil ricocheteado
+              const newDamage = projectile.damage * SkillsList.ricochet_shot.levels[skillLevel].value;
 
               // Calcula a direção do projétil para o inimigo mais próximo
               const dirX = nearestEnemy.position.x - projectile.position.x;
@@ -134,6 +136,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
                 projectile.ownerType,
                 projectile.originalHits, // mantém a contagem original de hits
                 newBounces,
+                newDamage
               )
             }
           }
@@ -163,13 +166,15 @@ export const useProjectileStore = defineStore('projectileStore', () => {
     return Math.hypot(pos1.x - pos2.x, pos1.z - pos2.z) < threshold;
   }
 
-  function spawnProjectile(type, position, direction, ownerId, ownerType, hits = 1, bounces = 0) {
-    const config = projectilesType[type];
+  function spawnProjectile(type, position, direction, ownerId, ownerType, hits = 1, bounces = 0, damage = 0) {
+    let config = projectilesType[type];
 
     if (! config) {
       console.warn(`Projectile type "${type}" not recognized.`);
       return;
     }
+
+    config.damage = damage;
 
     projectiles.value.push({
       id: `projectile-${Date.now()}_${Math.random()}`,
