@@ -31,7 +31,7 @@ export function useEnemyAI() {
 
                 currentRunStore.takeDamage(enemy.onHitDamage);
                 // destrói o asteroide após a colisão
-                enemyManager.takeDamage(enemy.id, enemy.health);
+                enemyManager.takeDamage(enemy.id, enemy.health, 'collision');
             }
         },
         ufo: (enemy, deltaTime) => {
@@ -89,7 +89,7 @@ export function useEnemyAI() {
                 console.log(`UFO ${enemy.id} colidiu com o jogador!`);
 
                 currentRunStore.takeDamage(enemy.onHitDamage);
-                enemyManager.takeDamage(enemy.id, enemy.health);
+                enemyManager.takeDamage(enemy.id, enemy.health, 'collision');
             }
         },
         boss: (enemy, deltaTime) => {

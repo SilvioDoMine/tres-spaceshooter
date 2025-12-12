@@ -79,7 +79,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
               1 // threshold de colisão - AINDA chumbado porque o tamanho dos inimigos não está definido
             )
           ) {
-            enemyManager.takeDamage(enemy.id, projectile.damage * playerStats.getDamageMultiplier);
+            enemyManager.takeDamage(enemy.id, projectile.damage * playerStats.getDamageMultiplier, 'shot');
             projectiles.value.splice(pIndex, 1); // Remove o projétil
           }
         });
