@@ -220,21 +220,71 @@ export function usePlayerControls() {
             );
 
             if (hasSkill('back_shot')) {
-              const backDirection = {
-                x: -direction.x,
-                y: 0,
-                z: -direction.z
-              };
+              // If level 1, shoots one backwards middle centered
+              // Level 2, shoots two backwards side by side
+              const skillLevel = getSkillLevel('back_shot');
 
-              projectileStore.spawnProjectile(
-                'player', // type
-                { x: position.x, y: position.y, z: position.z }, // position
-                backDirection, // direção normalizada
-                'player',
-                'player',
-                hits,
-                bounces,
-              );
+              if (skillLevel == 1) {
+                // Tiro reto para trás
+                const backDirection = {
+                  x: -direction.x,
+                  y: 0,
+                  z: -direction.z
+                };
+
+                projectileStore.spawnProjectile(
+                  'player',
+                  { x: position.x, y: position.y, z: position.z },
+                  backDirection,
+                  'player',
+                  'player',
+                  hits,
+                  bounces,
+                );
+              }
+
+              if (skillLevel >= 2) {
+                // Dois tiros pra trás lado a lado na mesma direção pra trás
+                const sideOffset = 0.5; // Ajuste a distância lateral entre os tiros
+
+                const leftBackPosition = {
+                  x: position.x + sideOffset * Math.cos(rotation.y + Math.PI / 2),
+                  y: position.y,
+                  z: position.z + sideOffset * Math.sin(rotation.y + Math.PI / 2)
+                };
+
+                const rightBackPosition = {
+                  x: position.x + sideOffset * Math.cos(rotation.y - Math.PI / 2),
+                  y: position.y,
+                  z: position.z + sideOffset * Math.sin(rotation.y - Math.PI / 2)
+                };
+
+                const backDirection = {
+                  x: -direction.x,
+                  y: 0,
+                  z: -direction.z
+                };
+
+                projectileStore.spawnProjectile(
+                  'player',
+                  leftBackPosition,
+                  backDirection,
+                  'player',
+                  'player',
+                  hits,
+                  bounces,
+                );
+
+                projectileStore.spawnProjectile(
+                  'player',
+                  rightBackPosition,
+                  backDirection,
+                  'player',
+                  'player',
+                  hits,
+                  bounces,
+                );
+              }
             }
 
             if (hasSkill('diagonal_shot')) {

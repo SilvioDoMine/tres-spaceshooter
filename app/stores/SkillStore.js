@@ -100,18 +100,19 @@ export const SkillsList ={
     icon: '➗',
     rarity: 'rare',
     levels: {
-      1: { value: 2, description: 'Dispara 2 projéteis diagonais.' },
-      2: { value: 4, description: 'Dispara 4 projéteis diagonais.' },
+      1: { value: 2, description: 'Dispara +2 projéteis diagonais.' },
+      2: { value: 4, description: 'Dispara +2 projéteis diagonais.' },
     },
   },
   back_shot: {
     id: 'back_shot',
     name: 'Tiro Traseiro',
-    description: 'Adiciona um tiro para trás com 90% da eficiência.',
+    description: 'Adiciona tiros para trás com 90% da eficiência.',
     icon: '🔙',
     rarity: 'rare',
     levels: {
-      1: { value: 1, description: 'Dispara 1 projétil para trás.' },
+      1: { value: 1, description: 'Dispara +1 projétil para trás.' },
+      2: { value: 2, description: 'Dispara +1 projétil para trás.' },
     },
   },
   piercing_shot: {
