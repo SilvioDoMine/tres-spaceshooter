@@ -5,8 +5,13 @@ import { LEVEL_1 } from '~/games/levels/LevelOneConfig';
 useHead({
   title: 'Home',
   meta: [
-    { name: 'description', content: 'A TresJS Nuxt application' }
-  ]
+    { name: 'description', content: 'A TresJS Nuxt application' },
+    { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+  ],
+  // Colors for mobile browsers
+  themeColor: '#020420',
+  msTileColor: '#020420',
+  appleMobileWebAppStatusBarStyle: '#020420',
 })
 
 const route = useRoute();
@@ -46,7 +51,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="relative w-full h-screen">
+  <div class="relative w-full h-dvh">
     <TresCanvas
       clear-color="#020420"
       window-size

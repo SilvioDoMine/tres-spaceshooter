@@ -64,29 +64,6 @@ function handleEnd() {
   // Zera o vetor de movimento para o jogador parar
   currentRun.setMoveVector(0, 0, 0); 
 }
-
-function isAnyOfAllMobileDevices() {
-  const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
-
-  // Verifica vários dispositivos móveis comuns
-  if (/android/i.test(ua)) {
-    return true;
-  }
-
-  if (/iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream) {
-    return true;
-  }
-
-  if (/windows phone/i.test(ua)) {
-    return true;
-  }
-
-  if (/blackberry/i.test(ua)) {
-    return true;
-  }
-
-  return false;
-}
 </script>
 
 <template>
@@ -98,7 +75,6 @@ function isAnyOfAllMobileDevices() {
     @mousedown="handleStart"
     @mousemove="handleMove"
     @mouseup="handleEnd"
-    v-if="isAnyOfAllMobileDevices()"
   >
     <div class="joystick-base" :style="{ opacity: isDragging ? 1 : 0.5 }">
       <div 
@@ -125,11 +101,10 @@ function isAnyOfAllMobileDevices() {
   align-items: center;
 }
 
-/** if screen is bigger than 768px */
-@media (min-width: 768px) {
+/** If the screen is desktop size, hidden */
+@media (min-width: 1024px) {
   .joystick-container {
-    left: 20px;
-    transform: none;
+    display: none;
   }
 }
 
