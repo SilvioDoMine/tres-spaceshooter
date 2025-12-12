@@ -85,6 +85,13 @@ export const useProjectileStore = defineStore('projectileStore', () => {
               1 // threshold de colisão - AINDA chumbado porque o tamanho dos inimigos não está definido
             )
           ) {
+            if (projectile.hitsList.includes(enemy.id)) {
+              return; // Já atingiu esse inimigo antes
+            }
+
+            projectile.hitsList.push(enemy.id);
+
+            // Aplica dano ao inimigo
             enemyManager.takeDamage(enemy.id, projectile.damage, 'shot');
             
             if (projectile.currentHits <= 1) {
@@ -136,7 +143,8 @@ export const useProjectileStore = defineStore('projectileStore', () => {
                 projectile.ownerType,
                 projectile.originalHits, // mantém a contagem original de hits
                 newBounces,
-                newDamage
+                newDamage,
+                [...projectile.hitsList]
               )
             }
           }
@@ -166,7 +174,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
     return Math.hypot(pos1.x - pos2.x, pos1.z - pos2.z) < threshold;
   }
 
-  function spawnProjectile(type, position, direction, ownerId, ownerType, hits = 1, bounces = 0, damage = 0) {
+  function spawnProjectile(type, position, direction, ownerId, ownerType, hits = 1, bounces = 0, damage = 0, ignoreEnemies = []) {
     let config = projectilesType[type];
 
     if (! config) {
@@ -186,6 +194,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
       distanceTraveled: 0,
       originalHits: hits,
       currentHits: hits,
+      hitsList: ignoreEnemies,
       bounces: bounces,
       ...config, // speed, damage, size, range, color
     });
