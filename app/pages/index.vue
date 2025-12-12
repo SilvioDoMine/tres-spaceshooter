@@ -39,12 +39,12 @@ async function handleButtonClick() {
     <TheExperience />
   </TresCanvas>
   
-  <div id="lobby-stuff" class="w-full h-full absolute top-0 left-0 right-0 bottom-0">
+  <div id="lobby-stuff" class="w-full h-full absolute top-0 left-0 right-0 bottom-0 pointer-events-none">
     <!-- Relative full content -->
     <div class="relative w-full h-full">
 
       <!-- Topbar -->
-      <div class="w-full h-17 absolute top-0">
+      <div class="w-full h-17 absolute top-0 pointer-events-auto">
         <!-- Icon absolute 64x64 -->
         <div class="absolute top-2 left-2 w-16 h-16 bg-gray-700 rounded flex items-center justify-center">
           <span class="text-white font-bold">ICON</span>
@@ -109,7 +109,7 @@ async function handleButtonClick() {
 
       <!-- Tailwind shine golden button with shimmer effect on the bottom middle of the page -->
       <div class="absolute bottom-30 left-1/2 -translate-x-1/2 w-full px-4 flex justify-center">
-        <div class="w-full max-w-md">
+        <div class="w-full max-w-md pointer-events-auto">
           <button
             @click="handleButtonClick"
             :class="[
