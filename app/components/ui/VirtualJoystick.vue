@@ -1,16 +1,40 @@
 <script setup lang="ts">
-import { ref, shallowReactive } from 'vue';
+import { ref, shallowReactive, onMounted, onBeforeUnmount } from 'vue';
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 
 const currentRun = useCurrentRunStore();
 
 const isDragging = ref(false);
-// ✅ shallowReactive: Propriedades top-level são reativas, mas sem deep watching
-const stickPosition = shallowReactive({ x: 0, y: 0 }); // Posição visual do stick
+const joystickBase = shallowReactive({ x: 0, y: 0 }); // Posição da base do joystick
+const stickPosition = shallowReactive({ x: 0, y: 0 }); // Posição visual do stick relativa à base
 const MAX_RADIUS = 50; // Raio máximo de movimento do stick em pixels
+
+// Posição padrão do joystick (centro inferior da tela)
+const defaultPosition = shallowReactive({ x: 0, y: 0 });
 
 let startX = 0;
 let startY = 0;
+
+// Calcula a posição padrão ao montar o componente
+onMounted(() => {
+  updateDefaultPosition();
+  window.addEventListener('resize', updateDefaultPosition);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateDefaultPosition);
+});
+
+function updateDefaultPosition() {
+  defaultPosition.x = window.innerWidth / 2;
+  defaultPosition.y = window.innerHeight - 100; // 100px do fundo
+
+  // Atualiza a posição do joystick se não estiver sendo arrastado
+  if (!isDragging.value) {
+    joystickBase.x = defaultPosition.x;
+    joystickBase.y = defaultPosition.y;
+  }
+}
 
 function getClientCoords(event: MouseEvent | TouchEvent): { clientX: number, clientY: number } {
   // Trata eventos de toque ou mouse
@@ -24,11 +48,22 @@ function getClientCoords(event: MouseEvent | TouchEvent): { clientX: number, cli
 
 function handleStart(event: MouseEvent | TouchEvent) {
   const coords = getClientCoords(event);
+
+  // Verifica se o clique foi na metade inferior da tela
+  const screenHeight = window.innerHeight;
+  if (coords.clientY < screenHeight / 2) {
+    return; // Ignora cliques na metade superior
+  }
+
+  // Move a base do joystick para onde o usuário clicou
   startX = coords.clientX;
   startY = coords.clientY;
+  joystickBase.x = coords.clientX;
+  joystickBase.y = coords.clientY;
+
   isDragging.value = true;
   // Previne arrastar a tela em touch devices
-  if (event instanceof TouchEvent) event.preventDefault(); 
+  if (event instanceof TouchEvent) event.preventDefault();
 }
 
 function handleMove(event: MouseEvent | TouchEvent) {
@@ -51,23 +86,27 @@ function handleMove(event: MouseEvent | TouchEvent) {
   // O eixo Y na tela (vertical) é mapeado para o eixo Z (profundidade) do mundo 3D
   const normalizedX = stickPosition.x / MAX_RADIUS;
   const normalizedZ = stickPosition.y / MAX_RADIUS; // Mapeia Y (tela) para Z (mundo)
-  
+
   // 4. Atualiza a Store (o Cérebro do Jogo)
-  currentRun.setMoveVector(normalizedX, 0, normalizedZ); 
+  currentRun.setMoveVector(normalizedX, 0, normalizedZ);
 }
 
 function handleEnd() {
   isDragging.value = false;
   stickPosition.x = 0;
   stickPosition.y = 0;
-  
+
+  // Volta o joystick para a posição padrão
+  joystickBase.x = defaultPosition.x;
+  joystickBase.y = defaultPosition.y;
+
   // Zera o vetor de movimento para o jogador parar
-  currentRun.setMoveVector(0, 0, 0); 
+  currentRun.setMoveVector(0, 0, 0);
 }
 </script>
 
 <template>
-  <div 
+  <div
     class="joystick-container"
     @touchstart="handleStart"
     @touchmove.prevent="handleMove"
@@ -75,10 +114,18 @@ function handleEnd() {
     @mousedown="handleStart"
     @mousemove="handleMove"
     @mouseup="handleEnd"
+    @mouseleave="handleEnd"
   >
-    <div class="joystick-base" :style="{ opacity: isDragging ? 1 : 0.5 }">
-      <div 
-        class="joystick-stick" 
+    <div
+      class="joystick-base"
+      :style="{
+        left: `${joystickBase.x}px`,
+        top: `${joystickBase.y}px`,
+        opacity: isDragging ? 1 : 0.5
+      }"
+    >
+      <div
+        class="joystick-stick"
         :style="{ transform: `translate(${stickPosition.x}px, ${stickPosition.y}px)` }"
       />
     </div>
@@ -87,18 +134,15 @@ function handleEnd() {
 
 <style scoped>
 .joystick-container {
-  /* Posiciona no canto inferior esquerdo da tela */
-  position: absolute;
-  bottom: 20px;
-  /** left 1/2 da tela */
-  left: 50%;
-  transform: translateX(-50%);
+  /* Cobre toda a tela para capturar cliques */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   z-index: 100; /* Acima da cena 3D */
-  width: 150px; /* Área de toque */
-  height: 150px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  pointer-events: all;
+  touch-action: none;
 }
 
 /** If the screen is desktop size, hidden */
@@ -114,11 +158,13 @@ function handleEnd() {
   background: rgba(0, 0, 0, 0.5);
   border: 2px solid rgba(255, 255, 255, 0.7);
   border-radius: 50%;
-  position: relative;
+  position: fixed;
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: opacity 0.2s;
+  transform: translate(-50%, -50%); /* Centraliza o joystick no ponto clicado */
+  pointer-events: none;
+  transition: opacity 0.2s ease; /* Animação apenas na opacidade */
 }
 
 .joystick-stick {
@@ -127,6 +173,6 @@ function handleEnd() {
   background: rgba(255, 255, 255, 0.8);
   border-radius: 50%;
   position: absolute;
-  cursor: grab;
+  pointer-events: none;
 }
 </style>
