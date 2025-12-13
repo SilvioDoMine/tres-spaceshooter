@@ -1,9 +1,6 @@
 <script setup lang="js">
-import { computed } from 'vue';
-import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
 
-const currentRun = useCurrentRunStore();
 const enemyManager = useEnemyManager();
 
 const activeEnemies = enemyManager.activeEnemies;
@@ -50,22 +47,17 @@ onUnmounted(() => {
         :transparent="getEnemyVisuals(enemy).transparent"
       />
       <TresBoxGeometry :args="[baseStats[enemy.type].size, baseStats[enemy.type].size, baseStats[enemy.type].size]" />
-      <!-- HP (só mostra quando ativo) -->
-      <Suspense v-if="enemy.state === 'active'">
-        <Text3D
-          :position="[0, 0, baseStats[enemy.type].size * 0.80]"
-          :rotation="[ -Math.PI / 2, 0, 0 ]"
-          :size="0.25"
-          :bevel-enabled="false"
-          :text="`HP: ${enemy.health}`"
-          color="black"
-          font="/fonts/PoppinsBold.json"
-          need-updates
-          center
-        >
-          <TresMeshNormalMaterial />
-        </Text3D>
-      </Suspense>
+      <!-- HealthBar (só mostra quando ativo) -->
+      <GameHealthBar
+        v-if="enemy.state === 'active'"
+        :current-health="enemy.health"
+        :max-health="baseStats[enemy.type].health"
+        :width="baseStats[enemy.type].size * 0.9"
+        :height="0.2"
+        :position="[0, 0, -baseStats[enemy.type].size * 0.7]"
+        color="red"
+        :hiddenFull="true"
+      />
     </TresMesh>
   </TresGroup>
 </template>

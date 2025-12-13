@@ -129,20 +129,17 @@ onBeforeRender(() => {
   >
     <TresMeshStandardMaterial  :visible="false" color="pink" />
     <TresBoxGeometry :args="[1, 1, 1]" />
-    <!-- HP -->
-    <Suspense>
-      <Text3D
-        :position="[0, 0, 1]"
-        :rotation="[ -Math.PI / 2, 0, 0 ]"
-        :scale="[0.5, 0.5, 0.5]"
-        :text="`HP: ${currentRun.currentHealth}`"
-        font="/fonts/PoppinsBold.json"
-        need-updates
-        center
-      >
-        <TresMeshNormalMaterial />
-      </Text3D>
-    </Suspense>
+
+    <!-- HealthBar (só mostra quando ativo) -->
+    <GameHealthBar
+      v-if="true"
+      :current-health="currentRun.currentHealth"
+      :max-health="PlayerBaseStats.maxHealth"
+      :width="1.5"
+      :height="0.21"
+      :position="[0, -5, -1.2]"
+      :showHp="true"
+    />
   </TresMesh>
 
   <!-- Círculo mostrando o range de tiro -->
