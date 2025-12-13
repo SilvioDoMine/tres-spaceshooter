@@ -1,9 +1,16 @@
 <script setup lang="js">
+import { shallowRef, watch } from 'vue';
 import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
+import { useCombatTextEvents } from '~/composables/useCombatTextEvents';
+import { useLoop } from '@tresjs/core';
 
 const enemyManager = useEnemyManager();
+const { consumeEventsForTarget } = useCombatTextEvents();
 
 const activeEnemies = enemyManager.activeEnemies;
+
+// Refs para combat text de cada inimigo
+const combatTextRefs = shallowRef({});
 
 // Calcula propriedades visuais baseado no estado do inimigo
 const getEnemyVisuals = (enemy) => {
@@ -26,6 +33,20 @@ const getEnemyVisuals = (enemy) => {
     transparent: false,
   };
 };
+
+// Escuta eventos de combat text e os aplica aos inimigos
+const { onBeforeRender } = useLoop();
+onBeforeRender(() => {
+  activeEnemies.value.forEach(enemy => {
+    const events = consumeEventsForTarget(enemy.id);
+    events.forEach(event => {
+      const combatTextRef = combatTextRefs.value[enemy.id];
+      if (combatTextRef) {
+        combatTextRef.addCombatText(event.value, event.type);
+      }
+    });
+  });
+});
 
 onUnmounted(() => {
   enemyManager.cleanup();
@@ -57,6 +78,11 @@ onUnmounted(() => {
         :position="[0, 0, -baseStats[enemy.type].size * 0.7]"
         color="red"
         :hiddenFull="true"
+      />
+      <!-- CombatText -->
+      <GameCombatText
+        :ref="(el) => { if (el) combatTextRefs[enemy.id] = el }"
+        :position="[0, baseStats[enemy.type].size * 0.8, 0]"
       />
     </TresMesh>
   </TresGroup>

@@ -3,6 +3,7 @@ import { shallowRef } from 'vue';
 import { useLoop } from '@tresjs/core';
 import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
 import { usePlayerStats } from '~/stores/playerStats';
+import { useCombatTextEvents } from '~/composables/useCombatTextEvents';
 import type { TresInstance } from '@tresjs/core';
 import * as THREE from 'three';
 
@@ -18,9 +19,13 @@ import * as THREE from 'three';
 
 const currentRun = useCurrentRunStore();
 const playerStats = usePlayerStats();
+const { consumeEventsForTarget } = useCombatTextEvents();
 
 // Posição inicial (reativa - só dispara quando componente monta)
 const initialPosition = currentRun.getPlayerPosition();
+
+// Ref para combat text do jogador
+const combatTextRef = shallowRef(null);
 
 /**
  * ✅ OTIMIZAÇÃO: Template Ref para acesso direto ao mesh Three.js
@@ -107,6 +112,14 @@ onBeforeRender(() => {
     rangeCircleRef.value.scale.setScalar(rangeMultiplier);
 
     currentPosition.value = { x: position.x, y: position.y, z: position.z };
+
+    // Processa eventos de combat text do jogador
+    const events = consumeEventsForTarget(PlayerBaseStats.id);
+    events.forEach(event => {
+      if (combatTextRef.value) {
+        combatTextRef.value.addCombatText(event.value, event.type);
+      }
+    });
   }
 });
 </script>
@@ -139,6 +152,12 @@ onBeforeRender(() => {
       :height="0.21"
       :position="[0, -5, -1.2]"
       :showHp="true"
+    />
+
+    <!-- CombatText -->
+    <GameCombatText
+      ref="combatTextRef"
+      :position="[0, 0, 0]"
     />
   </TresMesh>
 

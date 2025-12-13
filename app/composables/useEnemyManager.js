@@ -1,6 +1,7 @@
 import { useEnemyManagerStore } from '~/stores/enemyManagerStore';
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { storeToRefs } from 'pinia';
+import { useCombatTextEvents } from '~/composables/useCombatTextEvents';
 
 export const baseStats = {
   asteroid: {
@@ -62,6 +63,7 @@ export const baseStats = {
 export function useEnemyManager() {
   const enemyManagerStore = useEnemyManagerStore();
   const useCurrentRun = useCurrentRunStore();
+  const { emitCombatText } = useCombatTextEvents();
 
   const { activeEnemies } = storeToRefs(enemyManagerStore);
   
@@ -139,6 +141,9 @@ export function useEnemyManager() {
     }
 
     enemy.health -= damage;
+
+    // Emite evento de combat text
+    emitCombatText(enemyId, damage, 'damage', enemy.position);
 
     // Se a saúde do inimigo chegar a zero ou menos, removê-lo
     if (enemy.health <= 0) {

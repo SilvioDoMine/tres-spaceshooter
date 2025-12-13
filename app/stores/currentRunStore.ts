@@ -3,6 +3,7 @@ import { ref, shallowRef } from 'vue';
 import { useEnemyManager } from '~/composables/useEnemyManager';
 import { useSkillStore } from '~/stores/SkillStore';
 import { usePlayerStats } from '~/stores/playerStats';
+import { useCombatTextEvents } from '~/composables/useCombatTextEvents';
 
 // Define o formato básico do vetor de posição 3D
 interface Vector3 {
@@ -41,6 +42,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   const enemyManager = useEnemyManager();
   const skillStore = useSkillStore();
   const playerStats = usePlayerStats();
+  const { emitCombatText } = useCombatTextEvents();
 
   // -- ESTADO PERSISTENTE ENTRE PARTIDAS
   const totalGold = ref(0); // Gold total persistente entre partidas
@@ -228,6 +230,9 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   function takeDamage(amount: number) {
     currentHealth.value = Math.max(0, currentHealth.value - amount);
 
+    // Emite evento de combat text
+    emitCombatText(PlayerBaseStats.id, amount, 'damage', playerPosition.value);
+
     if (currentHealth.value <= 0) {
       console.log('Jogador morreu!');
       gameOver('You have been defeated.');
@@ -236,7 +241,13 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   }
 
   function healPlayer(amount: number) {
+    const actualHeal = Math.min(amount, maxHealth.value - currentHealth.value);
     currentHealth.value = Math.min(currentHealth.value + amount, maxHealth.value);
+
+    // Emite evento de combat text apenas se curou de fato
+    if (actualHeal > 0) {
+      emitCombatText(PlayerBaseStats.id, actualHeal, 'heal', playerPosition.value);
+    }
   }
 
   function setMaxHealth(newMaxHealth: number) {
