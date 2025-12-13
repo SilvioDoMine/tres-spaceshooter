@@ -29,11 +29,23 @@ async function handleButtonClick() {
   // Navega para a rota
   router.push('/play/1');
 }
+
+function formatCurrency(amount: number): string {
+  // Transform to be uppercase and with K for thousands, M for millions
+  if (amount >= 1_000_000) {
+    return (Math.floor(amount / 100) / 10).toFixed(1) + 'M';
+  } else if (amount >= 1_000) {
+    return (Math.floor(amount / 100) / 10).toFixed(1) + 'K';
+  } else {
+    return amount.toString();
+  }
+}
 </script>
 
 <template>
+  <!-- Dark Blue color-->
   <TresCanvas
-    clear-color="#420420"
+    clear-color="#000814"
     window-size
   >
     <TheExperience />
@@ -67,9 +79,17 @@ async function handleButtonClick() {
             </div>
           </div>
           <!-- Right side -->
-          <div>
+          <div class="flex gap-2">
+            <!-- Energy Count -->
+            <div class="bg-white/10 px-2 pr-3 py-0.5 flex items-center justify-between gap-2 rounded-full cursor-pointer">
+              <!-- Icon -->
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" class="text-emerald-600"><!-- Icon from Remix Icon by Remix Design - https://github.com/Remix-Design/RemixIcon/blob/master/License --><path fill="currentColor" d="M14.005 2.003a8 8 0 0 1 3.292 15.293A8 8 0 1 1 6.711 6.71a8 8 0 0 1 7.294-4.707m-3 7h-2v1a2.5 2.5 0 0 0-.164 4.995l.164.005h2l.09.008a.5.5 0 0 1 0 .984l-.09.008h-4v2h2v1h2v-1a2.5 2.5 0 0 0 .164-4.995l-.164-.005h-2l-.09-.008a.5.5 0 0 1 0-.984l.09-.008h4v-2h-2zm3-5A6 6 0 0 0 9.52 6.016a8 8 0 0 1 8.47 8.471a6 6 0 0 0-3.986-10.484"/></svg>
+
+              <!-- Text -->
+              <span class="font-bold text-white">{{ formatCurrency(0) }}</span>
+            </div>
+
             <!-- Gold Count -->
-            <!-- Notch Direito -->
             <div class="bg-white/10 px-2 pr-3 py-0.5 flex items-center justify-between gap-2 rounded-full cursor-pointer">
               <!-- Icon -->
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-amber-400">
@@ -77,16 +97,16 @@ async function handleButtonClick() {
               </svg>
 
               <!-- Text -->
-              <span class="font-bold text-white">{{ currentRunStore.totalGold }}</span>
+              <span class="font-bold text-white">{{ formatCurrency(currentRunStore.totalGold) }}</span>
             </div>
           </div>
         </div>
         <!-- Half bottom -->
         <div class="w-full h-7 flex">
           <div class="bg-white/10 pb-2 rounded-br-full h-full pl-20 pr-10 flex items-center justify-center text-xl gap-2 text-yellow-400">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 256 256"><!-- Icon from Phosphor by Phosphor Icons - https://github.com/phosphor-icons/core/blob/main/LICENSE --><g fill="currentColor"><path d="M240 56v128a16 16 0 0 1-16 16H72v-48h56v-48h56V56Z" opacity=".2"/><path d="M248 56a8 8 0 0 1-8 8h-48v40a8 8 0 0 1-8 8h-48v40a8 8 0 0 1-8 8H80v40a8 8 0 0 1-8 8H16a8 8 0 0 1 0-16h48v-40a8 8 0 0 1 8-8h48v-40a8 8 0 0 1 8-8h48V56a8 8 0 0 1 8-8h56a8 8 0 0 1 8 8"/></g></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256"><!-- Icon from Phosphor by Phosphor Icons - https://github.com/phosphor-icons/core/blob/main/LICENSE --><g fill="currentColor"><path d="M240 56v128a16 16 0 0 1-16 16H72v-48h56v-48h56V56Z" opacity=".2"/><path d="M248 56a8 8 0 0 1-8 8h-48v40a8 8 0 0 1-8 8h-48v40a8 8 0 0 1-8 8H80v40a8 8 0 0 1-8 8H16a8 8 0 0 1 0-16h48v-40a8 8 0 0 1 8-8h48v-40a8 8 0 0 1 8-8h48V56a8 8 0 0 1 8-8h56a8 8 0 0 1 8 8"/></g></svg>
             <h1 class="
-              relative text-xl font-extrabold tracking-tight
+              relative text-base lg:text-xl font-extrabold tracking-tight
               text-transparent bg-clip-text
               bg-[linear-gradient(180deg,#FFF9C9_0%,#FFE27A_18%,#FFCC33_40%,#F6A800_58%,#7A4A00_100%)]
               drop-shadow-[0_3px_0_rgba(90,55,0,0.75)]
@@ -152,8 +172,8 @@ async function handleButtonClick() {
                   INICIAR
                 </div>
 
-                <div class="mt-2 flex items-center justify-center gap-0 font-extrabold text-[#6b3a08] text-xl">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 1024 1024"><!-- Icon from Ant Design Icons by HeskeyBaozi - https://github.com/ant-design/ant-design-icons/blob/master/LICENSE --><path fill="currentColor" fill-opacity=".15" d="M695.4 164.1H470.8L281.2 491.5h157.4l-60.3 241l319.8-305.1h-211z"/><path fill="currentColor" d="M848.1 359.3H627.8L825.9 109c4.1-5.3.4-13-6.3-13H436.1c-2.8 0-5.5 1.5-6.9 4L170.1 547.5c-3.1 5.3.7 12 6.9 12h174.4L262 917.1c-1.9 7.8 7.5 13.3 13.3 7.7L853.6 373c5.2-4.9 1.7-13.7-5.5-13.7M378.3 732.5l60.3-241H281.2l189.6-327.4h224.6L487.1 427.4h211z"/></svg>
+                <div v-if="false" class="mt-2 flex items-center justify-center gap-0 font-extrabold text-[#6b3a08] text-xl">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 1024 1024" class="text-lime-600"><!-- Icon from Ant Design Icons by HeskeyBaozi - https://github.com/ant-design/ant-design-icons/blob/master/LICENSE --><path fill="currentColor" fill-opacity=".15" d="M695.4 164.1H470.8L281.2 491.5h157.4l-60.3 241l319.8-305.1h-211z"/><path fill="currentColor" d="M848.1 359.3H627.8L825.9 109c4.1-5.3.4-13-6.3-13H436.1c-2.8 0-5.5 1.5-6.9 4L170.1 547.5c-3.1 5.3.7 12 6.9 12h174.4L262 917.1c-1.9 7.8 7.5 13.3 13.3 7.7L853.6 373c5.2-4.9 1.7-13.7-5.5-13.7M378.3 732.5l60.3-241H281.2l189.6-327.4h224.6L487.1 427.4h211z"/></svg>
                   x5
                 </div>
               </div>
