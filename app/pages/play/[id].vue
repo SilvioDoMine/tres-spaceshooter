@@ -51,7 +51,7 @@ onUnmounted(() => {
 <template>
   <div class="relative w-full h-dvh">
     <TresCanvas
-      clear-color="#020420"
+      clear-color="#000814"
       window-size
     >
       <GameOrchestrator>
