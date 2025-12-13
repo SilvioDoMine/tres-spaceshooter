@@ -34,6 +34,13 @@ watch(
       />
     </TresMesh>
 
+    <!-- Fumaça nas bordas do mapa -->
+    <GameMapBoundarySmoke
+      :map-width="stageWidth"
+      :map-height="stageHeight"
+      color="#33ff33"
+    />
+
     <TresAmbientLight :intensity="0.5" />
     <TresDirectionalLight :intensity="1" :position="[5, 10, 7.5]" />
   </TresGroup>
