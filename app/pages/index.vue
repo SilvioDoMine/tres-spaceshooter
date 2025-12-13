@@ -51,7 +51,7 @@ async function handleButtonClick() {
         </div>
 
         <!-- Half top -->
-        <div class="bg-white/10 w-full h-10 flex justify-between items-center pl-20 pr-6 text-sm">
+        <div class="bg-white/10 w-full h-10 flex justify-between items-center pl-20 pr-2 text-sm">
           <!-- User Name & Level Bar -->
           <div class="text-white text-md font-bold flex flex-col">
             <!-- Level & User -->
