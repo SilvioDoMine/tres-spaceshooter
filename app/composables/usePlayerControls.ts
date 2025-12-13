@@ -113,6 +113,12 @@ export function usePlayerControls() {
     const dy = movement.y * speed * delta;
     const dz = movement.z * speed * delta;
 
+    // Verifica se pode mover, por exemplo está no limite do mapa
+    if (! currentRun.canPlayerMoveTo(position.x + dx, position.y + dy, position.z + dz)) {
+      // Se não pode mover, sai da função
+      return;
+    }
+
     // ✅ MUTAÇÃO DIRETA: Atualiza valores sem disparar reatividade
     // Com shallowRef, mutations internas não disparam watchers
     position.x += dx;

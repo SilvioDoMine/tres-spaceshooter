@@ -20,8 +20,8 @@ watch(
 <template>
   <TresGroup>
     <TresMesh :rotation="[-Math.PI / 2, 0, 0]" name="GameWorld">
-      <TresPlaneGeometry :args="[stageWidth, stageHeight]" />
-      <TresMeshStandardMaterial wireframe color="white" />
+      <!-- <TresPlaneGeometry :args="[stageWidth, stageHeight]" />
+      <TresMeshStandardMaterial wireframe color="transparent" /> -->
       <Stars
         :size="1"
         :rotation="[0, Math.PI / 4, 0]"

@@ -225,6 +225,23 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     return moveVector.value;
   }
 
+  function canPlayerMoveTo(x: number, y: number, z: number): boolean {
+    // Verifica a colusão com o Stage X e Z
+    const stage = currentStage.value;
+    if (!stage) {
+      return false; // Nenhum estágio carregado
+    }
+
+    const halfWidth = stage.width / 2 - 0.5;
+    const halfHeight = stage.height / 2 - 0.5;
+
+    if (x < -halfWidth || x > halfWidth || z < -halfHeight || z > halfHeight) {
+      return false; // Fora dos limites do mapa
+    }
+
+    return true;
+  }
+
   function takeDamage(amount: number) {
     currentHealth.value = Math.max(0, currentHealth.value - amount);
 
@@ -363,6 +380,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     getPlayerPosition,
     getMoveVector,
     setMoveSpeed,
+    canPlayerMoveTo,
 
     takeDamage, // Função para o jogador receber dano
     healPlayer, // Função para curar o jogador
