@@ -58,8 +58,12 @@ function formatCurrency(amount: number): string {
       <!-- Topbar -->
       <div class="w-full h-17 absolute top-0 pointer-events-auto">
         <!-- Icon absolute 64x64 -->
-        <div class="absolute top-2 left-2 w-16 h-16 bg-gray-700 rounded flex items-center justify-center">
-          <span class="text-white font-bold">ICON</span>
+        <div class="absolute top-2 left-2 w-16 h-16 bg-linear-to-b from-gray-400 to-gray-600 rounded flex items-center justify-center">
+          <img 
+            src="/images/icons/icon-user-03.png" 
+            alt="user-icon" 
+            class="w-13 h-13 rounded-sm"
+          />
         </div>
 
         <!-- Half top -->
