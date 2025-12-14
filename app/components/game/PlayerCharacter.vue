@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { shallowRef } from 'vue';
+import { shallowRef, computed } from 'vue';
 import { useLoop } from '@tresjs/core';
 import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import type { TresInstance } from '@tresjs/core';
 import * as THREE from 'three';
+import { CameraUtils } from '~/utils/CameraUtils';
 
   // | Efeito desejado                           | Altura | FOV   |
   // |-------------------------------------------|--------|-------|
@@ -30,6 +31,25 @@ const playerMeshRef = shallowRef<TresInstance | null>(null);
 const hpMeshRef = shallowRef<TresInstance | null>(null);
 const rangeCircleRef = shallowRef<TresInstance | null>(null);
 const currentPosition = shallowRef({ x: initialPosition.x, y: initialPosition.y, z: initialPosition.z });
+
+// Configuração da câmera
+const CAMERA_HEIGHT = 75;
+const CAMERA_FOV = 25;
+
+// Define o viewport manualmente (área visível) - ajustado para o tamanho dos stages
+// Valores similares ao vueshooter para funcionar bem com os stages
+const VIEWPORT_WIDTH = 20;
+const VIEWPORT_HEIGHT = 12;
+
+const cameraConfig = {
+  height: CAMERA_HEIGHT,
+  fov: CAMERA_FOV,
+  viewportWidth: VIEWPORT_WIDTH,
+  viewportHeight: VIEWPORT_HEIGHT
+};
+
+// Posição calculada da câmera com limites
+const cameraPosition = shallowRef({ x: initialPosition.x, y: CAMERA_HEIGHT, z: initialPosition.z });
 
 // Opcional: Se você estiver usando um modelo GLTF
 // const { nodes, materials } = await useGLTF('/models/player.gltf', { draco: true });
@@ -107,6 +127,32 @@ onBeforeRender(() => {
     rangeCircleRef.value.scale.setScalar(rangeMultiplier);
 
     currentPosition.value = { x: position.x, y: position.y, z: position.z };
+
+    // Calcula a posição da câmera com limites baseados no mapa
+    const stage = currentRun.currentStage;
+    if (stage) {
+      const mapBounds = CameraUtils.stageToMapBounds(stage.width, stage.height);
+      const calculatedCameraPos = CameraUtils.calculateCameraPosition(
+        { x: position.x, z: position.z },
+        mapBounds,
+        cameraConfig
+      );
+
+      // Debug temporário
+      if (Math.random() < 0.01) { // Log 1% das vezes para não spammar
+        console.log('Camera Debug:', {
+          playerPos: { x: position.x.toFixed(2), z: position.z.toFixed(2) },
+          cameraPos: { x: calculatedCameraPos.x.toFixed(2), z: calculatedCameraPos.z.toFixed(2) },
+          mapBounds,
+          viewport: { width: cameraConfig.viewportWidth.toFixed(2), height: cameraConfig.viewportHeight.toFixed(2) }
+        });
+      }
+
+      cameraPosition.value = calculatedCameraPos;
+    } else {
+      // Se não tem stage, segue o player diretamente
+      cameraPosition.value = { x: position.x, y: CAMERA_HEIGHT, z: position.z };
+    }
   }
 });
 </script>
@@ -153,9 +199,9 @@ onBeforeRender(() => {
   />
 
   <TresPerspectiveCamera
-    :position="[currentPosition.x, currentPosition.y + 75, currentPosition.z]"
-    :look-at="[currentPosition.x, currentPosition.y, currentPosition.z]"
-    :fov="25"
+    :position="[cameraPosition.x, cameraPosition.y, cameraPosition.z]"
+    :look-at="[cameraPosition.x, 0, cameraPosition.z]"
+    :fov="CAMERA_FOV"
     name="PlayerCamera"
   />
 </template>
