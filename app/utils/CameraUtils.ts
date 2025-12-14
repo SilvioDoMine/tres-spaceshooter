@@ -1,10 +1,12 @@
 /**
- * CameraUtils - Gerencia a posição da câmera com limites baseados no mapa
+ * CameraUtils - Sistema de câmera com limites baseados no mapa
  *
- * Implementa o comportamento onde:
- * 1. A câmera segue o jogador (centralizada nele)
- * 2. Quando chega nas bordas do mapa, a câmera para de se mover
- * 3. O jogador pode continuar se movendo nas bordas (se "desprende" da câmera)
+ * Comportamento:
+ * 1. Câmera segue o jogador (centralizada)
+ * 2. Para de seguir nas bordas do stage
+ * 3. Jogador pode continuar andando além da câmera
+ * 4. Se o stage cabe na tela, câmera fica centralizada
+ * 5. Ajuste automático por plataforma (mobile/desktop)
  */
 
 export interface MapBounds {
@@ -14,117 +16,102 @@ export interface MapBounds {
   zMax: number;
 }
 
-export interface CameraConfig {
-  /** Altura da câmera em relação ao chão */
-  height: number;
-  /** Campo de visão (FOV) da câmera em graus */
-  fov: number;
-  /** Largura do viewport visível na altura do chão */
-  viewportWidth: number;
-  /** Altura do viewport visível na altura do chão */
-  viewportHeight: number;
-}
-
 export class CameraUtils {
+  /**
+   * Calcula o viewport real (área visível) baseado na altura e FOV da câmera
+   *
+   * @param cameraHeight - Altura da câmera
+   * @param fov - Campo de visão em graus
+   * @param aspect - Aspect ratio da tela (width/height)
+   * @returns Tamanho do viewport { width, height }
+   */
+  static calculateViewportSize(
+    cameraHeight: number,
+    fov: number,
+    aspect: number = 16 / 9
+  ): { width: number; height: number } {
+    const fovRadians = (fov * Math.PI) / 180;
+    const height = 2 * cameraHeight * Math.tan(fovRadians / 2);
+    const width = height * aspect;
+
+    return { width, height };
+  }
+
   /**
    * Calcula a posição da câmera para seguir o jogador dentro dos limites do mapa
    *
+   * Sistema adaptativo:
+   * - Stage pequeno: câmera centralizada no mapa
+   * - Stage grande: câmera segue jogador até as bordas
+   * - Ajuste automático mobile/desktop para melhor experiência
+   *
    * @param playerPosition - Posição atual do jogador (x, z)
-   * @param mapBounds - Limites do mapa
-   * @param cameraConfig - Configuração da câmera
+   * @param mapBounds - Limites do mapa (stage)
+   * @param cameraHeight - Altura da câmera
+   * @param fov - Campo de visão da câmera em graus
+   * @param aspect - Aspect ratio da tela (width/height)
    * @returns Posição calculada da câmera (x, y, z)
    */
   static calculateCameraPosition(
     playerPosition: { x: number; z: number },
     mapBounds: MapBounds,
-    cameraConfig: CameraConfig
+    cameraHeight: number,
+    fov: number,
+    aspect: number = 16 / 9
   ): { x: number; y: number; z: number } {
-    // Calcula metade do viewport visível (área que a câmera vê)
-    // Usa 2.4 como divisor (igual ao vueshooter) para dar mais margem de movimento
-    const halfViewWidth = cameraConfig.viewportWidth / 2.4;
-    const halfViewHeight = cameraConfig.viewportHeight / 2.4;
+    const viewport = this.calculateViewportSize(cameraHeight, fov, aspect);
 
-    // Calcular os limites onde a câmera pode estar para não mostrar área fora do mapa
-    // A câmera não pode ir além de uma posição onde a borda do viewport mostraria fora do mapa
-    const minCameraX = mapBounds.xMin + halfViewWidth;
-    const maxCameraX = mapBounds.xMax - halfViewWidth;
-    const minCameraZ = mapBounds.zMin + halfViewHeight;
-    // Só limitar metade pra cima (Z+), pois o joystick mobile fica na parte de baixo da tela
-    const maxCameraZ = mapBounds.zMax - (halfViewHeight / 2);
-
-    // Posição ideal da câmera (centralizada no jogador)
-    let cameraX = playerPosition.x;
-    let cameraZ = playerPosition.z;
-
-    // Aplicar limites para não mostrar área fora do mapa
-    // Se o mapa é menor que o viewport, centraliza no mapa
-    if (mapBounds.xMax - mapBounds.xMin <= cameraConfig.viewportWidth) {
-      // Mapa menor que viewport - centraliza no centro do mapa
-      cameraX = (mapBounds.xMin + mapBounds.xMax) / 2;
+    // Ajuste de margem por plataforma
+    // Valores mais altos = câmera para mais próximo da borda exata
+    // 1.0 = exatamente na borda, 0.8 = 20% além da borda
+    let viewportUsage: number;
+    if (aspect < 0.8) {
+      viewportUsage = 0.85; // Mobile portrait
+    } else if (aspect < 1.2) {
+      viewportUsage = 0.9;  // Tablet/Mobile landscape
     } else {
-      // Aplica clamping: mantém a câmera entre os limites
-      cameraX = Math.max(minCameraX, Math.min(maxCameraX, cameraX));
+      viewportUsage = 0.95; // Desktop
     }
 
-    if (mapBounds.zMax - mapBounds.zMin <= cameraConfig.viewportHeight) {
-      // Mapa menor que viewport - centraliza no centro do mapa
-      cameraZ = (mapBounds.zMin + mapBounds.zMax) / 2;
+    const effectiveViewportWidth = viewport.width * viewportUsage;
+    const effectiveViewportHeight = viewport.height * viewportUsage;
+
+    const mapWidth = mapBounds.xMax - mapBounds.xMin;
+    const mapHeight = mapBounds.zMax - mapBounds.zMin;
+    const mapCenterX = (mapBounds.xMin + mapBounds.xMax) / 2;
+    const mapCenterZ = (mapBounds.zMin + mapBounds.zMax) / 2;
+
+    // Verifica se o mapa cabe no viewport efetivo
+    const mapFitsWidth = mapWidth <= effectiveViewportWidth;
+    const mapFitsHeight = mapHeight <= effectiveViewportHeight;
+
+    let cameraX: number;
+    let cameraZ: number;
+
+    // Eixo X: centraliza se cabe, senão segue com limites
+    if (mapFitsWidth) {
+      cameraX = mapCenterX;
     } else {
-      // Aplica clamping: mantém a câmera entre os limites
-      cameraZ = Math.max(minCameraZ, Math.min(maxCameraZ, cameraZ));
+      const halfViewWidth = effectiveViewportWidth / 2;
+      const minCameraX = mapBounds.xMin + halfViewWidth;
+      const maxCameraX = mapBounds.xMax - halfViewWidth;
+      cameraX = Math.max(minCameraX, Math.min(maxCameraX, playerPosition.x));
+    }
+
+    // Eixo Z: centraliza se cabe, senão segue com limites
+    if (mapFitsHeight) {
+      cameraZ = mapCenterZ;
+    } else {
+      const halfViewHeight = effectiveViewportHeight / 2;
+      const minCameraZ = mapBounds.zMin + halfViewHeight;
+      const maxCameraZ = mapBounds.zMax - halfViewHeight;
+      cameraZ = Math.max(minCameraZ, Math.min(maxCameraZ, playerPosition.z));
     }
 
     return {
       x: cameraX,
-      y: cameraConfig.height,
+      y: cameraHeight,
       z: cameraZ
-    };
-  }
-
-  /**
-   * Calcula a largura do viewport visível no chão baseado na altura e FOV da câmera
-   *
-   * @param cameraHeight - Altura da câmera
-   * @param fov - Campo de visão em graus
-   * @param aspect - Aspect ratio da tela (width/height)
-   * @returns Largura do viewport no chão
-   */
-  static calculateViewportWidth(cameraHeight: number, fov: number, aspect: number): number {
-    const fovRadians = (fov * Math.PI) / 180;
-    const viewportHeight = 2 * cameraHeight * Math.tan(fovRadians / 2);
-    return viewportHeight * aspect;
-  }
-
-  /**
-   * Calcula a altura do viewport visível no chão baseado na altura e FOV da câmera
-   *
-   * @param cameraHeight - Altura da câmera
-   * @param fov - Campo de visão em graus
-   * @returns Altura do viewport no chão
-   */
-  static calculateViewportHeight(cameraHeight: number, fov: number): number {
-    const fovRadians = (fov * Math.PI) / 180;
-    return 2 * cameraHeight * Math.tan(fovRadians / 2);
-  }
-
-  /**
-   * Cria uma configuração de câmera baseada nos parâmetros fornecidos
-   *
-   * @param height - Altura da câmera
-   * @param fov - Campo de visão em graus
-   * @param aspect - Aspect ratio da tela (width/height) - padrão 16/9
-   * @returns Configuração completa da câmera
-   */
-  static createCameraConfig(
-    height: number,
-    fov: number,
-    aspect: number = 16 / 9
-  ): CameraConfig {
-    return {
-      height,
-      fov,
-      viewportWidth: this.calculateViewportWidth(height, fov, aspect),
-      viewportHeight: this.calculateViewportHeight(height, fov)
     };
   }
 

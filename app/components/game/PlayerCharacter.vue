@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import { shallowRef, computed } from 'vue';
+import { shallowRef } from 'vue';
 import { useLoop } from '@tresjs/core';
 import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import type { TresInstance } from '@tresjs/core';
 import * as THREE from 'three';
 import { CameraUtils } from '~/utils/CameraUtils';
+
+// Interface para o Stage
+interface Stage {
+  width: number;
+  height: number;
+  [key: string]: any;
+}
 
   // | Efeito desejado                           | Altura | FOV   |
   // |-------------------------------------------|--------|-------|
@@ -32,23 +39,12 @@ const hpMeshRef = shallowRef<TresInstance | null>(null);
 const rangeCircleRef = shallowRef<TresInstance | null>(null);
 const currentPosition = shallowRef({ x: initialPosition.x, y: initialPosition.y, z: initialPosition.z });
 
-// Configuração da câmera
+// ==================== CONFIGURAÇÃO DA CÂMERA ====================
 const CAMERA_HEIGHT = 75;
 const CAMERA_FOV = 25;
+const ASPECT_RATIO = typeof window !== 'undefined' ? window.innerWidth / window.innerHeight : 16 / 9;
 
-// Define o viewport manualmente (área visível) - ajustado para o tamanho dos stages
-// Valores similares ao vueshooter para funcionar bem com os stages
-const VIEWPORT_WIDTH = 20;
-const VIEWPORT_HEIGHT = 12;
-
-const cameraConfig = {
-  height: CAMERA_HEIGHT,
-  fov: CAMERA_FOV,
-  viewportWidth: VIEWPORT_WIDTH,
-  viewportHeight: VIEWPORT_HEIGHT
-};
-
-// Posição calculada da câmera com limites
+// Posição calculada da câmera (atualizada a cada frame)
 const cameraPosition = shallowRef({ x: initialPosition.x, y: CAMERA_HEIGHT, z: initialPosition.z });
 
 // Opcional: Se você estiver usando um modelo GLTF
@@ -93,66 +89,45 @@ rangeCircleGeometry.setAttribute(
   new THREE.BufferAttribute(new Float32Array(circleVertices), 3)
 );
 
+// ==================== GAME LOOP (60 FPS) ====================
 /**
- * ✅ PADRÃO RECOMENDADO: Acessa mesh diretamente via template ref
- * Mutação direta sem overhead reativo - 25x mais rápido
+ * Loop principal de atualização do jogador
+ * ✅ Otimizado: Mutação direta sem overhead reativo
  */
 const { onBeforeRender } = useLoop();
 onBeforeRender(() => {
-  if (playerMeshRef.value && hpMeshRef.value && rangeCircleRef.value) {
-    // Lê posição e rotação atualizada do store (atualizada por usePlayerControls)
-    const position = currentRun.getPlayerPosition();
-    const rotation = currentRun.getPlayerRotation();
+  if (!playerMeshRef.value || !hpMeshRef.value || !rangeCircleRef.value) return;
 
-    // ✅ Mutação direta da propriedade Three.js - SEM reatividade
-    playerMeshRef.value.position.x = position.x;
-    playerMeshRef.value.position.y = position.y;
-    playerMeshRef.value.position.z = position.z;
+  const position = currentRun.getPlayerPosition();
+  const rotation = currentRun.getPlayerRotation();
 
-    playerMeshRef.value.rotation.x = rotation.x;
-    playerMeshRef.value.rotation.y = rotation.y;
-    playerMeshRef.value.rotation.z = rotation.z;
+  // Atualiza posição e rotação do jogador
+  playerMeshRef.value.position.set(position.x, position.y, position.z);
+  playerMeshRef.value.rotation.set(rotation.x, rotation.y, rotation.z);
 
-    hpMeshRef.value.position.x = position.x;
-    hpMeshRef.value.position.y = position.y + 2;
-    hpMeshRef.value.position.z = position.z;
+  // Atualiza barra de HP
+  hpMeshRef.value.position.set(position.x, position.y + 2, position.z);
 
-    // Atualiza a posição do círculo de range
-    rangeCircleRef.value.position.x = position.x;
-    rangeCircleRef.value.position.y = position.y + 0.1; // Levemente acima do chão
-    rangeCircleRef.value.position.z = position.z;
+  // Atualiza círculo de range
+  rangeCircleRef.value.position.set(position.x, position.y + 0.1, position.z);
+  rangeCircleRef.value.scale.setScalar(playerStats.getRangeMultiplier);
 
-    // Atualiza a escala do círculo de acordo com o multiplicador de range
-    const rangeMultiplier = playerStats.getRangeMultiplier;
-    rangeCircleRef.value.scale.setScalar(rangeMultiplier);
+  currentPosition.value = { x: position.x, y: position.y, z: position.z };
 
-    currentPosition.value = { x: position.x, y: position.y, z: position.z };
-
-    // Calcula a posição da câmera com limites baseados no mapa
-    const stage = currentRun.currentStage;
-    if (stage) {
-      const mapBounds = CameraUtils.stageToMapBounds(stage.width, stage.height);
-      const calculatedCameraPos = CameraUtils.calculateCameraPosition(
-        { x: position.x, z: position.z },
-        mapBounds,
-        cameraConfig
-      );
-
-      // Debug temporário
-      if (Math.random() < 0.01) { // Log 1% das vezes para não spammar
-        console.log('Camera Debug:', {
-          playerPos: { x: position.x.toFixed(2), z: position.z.toFixed(2) },
-          cameraPos: { x: calculatedCameraPos.x.toFixed(2), z: calculatedCameraPos.z.toFixed(2) },
-          mapBounds,
-          viewport: { width: cameraConfig.viewportWidth.toFixed(2), height: cameraConfig.viewportHeight.toFixed(2) }
-        });
-      }
-
-      cameraPosition.value = calculatedCameraPos;
-    } else {
-      // Se não tem stage, segue o player diretamente
-      cameraPosition.value = { x: position.x, y: CAMERA_HEIGHT, z: position.z };
-    }
+  // Calcula posição da câmera com limites do stage
+  const stage = currentRun.currentStage as Stage | null;
+  if (stage?.width && stage?.height) {
+    const mapBounds = CameraUtils.stageToMapBounds(stage.width, stage.height);
+    cameraPosition.value = CameraUtils.calculateCameraPosition(
+      { x: position.x, z: position.z },
+      mapBounds,
+      CAMERA_HEIGHT,
+      CAMERA_FOV,
+      ASPECT_RATIO
+    );
+  } else {
+    // Fallback: segue o jogador diretamente
+    cameraPosition.value = { x: position.x, y: CAMERA_HEIGHT, z: position.z };
   }
 });
 </script>
