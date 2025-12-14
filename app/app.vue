@@ -1,17 +1,32 @@
 <script setup lang="ts">
-import { TresLeches, useControls } from '@tresjs/leches';
 import { useCurrentRunStore } from '~/stores/currentRunStore';
-import { useEnemyManager } from '~/composables/useEnemyManager';
-import { useTweakpaneStore } from './stores/useTweakpaneStore';
-import { Pane } from 'tweakpane';
 
+// Meta tags para prevenir zoom e gestos mobile
+useHead({
+  meta: [
+    {
+      name: 'viewport',
+      content: 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
+    },
+    {
+      name: 'apple-mobile-web-app-capable',
+      content: 'yes'
+    },
+    {
+      name: 'apple-mobile-web-app-status-bar-style',
+      content: 'black-translucent'
+    },
+    {
+      name: 'mobile-web-app-capable',
+      content: 'yes'
+    }
+  ]
+});
 
-// useControls('fpsgraph');
-const paneContainer = ref<HTMLElement | null>(null);
-const tweakpaneStore = useTweakpaneStore();
-const enemyManager = useEnemyManager();
+// Ativa bloqueio de gestos mobile
+useMobileGestureLock();
+
 const currentRunStore = useCurrentRunStore();
-
 currentRunStore.initializePermanentState();
 
 // watchOnce(paneContainer, (newVal) => {
@@ -80,11 +95,6 @@ currentRunStore.initializePermanentState();
 <template>
   <div class="game-root">
     <NuxtPage />
-
-    <ClientOnly>
-      <div id="paneContainer" ref="paneContainer" class="absolute top-4 right-4 z-50" />
-      <!-- <TresLeches /> -->
-    </ClientOnly>
   </div>
 </template>
 

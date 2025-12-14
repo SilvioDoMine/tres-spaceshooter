@@ -31,7 +31,7 @@ const getSkillColorClass = (rarity) => {
                 ? 'opacity-100 pointer-events-auto'
                 : 'opacity-0 pointer-events-none'
         "
-        class="absolute z-50 translate-all flex duration-500 inset-0 p-4 text-white bg-black/50"
+        class="absolute z-50 translate-all flex duration-500 inset-0 p-4 text-white bg-black/50 allow-scroll"
         >
         <!-- Cards -->
         <div class="flex sm:flex-row transition-all flex-col gap-4 items-center justify-center w-full sm:px-4 sm:h-full">
