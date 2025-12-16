@@ -20,19 +20,19 @@ watch(
 <template>
   <TresGroup>
     <TresMesh :rotation="[-Math.PI / 2, 0, 0]" name="GameWorld">
-      <!-- <TresPlaneGeometry :args="[stageWidth, stageHeight]" />
-      <TresMeshStandardMaterial wireframe color="transparent" /> -->
+      <TresPlaneGeometry :args="[stageWidth, stageHeight]" />
+      <TresMeshStandardMaterial wireframe color="transparent" />
       <Stars />
       <Stars :size="2" :count="1500" :depth="600" />
 
     </TresMesh>
 
     <!-- Fumaça nas bordas do mapa -->
-    <GameMapBoundarySmoke
+    <!-- <GameMapBoundarySmoke
       :map-width="stageWidth"
       :map-height="stageHeight"
       color="#33ff33"
-    />
+    /> -->
 
     <TresAmbientLight :intensity="0.5" />
     <TresDirectionalLight :intensity="1" :position="[5, 10, 7.5]" />
