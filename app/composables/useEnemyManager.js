@@ -28,6 +28,33 @@ export const baseStats = {
       gold: {min: 5, max: 15}
     }
   },
+  ufofast: {
+    color: 'hotpink',
+    size: 1,
+    speed: 2.2,
+    health: 180,
+    onHitDamage: 500,
+    distanceKeep: 20,
+    shotDamage: 100,
+    cooldownTotalShot: 1,
+    drops: {
+      exp: {min: 200, max: 350},
+      gold: {min: 10, max: 25}
+    }
+  },
+  kamikaze: {
+    color: 'red',
+    size: 1,
+    speed: 3.5,
+    health: 80,
+    onHitDamage: 300,
+    distanceKeep: 7,
+    chargeRecoveryCooldown: 3, // Cooldown após charge (segundos)
+    drops: {
+      exp: {min: 150, max: 300},
+      gold: {min: 10, max: 20}
+    }
+  },
   miniboss: {
     color: 'green',
     size: 3,
@@ -56,6 +83,19 @@ export const baseStats = {
       gold: {min: 100, max: 200}
     }
   },
+  kamikazeBoss: {
+    color: 'red',
+    size: 2,
+    speed: 3,
+    health: 800,
+    onHitDamage: 9999,
+    distanceKeep: 10,
+    chargeRecoveryCooldown: 1, // Sem cooldown após charge
+    drops: {
+      exp: {min: 500, max: 800},
+      gold: {min: 150, max: 300}
+    }
+  }
 };
 
 // Lógica para gerenciar inimigos: spawn, atualização, remoção, etc.

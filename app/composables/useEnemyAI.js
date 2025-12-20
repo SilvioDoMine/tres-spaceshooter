@@ -95,6 +95,144 @@ export function useEnemyAI() {
                 enemyManager.takeDamage(enemy.id, enemy.health, 'collision');
             }
         },
+        ufofast: (enemy, deltaTime) => {
+            // Move-se em direção ao jogador, mas param a uma certa distância.
+            // Se o jogador se aproximar, o UFO mantém a distância.
+            const directionZ = playerPosition.value.z - enemy.position.z;
+            const directionX = playerPosition.value.x - enemy.position.x;
+            const length = Math.sqrt(directionZ * directionZ + directionX * directionX);
+            const desiredDistance = enemy.distanceKeep; // Distância que o UFO quer manter do jogador
+
+            // Atualiza o cooldown do tiro - Essa lógica precisa acontecer antes
+            if (enemy.cooldownShot !== undefined) {
+                enemy.cooldownShot -= deltaTime;
+                if (enemy.cooldownShot < 0) {
+                    enemy.cooldownShot = 0;
+                }
+            }
+
+            // Move-se em direção ao jogador se estiver além da distância desejada
+            if (length > desiredDistance) {
+                enemy.position.z += (directionZ / length) * enemy.speed * deltaTime;
+                enemy.position.x += (directionX / length) * enemy.speed * deltaTime;
+            } else {
+                // Verifica se o enemy pode atirar
+                if (enemy.cooldownShot === undefined) {
+                    console.log(`Enemy AI: UFO enemy ${enemy.id} missing cooldownShot property`);
+                    return;
+                }
+
+                if (enemy.cooldownShot > 0) {
+                    return;
+                }
+
+                // Atira um projétil em direção ao jogador
+                const directionNorm = {
+                    x: directionX / length,
+                    z: directionZ / length,
+                };
+
+                projectileStore.spawnProjectile(
+                    'ufofast',
+                    { ...enemy.position },
+                    directionNorm,
+                    enemy.id,
+                    'enemy',
+                    1,
+                    1,
+                    baseStats.ufofast.shotDamage
+                );
+
+                // Reseta o cooldown do tiro
+                enemy.cooldownShot = enemy.cooldownTotalShot;
+            }
+
+            // detecta colisão com o jogador e dá dano
+            if (length <= enemy.size) {
+                // Aqui você pode implementar a lógica de dano ao jogador
+                console.log(`UFOFAST ${enemy.id} colidiu com o jogador!`);
+
+                currentRunStore.takeDamage(enemy.onHitDamage);
+                enemyManager.takeDamage(enemy.id, enemy.health, 'collision');
+            } 
+        },
+        kamikaze: (enemy, deltaTime) => {
+            // Move-se lentamente até chegar no keepDistance, depois pausa por 1 segundo
+            // Depois acelera em direção ao jogador para colidir.
+            // Caso o jogador se afaste, volta a se aproximar lentamente e reinicia o ciclo.
+            const directionZ = playerPosition.value.z - enemy.position.z;
+            const directionX = playerPosition.value.x - enemy.position.x;
+            const length = Math.sqrt(directionZ * directionZ + directionX * directionX);
+            const desiredDistance = enemy.distanceKeep; // Distância que o kamikaze quer manter do jogador
+
+            if (! enemy.kamikazeState) {
+                enemy.kamikazeState = 'approaching'; // 'approaching', 'pausing', 'charging', 'recovering'
+                enemy.kamikazeTimer = 0;
+            }
+            
+            if (enemy.kamikazeState === 'approaching') {
+                // Move-se em direção ao jogador
+                if (length > desiredDistance) {
+                    enemy.position.z += (directionZ / length) * enemy.speed * deltaTime;
+                    enemy.position.x += (directionX / length) * enemy.speed * deltaTime;
+                } else {
+                    // Alcançou a distância desejada, começa a pausar
+                    enemy.kamikazeState = 'pausing';
+                    enemy.kamikazeTimer = 1.0; // Pausa por 1 segundo
+                }
+            } else if (enemy.kamikazeState === 'pausing') {
+                enemy.kamikazeTimer -= deltaTime;
+                if (enemy.kamikazeTimer <= 0) {
+                    // Começa a carregar em direção ao jogador
+                    enemy.kamikazeChargePosition = { ...playerPosition.value }; // Trava a posição do jogador no momento do charge
+                    enemy.kamikazeState = 'charging';
+                }
+            } else if (enemy.kamikazeState === 'charging') {
+                // Anda em direção à posição travada do jogador
+                const chargeDirectionZ = enemy.kamikazeChargePosition.z - enemy.position.z;
+                const chargeDirectionX = enemy.kamikazeChargePosition.x - enemy.position.x;
+                const chargeLength = Math.sqrt(chargeDirectionZ * chargeDirectionZ + chargeDirectionX * chargeDirectionX);
+
+
+                // Charge com 4x a velocidade normal
+                const chargeSpeed = enemy.speed * 4;
+
+                if (chargeLength > 0.5) { // Se ainda está longe da posição travada
+                    enemy.position.z += (chargeDirectionZ / chargeLength) * chargeSpeed * deltaTime;
+                    enemy.position.x += (chargeDirectionX / chargeLength) * chargeSpeed * deltaTime;
+                } else {
+                    // Chegou na posição travada, entra em cooldown de recuperação
+                    enemy.kamikazeState = 'recovering';
+                    enemy.kamikazeTimer = enemy.chargeRecoveryCooldown || 0;
+                }
+
+                // Se o jogador atual se afastar muito da posição travada, recalcula
+                const currentPlayerDistance = Math.sqrt(
+                    Math.pow(playerPosition.value.x - enemy.kamikazeChargePosition.x, 2) +
+                    Math.pow(playerPosition.value.z - enemy.kamikazeChargePosition.z, 2)
+                );
+                if (currentPlayerDistance > 8) { // Jogador se afastou muito, reinicia
+                    enemy.kamikazeState = 'recovering';
+                    enemy.kamikazeTimer = enemy.chargeRecoveryCooldown || 0;
+                }
+            } else if (enemy.kamikazeState === 'recovering') {
+                // Fica parado durante o cooldown de recuperação
+                enemy.kamikazeTimer -= deltaTime;
+                if (enemy.kamikazeTimer <= 0) {
+                    // Cooldown terminou, volta a se aproximar
+                    enemy.kamikazeState = 'approaching';
+                }
+            }
+
+            // detecta colisão com o jogador e dá dano
+            if (length <= enemy.size) {
+                // Aqui você pode implementar a lógica de dano ao jogador
+                console.log(`Kamikaze ${enemy.id} colidiu com o jogador!`);
+
+                currentRunStore.takeDamage(enemy.onHitDamage);
+                enemyManager.takeDamage(enemy.id, enemy.health, 'collision');
+            }
+        },
         boss: (enemy, deltaTime) => {
             // Comportamento do boss: Move-se lentamente em direção ao jogador e atira frequentemente
             const directionZ = playerPosition.value.z - enemy.position.z;
@@ -208,6 +346,83 @@ export function useEnemyAI() {
 
             // Reseta o cooldown do tiro
             enemy.cooldownShot = enemy.cooldownTotalShot;
+        },
+        kamikazeBoss: (enemy, deltaTime) => {
+            // Move-se lentamente até chegar no keepDistance, depois pausa por 1 segundo
+            // Depois acelera em direção ao jogador para colidir.
+            // Caso o jogador se afaste, volta a se aproximar lentamente e reinicia o ciclo.
+            const directionZ = playerPosition.value.z - enemy.position.z;
+            const directionX = playerPosition.value.x - enemy.position.x;
+            const length = Math.sqrt(directionZ * directionZ + directionX * directionX);
+            const desiredDistance = enemy.distanceKeep; // Distância que o kamikaze quer manter do jogador
+
+            if (! enemy.kamikazeState) {
+                enemy.kamikazeState = 'approaching'; // 'approaching', 'pausing', 'charging', 'recovering'
+                enemy.kamikazeTimer = 0;
+            }
+            
+            if (enemy.kamikazeState === 'approaching') {
+                // Move-se em direção ao jogador
+                if (length > desiredDistance) {
+                    enemy.position.z += (directionZ / length) * enemy.speed * deltaTime;
+                    enemy.position.x += (directionX / length) * enemy.speed * deltaTime;
+                } else {
+                    // Alcançou a distância desejada, começa a pausar
+                    enemy.kamikazeState = 'pausing';
+                    enemy.kamikazeTimer = 1.0; // Pausa por 1 segundo
+                }
+            } else if (enemy.kamikazeState === 'pausing') {
+                enemy.kamikazeTimer -= deltaTime;
+                if (enemy.kamikazeTimer <= 0) {
+                    // Começa a carregar em direção ao jogador
+                    enemy.kamikazeChargePosition = { ...playerPosition.value }; // Trava a posição do jogador no momento do charge
+                    enemy.kamikazeState = 'charging';
+                }
+            } else if (enemy.kamikazeState === 'charging') {
+                // Anda em direção à posição travada do jogador
+                const chargeDirectionZ = enemy.kamikazeChargePosition.z - enemy.position.z;
+                const chargeDirectionX = enemy.kamikazeChargePosition.x - enemy.position.x;
+                const chargeLength = Math.sqrt(chargeDirectionZ * chargeDirectionZ + chargeDirectionX * chargeDirectionX);
+
+
+                // Charge com 4x a velocidade normal
+                const chargeSpeed = enemy.speed * 4;
+
+                if (chargeLength > 0.5) { // Se ainda está longe da posição travada
+                    enemy.position.z += (chargeDirectionZ / chargeLength) * chargeSpeed * deltaTime;
+                    enemy.position.x += (chargeDirectionX / chargeLength) * chargeSpeed * deltaTime;
+                } else {
+                    // Chegou na posição travada, entra em cooldown de recuperação
+                    enemy.kamikazeState = 'recovering';
+                    enemy.kamikazeTimer = enemy.chargeRecoveryCooldown || 0;
+                }
+
+                // Se o jogador atual se afastar muito da posição travada, recalcula
+                const currentPlayerDistance = Math.sqrt(
+                    Math.pow(playerPosition.value.x - enemy.kamikazeChargePosition.x, 2) +
+                    Math.pow(playerPosition.value.z - enemy.kamikazeChargePosition.z, 2)
+                );
+                if (currentPlayerDistance > 8) { // Jogador se afastou muito, reinicia
+                    enemy.kamikazeState = 'recovering';
+                    enemy.kamikazeTimer = enemy.chargeRecoveryCooldown || 0;
+                }
+            } else if (enemy.kamikazeState === 'recovering') {
+                // Fica parado durante o cooldown de recuperação
+                enemy.kamikazeTimer -= deltaTime;
+                if (enemy.kamikazeTimer <= 0) {
+                    // Cooldown terminou, volta a se aproximar
+                    enemy.kamikazeState = 'approaching';
+                }
+            }
+
+            // detecta colisão com o jogador e dá dano
+            if (length <= enemy.size) {
+                // Aqui você pode implementar a lógica de dano ao jogador
+                console.log(`Kamikaze ${enemy.id} colidiu com o jogador!`);
+
+                currentRunStore.takeDamage(enemy.onHitDamage);
+                enemyManager.takeDamage(enemy.id, enemy.health, 'collision');
+            }
         },
     }
 
