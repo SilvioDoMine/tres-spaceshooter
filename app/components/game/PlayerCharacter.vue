@@ -164,7 +164,8 @@ onBeforeRender(() => {
 
     <!-- Combat text -->
     <GameCombatText
-      :position="[0, 5, 0]"
+      :position="[0, -5, -1.75]"
+      :entity-id="PlayerBaseStats.id"
     />
   </TresMesh>
 

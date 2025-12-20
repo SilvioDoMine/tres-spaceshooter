@@ -58,6 +58,12 @@ onUnmounted(() => {
         color="red"
         :hiddenFull="true"
       />
+
+      <!-- Combat Text -->
+      <GameCombatText
+        :position="[0, 0, -baseStats[enemy.type].size]"
+        :entity-id="enemy.id"
+      />
     </TresMesh>
   </TresGroup>
 </template>

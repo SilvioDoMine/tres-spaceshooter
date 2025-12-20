@@ -6,7 +6,7 @@ export const baseStats = {
   asteroid: {
     color: 'gray',
     speed: 3,
-    health: 50,
+    health: 65,
     onHitDamage: 100,
     size: 1.25,
     drops: {
@@ -18,7 +18,7 @@ export const baseStats = {
     color: 'green',
     size: 1,
     speed: 2,
-    health: 100,
+    health: 120,
     onHitDamage: 150,
     distanceKeep: 10,
     shotDamage: 50,
@@ -32,7 +32,7 @@ export const baseStats = {
     color: 'green',
     size: 3,
     speed: 1.1,
-    health: 200,
+    health: 600,
     onHitDamage: 999,
     distanceKeep: 20,
     shotDamage: 200,
@@ -46,7 +46,7 @@ export const baseStats = {
     color: 'hotpink',
     size: 3,
     speed: 1.1,
-    health: 400,
+    health: 1200,
     onHitDamage: 999,
     distanceKeep: 20,
     shotDamage: 300,
@@ -139,6 +139,13 @@ export function useEnemyManager() {
     }
 
     enemy.health -= damage;
+
+    // combat text
+    useCombatTextStore().emitForTarget(
+      enemyId,
+      'damage',
+      damage
+    );
 
     // Se a saúde do inimigo chegar a zero ou menos, removê-lo
     if (enemy.health <= 0) {
