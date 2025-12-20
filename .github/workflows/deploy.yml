@@ -50,8 +50,13 @@ jobs:
             source "$NVM_DIR/nvm.sh"
             nvm use 22
 
-            echo ">>> Installing node modules"
-            npm install || { echo "npm install failed"; exit 1; }
+            echo ">>> Check package.json diff to decide whether to install dependencies"
+            if git diff --name-only HEAD~1 HEAD | grep -q 'package.json\|package-lock.json'; then
+              echo "Dependencies changed, installing node modules"
+              npm install || { echo "npm install failed"; exit 1; }
+            else
+              echo "No changes in dependencies, skipping npm install"
+            fi
 
             echo ">>> Building the application"
             npm run generate || { echo "npm run generate failed"; exit 1; }
