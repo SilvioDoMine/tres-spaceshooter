@@ -86,7 +86,7 @@ onMounted(() => {
                 createdAt: Date.now(),
             });
         });
-    }, 100);
+    }, 10);
 
     // Remove textos expirados automaticamente
     cleanupInterval = setInterval(() => {

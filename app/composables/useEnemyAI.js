@@ -218,6 +218,10 @@ export function useEnemyAI() {
                 return;
             }
 
+            if (enemy.state !== 'active') {
+                return;
+            }
+
             const behavior = behaviors[enemy.type];
 
             if (! behavior) {

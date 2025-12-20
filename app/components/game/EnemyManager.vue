@@ -16,6 +16,22 @@ const getEnemyVisuals = (enemy) => {
       scale,
       opacity,
       transparent: true,
+      rotation: 0,
+    };
+  }
+
+  if (enemy.state === 'dying') {
+    // Durante morte: fade out + encolhimento + rotação
+    const progress = enemy.deathProgress; // 0 a 1
+    const scale = 1 - progress; // 1 a 0 (encolhe)
+    const opacity = 1 - progress; // 1 a 0 (fade out)
+    const rotation = progress * Math.PI * 2; // 0 a 2π (rotação completa)
+
+    return {
+      scale,
+      opacity,
+      transparent: true,
+      rotation,
     };
   }
 
@@ -24,6 +40,7 @@ const getEnemyVisuals = (enemy) => {
     scale: 1,
     opacity: 1,
     transparent: false,
+    rotation: 0,
   };
 };
 
@@ -34,36 +51,51 @@ onUnmounted(() => {
 
 <template>
   <TresGroup>
-    <TresMesh
+    <TresGroup
       v-for="(enemy, index) in activeEnemies"
       :key="index"
-      :name="`enemy-${index}`"
-      :position="[enemy.position.x, enemy.position.y, enemy.position.z]"
-      :scale="getEnemyVisuals(enemy).scale"
     >
-      <TresMeshStandardMaterial
-        :color="baseStats[enemy.type].color"
-        :opacity="getEnemyVisuals(enemy).opacity"
-        :transparent="getEnemyVisuals(enemy).transparent"
-      />
-      <TresBoxGeometry :args="[baseStats[enemy.type].size, baseStats[enemy.type].size, baseStats[enemy.type].size]" />
-      <!-- HealthBar (só mostra quando ativo) -->
-      <GameHealthBar
-        v-if="enemy.state === 'active'"
-        :current-health="enemy.health"
-        :max-health="baseStats[enemy.type].health"
-        :width="baseStats[enemy.type].size * 0.9"
-        :height="0.2"
-        :position="[0, 0, -baseStats[enemy.type].size * 0.7]"
-        color="red"
-        :hiddenFull="true"
-      />
+      <!-- Geometria visual do inimigo (ROTACIONA) -->
+      <TresMesh
+        :name="`enemy-visual-${index}`"
+        :position="[enemy.position.x, enemy.position.y, enemy.position.z]"
+        :scale="getEnemyVisuals(enemy).scale"
+        :rotation="[0, getEnemyVisuals(enemy).rotation, 0]"
+      >
+        <TresMeshStandardMaterial
+          :color="baseStats[enemy.type].color"
+          :opacity="getEnemyVisuals(enemy).opacity"
+          :transparent="getEnemyVisuals(enemy).transparent"
+        />
 
-      <!-- Combat Text -->
-      <GameCombatText
-        :position="[0, 0, -baseStats[enemy.type].size]"
-        :entity-id="enemy.id"
-      />
-    </TresMesh>
+        <TresBoxGeometry
+          :args="[baseStats[enemy.type].size, baseStats[enemy.type].size, baseStats[enemy.type].size]"
+        />
+      </TresMesh>
+
+      <!-- UI elements (NÃO ROTACIONAM) -->
+      <TresGroup
+        :name="`enemy-ui-${index}`"
+        :position="[enemy.position.x, enemy.position.y, enemy.position.z]"
+      >
+        <!-- HealthBar (só mostra quando ativo) -->
+        <GameHealthBar
+          v-if="enemy.state === 'active'"
+          :current-health="enemy.health"
+          :max-health="baseStats[enemy.type].health"
+          :width="baseStats[enemy.type].size * 0.9"
+          :height="0.2"
+          :position="[0, 0, -baseStats[enemy.type].size * 0.7]"
+          color="red"
+          :hiddenFull="true"
+        />
+
+        <!-- Combat Text -->
+        <GameCombatText
+          :position="[0, 0, -baseStats[enemy.type].size]"
+          :entity-id="enemy.id"
+        />
+      </TresGroup>
+    </TresGroup>
   </TresGroup>
 </template>

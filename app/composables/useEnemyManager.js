@@ -66,7 +66,7 @@ export function useEnemyManager() {
   const { activeEnemies } = storeToRefs(enemyManagerStore);
   
   const update = (delta) => {
-    // Atualiza o timer de spawn dos inimigos
+    // Atualiza o timer de spawn e morte dos inimigos
     activeEnemies.value.forEach(enemy => {
       if (enemy.state === 'spawning') {
         enemy.spawnTimer -= delta;
@@ -82,7 +82,20 @@ export function useEnemyManager() {
           enemy.spawnProgress = 1;
         }
       }
+
+      if (enemy.state === 'dying') {
+        enemy.deathTimer -= delta;
+
+        // Calcula o progresso da morte (0 a 1)
+        enemy.deathProgress = 1 - (enemy.deathTimer / enemy.totalDeathTime);
+        enemy.deathProgress = Math.max(0, Math.min(1, enemy.deathProgress)); // Clamp entre 0 e 1
+      }
     });
+
+    // Remove inimigos que terminaram a animação de morte
+    activeEnemies.value = activeEnemies.value.filter(enemy =>
+      !(enemy.state === 'dying' && enemy.deathTimer <= 0)
+    );
   };
 
   const spawnEnemyWave = (waveConfig) => {
@@ -133,8 +146,8 @@ export function useEnemyManager() {
       return;
     }
 
-    // Inimigos em spawning são invulneráveis
-    if (enemy.state === 'spawning') {
+    // Inimigos em spawning ou morrendo são invulneráveis
+    if (enemy.state === 'spawning' || enemy.state === 'dying') {
       return;
     }
 
@@ -147,9 +160,12 @@ export function useEnemyManager() {
       damage
     );
 
-    // Se a saúde do inimigo chegar a zero ou menos, removê-lo
+    // Se a saúde do inimigo chegar a zero ou menos, inicia animação de morte
     if (enemy.health <= 0) {
-      activeEnemies.value = activeEnemies.value.filter(e => e.id !== enemyId);
+      enemy.state = 'dying';
+      enemy.deathTimer = 0.8; // Duração da animação de morte (segundos)
+      enemy.totalDeathTime = 0.8;
+      enemy.deathProgress = 0;
 
       if (type === 'shot') {
         // Drop dos inimigos no chão
