@@ -161,6 +161,11 @@ onBeforeRender(() => {
       :position="[0, -5, -1.2]"
       :showHp="true"
     />
+
+    <!-- Combat text -->
+    <GameCombatText
+      :position="[0, 5, 0]"
+    />
   </TresMesh>
 
   <!-- Círculo mostrando o range de tiro -->
