@@ -41,9 +41,6 @@ jobs:
 
             echo ">>> Git pull"
             git pull origin ${{ github.ref_name }} || { echo "Git pull failed"; exit 1; }
-            
-            echo ">>> Removing node_modules and package-lock.json"
-            rm -rf node_modules package-lock.json || { echo "Failed to remove node_modules and package-lock.json"; exit 1; }
 
             echo ">>> Executing nvm and installing node"
             export NVM_DIR="$HOME/.nvm"
@@ -53,6 +50,7 @@ jobs:
             echo ">>> Check package.json diff to decide whether to install dependencies"
             if git diff --name-only HEAD~1 HEAD | grep -q 'package.json\|package-lock.json'; then
               echo "Dependencies changed, installing node modules"
+              rm -rf node_modules package-lock.json || { echo "Failed to remove node_modules and package-lock.json"; exit 1; }
               npm install || { echo "npm install failed"; exit 1; }
             else
               echo "No changes in dependencies, skipping npm install"
