@@ -39,7 +39,7 @@ export const baseStats = {
     onHitDamage: 500,
     distanceKeep: 20,
     shotDamage: 100,
-    cooldownTotalShot: 1,
+    cooldownTotalShot: 1.75,
     drops: {
       exp: {min: 200, max: 350},
       gold: {min: 10, max: 25}

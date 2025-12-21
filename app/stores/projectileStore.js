@@ -20,14 +20,14 @@ export const projectilesType = {
     color: baseStats.ufo.color,
   },
   ufofast: {
-    speed: 15,
+    speed: 8,
     damage: 150,
-    size: 0.2,
-    range: 10,
+    size: 0.3,
+    range: 20,
     color: baseStats.ufofast.color,
   },
   boss: {
-    speed: 12,
+    speed: 8,
     damage: 200,
     size: 0.5,
     range: 20,
