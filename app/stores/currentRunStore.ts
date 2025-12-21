@@ -361,7 +361,11 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   }
 
   function addExp(amount: number) {
-    currentExp.value += amount;
+    const multiplier = (stageLevel: number) => {
+      return 1 + (stageLevel - 1) * 0.5; // Exemplo: 10% a mais por nível de estágio acima do 1
+    }
+
+    currentExp.value += amount * multiplier(currentStageIndex.value + 1);
 
     while (currentExp.value >= expToNextLevel.value) {
       levelUp();
