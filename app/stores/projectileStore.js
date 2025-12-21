@@ -3,6 +3,7 @@ import { ref, shallowRef } from 'vue';
 import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
 import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
 import { usePlayerStats } from '~/stores/playerStats';
+import { useSkillStore, SkillsList } from '~/stores/SkillStore';
 
 export const projectilesType = {
   player: {
@@ -46,14 +47,19 @@ export const useProjectileStore = defineStore('projectileStore', () => {
   const enemyManager = useEnemyManager();
   const currentRunStore = useCurrentRunStore();
   const playerStats = usePlayerStats();
+  const skillStore = useSkillStore(); // ✅ OTIMIZAÇÃO: Inicializa uma vez fora do loop
 
-  const projectiles = ref([]);
+  // ✅ OTIMIZAÇÃO: shallowRef para arrays mutados diretamente
+  const projectiles = shallowRef([]);
 
   function update(deltaTime) {
     // Atualiza a lógica dos projéteis
     checkCollisions();
 
-    projectiles.value.forEach((projectile, index) => {
+    // ✅ OTIMIZAÇÃO: Filtra projéteis expirados ao invés de splice no loop
+    const projectilesToKeep = [];
+
+    projectiles.value.forEach((projectile) => {
       // Move o projétil na direção especificada
       let distance = projectile.speed * deltaTime;
 
@@ -62,6 +68,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
         distance *= playerStats.getProjectileSpeedMultiplier;
       }
 
+      // ✅ MUTAÇÃO DIRETA: Sem overhead de reatividade
       projectile.position.x += projectile.direction.x * distance;
       projectile.position.z += projectile.direction.z * distance;
       projectile.distanceTraveled += distance;
@@ -73,18 +80,22 @@ export const useProjectileStore = defineStore('projectileStore', () => {
         projectileRange *= playerStats.getRangeMultiplier;
       }
 
-      if (projectile.distanceTraveled >= projectileRange) {
-        projectiles.value.splice(index, 1); // Remove o projétil
-        return;
+      // Só mantém projéteis que não expiraram E não foram marcados para remoção
+      if (projectile.distanceTraveled < projectileRange && !projectile._markedForRemoval) {
+        projectilesToKeep.push(projectile);
       }
     });
+
+    // ✅ Atualiza array uma única vez
+    projectiles.value = projectilesToKeep;
   }
   
   function checkCollisions() {
-    projectiles.value.forEach((projectile, pIndex) => {
+    // ✅ OTIMIZAÇÃO: Marca projéteis para remoção ao invés de splice direto
+    projectiles.value.forEach((projectile) => {
       if (projectile.ownerType === 'player') {
         // Verifica colisão com inimigos
-        enemyManager.activeEnemies.value.forEach((enemy, eIndex) => {
+        enemyManager.activeEnemies.value.forEach((enemy) => {
           if (
             isColliding(
               projectile.position,
@@ -100,17 +111,16 @@ export const useProjectileStore = defineStore('projectileStore', () => {
 
             // Aplica dano ao inimigo
             enemyManager.takeDamage(enemy.id, projectile.damage, 'shot');
-            
+
             if (projectile.currentHits <= 1) {
-              projectiles.value.splice(pIndex, 1); // Remove o projétil
+              projectile._markedForRemoval = true; // ✅ Marca para remoção
             } else {
               projectile.currentHits -= 1;
             }
 
             // if ricochet skill, calculate new direction towards nearest enemy
-            const { hasSkill, getSkillLevel } = useSkillStore();
-            if (hasSkill('ricochet_shot')) {
-              const skillLevel = getSkillLevel('ricochet_shot');
+            if (skillStore.hasSkill('ricochet_shot')) {
+              const skillLevel = skillStore.getSkillLevel('ricochet_shot');
               // o range do ricochete é igual ao do projetil normal. Nível aumenta a quantidade de bounces depois.
               const nearestEnemy = nearestEnemyFromPlayer();
 
@@ -166,9 +176,9 @@ export const useProjectileStore = defineStore('projectileStore', () => {
           )
         ) {
           currentRunStore.takeDamage(projectile.damage);
-          
+
           if (projectile.currentHits <= 1) {
-            projectiles.value.splice(pIndex, 1); // Remove o projétil
+            projectile._markedForRemoval = true; // ✅ Marca para remoção
           } else {
             projectile.currentHits -= 1;
           }
@@ -182,15 +192,14 @@ export const useProjectileStore = defineStore('projectileStore', () => {
   }
 
   function spawnProjectile(type, position, direction, ownerId, ownerType, hits = 1, bounces = 0, damage = 0, ignoreEnemies = []) {
-    let config = projectilesType[type];
+    const config = projectilesType[type];
 
     if (! config) {
       console.warn(`Projectile type "${type}" not recognized.`);
       return;
     }
 
-    config.damage = damage;
-
+    // ✅ OTIMIZAÇÃO: Não mutamos o config compartilhado, aplicamos damage diretamente
     projectiles.value.push({
       id: `projectile-${Date.now()}_${Math.random()}`,
       type: type,
@@ -203,7 +212,8 @@ export const useProjectileStore = defineStore('projectileStore', () => {
       currentHits: hits,
       hitsList: ignoreEnemies,
       bounces: bounces,
-      ...config, // speed, damage, size, range, color
+      ...config, // speed, size, range, color (mas não damage)
+      damage: damage || config.damage, // ✅ Sobrescreve damage sem mutar config
     });
   }
 
