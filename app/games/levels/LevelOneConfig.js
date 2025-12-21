@@ -45,7 +45,13 @@ export const LEVEL_1 = {
       waves: [
         {
           enemies: [
-            { enemyType: 'asteroid', count: 4, delay: 1.5 },
+            { enemyType: 'asteroid', count: 2, delay: 1.5 },
+          ]
+        },
+        {
+          enemies: [
+            { enemyType: 'asteroid', count: 2, delay: 1.5 },
+            { enemyType: 'asteroid', count: 4, delay: 2.5 },
           ]
         },
         {
@@ -54,12 +60,12 @@ export const LEVEL_1 = {
             { enemyType: 'asteroid', count: 6, delay: 2.5 },
           ]
         },
-        // {
-        //   enemies: [
-        //     { enemyType: 'ufo', count: 2, delay: 1.5 },
-        //     { enemyType: 'asteroid', count: 6, delay: 1.5 },
-        //   ]
-        // },
+        {
+          enemies: [
+            { enemyType: 'asteroid', count: 6, delay: 1.5 },
+            { enemyType: 'asteroid', count: 8, delay: 2.5 },
+          ]
+        },
       ],
       devDescription: 'Primeira sala lança 4 asteroides, depois 6 asteroides e então é liberado para a próxima sala.',
       door: {
@@ -160,5 +166,89 @@ export const LEVEL_1 = {
       },
       playerStartPosition: { x: 0, y: 0, z: 0 },
     },
+    {
+      stageId: 'S7_Combat_More',
+      type: 'combat',
+      width: 10,
+      height: 20,
+      waves: [
+        {
+          enemies: [
+            { enemyType: 'ufofast', count: 2, delay: 1.5 },
+            { enemyType: 'asteroid', count: 4, delay: 1.5},
+          ]
+        },
+        {
+          enemies: [
+            { enemyType: 'ufofast', count: 2, delay: 1.5 },
+            { enemyType: 'asteroid', count: 6, delay: 1.5},
+            { enemyType: 'ufo', count: 2, delay: 1.5}
+          ]
+        },
+        {
+          enemies: [
+            { enemyType: 'ufofast', count: 4, delay: 1.5 },
+            { enemyType: 'asteroid', count: 8, delay: 1.5},
+            { enemyType: 'ufo', count: 3, delay: 1.5}
+          ],
+        },
+      ],
+      devDescription: 'Após o chefe boss, agora teremos um novo inimigo que é o ufofast.',
+      door: {
+        position: { x: 0, y: 0, z: -9 },
+        size: { width: 4, height: 8 },
+      },
+      playerStartPosition: { x: 0, y: 0, z: 0 },
+    },
+    {
+      stageId: 'S8_KamikazeBoss',
+      type: 'boss',
+      width: 40,
+      height: 40,
+      waves: [
+        { enemies: [ { enemyType: 'kamikazeboss', count: 1, delay: 3 } ] }
+      ],
+      devDescription: 'Chefe final do nível que utiliza ataques kamikaze.',
+      door: {
+        position: { x: 0, y: 0, z: -9 },
+        size: { width: 4, height: 8 },
+      },
+      playerStartPosition: { x: 0, y: 0, z: 0 },
+    },
+    {
+      stageId: 'S9_Combat_More',
+      type: 'combat',
+      width: 10,
+      height: 20,
+      waves: [
+        {
+          enemies: [
+            { enemyType: 'kamikaze', count: 2, delay: 1.5 },
+            { enemyType: 'ufofast', count: 2, delay: 1.5 },
+            { enemyType: 'asteroid', count: 4, delay: 1.5},
+          ]
+        },
+        {
+          enemies: [
+            { enemyType: 'kamikaze', count: 3, delay: 1.5 },
+            { enemyType: 'ufofast', count: 3, delay: 1.5 },
+            { enemyType: 'asteroid', count: 6, delay: 1.5},
+          ]
+        },
+        {
+          enemies: [
+            { enemyType: 'kamikaze', count: 4, delay: 1.5 },
+            { enemyType: 'ufofast', count: 4, delay: 1.5 },
+            { enemyType: 'asteroid', count: 8, delay: 1.5},
+          ],
+        },
+      ],
+      devDescription: 'Sala final com todos os inimigos do nível para testar as mecânicas aprendidas.',
+      door: {
+        position: { x: 0, y: 0, z: -9 },
+        size: { width: 4, height: 8 },
+      },
+      playerStartPosition: { x: 0, y: 0, z: 0 },
+    }
   ],
 };
