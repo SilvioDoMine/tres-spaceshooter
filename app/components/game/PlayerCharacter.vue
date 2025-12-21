@@ -155,7 +155,7 @@ onBeforeRender(() => {
     <GameHealthBar
       v-if="true"
       :current-health="currentRun.currentHealth"
-      :max-health="PlayerBaseStats.maxHealth"
+      :max-health="currentRun.maxHealth"
       :width="1.5"
       :height="0.21"
       :position="[0, -5, -1.2]"
