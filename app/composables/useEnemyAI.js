@@ -19,6 +19,26 @@ export function useEnemyAI() {
             const directionZ = playerPosition.value.z - enemy.position.z;
             const directionX = playerPosition.value.x - enemy.position.x;
             const length = Math.sqrt(directionZ * directionZ + directionX * directionX);
+
+            // Inicializa velocidade de rotação aleatória se não existir
+            if (!enemy.rotationSpeed) {
+                enemy.rotationSpeed = {
+                    x: (Math.random() - 0.5) * 2, // -1 a 1
+                    y: (Math.random() - 0.5) * 2,
+                    z: (Math.random() - 0.5) * 2
+                };
+            }
+
+            // Inicializa rotação se não existir
+            if (!enemy.rotation) {
+                enemy.rotation = { x: 0, y: 0, z: 0 };
+            }
+
+            // Atualiza rotação continuamente
+            enemy.rotation.x += enemy.rotationSpeed.x * deltaTime;
+            enemy.rotation.y += enemy.rotationSpeed.y * deltaTime;
+            enemy.rotation.z += enemy.rotationSpeed.z * deltaTime;
+
             if (length > 1) {
                 enemy.position.z += (directionZ / length) * enemy.speed * deltaTime;
                 enemy.position.x += (directionX / length) * enemy.speed * deltaTime;
@@ -175,6 +195,20 @@ export function useEnemyAI() {
                 if (length > desiredDistance) {
                     enemy.position.z += (directionZ / length) * enemy.speed * deltaTime;
                     enemy.position.x += (directionX / length) * enemy.speed * deltaTime;
+
+                    // Rotação suave para apontar na direção do movimento
+                    const targetRotation = Math.atan2(directionX, directionZ);
+                    if (!enemy.rotation) enemy.rotation = targetRotation;
+
+                    // Interpolação suave da rotação
+                    const rotationSpeed = 8; // Velocidade de rotação
+                    let diff = targetRotation - enemy.rotation;
+
+                    // Normaliza diferença para [-PI, PI] (caminho mais curto)
+                    while (diff > Math.PI) diff -= 2 * Math.PI;
+                    while (diff < -Math.PI) diff += 2 * Math.PI;
+
+                    enemy.rotation += diff * rotationSpeed * deltaTime;
                 } else {
                     // Alcançou a distância desejada, começa a pausar
                     enemy.kamikazeState = 'pausing';
@@ -200,6 +234,20 @@ export function useEnemyAI() {
                 if (chargeLength > 0.5) { // Se ainda está longe da posição travada
                     enemy.position.z += (chargeDirectionZ / chargeLength) * chargeSpeed * deltaTime;
                     enemy.position.x += (chargeDirectionX / chargeLength) * chargeSpeed * deltaTime;
+
+                    // Rotação suave para apontar na direção do charge
+                    const targetRotation = Math.atan2(chargeDirectionX, chargeDirectionZ);
+                    if (!enemy.rotation) enemy.rotation = targetRotation;
+
+                    // Interpolação rápida durante o charge
+                    const rotationSpeed = 15; // Mais rápido durante charge
+                    let diff = targetRotation - enemy.rotation;
+
+                    // Normaliza diferença para [-PI, PI] (caminho mais curto)
+                    while (diff > Math.PI) diff -= 2 * Math.PI;
+                    while (diff < -Math.PI) diff += 2 * Math.PI;
+
+                    enemy.rotation += diff * rotationSpeed * deltaTime;
                 } else {
                     // Chegou na posição travada, entra em cooldown de recuperação
                     enemy.kamikazeState = 'recovering';
@@ -366,6 +414,20 @@ export function useEnemyAI() {
                 if (length > desiredDistance) {
                     enemy.position.z += (directionZ / length) * enemy.speed * deltaTime;
                     enemy.position.x += (directionX / length) * enemy.speed * deltaTime;
+
+                    // Rotação suave para apontar na direção do movimento
+                    const targetRotation = Math.atan2(directionX, directionZ);
+                    if (!enemy.rotation) enemy.rotation = targetRotation;
+
+                    // Interpolação suave da rotação
+                    const rotationSpeed = 8; // Velocidade de rotação
+                    let diff = targetRotation - enemy.rotation;
+
+                    // Normaliza diferença para [-PI, PI] (caminho mais curto)
+                    while (diff > Math.PI) diff -= 2 * Math.PI;
+                    while (diff < -Math.PI) diff += 2 * Math.PI;
+
+                    enemy.rotation += diff * rotationSpeed * deltaTime;
                 } else {
                     // Alcançou a distância desejada, começa a pausar
                     enemy.kamikazeState = 'pausing';
@@ -391,6 +453,20 @@ export function useEnemyAI() {
                 if (chargeLength > 0.5) { // Se ainda está longe da posição travada
                     enemy.position.z += (chargeDirectionZ / chargeLength) * chargeSpeed * deltaTime;
                     enemy.position.x += (chargeDirectionX / chargeLength) * chargeSpeed * deltaTime;
+
+                    // Rotação suave para apontar na direção do charge
+                    const targetRotation = Math.atan2(chargeDirectionX, chargeDirectionZ);
+                    if (!enemy.rotation) enemy.rotation = targetRotation;
+
+                    // Interpolação rápida durante o charge
+                    const rotationSpeed = 15; // Mais rápido durante charge
+                    let diff = targetRotation - enemy.rotation;
+
+                    // Normaliza diferença para [-PI, PI] (caminho mais curto)
+                    while (diff > Math.PI) diff -= 2 * Math.PI;
+                    while (diff < -Math.PI) diff += 2 * Math.PI;
+
+                    enemy.rotation += diff * rotationSpeed * deltaTime;
                 } else {
                     // Chegou na posição travada, entra em cooldown de recuperação
                     enemy.kamikazeState = 'recovering';
@@ -430,6 +506,10 @@ export function useEnemyAI() {
         activeEnemies.value.forEach(enemy => {
             // Inimigos em spawning não se movem nem atacam
             if (enemy.state === 'spawning') {
+                return;
+            }
+
+            if (enemy.state === 'dying') {
                 return;
             }
 

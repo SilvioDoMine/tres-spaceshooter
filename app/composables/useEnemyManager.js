@@ -5,6 +5,7 @@ import { storeToRefs } from 'pinia';
 export const baseStats = {
   asteroid: {
     color: 'gray',
+    shape: 'dodecahedron',
     speed: 3,
     health: 65,
     onHitDamage: 100,
@@ -16,6 +17,7 @@ export const baseStats = {
   },
   ufo: {
     color: 'green',
+    shape: 'square',
     size: 1,
     speed: 2,
     health: 120,
@@ -30,6 +32,7 @@ export const baseStats = {
   },
   ufofast: {
     color: 'hotpink',
+    shape: 'square',
     size: 1,
     speed: 2.2,
     health: 180,
@@ -44,6 +47,7 @@ export const baseStats = {
   },
   kamikaze: {
     color: 'red',
+    shape: 'cone',
     size: 1,
     speed: 3.5,
     health: 80,
@@ -57,6 +61,7 @@ export const baseStats = {
   },
   miniboss: {
     color: 'green',
+    shape: 'square',
     size: 3,
     speed: 1.1,
     health: 600,
@@ -71,6 +76,7 @@ export const baseStats = {
   },
   boss: {
     color: 'hotpink',
+    shape: 'square',
     size: 3,
     speed: 1.1,
     health: 1200,
@@ -85,6 +91,7 @@ export const baseStats = {
   },
   kamikazeBoss: {
     color: 'red',
+    shape: 'cone',
     size: 2,
     speed: 3,
     health: 800,

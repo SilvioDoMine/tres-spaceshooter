@@ -1,82 +1,153 @@
 <script setup lang="js">
+import { shallowRef } from 'vue';
+import { useLoop } from '@tresjs/core';
 import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
 
 const enemyManager = useEnemyManager();
-
 const activeEnemies = enemyManager.activeEnemies;
 
-// Calcula propriedades visuais baseado no estado do inimigo
-const getEnemyVisuals = (enemy) => {
-  if (enemy.state === 'spawning') {
-    // Durante spawn: escala e opacidade crescem de 0 a 1
-    const scale = enemy.spawnProgress; // 0 a 1
-    const opacity = enemy.spawnProgress * 0.3; // 0 a 0.5 (semi-transparente)
+// Map para armazenar refs dos meshes de cada inimigo
+// Chave: enemy.id, Valor: { visualMesh, uiGroup }
+const enemyRefs = new Map();
 
-    return {
-      scale,
-      opacity,
-      transparent: true,
-      rotation: 0,
-    };
+// Função para setar ref do visual mesh
+const setVisualMeshRef = (enemyId) => (el) => {
+  if (el) {
+    if (!enemyRefs.has(enemyId)) {
+      enemyRefs.set(enemyId, { visualMesh: null, uiGroup: null });
+    }
+    enemyRefs.get(enemyId).visualMesh = el;
   }
-
-  if (enemy.state === 'dying') {
-    // Durante morte: fade out + encolhimento + rotação
-    const progress = enemy.deathProgress; // 0 a 1
-    const scale = 1 - progress; // 1 a 0 (encolhe)
-    const opacity = 1 - progress; // 1 a 0 (fade out)
-    const rotation = progress * Math.PI * 2; // 0 a 2π (rotação completa)
-
-    return {
-      scale,
-      opacity,
-      transparent: true,
-      rotation,
-    };
-  }
-
-  // Inimigos ativos: escala e opacidade normais
-  return {
-    scale: 1,
-    opacity: 1,
-    transparent: false,
-    rotation: 0,
-  };
 };
+
+// Função para setar ref do UI group
+const setUIGroupRef = (enemyId) => (el) => {
+  if (el) {
+    if (!enemyRefs.has(enemyId)) {
+      enemyRefs.set(enemyId, { visualMesh: null, uiGroup: null });
+    }
+    enemyRefs.get(enemyId).uiGroup = el;
+  }
+};
+
+// ==================== GAME LOOP (60 FPS) ====================
+const { onBeforeRender } = useLoop();
+onBeforeRender(() => {
+  activeEnemies.value.forEach(enemy => {
+    const refs = enemyRefs.get(enemy.id);
+    if (!refs?.visualMesh || !refs?.uiGroup) return;
+
+    const visualMesh = refs.visualMesh;
+    const uiGroup = refs.uiGroup;
+
+    // ✅ MUTAÇÃO DIRETA: Atualiza posição sem disparar reatividade
+    visualMesh.position.set(enemy.position.x, enemy.position.y, enemy.position.z);
+    uiGroup.position.set(enemy.position.x, enemy.position.y, enemy.position.z);
+
+    // Calcula escala e opacidade baseado no estado
+    let scale = 1;
+    let opacity = 1;
+    let transparent = false;
+    let deathRotation = 0;
+
+    if (enemy.state === 'spawning') {
+      scale = enemy.spawnProgress;
+      opacity = enemy.spawnProgress * 0.3;
+      transparent = true;
+    } else if (enemy.state === 'dying') {
+      const progress = enemy.deathProgress;
+      scale = 1 - progress;
+      opacity = 1 - progress;
+      transparent = true;
+      deathRotation = progress * Math.PI * 2;
+    }
+
+    // Atualiza escala
+    visualMesh.scale.setScalar(scale);
+
+    // Atualiza material (opacidade e transparência)
+    if (visualMesh.material) {
+      visualMesh.material.opacity = opacity;
+      visualMesh.material.transparent = transparent;
+    }
+
+    // Atualiza rotação baseado no tipo
+    if (enemy.shape === 'square' || enemy.shape === 'cone') {
+      // Square e Cone: rotação no eixo Y
+      const rotY = (enemy.rotation || 0) + deathRotation;
+      visualMesh.rotation.set(0, rotY, 0);
+    } else if (enemy.shape === 'dodecahedron') {
+      // Dodecahedron: rotação 3D customizada
+      visualMesh.rotation.set(
+        enemy.rotation?.x || 0,
+        deathRotation,
+        enemy.rotation?.z || 0
+      );
+    }
+  });
+
+  // Limpa refs de inimigos removidos
+  const activeIds = new Set(activeEnemies.value.map(e => e.id));
+  for (const [id] of enemyRefs) {
+    if (!activeIds.has(id)) {
+      enemyRefs.delete(id);
+    }
+  }
+});
 
 onUnmounted(() => {
   enemyManager.cleanup();
+  enemyRefs.clear();
 });
 </script>
 
 <template>
   <TresGroup>
     <TresGroup
-      v-for="(enemy, index) in activeEnemies"
-      :key="index"
+      v-for="enemy in activeEnemies"
+      :key="enemy.id"
     >
-      <!-- Geometria visual do inimigo (ROTACIONA) -->
+      <!-- Geometria visual do inimigo SQUARE -->
       <TresMesh
-        :name="`enemy-visual-${index}`"
-        :position="[enemy.position.x, enemy.position.y, enemy.position.z]"
-        :scale="getEnemyVisuals(enemy).scale"
-        :rotation="[0, getEnemyVisuals(enemy).rotation, 0]"
+        v-if="enemy.shape === 'square'"
+        :ref="setVisualMeshRef(enemy.id)"
+        :name="`enemy-visual-${enemy.id}`"
       >
-        <TresMeshStandardMaterial
-          :color="baseStats[enemy.type].color"
-          :opacity="getEnemyVisuals(enemy).opacity"
-          :transparent="getEnemyVisuals(enemy).transparent"
-        />
-
+        <TresMeshStandardMaterial :color="baseStats[enemy.type].color" />
         <TresBoxGeometry
           :args="[baseStats[enemy.type].size, baseStats[enemy.type].size, baseStats[enemy.type].size]"
         />
       </TresMesh>
 
+      <!-- Geometria visual do inimigo CONE -->
+      <TresMesh
+        v-else-if="enemy.shape === 'cone'"
+        :ref="setVisualMeshRef(enemy.id)"
+        :name="`enemy-visual-${enemy.id}`"
+      >
+        <TresMeshStandardMaterial :color="baseStats[enemy.type].color" />
+        <TresConeGeometry
+          :args="[baseStats[enemy.type].size * 0.5, baseStats[enemy.type].size, 16]"
+          :rotateX="Math.PI / 2"
+        />
+      </TresMesh>
+
+      <!-- Geometria visual do inimigo DODECAHEDRON -->
+      <TresMesh
+        v-else-if="enemy.shape === 'dodecahedron'"
+        :ref="setVisualMeshRef(enemy.id)"
+        :name="`enemy-visual-${enemy.id}`"
+      >
+        <TresMeshStandardMaterial :color="baseStats[enemy.type].color" />
+        <TresDodecahedronGeometry
+          :args="[baseStats[enemy.type].size * 0.6]"
+        />
+      </TresMesh>
+
       <!-- UI elements (NÃO ROTACIONAM) -->
       <TresGroup
-        :name="`enemy-ui-${index}`"
-        :position="[enemy.position.x, enemy.position.y, enemy.position.z]"
+        :ref="setUIGroupRef(enemy.id)"
+        :name="`enemy-ui-${enemy.id}`"
       >
         <!-- HealthBar (só mostra quando ativo) -->
         <GameHealthBar
