@@ -169,8 +169,8 @@ export const LEVEL_1 = {
     {
       stageId: 'S7_Combat_More',
       type: 'combat',
-      width: 20,
-      height: 30,
+      width: 30,
+      height: 40,
       waves: [
         {
           enemies: [
@@ -218,8 +218,8 @@ export const LEVEL_1 = {
     {
       stageId: 'S9_Combat_More',
       type: 'combat',
-      width: 10,
-      height: 20,
+      width: 30,
+      height: 40,
       waves: [
         {
           enemies: [
