@@ -40,8 +40,8 @@ export const LEVEL_1 = {
     {
       stageId: 'S2_Combat_Intro',
       type: 'combat',
-      width: 40,
-      height: 30,
+      width: 30,
+      height: 20,
       waves: [
         {
           enemies: [
@@ -77,8 +77,8 @@ export const LEVEL_1 = {
     {
       stageId: 'S2_Miniboss',
       type: 'boss',
-      width: 40,
-      height: 40,
+      width: 30,
+      height: 30,
       waves: [
         { enemies: [ { enemyType: 'miniboss', count: 1, delay: 3 } ] }
       ],
@@ -154,8 +154,8 @@ export const LEVEL_1 = {
     {
       stageId: 'S6_Boss',
       type: 'boss',
-      width: 40,
-      height: 40,
+      width: 30,
+      height: 30,
       waves: [
         { enemies: [ { enemyType: 'boss', count: 1, delay: 3 } ] }
       ],
@@ -169,8 +169,8 @@ export const LEVEL_1 = {
     {
       stageId: 'S7_Combat_More',
       type: 'combat',
-      width: 10,
-      height: 20,
+      width: 20,
+      height: 30,
       waves: [
         {
           enemies: [
@@ -203,10 +203,10 @@ export const LEVEL_1 = {
     {
       stageId: 'S8_KamikazeBoss',
       type: 'boss',
-      width: 40,
-      height: 40,
+      width: 30,
+      height: 30,
       waves: [
-        { enemies: [ { enemyType: 'kamikazeboss', count: 1, delay: 3 } ] }
+        { enemies: [ { enemyType: 'kamikazeBoss', count: 1, delay: 3 } ] }
       ],
       devDescription: 'Chefe final do nível que utiliza ataques kamikaze.',
       door: {
