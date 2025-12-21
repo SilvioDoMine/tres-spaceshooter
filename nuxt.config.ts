@@ -8,5 +8,6 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()]
   },
-  devtools: { enabled: true }
+  devtools: { enabled: true },
+  ssr: false,
 })
