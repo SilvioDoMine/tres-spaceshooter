@@ -1,6 +1,6 @@
 export const useLobbyStore = defineStore('LobbyStore', () => {
-    const modalOpened = ref(true);
-    const currentModal = ref('profile');
+    const modalOpened = ref(false);
+    const currentModal = ref(null);
 
     function openModal(modalName) {
         currentModal.value = modalName;
