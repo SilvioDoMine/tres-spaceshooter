@@ -31,7 +31,7 @@ const changeNameModal = useModal('change-name-modal');
                     <!-- Tailwind for each child add a border b between them -->
                     <div class="bg-white/40 rounded-md p-2 flex flex-col flex-1">
                         <h3 @click="changeNameModal.open()" class="text-lg font-semibold text-amber-900">{{ lobbyStore.getCurrentProfileName }}</h3>
-                        <p class="text-sm text-amber-800">Level: 99</p>
+                        <p class="text-sm text-amber-800">Level: 1</p>
                         <p class="text-sm text-amber-800">Partidas jogadas: 45</p>
                     </div>
                 </div>
