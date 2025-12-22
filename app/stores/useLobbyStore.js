@@ -76,8 +76,9 @@ export const useLobbyStore = defineStore('LobbyStore', () => {
 
         if (! savedName) {
             const newName = `Desconhecido${Math.floor(Math.random() * 1000)}`; // Desconhecido123
-            localStorage.setItem('profileName', newName); // Desconhecido123
-            return newName; // Desconhecido123
+            localStorage.setItem('profileName', newName);
+            profileName.value = newName;
+            return profileName.value;
         }
 
         profileName.value = savedName;
