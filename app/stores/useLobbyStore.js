@@ -1,18 +1,4 @@
 export const useLobbyStore = defineStore('LobbyStore', () => {
-    const modalOpened = ref(false);
-    const currentModal = ref(null);
-
-    function openModal(modalName) {
-        currentModal.value = modalName;
-        modalOpened.value = true;
-    }
-
-    function closeModal() {
-        // alert('Closing modal');
-        currentModal.value = null;
-        modalOpened.value = false;
-    }
-
     /**
      * AVATARS
      */
@@ -80,19 +66,40 @@ export const useLobbyStore = defineStore('LobbyStore', () => {
         currentProfilePicture.value = selectedProfileIcon.value;
     }
 
+    /**
+     * Profile Name
+     */
+    const profileName = ref('Desconhecido');
+
+    const getCurrentProfileName = computed(() => {
+        const savedName = localStorage.getItem('profileName');
+
+        if (! savedName) {
+            const newName = `Desconhecido${Math.floor(Math.random() * 1000)}`; // Desconhecido123
+            localStorage.setItem('profileName', newName); // Desconhecido123
+            return newName; // Desconhecido123
+        }
+
+        profileName.value = savedName;
+
+        return profileName.value;
+    });
+
+    function changeProfileName(newName) {
+        profileName.value = newName;
+        localStorage.setItem('profileName', newName);
+    }
+
     return {
-        // Modal
-        modalOpened,
-        currentModal,
-
-        openModal,
-        closeModal,
-
         // Avatars
         getCurrentProfilePicture,
         availableProfileIcons,
         selectedProfileIcon,
         selectProfileIcon,
         confirmProfileIconSelection,
+
+        // Profile Name
+        getCurrentProfileName,
+        changeProfileName,
     }
 });

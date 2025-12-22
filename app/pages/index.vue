@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useLobbyStore } from '~/stores/useLobbyStore';
+import { useModal } from '~/composables/useModal';
 import { LEVEL_1 } from '~/games/levels/LevelOneConfig';
 
 // Page metadata
@@ -14,6 +15,32 @@ const lobbyStore = useLobbyStore();
 const currentRunStore = useCurrentRunStore();
 const router = useRouter();
 const isAnimating = ref(false);
+
+// ✅ NOVO SISTEMA DE MODAIS REUTILIZÁVEL
+// Exemplo de uso do composable useModal
+const profileModal = useModal('profile-modal');
+
+/**
+ * Abre o modal de perfil usando o sistema de modais reutilizável
+ *
+ * FORMAS DE USO:
+ *
+ * 1. Abrir:
+ *    profileModal.open()
+ *
+ * 2. Fechar:
+ *    profileModal.close()
+ *
+ * 3. Verificar se está aberto:
+ *    profileModal.isOpen.value
+ *
+ * 4. Empilhar modais:
+ *    const modal2 = useModal('outro-modal-id')
+ *    modal2.open() // Abre por cima do profileModal
+ */
+function openProfileModal() {
+  profileModal.open();
+}
 
 function startGame() {
   console.log('Iniciando o jogo...');
@@ -61,7 +88,7 @@ function formatCurrency(amount: number): string {
       <!-- Topbar -->
       <div class="w-full h-17 absolute top-0 pointer-events-auto">
         <!-- Icon absolute 64x64 -->
-        <div @click="lobbyStore.openModal('profile')" class="absolute cursor-pointer top-2 left-2 w-16 h-16 bg-linear-to-b from-gray-400 to-gray-600 rounded flex items-center justify-center">
+        <div @click="openProfileModal" class="absolute cursor-pointer top-2 left-2 w-16 h-16 bg-linear-to-b from-gray-400 to-gray-600 rounded flex items-center justify-center">
           <img 
             :src="`/images/icons/${lobbyStore.getCurrentProfilePicture.iconPath}`" 
             alt="user-icon" 
@@ -72,12 +99,12 @@ function formatCurrency(amount: number): string {
         <!-- Half top -->
         <div class="bg-white/10 w-full h-10 flex justify-between items-center pl-20 pr-2 text-sm">
           <!-- User Name & Level Bar -->
-          <div @click="lobbyStore.openModal('profile')" class="text-white text-md font-bold flex flex-col cursor-pointer">
+          <div @click="openProfileModal" class="text-white text-md font-bold flex flex-col cursor-pointer">
             <!-- Level & User -->
             <div class="flex gap-2 items-center h-full">
               <p class="text-blue-400 w-6 font-bold text-center">99</p>
               <div>
-                <p>Unknown</p>
+                <p>{{ lobbyStore.getCurrentProfileName }}</p>
                 <!-- Mini level bar -->
                 <div class="w-full h-1 bg-white/20 rounded-full overflow-hidden">
                   <div class="h-full bg-blue-400 rounded-full" style="width: 100%;"></div>
@@ -111,8 +138,8 @@ function formatCurrency(amount: number): string {
         <!-- Half bottom -->
         <div class="w-full h-7 flex">
           <div class="bg-white/10 pb-2 rounded-br-full h-full pl-20 pr-10 flex items-center justify-center text-xl gap-2 text-yellow-400">
-            <svg @click="lobbyStore.openModal('profile')" class="cursor-pointer" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256"><!-- Icon from Phosphor by Phosphor Icons - https://github.com/phosphor-icons/core/blob/main/LICENSE --><g fill="currentColor"><path d="M240 56v128a16 16 0 0 1-16 16H72v-48h56v-48h56V56Z" opacity=".2"/><path d="M248 56a8 8 0 0 1-8 8h-48v40a8 8 0 0 1-8 8h-48v40a8 8 0 0 1-8 8H80v40a8 8 0 0 1-8 8H16a8 8 0 0 1 0-16h48v-40a8 8 0 0 1 8-8h48v-40a8 8 0 0 1 8-8h48V56a8 8 0 0 1 8-8h56a8 8 0 0 1 8 8"/></g></svg>
-            <h1 @click="lobbyStore.openModal('profile')" class="
+            <svg @click="openProfileModal" class="cursor-pointer" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256"><!-- Icon from Phosphor by Phosphor Icons - https://github.com/phosphor-icons/core/blob/main/LICENSE --><g fill="currentColor"><path d="M240 56v128a16 16 0 0 1-16 16H72v-48h56v-48h56V56Z" opacity=".2"/><path d="M248 56a8 8 0 0 1-8 8h-48v40a8 8 0 0 1-8 8h-48v40a8 8 0 0 1-8 8H80v40a8 8 0 0 1-8 8H16a8 8 0 0 1 0-16h48v-40a8 8 0 0 1 8-8h48v-40a8 8 0 0 1 8-8h48V56a8 8 0 0 1 8-8h56a8 8 0 0 1 8 8"/></g></svg>
+            <h1 @click="openProfileModal" class="
               cursor-pointer
               relative text-base lg:text-xl font-extrabold tracking-tight
               text-transparent bg-clip-text
@@ -225,7 +252,10 @@ function formatCurrency(amount: number): string {
       </div>
 
       <!-- Modals -->
-      <LobbyProfileModal />
+      <ClientOnly>
+        <LobbyProfileModal />
+        <LobbyChangeNameModal />
+      </ClientOnly>
     </div>
   </div>
 </template>
