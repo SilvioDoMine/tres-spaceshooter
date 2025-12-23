@@ -1,5 +1,25 @@
 @import "tailwindcss";
 
+/* ==================== FONTS ====================
+ * Fontes customizadas para o jogo
+ */
+
+@font-face {
+  font-family: 'Lilita One';
+  src: url('~/assets/fonts/LilitaOne-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Fredoka One';
+  src: url('~/assets/fonts/FredokaOne-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ==================== MOBILE GESTURE LOCK ====================
  * Previne gestos nativos do navegador em dispositivos mobile:
  * - Swipe horizontal (voltar/avançar página)
