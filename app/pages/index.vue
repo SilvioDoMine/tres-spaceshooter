@@ -107,7 +107,7 @@ function formatCurrency(amount: number): string {
                 <p>{{ lobbyStore.getCurrentProfileName }}</p>
                 <!-- Mini level bar -->
                 <div class="w-full h-1 bg-white/20 rounded-full overflow-hidden">
-                  <div class="h-full bg-blue-400 rounded-full" style="width: 100%;"></div>
+                  <div class="h-full bg-blue-400 rounded-full" style="width: 0%;"></div>
                 </div>
               </div>
             </div>
