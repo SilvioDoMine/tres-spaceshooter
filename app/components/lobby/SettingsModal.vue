@@ -94,6 +94,22 @@ const enableParticles = ref(true);
 
 
                 </div>
+
+                <!-- Actions -->
+                <div class="flex flex-row gap-2 justify-between">
+                    <BaseButton
+                        variant="red"
+                        label="Resetar Progresso"
+                        size="sm"
+                        @click=""
+                    />
+                    <BaseButton
+                        variant="green"
+                        label="Suporte"
+                        size="sm"
+                        @click=""
+                    />
+                </div>
         </div>
     </BaseModal>
 </template>
