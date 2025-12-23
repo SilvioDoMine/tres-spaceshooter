@@ -113,18 +113,18 @@ function handleContentClick(e) {
           <!-- Title -->
           <div
             v-if="title"
-            :class="['absolute shadow-md px-4 flex top-3 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-md items-center', titleBgColor, titleShadowColor]"
+            class="modal-header"
           >
-            <!-- Screw Left -->
-            <div class="w-3 h-3 bg-gray-400 rounded-sm rotate-45"></div>
+            <!-- Diamond Left -->
+            <div class="modal-diamond"></div>
 
             <!-- Title Text -->
-            <h2 class="text-xl md:text-2xl whitespace-nowrap font-bold px-6 py-2 text-white text-shadow-md text-shadow-gray-800">
+            <h2 class="modal-title">
               {{ title }}
             </h2>
 
-            <!-- Screw Right -->
-            <div class="w-3 h-3 rounded-sm rotate-45 bg-gray-400"></div>
+            <!-- Diamond Right -->
+            <div class="modal-diamond"></div>
           </div>
 
           <!-- Content Slot -->
@@ -135,3 +135,71 @@ function handleContentClick(e) {
     </div>
   </Transition>
 </template>
+
+<style scoped>
+/* Header do Modal */
+.modal-header {
+  position: absolute;
+  top: 0.75rem;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(
+    to bottom,
+    #6bb5ff 0%,
+    #4a9fff 50%,
+    #2988ff 100%
+  );
+  border: 2px solid #1a5a9a;
+  border-radius: 12px;
+}
+
+/* Título */
+.modal-title {
+  font-family: 'Lilita One', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: white;
+  white-space: nowrap;
+  padding: 0 1rem;
+  letter-spacing: 0.5px;
+  text-shadow:
+    -1px -1px 0 rgba(26, 90, 154, 0.5),
+    1px -1px 0 rgba(26, 90, 154, 0.5),
+    -1px 1px 0 rgba(26, 90, 154, 0.5),
+    1px 1px 0 rgba(26, 90, 154, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* Diamantes decorativos */
+.modal-diamond {
+  width: 0.75rem;
+  height: 0.75rem;
+  background: linear-gradient(
+    135deg,
+    #e8f4ff 0%,
+    #b8d9ff 50%,
+    #8ab8e6 100%
+  );
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 3px;
+  transform: rotate(45deg);
+  box-shadow:
+    inset 0 1px 3px rgba(255, 255, 255, 0.6),
+    0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 640px) {
+  .modal-title {
+    font-size: 1.125rem;
+    padding: 0 0.75rem;
+  }
+
+  .modal-diamond {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+</style>
