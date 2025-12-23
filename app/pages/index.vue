@@ -19,6 +19,7 @@ const isAnimating = ref(false);
 // ✅ NOVO SISTEMA DE MODAIS REUTILIZÁVEL
 // Exemplo de uso do composable useModal
 const profileModal = useModal('profile-modal');
+const settingsModal = useModal('settings-modal');
 
 /**
  * Abre o modal de perfil usando o sistema de modais reutilizável
@@ -166,7 +167,7 @@ function formatCurrency(amount: number): string {
         <!-- Left -->
         <div class="flex flex-col gap-2">
           <!-- Settings -->
-          <div class="p-2 bg-white/20 rounded-lg inline-flex items-center justify-center cursor-pointer pointer-events-auto hover:bg-white/20 transition hud-button-shake active:translate-y-1 active:shadow-inner active:bg-white/30">
+          <div @click="settingsModal.open()" class="p-2 bg-white/20 rounded-lg inline-flex items-center justify-center cursor-pointer pointer-events-auto hover:bg-white/20 transition hud-button-shake active:translate-y-1 active:shadow-inner active:bg-white/30">
             <svg class="text-white/80" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Material Symbols by Google - https://github.com/google/material-design-icons/blob/master/LICENSE --><path fill="currentColor" d="M10 20q-.825 0-1.412-.587T8 18t.588-1.412T10 16h10q.825 0 1.413.588T22 18t-.587 1.413T20 20zm0-6q-.825 0-1.412-.587T8 12t.588-1.412T10 10h10q.825 0 1.413.588T22 12t-.587 1.413T20 14zm0-6q-.825 0-1.412-.587T8 6t.588-1.412T10 4h10q.825 0 1.413.588T22 6t-.587 1.413T20 8zM4 8q-.825 0-1.412-.587T2 6t.588-1.412T4 4t1.413.588T6 6t-.587 1.413T4 8m0 6q-.825 0-1.412-.587T2 12t.588-1.412T4 10t1.413.588T6 12t-.587 1.413T4 14m0 6q-.825 0-1.412-.587T2 18t.588-1.412T4 16t1.413.588T6 18t-.587 1.413T4 20"/></svg>
           </div>
 
@@ -255,6 +256,7 @@ function formatCurrency(amount: number): string {
       <ClientOnly>
         <LobbyProfileModal />
         <LobbyChangeNameModal />
+        <LobbySettingsModal />
       </ClientOnly>
     </div>
   </div>
