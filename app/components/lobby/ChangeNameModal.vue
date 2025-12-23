@@ -79,12 +79,13 @@ defineExpose({ open, close, isOpen });
 
       <!-- Ações -->
       <div class="flex gap-2 justify-center">
-        <button
+        <BaseButton
+          variant="blue"
+          size="sm"
           @click="handleConfirm"
-          class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition"
         >
           Confirmar
-        </button>
+        </BaseButton>
       </div>
     </div>
   </BaseModal>

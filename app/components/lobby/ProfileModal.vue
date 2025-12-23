@@ -71,17 +71,17 @@ const changeNameModal = useModal('change-name-modal');
 
                     <!-- Confirmation button -->
                      <div class="flex justify-center">
-                        <button
+                        <BaseButton
+                            variant="blue"
+                            size="sm"
                             @click="lobbyStore.confirmProfileIconSelection()"
                             :disabled="lobbyStore.selectedProfileIcon.locked || lobbyStore.selectedProfileIcon.id === lobbyStore.getCurrentProfilePicture.id"
-                            class="bg-green-600 cursor-pointer disabled:cursor-default hover:bg-green-700 disabled:bg-gray-500 text-white font-bold py-2 px-4 rounded-md shadow-md shadow-green-800 disabled:shadow-gray-800 transition"
                         >
-                            {{ 
-                            
-                                lobbyStore.selectedProfileIcon.locked ? 'Ícone bloqueado' : 
-                                (lobbyStore.selectedProfileIcon.id === lobbyStore.getCurrentProfilePicture.id ? 'Em uso' : 'Confirmar seleção') 
+                            {{
+                                lobbyStore.selectedProfileIcon.locked ? 'Ícone bloqueado' :
+                                (lobbyStore.selectedProfileIcon.id === lobbyStore.getCurrentProfilePicture.id ? 'Em uso' : 'Confirmar seleção')
                             }}
-                        </button>
+                        </BaseButton>
                     </div>
                 </div>
         </div>
