@@ -11,7 +11,7 @@
     @touchstart.prevent="handlePress"
   >
     <span class="glossy-button__text">
-      <slot>{{ label }}</slot>
+      <slot></slot>
     </span>
   </button>
 </template>
@@ -24,10 +24,6 @@ export default {
       type: String,
       default: 'blue',
       validator: (value) => ['blue', 'yellow', 'red', 'green'].includes(value)
-    },
-    label: {
-      type: String,
-      default: ''
     },
     size: {
       type: String,
