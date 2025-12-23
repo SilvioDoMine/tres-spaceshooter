@@ -4,9 +4,10 @@
       'glossy-button',
       `glossy-button--${variant}`,
       `glossy-button--${size}`,
-      { 'is-pressed': isPressed }
+      { 'is-pressed': isPressed, 'is-disabled': disabled }
     ]"
     class=""
+    :disabled="disabled"
     @mousedown.prevent="handlePress"
     @touchstart.prevent="handlePress"
   >
@@ -29,6 +30,10 @@ export default {
       type: String,
       default: 'md',
       validator: (value) => ['sm', 'md', 'lg'].includes(value)
+    },
+    disabled: {
+      type: Boolean,
+      default: false
     }
   },
   emits: ['click'],
@@ -39,7 +44,7 @@ export default {
   },
   methods: {
     handlePress(event) {
-      if (this.isPressed) return
+      if (this.isPressed || this.disabled) return
 
       this.isPressed = true
 
@@ -493,5 +498,18 @@ export default {
 
 .glossy-button--green.glossy-button--lg::before {
   top: 5px;
+}
+
+/* Estado Disabled */
+.glossy-button.is-disabled,
+.glossy-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.3);
+}
+
+.glossy-button.is-disabled::before,
+.glossy-button:disabled::before {
+  opacity: 0.5;
 }
 </style>
