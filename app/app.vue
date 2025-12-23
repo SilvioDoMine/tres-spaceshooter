@@ -105,10 +105,23 @@ body {
   background-color: #020420;
   margin: 0;
   padding: 0;
+  /* Previne double-tap zoom - permite apenas pan/scroll */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* Suporte para safe area no iOS */
 .game-root {
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* Permite seleção de texto em elementos interativos */
+input,
+textarea,
+button {
+  -webkit-user-select: text;
+  user-select: text;
 }
 </style>
