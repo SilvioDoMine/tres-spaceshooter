@@ -175,8 +175,8 @@ function handleContentClick(e) {
 
 /* Diamantes decorativos */
 .modal-diamond {
-  width: 0.75rem;
-  height: 0.75rem;
+  width: 0.5rem;
+  height: 0.5rem;
   background: linear-gradient(
     135deg,
     #e8f4ff 0%,
