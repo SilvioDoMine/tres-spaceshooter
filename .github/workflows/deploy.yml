@@ -40,7 +40,11 @@ jobs:
             cd $APP_DIR || { echo "Failed to change directory to $APP_DIR"; exit 1; }
 
             echo ">>> Git pull"
-            git pull origin ${{ github.ref_name }} || { echo "Git pull failed"; exit 1; }
+            if ! git pull origin ${{ github.ref_name }}; then
+              echo "Git pull failed, removing package-lock.json and trying again"
+              rm -f package-lock.json
+              git pull origin ${{ github.ref_name }} || { echo "Git pull failed again after removing package-lock.json"; exit 1; }
+            fi
 
             echo ">>> Executing nvm and installing node"
             export NVM_DIR="$HOME/.nvm"
