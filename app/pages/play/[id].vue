@@ -68,7 +68,7 @@ onUnmounted(() => {
     <!-- Modals -->
     <PlayPauseModal />
     <PlayOverModal />
-    <GameVictoryModal />
+    <PlayVictoryModal />
     <GameSkillSelectModal />
 
     <!-- Leches -->

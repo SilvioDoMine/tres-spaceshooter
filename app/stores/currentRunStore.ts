@@ -4,6 +4,7 @@ import { useEnemyManager } from '~/composables/useEnemyManager';
 import { useSkillStore } from '~/stores/SkillStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import { useCombatTextStore } from '~/stores/useCombatTextStore';
+import { useModal } from '~/composables/useModal';
 
 // Define o formato básico do vetor de posição 3D
 interface Vector3 {
@@ -45,6 +46,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   const combatTextStore = useCombatTextStore();
   const uiModalPause = useModal('pause-modal');
   const uiModalOver = useModal('play-over-modal');
+  const uiModalVictory = useModal('play-victory-modal');
 
   // -- ESTADO PERSISTENTE ENTRE PARTIDAS
   const totalGold = ref(0); // Gold total persistente entre partidas
@@ -333,6 +335,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     console.log('Victory:', message);
 
     gameState.value = 'victory';
+    uiModalVictory.open();
   }
 
   function gameLevelSelect() {
