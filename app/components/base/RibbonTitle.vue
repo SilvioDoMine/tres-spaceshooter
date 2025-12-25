@@ -1,7 +1,7 @@
 <template>
   <div class="w-full flex justify-center">
     <div
-      class="relative inline-block drop-shadow-[0_4px_6px_rgba(0,0,0,0.2)]"
+      :class="['relative', 'inline-block', 'drop-shadow-[0_4px_6px_rgba(0,0,0,0.2)]', `ribbon--${variant}`]"
       :style="vars"
       role="button"
       aria-label="Ribbon"
@@ -14,7 +14,7 @@
         class="relative z-2 flex items-center justify-center border-4 rounded-sm"
         :class="mainSizeClass"
       >
-        <span class="ribbon-text select-none title-text title-text-yellow text-2xl">
+        <span :class="['ribbon-text', 'select-none', 'title-text', `title-text-${variant}`, 'text-2xl']">
           {{ text }}
         </span>
 
@@ -34,35 +34,27 @@ import { computed } from "vue";
 
 type Props = {
   text?: string;
+  variant?: 'yellow' | 'blue' | 'green' | 'red' | 'orange' | 'gray';
   width?: number;  // px
   height?: number; // px
   sideWidth?: number; // px
   sideHeight?: number; // px
-  sideOffset?: number; // px (quanto “entra” pra fora)
+  sideOffset?: number; // px (quanto "entra" pra fora)
   sideTop?: number; // px (posição Y das pontas)
-  primaryYellow?: string;
-  darkYellow?: string;
-  borderOrange?: string;
 };
 
 const props = withDefaults(defineProps<Props>(), {
   text: "Pausar",
+  variant: "yellow",
   width: 300,
   height: 60,
   sideWidth: 40,
   sideHeight: 45,
   sideOffset: 25,
   sideTop: 26,
-  primaryYellow: "#ffdf61",
-  darkYellow: "#f4c542",
-  borderOrange: "#d99c30",
 });
 
 const vars = computed(() => ({
-  "--primary-yellow": props.primaryYellow,
-  "--dark-yellow": props.darkYellow,
-  "--border-orange": props.borderOrange,
-
   "--main-w": `${props.width}px`,
   "--main-h": `${props.height}px`,
 
@@ -82,16 +74,8 @@ const mainSizeClass = computed(() => "ribbon-main-size");
 .ribbon-main-size {
   width: var(--main-w);
   height: var(--main-h);
-  border-color: var(--border-orange);
   position: relative;
   overflow: hidden;
-  /* Gradiente amarelo vibrante estilo Duolingo */
-  background: linear-gradient(
-    to bottom,
-    var(--primary-yellow) 0%,
-    var(--dark-yellow) 50%,
-    var(--primary-yellow) 100%
-  );
 }
 
 /* Efeito de brilho glossy no topo (luz superior) */
@@ -135,13 +119,7 @@ const mainSizeClass = computed(() => "ribbon-main-size");
   top: var(--side-top);
   width: var(--side-w);
   height: var(--side-h);
-  background: linear-gradient(
-    to bottom,
-    var(--primary-yellow) 0%,
-    var(--dark-yellow) 50%,
-    var(--primary-yellow) 100%
-  );
-  border: 4px solid var(--border-orange);
+  border: 4px solid;
   z-index: 1;
   overflow: hidden;
 }
@@ -189,13 +167,187 @@ const mainSizeClass = computed(() => "ribbon-main-size");
   left: -5px;
   border-width: 0 15px 15px 0;
   border-radius: 10px 0px 10px 0px;
-  border-color: transparent var(--border-orange) transparent transparent;
 }
 
 .right-fold {
   right: -5px;
   border-radius: 0px 10px 0px 10px;
   border-width: 15px 15px 0 0;
-  border-color: var(--border-orange) transparent transparent transparent;
+}
+
+/* ========== VARIANTES DE CORES ========== */
+
+/* Variante Amarela (Padrão) */
+.ribbon--yellow .ribbon-main-size {
+  background: linear-gradient(
+    to bottom,
+    #ffdf61 0%,
+    #f4c542 50%,
+    #ffdf61 100%
+  );
+  border-color: #d99c30;
+}
+
+.ribbon--yellow .ribbon-side {
+  background: linear-gradient(
+    to bottom,
+    #ffdf61 0%,
+    #f4c542 50%,
+    #ffdf61 100%
+  );
+  border-color: #d99c30;
+}
+
+.ribbon--yellow .left-fold {
+  border-color: transparent #d99c30 transparent transparent;
+}
+
+.ribbon--yellow .right-fold {
+  border-color: #d99c30 transparent transparent transparent;
+}
+
+/* Variante Azul */
+.ribbon--blue .ribbon-main-size {
+  background: linear-gradient(
+    to bottom,
+    #7cb5ff 0%,
+    #5a9fff 50%,
+    #7cb5ff 100%
+  );
+  border-color: #1a4a8a;
+}
+
+.ribbon--blue .ribbon-side {
+  background: linear-gradient(
+    to bottom,
+    #7cb5ff 0%,
+    #5a9fff 50%,
+    #7cb5ff 100%
+  );
+  border-color: #1a4a8a;
+}
+
+.ribbon--blue .left-fold {
+  border-color: transparent #1a4a8a transparent transparent;
+}
+
+.ribbon--blue .right-fold {
+  border-color: #1a4a8a transparent transparent transparent;
+}
+
+/* Variante Verde */
+.ribbon--green .ribbon-main-size {
+  background: linear-gradient(
+    to bottom,
+    #7ce85c 0%,
+    #5cd63c 50%,
+    #7ce85c 100%
+  );
+  border-color: #1a7a0a;
+}
+
+.ribbon--green .ribbon-side {
+  background: linear-gradient(
+    to bottom,
+    #7ce85c 0%,
+    #5cd63c 50%,
+    #7ce85c 100%
+  );
+  border-color: #1a7a0a;
+}
+
+.ribbon--green .left-fold {
+  border-color: transparent #1a7a0a transparent transparent;
+}
+
+.ribbon--green .right-fold {
+  border-color: #1a7a0a transparent transparent transparent;
+}
+
+/* Variante Vermelha */
+.ribbon--red .ribbon-main-size {
+  background: linear-gradient(
+    to bottom,
+    #ff7a7a 0%,
+    #ff4a4a 50%,
+    #ff7a7a 100%
+  );
+  border-color: #b81a1a;
+}
+
+.ribbon--red .ribbon-side {
+  background: linear-gradient(
+    to bottom,
+    #ff7a7a 0%,
+    #ff4a4a 50%,
+    #ff7a7a 100%
+  );
+  border-color: #b81a1a;
+}
+
+.ribbon--red .left-fold {
+  border-color: transparent #b81a1a transparent transparent;
+}
+
+.ribbon--red .right-fold {
+  border-color: #b81a1a transparent transparent transparent;
+}
+
+/* Variante Laranja */
+.ribbon--orange .ribbon-main-size {
+  background: linear-gradient(
+    to bottom,
+    #ffb366 0%,
+    #ff9933 50%,
+    #ffb366 100%
+  );
+  border-color: #cc6600;
+}
+
+.ribbon--orange .ribbon-side {
+  background: linear-gradient(
+    to bottom,
+    #ffb366 0%,
+    #ff9933 50%,
+    #ffb366 100%
+  );
+  border-color: #cc6600;
+}
+
+.ribbon--orange .left-fold {
+  border-color: transparent #cc6600 transparent transparent;
+}
+
+.ribbon--orange .right-fold {
+  border-color: #cc6600 transparent transparent transparent;
+}
+
+/* Variante Cinza */
+.ribbon--gray {
+  background: linear-gradient(
+    to bottom,
+    #b8b8b8 0%,
+    #8a8a8a 50%,
+    #b8b8b8 100%
+  );
+  border-color: #4a4a4a;
+}
+
+.ribbon--gray .ribbon-side {
+  background: linear-gradient(
+    to bottom,
+    #b8b8b8 0%,
+    #8a8a8a 50%,
+    #b8b8b8 100%
+  );
+  border-color: #4a4a4a;
+}
+
+.ribbon--gray .left-fold {
+  border-color: transparent #4a4a4a transparent transparent;
+}
+
+.ribbon--gray .right-fold {
+  border-color: #4a4a4a transparent transparent transparent;
 }
 </style>

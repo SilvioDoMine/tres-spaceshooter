@@ -79,9 +79,7 @@ function handleContentClick(e) {
           v-if="title"
           :text="title"
           :height="60"
-          primary-yellow="#FFD84D"
-          dark-yellow="#F5C842"
-          border-orange="#D69B2D"
+          variant="yellow"
         />
 
         <div class="flex flex-col gap-2">
