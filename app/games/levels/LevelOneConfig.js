@@ -74,53 +74,53 @@ export const LEVEL_1 = {
       },
       playerStartPosition: { x: 0, y: 0, z: 0 },
     },
-    // {
-    //   stageId: 'S2_Miniboss',
-    //   type: 'boss',
-    //   width: 30,
-    //   height: 30,
-    //   waves: [
-    //     { enemies: [ { enemyType: 'miniboss', count: 1, delay: 3 } ] }
-    //   ],
-    //   devDescription: 'Sala do chefe intermediário do nível. Após vencer, o nível é concluído e novo inimigo introduzido.',
-    //   door: {
-    //     position: { x: 0, y: 0, z: -9 },
-    //     size: { width: 4, height: 8 },
-    //   },
-    //   playerStartPosition: { x: 0, y: 0, z: 0 },
-    // },
-    // {
-    //   stageId: 'S3_Combat_Intro',
-    //   type: 'combat',
-    //   width: 30,
-    //   height: 20,
-    //   waves: [
-    //     {
-    //       enemies: [
-    //         { enemyType: 'asteroid', count: 4, delay: 1.5 },
-    //         { enemyType: 'ufo', count: 2, delay: 1.5 },
-    //       ]
-    //     },
-    //     {
-    //       enemies: [
-    //         { enemyType: 'asteroid', count: 6, delay: 1.5 },
-    //         { enemyType: 'ufo', count: 2, delay: 1.5 },
-    //       ]
-    //     },
-    //     {
-    //       enemies: [
-    //         { enemyType: 'asteroid', count: 8, delay: 1.5 },
-    //         { enemyType: 'ufo', count: 3, delay: 1.5 },
-    //       ]
-    //     }
-    //   ],
-    //   devDescription: 'Segunda sala lança 4 asteroides + 2 UFOs, depois 6 asteroides + 2 UFOs e então é liberado para a próxima sala.',
-    //   door: {
-    //     position: { x: 0, y: 0, z: -9 },
-    //     size: { width: 4, height: 8 },
-    //   },
-    //   playerStartPosition: { x: 0, y: 0, z: 0 },
-    // },
+    {
+      stageId: 'S2_Miniboss',
+      type: 'boss',
+      width: 30,
+      height: 30,
+      waves: [
+        { enemies: [ { enemyType: 'miniboss', count: 1, delay: 3 } ] }
+      ],
+      devDescription: 'Sala do chefe intermediário do nível. Após vencer, o nível é concluído e novo inimigo introduzido.',
+      door: {
+        position: { x: 0, y: 0, z: -9 },
+        size: { width: 4, height: 8 },
+      },
+      playerStartPosition: { x: 0, y: 0, z: 0 },
+    },
+    {
+      stageId: 'S3_Combat_Intro',
+      type: 'combat',
+      width: 30,
+      height: 20,
+      waves: [
+        {
+          enemies: [
+            { enemyType: 'asteroid', count: 4, delay: 1.5 },
+            { enemyType: 'ufo', count: 2, delay: 1.5 },
+          ]
+        },
+        {
+          enemies: [
+            { enemyType: 'asteroid', count: 6, delay: 1.5 },
+            { enemyType: 'ufo', count: 2, delay: 1.5 },
+          ]
+        },
+        {
+          enemies: [
+            { enemyType: 'asteroid', count: 8, delay: 1.5 },
+            { enemyType: 'ufo', count: 3, delay: 1.5 },
+          ]
+        }
+      ],
+      devDescription: 'Segunda sala lança 4 asteroides + 2 UFOs, depois 6 asteroides + 2 UFOs e então é liberado para a próxima sala.',
+      door: {
+        position: { x: 0, y: 0, z: -9 },
+        size: { width: 4, height: 8 },
+      },
+      playerStartPosition: { x: 0, y: 0, z: 0 },
+    },
     // {
     //   width: 10,
     //   height: 20,
