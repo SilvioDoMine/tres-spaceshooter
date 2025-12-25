@@ -67,7 +67,7 @@ onUnmounted(() => {
 
     <!-- Modals -->
     <PlayPauseModal />
-    <GameOverModal />
+    <PlayOverModal />
     <GameVictoryModal />
     <GameSkillSelectModal />
 

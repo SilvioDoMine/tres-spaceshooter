@@ -35,8 +35,8 @@ const emit = defineEmits(['close']);
 const { isOpen, zIndex, close } = useModal(props.modalId);
 
 function handleClose() {
-  close();
   emit('close');
+  close();
 }
 
 function handleOverlayClick() {

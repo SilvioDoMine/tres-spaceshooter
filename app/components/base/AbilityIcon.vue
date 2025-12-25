@@ -17,6 +17,11 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  /** Mostrar quantidade no canto inferior esquerdo */
+  quantity: {
+    type: String,
+    default: '',
+  },
   /** Se o componente é clicável */
   clickable: {
     type: Boolean,
@@ -101,6 +106,14 @@ function handleClick() {
       ]"
     >
       <p class="-rotate-45">{{ badge }}</p>
+    </div>
+
+    <!-- Quantity (opcional) -->
+    <div
+      v-if="quantity"
+      class="absolute bottom-0 text-xs right-1 title-text text-white drop-shadow-[0_2px_2px_rgba(0,0,0,1)] z-20"
+    >
+      {{ quantity }}
     </div>
   </div>
 </template>

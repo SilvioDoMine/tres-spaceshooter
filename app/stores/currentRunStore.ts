@@ -44,6 +44,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   const playerStats = usePlayerStats();
   const combatTextStore = useCombatTextStore();
   const uiModalPause = useModal('pause-modal');
+  const uiModalOver = useModal('play-over-modal');
 
   // -- ESTADO PERSISTENTE ENTRE PARTIDAS
   const totalGold = ref(0); // Gold total persistente entre partidas
@@ -318,6 +319,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   function gameOver(message: string = 'You have been defeated.') {
     console.log('Game Over:', message);
     gameState.value = 'gameover';
+    uiModalOver.open();
   }
 
   function gameVictoryRewards() {
