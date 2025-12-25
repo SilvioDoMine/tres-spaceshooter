@@ -75,7 +75,7 @@ const mainSizeClass = computed(() => "ribbon-main-size");
   width: var(--main-w);
   height: var(--main-h);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* Efeito de brilho glossy no topo (luz superior) */
@@ -323,7 +323,7 @@ const mainSizeClass = computed(() => "ribbon-main-size");
 }
 
 /* Variante Cinza */
-.ribbon--gray {
+.ribbon--gray .ribbon-main-size {
   background: linear-gradient(
     to bottom,
     #b8b8b8 0%,
