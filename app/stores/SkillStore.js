@@ -28,7 +28,7 @@ export const SkillsList ={
     name: 'Dano Aumentado',
     description: 'Aumenta o dano base do seu projétil.',
     icon: '⚔️',
-    rarity: 'common',
+    rarity: 'uncommon',
     levels: {
       1: { value: 0.5, description: '+50% de dano base' }, // +50% dano
       2: { value: 1.0, description: '+50% de dano base' }, // +60% dano
@@ -42,7 +42,7 @@ export const SkillsList ={
     name: 'Vida Aumentada',
     description: 'Aumenta sua vida máxima permanentemente.',
     icon: '❤️',
-    rarity: 'common',
+    rarity: 'uncommon',
     levels: {
       1: { value: 0.4, description: '+40% de vida máxima base' }, // +40% vida - valor base pré estacada
       2: { value: 0.9, description: '+50% de vida máxima base' }, // +50% vida - (valor base + 40%) + 50% = +90%
@@ -56,7 +56,7 @@ export const SkillsList ={
     name: 'Regeneração de Vida',
     description: 'Regenera uma porcentagem da sua vida máxima a cada segundo.',
     icon: '🩹',
-    rarity: 'common',
+    rarity: 'uncommon',
     levels: {
       1: { value: 0.01, description: '+1% de regeneração por segundo' }, // Tempo para regenerar 100% da vida: 100 segundos
       2: { value: 0.02, description: '+2% de regeneração por segundo' }, // Tempo para regenerar 100% da vida: 50 segundos
@@ -70,7 +70,7 @@ export const SkillsList ={
     name: 'Velocidade Aumentada',
     description: 'Aumenta sua velocidade de movimento e disparo.',
     icon: '👟',
-    rarity: 'common',
+    rarity: 'uncommon',
     levels: {
       1: { value: 0.1, description: '+15% de velocidade' }, // +15% velocidade
       2: { value: 0.3, description: '+30% de velocidade' }, // +30% velocidade
@@ -229,6 +229,7 @@ export const useSkillStore = defineStore('SkillStore', () => {
         let selectedSkills = [];
         let rarities = [
           'common',
+          'uncommon',
           'rare',
           'epic',
           // 'legendary'

@@ -103,3 +103,82 @@ textarea {
   -webkit-user-select: text;
   user-select: text;
 }
+
+/* ==================== CUSTOM TEXT UTILITIES ====================
+ * Classes reutilizáveis para estilos de texto nos componentes
+ */
+
+@layer utilities {
+  .title-text {
+    font-family: 'Lilita One', sans-serif;
+    font-weight: 400;
+    color: white;
+    letter-spacing: 0.5px;
+  }
+
+  /* Text shadow padrão (usado em RibbonTitle e contextos neutros) */
+  .title-text-default {
+    text-shadow:
+      -1px -1px 0 rgba(0, 0, 0, 0.25),
+      1px -1px 0 rgba(0, 0, 0, 0.25),
+      -1px 1px 0 rgba(0, 0, 0, 0.25),
+      1px 1px 0 rgba(0, 0, 0, 0.25),
+      0 2px 3px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Text shadow para botões/títulos azuis */
+  .title-text-blue {
+    text-shadow:
+      -1px -1px 0 rgba(26, 74, 138, 0.6),
+      1px -1px 0 rgba(26, 74, 138, 0.6),
+      -1px 1px 0 rgba(26, 74, 138, 0.6),
+      1px 1px 0 rgba(26, 74, 138, 0.6),
+      0 -1px 0 rgba(26, 74, 138, 0.6),
+      0 1px 0 rgba(26, 74, 138, 0.6),
+      -1px 0 0 rgba(26, 74, 138, 0.6),
+      1px 0 0 rgba(26, 74, 138, 0.6),
+      0 2px 3px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Text shadow para botões/títulos amarelos */
+  .title-text-yellow {
+    text-shadow:
+      -1px -1px 0 rgba(168, 107, 0, 0.6),
+      1px -1px 0 rgba(168, 107, 0, 0.6),
+      -1px 1px 0 rgba(168, 107, 0, 0.6),
+      1px 1px 0 rgba(168, 107, 0, 0.6),
+      0 -1px 0 rgba(168, 107, 0, 0.6),
+      0 1px 0 rgba(168, 107, 0, 0.6),
+      -1px 0 0 rgba(168, 107, 0, 0.6),
+      1px 0 0 rgba(168, 107, 0, 0.6),
+      0 2px 3px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Text shadow para botões/títulos vermelhos */
+  .title-text-red {
+    text-shadow:
+      -1px -1px 0 rgba(184, 26, 26, 0.6),
+      1px -1px 0 rgba(184, 26, 26, 0.6),
+      -1px 1px 0 rgba(184, 26, 26, 0.6),
+      1px 1px 0 rgba(184, 26, 26, 0.6),
+      0 -1px 0 rgba(184, 26, 26, 0.6),
+      0 1px 0 rgba(184, 26, 26, 0.6),
+      -1px 0 0 rgba(184, 26, 26, 0.6),
+      1px 0 0 rgba(184, 26, 26, 0.6),
+      0 2px 3px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Text shadow para botões/títulos verdes */
+  .title-text-green {
+    text-shadow:
+      -1px -1px 0 rgba(26, 122, 10, 0.6),
+      1px -1px 0 rgba(26, 122, 10, 0.6),
+      -1px 1px 0 rgba(26, 122, 10, 0.6),
+      1px 1px 0 rgba(26, 122, 10, 0.6),
+      0 -1px 0 rgba(26, 122, 10, 0.6),
+      0 1px 0 rgba(26, 122, 10, 0.6),
+      -1px 0 0 rgba(26, 122, 10, 0.6),
+      1px 0 0 rgba(26, 122, 10, 0.6),
+      0 2px 3px rgba(0, 0, 0, 0.25);
+  }
+}

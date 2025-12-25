@@ -11,7 +11,7 @@
     @mousedown.prevent="handlePress"
     @touchstart.prevent="handlePress"
   >
-    <span class="glossy-button__text">
+    <span :class="['glossy-button__text', 'title-text', `title-text-${variant}`]">
       <slot></slot>
     </span>
   </button>
@@ -157,15 +157,7 @@ export default {
 
 .glossy-button__text {
   display: inline-block;
-  color: white;
-  text-shadow:
-    /* Contorno sutil */
-    -1px -1px 0 rgba(0, 0, 0, 0.25),
-    1px -1px 0 rgba(0, 0, 0, 0.25),
-    -1px 1px 0 rgba(0, 0, 0, 0.25),
-    1px 1px 0 rgba(0, 0, 0, 0.25),
-    /* Sombra suave */
-    0 2px 3px rgba(0, 0, 0, 0.2);
+  /* Font e text-shadow agora vêm das classes title-text e title-text-{variant} */
 }
 
 /* Variante Azul - Excluir Tudo */
@@ -177,21 +169,6 @@ export default {
     #3d88ff 100%
   );
   border-color: #1a4a8a;
-}
-
-.glossy-button--blue .glossy-button__text {
-  text-shadow:
-    /* Contorno azul escuro */
-    -1px -1px 0 rgba(26, 74, 138, 0.6),
-    1px -1px 0 rgba(26, 74, 138, 0.6),
-    -1px 1px 0 rgba(26, 74, 138, 0.6),
-    1px 1px 0 rgba(26, 74, 138, 0.6),
-    0 -1px 0 rgba(26, 74, 138, 0.6),
-    0 1px 0 rgba(26, 74, 138, 0.6),
-    -1px 0 0 rgba(26, 74, 138, 0.6),
-    1px 0 0 rgba(26, 74, 138, 0.6),
-    /* Sombra suave */
-    0 2px 3px rgba(0, 0, 0, 0.25);
 }
 
 /* Sombras graduais para tamanho SM - Azul */
@@ -262,21 +239,6 @@ export default {
   border-color: #a86b00;
 }
 
-.glossy-button--yellow .glossy-button__text {
-  text-shadow:
-    /* Contorno marrom escuro */
-    -1px -1px 0 rgba(168, 107, 0, 0.6),
-    1px -1px 0 rgba(168, 107, 0, 0.6),
-    -1px 1px 0 rgba(168, 107, 0, 0.6),
-    1px 1px 0 rgba(168, 107, 0, 0.6),
-    0 -1px 0 rgba(168, 107, 0, 0.6),
-    0 1px 0 rgba(168, 107, 0, 0.6),
-    -1px 0 0 rgba(168, 107, 0, 0.6),
-    1px 0 0 rgba(168, 107, 0, 0.6),
-    /* Sombra suave */
-    0 2px 3px rgba(0, 0, 0, 0.25);
-}
-
 /* Sombras graduais para tamanho SM - Amarelo */
 .glossy-button--yellow.glossy-button--sm {
   box-shadow:
@@ -345,21 +307,6 @@ export default {
   border-color: #b81a1a;
 }
 
-.glossy-button--red .glossy-button__text {
-  text-shadow:
-    /* Contorno vermelho escuro */
-    -1px -1px 0 rgba(184, 26, 26, 0.6),
-    1px -1px 0 rgba(184, 26, 26, 0.6),
-    -1px 1px 0 rgba(184, 26, 26, 0.6),
-    1px 1px 0 rgba(184, 26, 26, 0.6),
-    0 -1px 0 rgba(184, 26, 26, 0.6),
-    0 1px 0 rgba(184, 26, 26, 0.6),
-    -1px 0 0 rgba(184, 26, 26, 0.6),
-    1px 0 0 rgba(184, 26, 26, 0.6),
-    /* Sombra suave */
-    0 2px 3px rgba(0, 0, 0, 0.25);
-}
-
 /* Sombras graduais para tamanho SM - Vermelho */
 .glossy-button--red.glossy-button--sm {
   box-shadow:
@@ -426,21 +373,6 @@ export default {
     #3cc41c 100%
   );
   border-color: #1a7a0a;
-}
-
-.glossy-button--green .glossy-button__text {
-  text-shadow:
-    /* Contorno verde escuro */
-    -1px -1px 0 rgba(26, 122, 10, 0.6),
-    1px -1px 0 rgba(26, 122, 10, 0.6),
-    -1px 1px 0 rgba(26, 122, 10, 0.6),
-    1px 1px 0 rgba(26, 122, 10, 0.6),
-    0 -1px 0 rgba(26, 122, 10, 0.6),
-    0 1px 0 rgba(26, 122, 10, 0.6),
-    -1px 0 0 rgba(26, 122, 10, 0.6),
-    1px 0 0 rgba(26, 122, 10, 0.6),
-    /* Sombra suave */
-    0 2px 3px rgba(0, 0, 0, 0.25);
 }
 
 /* Sombras graduais para tamanho SM - Verde */

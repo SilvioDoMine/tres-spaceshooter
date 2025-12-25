@@ -66,7 +66,7 @@ onUnmounted(() => {
     </TresCanvas>
 
     <!-- Modals -->
-    <GamePauseModal />
+    <PlayPauseModal />
     <GameOverModal />
     <GameVictoryModal />
     <GameSkillSelectModal />

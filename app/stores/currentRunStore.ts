@@ -43,6 +43,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   const skillStore = useSkillStore();
   const playerStats = usePlayerStats();
   const combatTextStore = useCombatTextStore();
+  const uiModalPause = useModal('pause-modal');
 
   // -- ESTADO PERSISTENTE ENTRE PARTIDAS
   const totalGold = ref(0); // Gold total persistente entre partidas
@@ -97,9 +98,6 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   const roomCurrentWaveIndex = ref(0);
   const isWaveInProgress = ref(false);
 
-  // -- MENU DE PAUSA
-  const menuPauseState = ref('closed'); // 'closed', 'general', 'settings', etc.
-
   function initializePermanentState() {
     totalGold.value = loadGold();
     console.log('Permanent state initialized. Total Gold:', totalGold.value);
@@ -143,7 +141,9 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     expToNextLevel.value = getExpForLevel(currentLevel.value);
     skillRerollCount.value = 1;
     gameState.value = 'init';
-    menuPauseState.value = 'closed';
+
+    // Close modals
+    uiModalPause.close();
 
     enemyManager.cleanup();
     skillStore.cleanup();
@@ -162,7 +162,9 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     isWaveInProgress.value = false;
     roomCurrentWaveIndex.value = 0;
     currentMoveSpeed.value = PlayerBaseStats.moveSpeed;
-    menuPauseState.value = 'closed';
+
+    // Remoção de modal
+    uiModalPause.close();
   }
 
   function completeStage() {
@@ -302,13 +304,13 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   function gamePause() {
     if (isPlaying.value) {
       gameState.value = 'paused';
-      menuPauseState.value = 'general';
+      uiModalPause.open();
     }
   }
 
   function gameResume() {
     if (isPaused.value) {
-      menuPauseState.value = 'closed';
+      uiModalPause.close();
       gameState.value = 'playing';
     }
   }
@@ -461,9 +463,6 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     stageTimer,
     roomCurrentWaveIndex,
     isWaveInProgress,
-
-    // Pause menu
-    menuPauseState,
 
     // permanent state
     initializePermanentState,
