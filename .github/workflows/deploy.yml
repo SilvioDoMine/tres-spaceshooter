@@ -56,6 +56,9 @@ jobs:
               echo "Dependencies changed, installing node modules"
               rm -rf node_modules package-lock.json || { echo "Failed to remove node_modules and package-lock.json"; exit 1; }
               npm install || { echo "npm install failed"; exit 1; }
+            elif [ ! -f package-lock.json ]; then
+              echo "package-lock.json not found, installing dependencies"
+              npm install || { echo "npm install failed"; exit 1; }
             else
               echo "No changes in dependencies, skipping npm install"
             fi
