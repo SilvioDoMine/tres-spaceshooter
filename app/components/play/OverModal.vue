@@ -62,83 +62,64 @@ function getRarityFromSkill(skill) {
 </script>
 
 <template>
-  <PlayModal
-    :modal-id="MODAL_ID"
-    title="Fim do Desafio"
-    max-width="max-w-lg"
-    :disable-overlay-close="false"
-    @close="handleQuit"
-  >
-    <!-- Main Card with border-->
-    <div 
-      class="p-3 -mt-10 mb-5 bg-yellow-300 rounded-xl max-w-[175px] mx-auto shadow-[0px_2px_0px_2px_rgba(255,0,0,1)] shadow-yellow-600"
-    >
-      <!-- Content card -->
-      <div 
-        class="relative p-1 py-10 title-text bg-blue-700 rounded-lg shadow-[0px_0.5px_0px_2px_rgba(255,0,0,1)] shadow-blue-800 drop-shadow-[0px_2px_0px_rgba(255,0,0,1)] drop-shadow-yellow-200"
-        style=""
-      >
-        <!-- Checkers background -->
-        <div class="absolute inset-0 bg-center rounded-lg"
-          style="background-image:
-            linear-gradient(135deg, rgba(255,255,255,.05) 25%, transparent 25%),
-            linear-gradient(225deg, rgba(255,255,255,.05) 25%, transparent 25%),
-            linear-gradient(315deg, rgba(255,255,255,.05) 25%, transparent 25%),
-            linear-gradient(45deg, rgba(255,255,255,.05) 25%, transparent 25%);
-            background-size: 50px 50px;"
-        >
-        </div>
+<PlayModal
+  :modal-id="MODAL_ID"
+  title="Fim do Desafio"
+  max-width="max-w-lg"
+  :disable-overlay-close="false"
+  @close="handleQuit"
+>
+  <BaseCardFancy class="max-w-[175px] mx-auto -mt-10 mb-5">
+    <!-- Content -->
+    <div class="flex flex-col items-center py-10">
 
-        <!-- Content -->
-        <div class="flex flex-col items-center">
-
-          <!-- Status da fase -->
-          <div class="flex flex-col items-center">
-            <h2 class="text-lg text-cyan-200 text-shadow-xl text-shadow-blue-900">Nível alcançado</h2>
-            <p class="text-7xl font-mono font-bold text-shadow-[4px_5px_0px_rgba(0,0,0,1)] text-shadow-blue-900">{{ useCurrentRunStore().currentLevel - 1 }}</p>
-            <p class="title-text-blue text-xl">Fase 1</p>
-          </div>
-        </div>
-
+      <!-- Status da fase -->
+      <div class="flex flex-col items-center">
+        <h2 class="text-lg text-cyan-200 text-shadow-xl text-shadow-blue-900">Nível alcançado</h2>
+        <p class="text-7xl font-mono font-bold text-shadow-[4px_5px_0px_rgba(0,0,0,1)] text-shadow-blue-900">{{ useCurrentRunStore().currentLevel - 1 }}</p>
+        <p class="title-text-blue text-xl">Fase 1</p>
       </div>
+
     </div>
+  </BaseCardFancy>
 
-    <BaseSectionDivider :text="useCurrentRunStore().currentGold > 0 ? 'Recompensas' : 'Não há recompensas'" />
 
-    <!-- Grid de habilidades -->
-    <div class="abilities-grid">
-      <BaseAbilityIcon
-        rarity="gray"
-        size="sm"
-        :clickable="true"
-        :quantity="useCurrentRunStore().currentGold"
-        v-if="useCurrentRunStore().currentGold > 0"
-      >
-        <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">
-          <span class="drop-shadow-xs drop-shadow-black text-gold">
-            <SvgCoinIcon :size="25" />
-          </span>
-        </p>
-      </BaseAbilityIcon>
+  <BaseSectionDivider :text="useCurrentRunStore().currentGold > 0 ? 'Recompensas' : 'Não há recompensas'" />
 
-      <BaseAbilityIcon
-        rarity="gray"
-        size="sm"
-        :clickable="true"
-        quantity="100"
-        v-if="false"
-      >
-        <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">
-          <SvgExpIcon size="35" />
-        </p>
-      </BaseAbilityIcon>
-    </div>
+  <!-- Grid de habilidades -->
+  <div class="abilities-grid">
+    <BaseAbilityIcon
+      rarity="gray"
+      size="sm"
+      :clickable="true"
+      :quantity="useCurrentRunStore().currentGold"
+      v-if="useCurrentRunStore().currentGold > 0"
+    >
+      <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">
+        <span class="drop-shadow-xs drop-shadow-black text-gold">
+          <SvgCoinIcon :size="25" />
+        </span>
+      </p>
+    </BaseAbilityIcon>
 
-    <!-- Slot de actions para os botões grandes -->
-    <template #actions>
-      <p class="title-text text-white animate-pulse animate">Toque para continuar</p class="text-title text-white">
-    </template>
-  </PlayModal>
+    <BaseAbilityIcon
+      rarity="gray"
+      size="sm"
+      :clickable="true"
+      quantity="100"
+      v-if="false"
+    >
+      <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">
+        <SvgExpIcon size="35" />
+      </p>
+    </BaseAbilityIcon>
+  </div>
+
+  <!-- Slot de actions para os botões grandes -->
+  <template #actions>
+    <p @click="handleQuit" class="title-text text-white animate-pulse animate">Toque para continuar</p class="text-title text-white">
+  </template>
+</PlayModal>
 </template>
 
 <style scoped>
