@@ -80,11 +80,21 @@ function getRarityFromSkill(skill) {
 <template>
   <PlayModal
     :modal-id="MODAL_ID"
-    title="Jogo Pausado"
-    :divider-text="skillStore.currentSkills.length > 0 ? 'Habilidades Obtidas' : 'Nenhuma habilidade obitida'"
     max-width="max-w-lg"
     :disable-overlay-close="true"
   >
+    <!-- Title slot -->
+    <template #title>
+      <BaseRibbonTitle
+        text="Jogo Pausado"
+        :height="60"
+        variant="yellow"
+      />
+    </template>
+
+    <!-- Section divider -->
+    <BaseSectionDivider :text="skillStore.currentSkills.length > 0 ? 'Habilidades Obtidas' : 'Nenhuma habilidade obitida'" />
+
     <!-- Grid de habilidades -->
     <div class="abilities-grid">
       <BaseAbilityIcon

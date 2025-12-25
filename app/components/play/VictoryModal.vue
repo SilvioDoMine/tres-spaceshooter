@@ -45,20 +45,28 @@ defineExpose({ open, close, isOpen });
   :disable-overlay-close="false"
   @close="handleQuit"
 >
-  <BaseCardFancy class="max-w-[175px] mx-auto -mt-10 mb-5">
+  <!-- Title slot -->
+  <template #title>
+    <BaseRibbonTitle
+      text="Desafio Concluído"
+      :height="60"
+      variant="red"
+    />
+  </template>
+
+  <BaseCardFancy variant="red" :gold-border="true" class="max-w-[175px] mx-auto -mt-10 mb-5">
     <!-- Content -->
     <div class="flex flex-col items-center py-10">
 
       <!-- Status da fase -->
-      <div class="flex flex-col items-center">
-        <h2 class="text-lg text-cyan-200 text-shadow-xl text-shadow-blue-900">Nível alcançado</h2>
+      <div class="flex flex-col items-center text-white title-text">
+        <h2 class="text-lg text-rose-200 text-shadow-xl text-shadow-blue-900">Nível alcançado</h2>
         <p class="text-7xl font-mono font-bold text-shadow-[4px_5px_0px_rgba(0,0,0,1)] text-shadow-blue-900">{{ useCurrentRunStore().currentLevel - 1 }}</p>
-        <p class="title-text-blue text-xl">Fase 1</p>
+        <p class="title-text-red text-xl">Fase 1</p>
       </div>
 
     </div>
   </BaseCardFancy>
-
 
   <BaseSectionDivider :text="useCurrentRunStore().currentGold > 0 ? 'Recompensas' : 'Não há recompensas'" />
 

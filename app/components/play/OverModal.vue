@@ -45,14 +45,22 @@ defineExpose({ open, close, isOpen });
 <template>
 <PlayModal
   :modal-id="MODAL_ID"
-  title="Fim do Desafio"
   max-width="max-w-lg"
   :disable-overlay-close="false"
   @close="handleQuit"
 >
-  <BaseCardFancy class="max-w-[175px] mx-auto -mt-10 mb-5">
+  <!-- Title slot -->
+  <template #title>
+    <BaseRibbonTitle
+      text="Fim do Desafio"
+      :height="60"
+      variant="blue"
+    />
+  </template>
+
+  <BaseCardFancy variant="blue" :gold-border="true" class="max-w-[175px] mx-auto -mt-10 mb-5">
     <!-- Content -->
-    <div class="flex flex-col items-center py-10">
+    <div class="flex flex-col items-center py-10 title-text">
 
       <!-- Status da fase -->
       <div class="flex flex-col items-center">
