@@ -35,6 +35,14 @@ function handleQuit() {
 }
 
 defineExpose({ open, close, isOpen });
+
+// Quando abrir o modal, executa o código
+watch(isOpen, (newVal) => {
+  if (newVal) {
+    confettiOnPageSides(2000);
+    confettiOnBottom(2000);
+  }
+});
 </script>
 
 <template>

@@ -10,4 +10,7 @@ export default defineNuxtConfig({
   },
   devtools: { enabled: true },
   ssr: false,
+  extends: [
+    'nuxt-unified-confetti',
+  ],
 })
