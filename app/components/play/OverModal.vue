@@ -40,25 +40,6 @@ function handleQuit() {
 }
 
 defineExpose({ open, close, isOpen });
-
-const skillStore = useSkillStore();
-
-function getRarityFromSkill(skill) {
-  switch (skill.rarity) {
-    case 'common':
-      return 'gray';
-    case 'uncommon':
-      return 'green';
-    case 'rare':
-      return 'blue';
-    case 'epic':
-      return 'purple';
-    case 'legendary':
-      return 'orange';
-    default:
-      return 'gray';
-  }
-}
 </script>
 
 <template>
