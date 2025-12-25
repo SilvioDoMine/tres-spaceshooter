@@ -133,122 +133,122 @@ export const LEVEL_1 = {
     //   },
     //   playerStartPosition: { x: 0, y: 0, z: 0 },
     // },
-    // {
-    //   stageId: 'S5_Combat_More',
-    //   type: 'combat',
-    //   width: 20,
-    //   height: 30,
-    //   waves: [
-    //     { enemies: [ { enemyType: 'ufo', count: 4 }, { enemyType: 'asteroid', count: 6, delay: 1.5 } ] },
-    //     { enemies: [ { enemyType: 'ufo', count: 6 }, { enemyType: 'asteroid', count: 8, delay: 1.5 } ] },
-    //     { enemies: [ { enemyType: 'ufo', count: 8 }, { enemyType: 'asteroid', count: 10, delay: 1.5 } ] },
-    //     { enemies: [ { enemyType: 'ufo', count: 10 }, { enemyType: 'asteroid', count: 12, delay: 1.5 } ] },
-    //   ],
-    //   devDescription: 'Terceira sala lança 4 UFOs + 6 asteroides, depois 6 UFOs + 8 asteroides e então é liberado para a próxima sala.',
-    //   door: {
-    //     position: { x: 0, y: 0, z: -9 },
-    //     size: { width: 4, height: 8 },
-    //   },
-    //   playerStartPosition: { x: 0, y: 0, z: 0 },
-    // },
-    // {
-    //   stageId: 'S6_Boss',
-    //   type: 'boss',
-    //   width: 30,
-    //   height: 30,
-    //   waves: [
-    //     { enemies: [ { enemyType: 'boss', count: 1, delay: 3 } ] }
-    //   ],
-    //   devDescription: 'Sala do chefe final do nível. Após vencer, o nível é concluído após eu sair da portinha.',
-    //   door: {
-    //     position: { x: 0, y: 0, z: -9 },
-    //     size: { width: 4, height: 8 },
-    //   },
-    //   playerStartPosition: { x: 0, y: 0, z: 0 },
-    // },
-    // {
-    //   stageId: 'S7_Combat_More',
-    //   type: 'combat',
-    //   width: 30,
-    //   height: 40,
-    //   waves: [
-    //     {
-    //       enemies: [
-    //         { enemyType: 'ufofast', count: 2, delay: 1.5 },
-    //         { enemyType: 'asteroid', count: 4, delay: 1.5},
-    //       ]
-    //     },
-    //     {
-    //       enemies: [
-    //         { enemyType: 'ufofast', count: 2, delay: 1.5 },
-    //         { enemyType: 'asteroid', count: 6, delay: 1.5},
-    //         { enemyType: 'ufo', count: 2, delay: 1.5}
-    //       ]
-    //     },
-    //     {
-    //       enemies: [
-    //         { enemyType: 'ufofast', count: 4, delay: 1.5 },
-    //         { enemyType: 'asteroid', count: 8, delay: 1.5},
-    //         { enemyType: 'ufo', count: 3, delay: 1.5}
-    //       ],
-    //     },
-    //   ],
-    //   devDescription: 'Após o chefe boss, agora teremos um novo inimigo que é o ufofast.',
-    //   door: {
-    //     position: { x: 0, y: 0, z: -9 },
-    //     size: { width: 4, height: 8 },
-    //   },
-    //   playerStartPosition: { x: 0, y: 0, z: 0 },
-    // },
-    // {
-    //   stageId: 'S8_KamikazeBoss',
-    //   type: 'boss',
-    //   width: 30,
-    //   height: 30,
-    //   waves: [
-    //     { enemies: [ { enemyType: 'kamikazeBoss', count: 1, delay: 3 } ] }
-    //   ],
-    //   devDescription: 'Chefe final do nível que utiliza ataques kamikaze.',
-    //   door: {
-    //     position: { x: 0, y: 0, z: -9 },
-    //     size: { width: 4, height: 8 },
-    //   },
-    //   playerStartPosition: { x: 0, y: 0, z: 0 },
-    // },
-    // {
-    //   stageId: 'S9_Combat_More',
-    //   type: 'combat',
-    //   width: 30,
-    //   height: 40,
-    //   waves: [
-    //     {
-    //       enemies: [
-    //         { enemyType: 'kamikaze', count: 2, delay: 1.5 },
-    //         { enemyType: 'ufofast', count: 2, delay: 1.5 },
-    //         { enemyType: 'asteroid', count: 4, delay: 1.5},
-    //       ]
-    //     },
-    //     {
-    //       enemies: [
-    //         { enemyType: 'kamikaze', count: 3, delay: 1.5 },
-    //         { enemyType: 'ufofast', count: 3, delay: 1.5 },
-    //         { enemyType: 'asteroid', count: 6, delay: 1.5},
-    //       ]
-    //     },
-    //     {
-    //       enemies: [
-    //         { enemyType: 'kamikaze', count: 4, delay: 1.5 },
-    //         { enemyType: 'ufofast', count: 4, delay: 1.5 },
-    //         { enemyType: 'asteroid', count: 8, delay: 1.5},
-    //       ],
-    //     },
-    //   ],
-    //   devDescription: 'Sala final com todos os inimigos do nível para testar as mecânicas aprendidas.',
-    //   door: {
-    //     position: { x: 0, y: 0, z: -9 },
-    //     size: { width: 4, height: 8 },
-    //   },
-    //   playerStartPosition: { x: 0, y: 0, z: 0 },
-    // }
+    {
+      stageId: 'S5_Combat_More',
+      type: 'combat',
+      width: 20,
+      height: 30,
+      waves: [
+        { enemies: [ { enemyType: 'ufo', count: 4 }, { enemyType: 'asteroid', count: 6, delay: 1.5 } ] },
+        { enemies: [ { enemyType: 'ufo', count: 6 }, { enemyType: 'asteroid', count: 8, delay: 1.5 } ] },
+        { enemies: [ { enemyType: 'ufo', count: 8 }, { enemyType: 'asteroid', count: 10, delay: 1.5 } ] },
+        { enemies: [ { enemyType: 'ufo', count: 10 }, { enemyType: 'asteroid', count: 12, delay: 1.5 } ] },
+      ],
+      devDescription: 'Terceira sala lança 4 UFOs + 6 asteroides, depois 6 UFOs + 8 asteroides e então é liberado para a próxima sala.',
+      door: {
+        position: { x: 0, y: 0, z: -9 },
+        size: { width: 4, height: 8 },
+      },
+      playerStartPosition: { x: 0, y: 0, z: 0 },
+    },
+    {
+      stageId: 'S6_Boss',
+      type: 'boss',
+      width: 30,
+      height: 30,
+      waves: [
+        { enemies: [ { enemyType: 'boss', count: 1, delay: 3 } ] }
+      ],
+      devDescription: 'Sala do chefe final do nível. Após vencer, o nível é concluído após eu sair da portinha.',
+      door: {
+        position: { x: 0, y: 0, z: -9 },
+        size: { width: 4, height: 8 },
+      },
+      playerStartPosition: { x: 0, y: 0, z: 0 },
+    },
+    {
+      stageId: 'S7_Combat_More',
+      type: 'combat',
+      width: 30,
+      height: 40,
+      waves: [
+        {
+          enemies: [
+            { enemyType: 'ufofast', count: 2, delay: 1.5 },
+            { enemyType: 'asteroid', count: 4, delay: 1.5},
+          ]
+        },
+        {
+          enemies: [
+            { enemyType: 'ufofast', count: 2, delay: 1.5 },
+            { enemyType: 'asteroid', count: 6, delay: 1.5},
+            { enemyType: 'ufo', count: 2, delay: 1.5}
+          ]
+        },
+        {
+          enemies: [
+            { enemyType: 'ufofast', count: 4, delay: 1.5 },
+            { enemyType: 'asteroid', count: 8, delay: 1.5},
+            { enemyType: 'ufo', count: 3, delay: 1.5}
+          ],
+        },
+      ],
+      devDescription: 'Após o chefe boss, agora teremos um novo inimigo que é o ufofast.',
+      door: {
+        position: { x: 0, y: 0, z: -9 },
+        size: { width: 4, height: 8 },
+      },
+      playerStartPosition: { x: 0, y: 0, z: 0 },
+    },
+    {
+      stageId: 'S8_KamikazeBoss',
+      type: 'boss',
+      width: 30,
+      height: 30,
+      waves: [
+        { enemies: [ { enemyType: 'kamikazeBoss', count: 1, delay: 3 } ] }
+      ],
+      devDescription: 'Chefe final do nível que utiliza ataques kamikaze.',
+      door: {
+        position: { x: 0, y: 0, z: -9 },
+        size: { width: 4, height: 8 },
+      },
+      playerStartPosition: { x: 0, y: 0, z: 0 },
+    },
+    {
+      stageId: 'S9_Combat_More',
+      type: 'combat',
+      width: 30,
+      height: 40,
+      waves: [
+        {
+          enemies: [
+            { enemyType: 'kamikaze', count: 2, delay: 1.5 },
+            { enemyType: 'ufofast', count: 2, delay: 1.5 },
+            { enemyType: 'asteroid', count: 4, delay: 1.5},
+          ]
+        },
+        {
+          enemies: [
+            { enemyType: 'kamikaze', count: 3, delay: 1.5 },
+            { enemyType: 'ufofast', count: 3, delay: 1.5 },
+            { enemyType: 'asteroid', count: 6, delay: 1.5},
+          ]
+        },
+        {
+          enemies: [
+            { enemyType: 'kamikaze', count: 4, delay: 1.5 },
+            { enemyType: 'ufofast', count: 4, delay: 1.5 },
+            { enemyType: 'asteroid', count: 8, delay: 1.5},
+          ],
+        },
+      ],
+      devDescription: 'Sala final com todos os inimigos do nível para testar as mecânicas aprendidas.',
+      door: {
+        position: { x: 0, y: 0, z: -9 },
+        size: { width: 4, height: 8 },
+      },
+      playerStartPosition: { x: 0, y: 0, z: 0 },
+    }
   ],
 };
