@@ -320,6 +320,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
   function gameOver(message: string = 'You have been defeated.') {
     console.log('Game Over:', message);
+    gameVictoryRewards();
     gameState.value = 'gameover';
     uiModalOver.open();
   }
