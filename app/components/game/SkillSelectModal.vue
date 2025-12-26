@@ -21,6 +21,17 @@ const getSkillColorClass = (rarity) => {
             return 'bg-white text-black hover:bg-gray-200 group-hover:bg-gray-200';
     }
 };
+
+// When modal is closed and opens up, we should throw confetti
+watch(
+    () => skillStore.isModalOpen,
+    (newVal, oldVal) => {
+        if (newVal && !oldVal) {
+            confettiOnPageSides(200);
+            confettiOnBottom(200);
+        }
+    }
+);
 </script>
 
 <template>
