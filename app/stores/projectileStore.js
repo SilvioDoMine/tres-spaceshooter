@@ -127,7 +127,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
             if (skillStore.hasSkill('ricochet_shot')) {
               const skillLevel = skillStore.getSkillLevel('ricochet_shot');
               // o range do ricochete é igual ao do projetil normal. Nível aumenta a quantidade de bounces depois.
-              const nearestEnemy = nearestEnemyFromPlayer();
+              const nearestEnemy = nearestEnemyFromPosition(projectile.position, projectile.range * playerStats.getRangeMultiplier, enemy.id);
 
               if (! nearestEnemy) {
                 return; // sem inimigos próximos, não faz ricochete
@@ -267,6 +267,36 @@ export const useProjectileStore = defineStore('projectileStore', () => {
     return nearestEnemy;
   }
 
+  function nearestEnemyFromPosition(position, maxRange = Infinity, ownerId = null) {
+    let nearestEnemy = null;
+    let minDistance = Infinity;
+
+    enemyManager.activeEnemies.value.forEach(enemy => {
+      // if enemy is not active, ignore
+      if (enemy.state !== 'active') return;
+
+      // Ignore self
+      if (ownerId && enemy.id === ownerId) return;
+
+      const dist = Math.hypot(
+        enemy.position.x - position.x,
+        enemy.position.z - position.z
+      );
+
+      if (dist < minDistance) {
+        minDistance = dist;
+        nearestEnemy = enemy;
+      }
+    });
+
+    // Se o inimigo mais próximo estiver longe do range do tiro, retorna null
+    if (minDistance > maxRange) {
+      return null;
+    }
+
+    return nearestEnemy;
+  }
+
   return {
     update,
     cleanup,
@@ -276,6 +306,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
     projectiles,
 
     nearestEnemyFromPlayer,
+    nearestEnemyFromPosition,
   };
 });
 
