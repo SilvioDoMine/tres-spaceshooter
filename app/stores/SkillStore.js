@@ -237,6 +237,7 @@ export const useSkillStore = defineStore('SkillStore', () => {
 
         let rarityChances = {
           common: 0.5, // 50%
+          uncommon: 0.5, // 50%
           rare: 0.25, // 25%
           epic: 0.17, // 17%
           legendary: 0.08, // 8%
