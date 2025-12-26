@@ -1,5 +1,6 @@
 <script setup lang="js">
 import { LEVEL_1 } from '~/games/levels/LevelOneConfig';
+import { useAudio } from '~/composables/useAudio';
 
 // Page metadata
 useHead({
@@ -14,10 +15,35 @@ useHead({
 
 const route = useRoute();
 const currentRunStore = useCurrentRunStore();
-
+const audio = useAudio();
 
 const levels = {
   1: LEVEL_1,
+};
+
+const audioInitialized = ref(false);
+
+// Inicializa áudio na primeira interação do usuário
+const initAudioOnFirstInput = async () => {
+  if (audioInitialized.value) return;
+
+  console.log('First user interaction detected, initializing audio...');
+  audioInitialized.value = true;
+
+  // Inicia o sistema de áudio
+  await audio.init();
+
+  // Toca música de fundo
+  audio.playBackgroundMusic('/sounds/background_main.mp3', true);
+
+  // Carrega efeitos sonoros (exemplo)
+  // await audio.loadSound('shoot', '/sounds/shoot.mp3');
+  // await audio.loadSound('hit', '/sounds/hit.mp3');
+
+  // Remove os listeners após inicializar
+  window.removeEventListener('click', initAudioOnFirstInput);
+  window.removeEventListener('keydown', initAudioOnFirstInput);
+  window.removeEventListener('touchstart', initAudioOnFirstInput);
 };
 
 onMounted(async () => {
@@ -37,12 +63,25 @@ onMounted(async () => {
     return;
   }
 
+  // Aguarda primeira interação do usuário para inicializar áudio
+  window.addEventListener('click', initAudioOnFirstInput, { once: false });
+  window.addEventListener('keydown', initAudioOnFirstInput, { once: false });
+  window.addEventListener('touchstart', initAudioOnFirstInput, { once: false });
+
   // Inicia uma nova partida ao montar a página
   currentRunStore.gameStart(levels[route.params.id ]);
 });
 
 onUnmounted(() => {
   console.log('Play page unmounted');
+
+  // Para a música ao desmontar
+  audio.stopBackgroundMusic();
+
+  // Remove listeners caso ainda existam
+  window.removeEventListener('click', initAudioOnFirstInput);
+  window.removeEventListener('keydown', initAudioOnFirstInput);
+  window.removeEventListener('touchstart', initAudioOnFirstInput);
 
   // currentRunStore.endRun();
 });
@@ -70,6 +109,7 @@ onUnmounted(() => {
     <PlayOverModal />
     <PlayVictoryModal />
     <GameSkillSelectModal />
+    <LobbySettingsModal />
 
     <!-- Leches -->
     <!-- <TresLeches /> -->

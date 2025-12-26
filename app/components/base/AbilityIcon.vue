@@ -15,6 +15,7 @@ const props = defineProps({
   /** Mostrar indicador de quantidade/nível */
   badge: {
     type: String,
+    required: false,
     default: '',
   },
   /** Mostrar quantidade no canto inferior esquerdo */

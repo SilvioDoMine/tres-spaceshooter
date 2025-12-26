@@ -75,6 +75,9 @@ function getRarityFromSkill(skill) {
       return 'gray';
   }
 }
+
+// config
+const uiModalConfig = useModal('settings-modal');
 </script>
 
 <template>
@@ -120,6 +123,14 @@ function getRarityFromSkill(skill) {
 
     <!-- Slot de actions para os botões grandes -->
     <template #actions>
+      <BaseButton
+        variant="red"
+        size="sm"
+        @click="uiModalConfig.open()"
+      >
+        Config
+      </BaseButton>
+
       <BaseButton
         variant="yellow"
         size="sm"

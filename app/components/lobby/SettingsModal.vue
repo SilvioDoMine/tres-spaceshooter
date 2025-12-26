@@ -2,14 +2,13 @@
 import { useLobbyStore } from '~/stores/useLobbyStore';
 import BaseModal from '~/components/ui/BaseModal.vue';
 import { useModal } from '~/composables/useModal';
+import { useAudio } from '~/composables/useAudio';
 
 // Store apenas para dados de avatar (não mais para controle de modal)
 const lobbyStore = useLobbyStore();
 
 // Settings
-const volumeGeneral = ref(100);
-const volumeBackground = ref(100);
-const volumeEffects = ref(100);
+const useAudioPlayer = useAudio();
 const enableParticles = ref(true);
 </script>
 
@@ -33,7 +32,7 @@ const enableParticles = ref(true);
                             </div>
                             <div class="flex items-center justify-center">
                                 <BaseRangeInput 
-                                    v-model="volumeGeneral"
+                                    v-model="useAudioPlayer.audioSettings.value.volumeGeneral"
                                     :min="0"
                                     :max="100"
                                     :showValue="false"
@@ -50,7 +49,7 @@ const enableParticles = ref(true);
                             </div>
                             <div class="flex items-center justify-center">
                                 <BaseRangeInput 
-                                    v-model="volumeBackground"
+                                    v-model="useAudioPlayer.audioSettings.value.volumeBackground"
                                     :min="0"
                                     :max="100"
                                     :showValue="false"
@@ -67,7 +66,7 @@ const enableParticles = ref(true);
                             </div>
                             <div class="flex items-center justify-center">
                                 <BaseRangeInput 
-                                    v-model="volumeEffects"
+                                    v-model="useAudioPlayer.audioSettings.value.volumeEffects"
                                     :min="0"
                                     :max="100"
                                     :showValue="false"
