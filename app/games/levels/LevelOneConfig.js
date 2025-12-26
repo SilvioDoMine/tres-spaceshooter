@@ -23,6 +23,7 @@ export const LEVEL_1 = {
   levelId: 'level_open_space_001',
   width: 10,
   height: 20,
+  rewardExperience: 80, // Experiência concedida ao completar finalizar o nível
   stages: [
     {
       stageId: 'S1_Intro',

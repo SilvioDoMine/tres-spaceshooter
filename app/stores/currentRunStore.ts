@@ -5,6 +5,7 @@ import { useSkillStore } from '~/stores/SkillStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import { useCombatTextStore } from '~/stores/useCombatTextStore';
 import { useModal } from '~/composables/useModal';
+import { useLevelAccount } from '~/composables/useLevelAccount';
 
 // Define o formato básico do vetor de posição 3D
 interface Vector3 {
@@ -47,6 +48,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   const uiModalPause = useModal('pause-modal');
   const uiModalOver = useModal('play-over-modal');
   const uiModalVictory = useModal('play-victory-modal');
+  const levelAccount = useLevelAccount();
 
   // -- ESTADO PERSISTENTE ENTRE PARTIDAS
   const totalGold = ref(0); // Gold total persistente entre partidas
@@ -336,6 +338,12 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
     saveGold(Number(totalGold.value) + Number(currentGold.value));
     totalGold.value += currentGold.value;
+
+    const expGained = levelAccount.calculateExpReward(levelConfig.value, currentStageIndex.value + 1);
+
+    console.log(`Player gained ${expGained} EXP from victory.`);
+
+    levelAccount.addExp(expGained);
   }
 
   function gameVictory(message: string = 'Congratulations! You have won.') {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useLobbyStore } from '~/stores/useLobbyStore';
 import { useModal } from '~/composables/useModal';
+import { useLevelAccount } from '~/composables/useLevelAccount';
 import { LEVEL_1 } from '~/games/levels/LevelOneConfig';
 
 // Page metadata
@@ -12,6 +13,7 @@ useHead({
 })
 
 const lobbyStore = useLobbyStore();
+const levelAccount = useLevelAccount();
 const currentRunStore = useCurrentRunStore();
 const router = useRouter();
 const isAnimating = ref(false);
@@ -21,31 +23,8 @@ const isAnimating = ref(false);
 const profileModal = useModal('profile-modal');
 const settingsModal = useModal('settings-modal');
 
-/**
- * Abre o modal de perfil usando o sistema de modais reutilizável
- *
- * FORMAS DE USO:
- *
- * 1. Abrir:
- *    profileModal.open()
- *
- * 2. Fechar:
- *    profileModal.close()
- *
- * 3. Verificar se está aberto:
- *    profileModal.isOpen.value
- *
- * 4. Empilhar modais:
- *    const modal2 = useModal('outro-modal-id')
- *    modal2.open() // Abre por cima do profileModal
- */
 function openProfileModal() {
   profileModal.open();
-}
-
-function startGame() {
-  console.log('Iniciando o jogo...');
-  currentRunStore.initializeLevel(LEVEL_1);
 }
 
 async function handleButtonClick() {
@@ -103,12 +82,12 @@ function formatCurrency(amount: number): string {
           <div @click="openProfileModal" class="text-white text-md font-bold flex flex-col cursor-pointer">
             <!-- Level & User -->
             <div class="flex gap-2 items-center h-full">
-              <p class="text-blue-400 w-6 font-bold text-center">1</p>
+              <p class="text-blue-400 w-6 font-bold text-center">{{ levelAccount.getLevelAccount() }}</p>
               <div>
                 <p>{{ lobbyStore.getCurrentProfileName }}</p>
                 <!-- Mini level bar -->
                 <div class="w-full h-1 bg-white/20 rounded-full overflow-hidden">
-                  <div class="h-full bg-blue-400 rounded-full" style="width: 0%;"></div>
+                  <div class="h-full bg-blue-400 rounded-full" :style="{ width: levelAccount.getCurrentPercentageToNextLevel() + '%' }"></div>
                 </div>
               </div>
             </div>

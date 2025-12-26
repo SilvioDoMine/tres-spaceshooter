@@ -40,6 +40,10 @@ function handleQuit() {
 }
 
 defineExpose({ open, close, isOpen });
+
+// Level Thing
+const levelAccount = useLevelAccount();
+const expReward = computed(() => levelAccount.calculateExpReward());
 </script>
 
 <template>
@@ -81,7 +85,7 @@ defineExpose({ open, close, isOpen });
       rarity="gray"
       size="sm"
       :clickable="true"
-      :quantity="useCurrentRunStore().currentGold"
+      :quantity="`${useCurrentRunStore().currentGold}`"
       v-if="useCurrentRunStore().currentGold > 0"
     >
       <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">
@@ -95,11 +99,11 @@ defineExpose({ open, close, isOpen });
       rarity="gray"
       size="sm"
       :clickable="true"
-      quantity="100"
-      v-if="false"
+      :quantity="`${expReward}`"
+      v-if="expReward > 0"
     >
       <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">
-        <SvgExpIcon size="35" />
+        <SvgExpIcon :size="35" />
       </p>
     </BaseAbilityIcon>
   </div>
