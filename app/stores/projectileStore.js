@@ -96,6 +96,11 @@ export const useProjectileStore = defineStore('projectileStore', () => {
       if (projectile.ownerType === 'player') {
         // Verifica colisão com inimigos
         enemyManager.activeEnemies.value.forEach((enemy) => {
+          // Se inimigo não estiver ativo, ignora
+          if (enemy.state !== 'active') {
+            return;
+          }
+
           if (
             isColliding(
               projectile.position,
