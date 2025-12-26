@@ -27,8 +27,30 @@ watch(
     () => skillStore.isModalOpen,
     (newVal, oldVal) => {
         if (newVal && !oldVal) {
-            confettiOnPageSides(200);
-            confettiOnBottom(200);
+            const duration = 200;
+
+            confettiCustomParade(duration, {
+                particleCount: 7,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 },
+                ticks: 100,
+            });
+            
+            confettiCustomParade(duration, {
+                particleCount: 7,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 },
+                ticks: 100,
+            });
+
+            confettiCustomParade(duration, {
+                particleCount: 7,
+                angle: 90,
+                origin: { x: 0.5, y: 1 },
+                ticks: 100,
+            });
         }
     }
 );
