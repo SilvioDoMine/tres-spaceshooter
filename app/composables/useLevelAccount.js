@@ -130,57 +130,27 @@ export const levelAccountConfiguration = {
         expRequired: 100,
     },
     3: {
-        expRequired: 220,
+        expRequired: 300, // effective is 200
     },
     4: {
-        expRequired: 360,
+        expRequired: 600, // effective is 300
     },
     5: {
-        expRequired: 520,
+        expRequired: 1000, // effective is 400
     },
     6: {
-        expRequired: 700,
+        expRequired: 1500, // effective is 500
     },
     7: {
-        expRequired: 900,
+        expRequired: 2100, // effective is 600
     },
     8: {
-        expRequired: 1120,
+        expRequired: 2800, // effective is 700
     },
     9: {
-        expRequired: 1360,
+        expRequired: 3360, // effective is 800
     },
     10: {
-        expRequired: 1620,
-    },
-    11: {
-        expRequired: 1900,
-    },
-    12: {
-        expRequired: 2200,
-    },
-    13: {
-        expRequired: 2520,
-    },
-    14: {
-        expRequired: 2860,
-    },
-    15: {
-        expRequired: 3220,
-    },
-    16: {
-        expRequired: 3600,
-    },
-    17: {
-        expRequired: 4000,
-    },
-    18: {
-        expRequired: 4420,
-    },
-    19: {
-        expRequired: 4860,
-    },
-    20: {
-        expRequired: 5320,
-    },
+        expRequired: 3720, // effective is 900
+    }
 }
