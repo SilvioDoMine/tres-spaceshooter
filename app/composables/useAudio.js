@@ -1,10 +1,37 @@
-const audioSettings = ref({
-    volumeGeneral: 100,
-    volumeBackground: 100,
-    volumeEffects: 100,
-});
+// Carrega configurações do localStorage ou cria padrão
+const loadAudioSettings = () => {
+    const saved = localStorage.getItem('audioSettings');
+
+    if (!saved) {
+        // Não existe, cria padrão
+        const defaultSettings = {
+            volumeGeneral: 100,
+            volumeBackground: 100,
+            volumeEffects: 100,
+        };
+        localStorage.setItem('audioSettings', JSON.stringify(defaultSettings));
+        return defaultSettings;
+    }
+
+    try {
+        return JSON.parse(saved);
+    } catch (error) {
+        console.error('Failed to parse audio settings from localStorage:', error);
+        // Se der erro no parse, retorna padrão
+        return {
+            volumeGeneral: 100,
+            volumeBackground: 100,
+            volumeEffects: 100,
+        };
+    }
+};
+
+const audioSettings = ref(loadAudioSettings());
 
 watch(audioSettings, (newSettings) => {
+    // Salva no localStorage sempre que mudar
+    localStorage.setItem('audioSettings', JSON.stringify(newSettings));
+
     // Atualiza volume do gain node (Web Audio API) se existir
     if (backgroundMusicGain) {
         backgroundMusicGain.gain.value = (newSettings.volumeGeneral / 100) * (newSettings.volumeBackground / 100);
@@ -226,6 +253,25 @@ export function useAudio() {
         console.log(`Background music restored (normal) - fade out ${fadeDuration}s`);
     }
 
+    // Reseta as configurações de áudio para padrão
+    function resetAudioSettings() {
+        const defaultSettings = {
+            volumeGeneral: 100,
+            volumeBackground: 100,
+            volumeEffects: 100,
+        };
+
+        audioSettings.value = defaultSettings;
+        localStorage.setItem('audioSettings', JSON.stringify(defaultSettings));
+
+        // Atualiza volume da música se estiver tocando
+        if (backgroundMusicGain) {
+            backgroundMusicGain.gain.value = 1.0; // 100% * 100% = 1.0
+        }
+
+        console.log('Audio settings reset to default');
+    }
+
     return {
         // Volume controls
         audioSettings,
@@ -235,6 +281,7 @@ export function useAudio() {
         setGeneralVolume,
         setBackgroundVolume,
         setEffectsVolume,
+        resetAudioSettings,
 
         // Audio system
         init,
