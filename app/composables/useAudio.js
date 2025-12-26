@@ -5,12 +5,18 @@ const audioSettings = ref({
 });
 
 watch(audioSettings, (newSettings) => {
-    backgroundMusic.volume = (newSettings.volumeGeneral / 100) * (newSettings.volumeBackground / 100);
+    // Atualiza volume do gain node (Web Audio API) se existir
+    if (backgroundMusicGain) {
+        backgroundMusicGain.gain.value = (newSettings.volumeGeneral / 100) * (newSettings.volumeBackground / 100);
+    }
 }, { deep: true });
 
 // Estado do áudio
 let audioContext = null;
 let backgroundMusic = null;
+let backgroundMusicSource = null;
+let backgroundMusicGain = null;
+let backgroundMusicFilter = null;
 const soundBuffers = new Map();
 const isInitialized = ref(false);
 
@@ -79,7 +85,7 @@ export function useAudio() {
     }
 
     // Toca um efeito sonoro (permite múltiplos simultâneos)
-    function playSound(name, volumeMultiplier = 1.0) {
+    function playSound(name, volumeMultiplier = 1.0, pitch = 1.0) {
         if (!audioContext || !soundBuffers.has(name)) {
             console.warn(`Sound not loaded: ${name}`);
             return;
@@ -102,6 +108,8 @@ export function useAudio() {
 
             gainNode.gain.value = finalVolume;
 
+            source.playbackRate.value = pitch;
+
             source.connect(gainNode);
             gainNode.connect(audioContext.destination);
             source.start(0);
@@ -110,17 +118,39 @@ export function useAudio() {
         }
     }
 
-    // Inicia música de fundo (HTML Audio API - melhor para loops longos)
+    // Inicia música de fundo com Web Audio API (permite filtros e efeitos)
     async function playBackgroundMusic(url, loop = true) {
         try {
+            if (!audioContext) await init();
+
+            // Para música anterior se existir
             if (backgroundMusic) {
                 backgroundMusic.pause();
                 backgroundMusic.currentTime = 0;
             }
 
+            // Cria elemento Audio
             backgroundMusic = new Audio(url);
             backgroundMusic.loop = loop;
-            backgroundMusic.volume = getGeneralVolume() * getBackgroundVolume();
+            backgroundMusic.crossOrigin = 'anonymous';
+
+            // Cria nodes do Web Audio API
+            backgroundMusicSource = audioContext.createMediaElementSource(backgroundMusic);
+            backgroundMusicGain = audioContext.createGain();
+            backgroundMusicFilter = audioContext.createBiquadFilter();
+
+            // Configura o filtro lowpass (inicialmente desligado - frequência alta)
+            backgroundMusicFilter.type = 'lowpass';
+            backgroundMusicFilter.frequency.value = 22050; // Frequência alta = sem filtro
+            backgroundMusicFilter.Q.value = 1;
+
+            // Configura volume
+            backgroundMusicGain.gain.value = getGeneralVolume() * getBackgroundVolume();
+
+            // Conecta: source -> filter -> gain -> destination
+            backgroundMusicSource.connect(backgroundMusicFilter);
+            backgroundMusicFilter.connect(backgroundMusicGain);
+            backgroundMusicGain.connect(audioContext.destination);
 
             // Aguarda interação do usuário (browsers requerem isso)
             const playPromise = backgroundMusic.play();
@@ -131,6 +161,7 @@ export function useAudio() {
                 });
             }
 
+            console.log('Background music initialized with Web Audio API filters');
             return backgroundMusic;
         } catch (error) {
             console.error('Failed to play background music:', error);
@@ -143,6 +174,56 @@ export function useAudio() {
             backgroundMusic.pause();
             backgroundMusic.currentTime = 0;
         }
+    }
+
+    function startBackgroundMusicAbafado(fadeDuration = 1) {
+        if (!backgroundMusicFilter || !backgroundMusicGain) return;
+
+        const now = audioContext.currentTime;
+        const targetVolume = (getGeneralVolume() * getBackgroundVolume()) * 0.4;
+
+        // Cancela agendamentos anteriores
+        backgroundMusicGain.gain.cancelScheduledValues(now);
+        backgroundMusicFilter.frequency.cancelScheduledValues(now);
+
+        // Fade-out do volume atual para o volume abafado
+        backgroundMusicGain.gain.setValueAtTime(backgroundMusicGain.gain.value, now);
+        backgroundMusicGain.gain.linearRampToValueAtTime(targetVolume, now + fadeDuration);
+
+        // Fade do filtro: frequência alta → baixa (abafa gradualmente)
+        backgroundMusicFilter.frequency.setValueAtTime(backgroundMusicFilter.frequency.value, now);
+        backgroundMusicFilter.frequency.linearRampToValueAtTime(500, now);
+
+        // Aumenta Q gradualmente para efeito de "caixa"
+        backgroundMusicFilter.Q.setValueAtTime(backgroundMusicFilter.Q.value, now);
+        backgroundMusicFilter.Q.linearRampToValueAtTime(2, now);
+
+        console.log(`Background music muffled (bathroom effect) - fade in ${fadeDuration}s`);
+    }
+
+    function stopBackgroundMusicAbafado(fadeDuration = 1) {
+        if (!backgroundMusicFilter || !backgroundMusicGain) return;
+
+        const now = audioContext.currentTime;
+        const targetVolume = getGeneralVolume() * getBackgroundVolume();
+
+        // Cancela agendamentos anteriores
+        backgroundMusicGain.gain.cancelScheduledValues(now);
+        backgroundMusicFilter.frequency.cancelScheduledValues(now);
+
+        // Fade-in do volume abafado para o volume normal
+        backgroundMusicGain.gain.setValueAtTime(backgroundMusicGain.gain.value, now);
+        backgroundMusicGain.gain.linearRampToValueAtTime(targetVolume, now + fadeDuration);
+
+        // Fade do filtro: frequência baixa → alta (clareia gradualmente)
+        backgroundMusicFilter.frequency.setValueAtTime(backgroundMusicFilter.frequency.value, now);
+        backgroundMusicFilter.frequency.linearRampToValueAtTime(22050, now + fadeDuration);
+
+        // Reduz Q gradualmente (remove efeito de "caixa")
+        backgroundMusicFilter.Q.setValueAtTime(backgroundMusicFilter.Q.value, now);
+        backgroundMusicFilter.Q.linearRampToValueAtTime(1, now + fadeDuration);
+
+        console.log(`Background music restored (normal) - fade out ${fadeDuration}s`);
     }
 
     return {
@@ -166,5 +247,7 @@ export function useAudio() {
         // Background music
         playBackgroundMusic,
         stopBackgroundMusic,
+        startBackgroundMusicAbafado,
+        stopBackgroundMusicAbafado,
     };
 }

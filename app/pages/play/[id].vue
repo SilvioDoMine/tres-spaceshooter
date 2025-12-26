@@ -38,6 +38,24 @@ const initAudioOnFirstInput = async () => {
 
   // Carrega efeitos sonoros principais
   audio.loadSound('levelup', '/sounds/levelup.wav');
+  audio.loadSound('shoot-player', '/sounds/shoot-player.wav');
+  audio.loadSound('player-death', '/sounds/player-death.wav');
+  audio.loadSound('shoot2', '/sounds/shoot2.wav');
+  audio.loadSound('shoot7', '/sounds/shoot7.wav');
+  audio.loadSound('shoot1', '/sounds/shoot1.wav');
+  audio.loadSound('hit-soft1', '/sounds/hit-soft1.wav');
+  audio.loadSound('hit-soft2', '/sounds/hit-soft2.wav');
+  audio.loadSound('hit-soft3', '/sounds/hit-soft3.wav');
+  audio.loadSound('hit-soft4', '/sounds/hit-soft3.wav');
+  audio.loadSound('hit-soft5', '/sounds/hit-soft3.wav');
+  audio.loadSound('enemy-death1', '/sounds/enemy-death1.wav');
+  audio.loadSound('enemy-death2', '/sounds/enemy-death2.wav');
+  audio.loadSound('enemy-death3', '/sounds/enemy-death3.wav');
+  audio.loadSound('hit-hard1', '/sounds/hit-hard1.wav');
+  audio.loadSound('hit-hard2', '/sounds/hit-hard2.wav');
+  audio.loadSound('hit-hard3', '/sounds/hit-hard3.wav');
+  audio.loadSound('hit-hard4', '/sounds/hit-hard4.wav');
+  audio.loadSound('hit-hard5', '/sounds/hit-hard5.wav');
 
   // Carrega efeitos sonoros (exemplo)
   // await audio.loadSound('shoot', '/sounds/shoot.mp3');

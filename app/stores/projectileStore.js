@@ -199,6 +199,18 @@ export const useProjectileStore = defineStore('projectileStore', () => {
       return;
     }
 
+    // Play sound
+    if (ownerType === 'player') {
+      const randomPitch = 0.5 + Math.random() * 1; // Entre 0.5 e 1.0
+      useAudio().playSound('shoot-player', 1, 1);
+    } else {
+      const enemySound = baseStats[ownerType]?.shotSound;
+
+      if (enemySound) {
+        useAudio().playSound(enemySound);
+      }
+    }
+
     // ✅ OTIMIZAÇÃO: Não mutamos o config compartilhado, aplicamos damage diretamente
     projectiles.value.push({
       id: `projectile-${Date.now()}_${Math.random()}`,

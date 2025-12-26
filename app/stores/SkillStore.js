@@ -191,6 +191,7 @@ export const useSkillStore = defineStore('SkillStore', () => {
       }
 
       useAudio().playSound('levelup');
+      useAudio().startBackgroundMusicAbafado();
 
       // console.log('Iniciando atualização de skill...', upgradeQueueCount.value);
 
@@ -428,6 +429,9 @@ export const useSkillStore = defineStore('SkillStore', () => {
 
       // Limpa as opções de skills
       skillOptions.value = [];
+
+      // Retoma o jogo
+      useAudio().stopBackgroundMusicAbafado();
     }
 
     // Finish Implementing Rerolls

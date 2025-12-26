@@ -264,8 +264,12 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
     if (currentHealth.value <= 0) {
       console.log('Jogador morreu!');
+      useAudio().playSound('player-death');
+      useAudio().stopBackgroundMusic();
       gameOver('You have been defeated.');
       // Lógica adicional de morte do jogador pode ser adicionada aqui
+    } else {
+      useAudio().playSound('hit-soft1');
     }
   }
 
@@ -308,6 +312,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     if (isPlaying.value) {
       gameState.value = 'paused';
       uiModalPause.open();
+      useAudio().startBackgroundMusicAbafado();
     }
   }
 
@@ -315,6 +320,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     if (isPaused.value) {
       uiModalPause.close();
       gameState.value = 'playing';
+      useAudio().stopBackgroundMusicAbafado();
     }
   }
 

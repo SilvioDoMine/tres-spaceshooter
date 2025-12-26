@@ -10,6 +10,8 @@ export const baseStats = {
     health: 65,
     onHitDamage: 100,
     size: 1.25,
+    deathSound: 'hit-hard3',
+    hitSound: 'hit-soft2',
     drops: {
       exp: {min: 60, max: 100},
       gold: {min: 0, max: 10}
@@ -25,6 +27,9 @@ export const baseStats = {
     distanceKeep: 10,
     shotDamage: 50,
     cooldownTotalShot: 2,
+    shotSound: 'shoot7',
+    deathSound: 'hit-hard3',
+    hitSound: 'hit-soft2',
     drops: {
       exp: {min: 100, max: 250},
       gold: {min: 5, max: 15}
@@ -40,6 +45,9 @@ export const baseStats = {
     distanceKeep: 20,
     shotDamage: 100,
     cooldownTotalShot: 1.75,
+    shotSound: 'shoot2',
+    deathSound: 'hit-hard2',
+    hitSound: 'hit-soft2',
     drops: {
       exp: {min: 200, max: 350},
       gold: {min: 10, max: 25}
@@ -54,6 +62,8 @@ export const baseStats = {
     onHitDamage: 300,
     distanceKeep: 7,
     chargeRecoveryCooldown: 3, // Cooldown após charge (segundos)
+    deathSound: 'hit-hard3',
+    hitSound: 'hit-soft3',
     drops: {
       exp: {min: 150, max: 300},
       gold: {min: 10, max: 20}
@@ -69,6 +79,9 @@ export const baseStats = {
     distanceKeep: 20,
     shotDamage: 200,
     cooldownTotalShot: 2,
+    shotSound: 'shoot7',
+    deathSound: 'enemy-death1',
+    hitSound: 'hit-soft3',
     drops: {
       exp: {min: 400, max: 600},
       gold: {min: 100, max: 200}
@@ -84,6 +97,9 @@ export const baseStats = {
     distanceKeep: 20,
     shotDamage: 300,
     cooldownTotalShot: 1,
+    shotSound: 'shoot2',
+    deathSound: 'enemy-death2',
+    hitSound: 'hit-soft3',
     drops: {
       exp: {min: 0, max: 0},
       gold: {min: 100, max: 200}
@@ -98,6 +114,8 @@ export const baseStats = {
     onHitDamage: 9999,
     distanceKeep: 10,
     chargeRecoveryCooldown: 1, // Sem cooldown após charge
+    deathSound: 'enemy-death3',
+    hitSound: 'hit-soft3',
     drops: {
       exp: {min: 500, max: 800},
       gold: {min: 150, max: 300}
@@ -208,6 +226,8 @@ export function useEnemyManager() {
     );
 
     // Se a saúde do inimigo chegar a zero ou menos, inicia animação de morte
+    const randomPitch = 0.9 + Math.random() * 0.2; // Entre 0.9 e 1.1
+
     if (enemy.health <= 0) {
       enemy.state = 'dying';
       enemy.deathTimer = 0.8; // Duração da animação de morte (segundos)
@@ -215,6 +235,9 @@ export function useEnemyManager() {
       enemy.deathProgress = 0;
 
       if (type === 'shot') {
+        // Reproduz som de inimigo morto
+        useAudio().playSound(enemy.deathSound, 1, randomPitch);
+
         // Drop dos inimigos no chão
         const minGold = enemy.drops?.gold?.min || 0;
         const maxGold = enemy.drops?.gold?.max || 0;
@@ -225,6 +248,12 @@ export function useEnemyManager() {
         const maxExp = enemy.drops?.exp?.max || 0;
         const expDropped = Math.floor(Math.random() * (maxExp - minExp + 1)) + minExp;
         useCurrentRun.addExp(expDropped);
+      }
+    } else {
+      if (type === 'shot') {
+        // Reproduz som de hit suave
+
+        useAudio().playSound(enemy.hitSound, 1, randomPitch);
       }
     }
   }
