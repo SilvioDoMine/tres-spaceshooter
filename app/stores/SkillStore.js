@@ -190,6 +190,8 @@ export const useSkillStore = defineStore('SkillStore', () => {
         return;
       }
 
+      useAudio().playSound('levelup');
+
       // console.log('Iniciando atualização de skill...', upgradeQueueCount.value);
 
       // Processa uma skill da fila

@@ -36,6 +36,9 @@ const initAudioOnFirstInput = async () => {
   // Toca música de fundo
   audio.playBackgroundMusic('/sounds/background_main.mp3', true);
 
+  // Carrega efeitos sonoros principais
+  audio.loadSound('levelup', '/sounds/levelup.wav');
+
   // Carrega efeitos sonoros (exemplo)
   // await audio.loadSound('shoot', '/sounds/shoot.mp3');
   // await audio.loadSound('hit', '/sounds/hit.mp3');
