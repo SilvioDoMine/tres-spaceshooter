@@ -85,7 +85,7 @@ onUnmounted(() => {
                     'bg-black/20 w-full rounded-md p-2 flex flex-col gap-2',
                     'max-h-[200px] overflow-y-auto',
                     'snap-y snap-proximity scroll-pt-2',
-                    'scrollbar-hide',
+                    'scrollbar-hide allow-scroll',
                 ]">
                     <!-- Mission: Claimable (ready to claim reward) -->
                     <MissionItem
