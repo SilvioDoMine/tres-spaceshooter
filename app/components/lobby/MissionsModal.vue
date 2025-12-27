@@ -83,6 +83,7 @@ onUnmounted(() => {
                 <!-- Missões em si -->
                 <div :class="[
                     'bg-black/20 w-full rounded-md p-2 flex flex-col gap-2',
+                    'max-h-[200px] overflow-y-auto',
                 ]">
                     <!-- Mission: Claimable (ready to claim reward) -->
                     <MissionItem
