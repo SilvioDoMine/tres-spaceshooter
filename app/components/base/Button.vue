@@ -29,7 +29,7 @@ export default {
     size: {
       type: String,
       default: 'md',
-      validator: (value) => ['sm', 'md', 'lg'].includes(value)
+      validator: (value) => ['xs', 'sm', 'md', 'lg'].includes(value)
     },
     disabled: {
       type: Boolean,
@@ -88,6 +88,15 @@ export default {
 }
 
 /* Tamanhos - Alto relevo com transição gradual */
+.glossy-button--xs {
+  padding: 6px 16px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 2px solid;
+  transform: translateY(0);
+  line-height: 1.2;
+}
+
 .glossy-button--sm {
   padding: 10px 24px;
   font-size: 18px;
@@ -123,6 +132,11 @@ export default {
     max-width: 140px;
   }
 
+  .glossy-button--xs {
+    font-size: 12px;
+    padding: 4px 12px;
+  }
+
   .glossy-button--sm {
     font-size: 16px;
     padding: 8px 18px;
@@ -140,6 +154,11 @@ export default {
 }
 
 /* Pressed states - Botão abaixa */
+.glossy-button--xs.is-pressed {
+  transform: translateY(3px);
+  box-shadow: none !important;
+}
+
 .glossy-button--sm.is-pressed {
   transform: translateY(4px);
   box-shadow: none !important;
@@ -169,6 +188,14 @@ export default {
     #3d88ff 100%
   );
   border-color: #1a4a8a;
+}
+
+/* Sombras graduais para tamanho XS - Azul */
+.glossy-button--blue.glossy-button--xs {
+  box-shadow:
+    0 1px 0 0 #245396,
+    0 2px 0 0 #1e478c,
+    0 3px 0 0 #1a4a8a;
 }
 
 /* Sombras graduais para tamanho SM - Azul */
@@ -216,6 +243,10 @@ export default {
   pointer-events: none;
 }
 
+.glossy-button--blue.glossy-button--xs::before {
+  top: 2px;
+}
+
 .glossy-button--blue.glossy-button--sm::before {
   top: 3px;
 }
@@ -237,6 +268,14 @@ export default {
     #ffb82a 100%
   );
   border-color: #a86b00;
+}
+
+/* Sombras graduais para tamanho XS - Amarelo */
+.glossy-button--yellow.glossy-button--xs {
+  box-shadow:
+    0 1px 0 0 #b87900,
+    0 2px 0 0 #ad7000,
+    0 3px 0 0 #a86b00;
 }
 
 /* Sombras graduais para tamanho SM - Amarelo */
@@ -284,6 +323,10 @@ export default {
   pointer-events: none;
 }
 
+.glossy-button--yellow.glossy-button--xs::before {
+  top: 2px;
+}
+
 .glossy-button--yellow.glossy-button--sm::before {
   top: 3px;
 }
@@ -305,6 +348,14 @@ export default {
     #ff2a2a 100%
   );
   border-color: #b81a1a;
+}
+
+/* Sombras graduais para tamanho XS - Vermelho */
+.glossy-button--red.glossy-button--xs {
+  box-shadow:
+    0 1px 0 0 #c81e1e,
+    0 2px 0 0 #bd1c1c,
+    0 3px 0 0 #b81a1a;
 }
 
 /* Sombras graduais para tamanho SM - Vermelho */
@@ -352,6 +403,10 @@ export default {
   pointer-events: none;
 }
 
+.glossy-button--red.glossy-button--xs::before {
+  top: 2px;
+}
+
 .glossy-button--red.glossy-button--sm::before {
   top: 3px;
 }
@@ -373,6 +428,14 @@ export default {
     #3cc41c 100%
   );
   border-color: #1a7a0a;
+}
+
+/* Sombras graduais para tamanho XS - Verde */
+.glossy-button--green.glossy-button--xs {
+  box-shadow:
+    0 1px 0 0 #1a840c,
+    0 2px 0 0 #1a7f0b,
+    0 3px 0 0 #1a7a0a;
 }
 
 /* Sombras graduais para tamanho SM - Verde */
@@ -418,6 +481,10 @@ export default {
   );
   border-radius: 50% 50% 100px 100px;
   pointer-events: none;
+}
+
+.glossy-button--green.glossy-button--xs::before {
+  top: 2px;
 }
 
 .glossy-button--green.glossy-button--sm::before {
