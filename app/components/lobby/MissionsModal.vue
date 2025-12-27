@@ -96,6 +96,15 @@ onUnmounted(() => {
                         @claim="() => console.log('Claimed: Aprimore equipamento')"
                     />
 
+                    <!-- Mission: In Progress -->
+                    <MissionItem
+                        title="Derrote 100 inimigos"
+                        :current-progress="31"
+                        :max-progress="100"
+                        status="in_progress"
+                        @play="() => console.log('Play: Derrote inimigos')"
+                    />
+
                     <MissionItem
                         title="Complete 2 partidas"
                         :current-progress="0"
@@ -118,15 +127,6 @@ onUnmounted(() => {
                         :max-progress="1"
                         status="in_progress"
                         @claim="() => console.log('Claimed: Aprimore equipamento')"
-                    />
-
-                    <!-- Mission: In Progress -->
-                    <MissionItem
-                        title="Derrote 100 inimigos"
-                        :current-progress="31"
-                        :max-progress="100"
-                        status="in_progress"
-                        @play="() => console.log('Play: Derrote inimigos')"
                     />
 
                     <!-- Mission: Claimed (completed and reward claimed) -->
