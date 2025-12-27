@@ -60,13 +60,34 @@ onUnmounted(() => {
                     <!-- Content card -->
                     <BaseCheckersCard
                         variant="blue"
-                        padding="p-1"
+                        padding="py-6"
                         rounded="rounded-lg"
                         shadow=""
                         class="w-full"
                     >
                         <div class="flex flex-col items-center">
-                            HellO!
+
+                            <div class="h-full w-42 sm:w-2xs relative flex items-center justify-center">
+                                <!-- Progress bar form 0 to 100, with a icon on the middle of the bar each 20%, until 100% -->
+                                <div class="relative w-full h-5 bg-linear-to-b from-black/40 via-black/30 to-black/20 border border-black/10 mt-1 overflow-hidden shadow-inner shadow-black/30">
+                                    <div 
+                                        class="absolute top-0 left-0 h-full bg-linear-to-b from-yellow-500 via-yellow-400 to-yellow-300 border-2 border-black/10 shadow-[inset_0_1px_0px_0px_rgba(255,255,255,0.4),0_1px_2px_0_rgba(255,0,0,1)]"
+                                        :style="{ width: 80 + '%' }"
+                                    >
+                                        <div class="progress-bar-highlight"></div>
+                                    </div>
+                                </div>
+
+                                <div class="absolute top-1 inset-0 -inset-x-2.5 z-20 flex flex-row items-center justify-between">
+                                    <div class="text-2xl">🅰️</div>
+                                    <div class="text-2xl">✅</div>
+                                    <div class="text-2xl">✅</div>
+                                    <div class="text-2xl">✅</div>
+                                    <div class="text-2xl">✅</div>
+                                    <div class="text-2xl">✅</div>
+                                </div>
+                            </div>
+                            
                         </div>
                     </BaseCheckersCard>
 
@@ -82,7 +103,7 @@ onUnmounted(() => {
 
                 <!-- Missões em si -->
                 <div :class="[
-                    'bg-black/20 w-full rounded-md p-2 flex flex-col gap-2',
+                    'bg-black/20 w-full rounded-xl p-2 flex flex-col gap-2',
                     'max-h-[200px] overflow-y-auto',
                     'snap-y snap-proximity scroll-pt-2',
                     'scrollbar-hide allow-scroll',
