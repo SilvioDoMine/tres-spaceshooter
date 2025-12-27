@@ -33,7 +33,7 @@ const progressText = computed(() => {
 </script>
 
 <template>
-    <div class="flex h-15 relative flex-row bg-yellow-500 rounded-2xl shadow-sm shadow-black/40 items-center">
+    <div class="flex h-15 relative flex-row bg-yellow-500 rounded-2xl shadow-sm shadow-black/40 items-center snap-start">
         <!-- Progression count -->
         <div class="z-10 rounded-br-2xl h-full flex items-center justify-center relative">
              <!-- Full div -->

@@ -84,6 +84,8 @@ onUnmounted(() => {
                 <div :class="[
                     'bg-black/20 w-full rounded-md p-2 flex flex-col gap-2',
                     'max-h-[200px] overflow-y-auto',
+                    'snap-y snap-proximity scroll-pt-2',
+                    'scrollbar-hide',
                 ]">
                     <!-- Mission: Claimable (ready to claim reward) -->
                     <MissionItem
@@ -144,6 +146,17 @@ onUnmounted(() => {
     /** Style glow for image div */
     .glow {
         box-shadow: 0 0px 10px 5px rgb(79, 74, 240);
+    }
+
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Hide scrollbar for IE, Edge and Firefox */
+    .scrollbar-hide {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
     }
 </style>
 
