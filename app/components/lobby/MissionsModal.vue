@@ -81,7 +81,7 @@ onUnmounted(() => {
                                 <div class="absolute top-1.5 inset-0 -inset-x-2.5 z-20 flex flex-row items-center justify-between">
                                     <ImageMissionBadge size="small" description="0" />
                                     <ImageTreasure size="small" :opened="true" description="20" />
-                                    <ImageTreasure size="small" :opened="false" :shake="true" description="40" />
+                                    <ImageTreasure size="small" :opened="false" :shake="true" description="40" :notification="true" />
                                     <ImageTreasure size="small" :opened="false" description="60" />
                                     <ImageTreasure size="small" :opened="false" description="80" />
                                     <ImageTreasure size="small" :opened="false" description="100" />

@@ -16,6 +16,10 @@ const props = defineProps({
     description: {
         type: String,
         default: ''
+    },
+    notification: {
+        type: Boolean,
+        default: false
     }
 });
 </script>
@@ -55,5 +59,7 @@ const props = defineProps({
         >
             {{ description }}
         </div>
+
+        <BaseNotification v-if="notification" />
     </div>
 </template>
