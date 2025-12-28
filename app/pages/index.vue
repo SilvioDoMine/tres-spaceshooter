@@ -202,10 +202,7 @@ function formatCurrency(amount: number): string {
             ></span>
 
             <!-- stripes diagonais (textura) -->
-            <span
-              class="pointer-events-none absolute inset-0 opacity-[0.18]
-                    bg-[repeating-linear-gradient(135deg,rgba(255,255,255,.55)_0_22px,rgba(255,255,255,0)_22px_44px)]"
-            ></span>
+            <span class="stripes-animated"></span>
 
             <!-- shine animado (o “fundo mexendo”) -->
             <span
@@ -249,6 +246,11 @@ function formatCurrency(amount: number): string {
   100% { transform: translateX(40%) rotate(0deg); }
 }
 
+@keyframes stripe-move {
+  from { background-position: 0 0; }
+  to   { background-position: 44px 44px; }
+}
+
 @keyframes click-bounce {
   0% { transform: translateY(0) scale(1); }
   50% { transform: translateY(8px) scale(0.96); }
@@ -263,6 +265,22 @@ function formatCurrency(amount: number): string {
 
 .animate-shine {
   animation: shine 2.2s linear infinite;
+}
+
+.stripes-animated {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.55) 0,
+    rgba(255, 255, 255, 0.55) 22px,
+    rgba(255, 255, 255, 0) 22px,
+    rgba(255, 255, 255, 0) 44px
+  );
+  background-size: 44px 44px;
+  animation: stripe-move 2s linear infinite;
 }
 
 .animate-click-bounce {
