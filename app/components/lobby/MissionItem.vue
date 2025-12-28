@@ -33,10 +33,10 @@ const progressText = computed(() => {
 </script>
 
 <template>
-    <div class="flex h-svh relative flex-row bg-yellow-500 rounded-2xl shadow-sm shadow-black/40 items-center snap-start">
-        <!-- Progression count -->
-        <div class="z-10 rounded-br-2xl h-full flex items-center justify-center relative">
-             <!-- Full div -->
+    <div class="flex relative flex-row bg-yellow-500 rounded-2xl shadow-sm shadow-black/40 items-center snap-start">
+        <!-- Reward -->
+        <div class="z-10 rounded-br-2xl self-stretch flex items-center justify-center relative">
+             <!-- Icon reward itself -->
             <div class="text-white flex items-center justify-center px-1 sm:px-3 rounded-l-2xl rounded-br-2xl h-full font-bold bg-yellow-500 w-full z-2">
                 <ImageMissionBadge size="small" description="10" />
             </div>
