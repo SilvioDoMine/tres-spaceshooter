@@ -29,7 +29,7 @@ const props = defineProps({
         <img
             src="/images/icons/badges/mission-badge.png"
             alt="Mission Badge"
-            class="w-full h-full object-contain drop-shadow-[1px_1px_0px_rgba(0,0,0,0.8),-0.5px_-0.5px_0px_rgba(0,0,0,0.8)]"
+            class="w-full pointer-events-none h-full object-contain drop-shadow-[1px_1px_0px_rgba(0,0,0,0.8),-0.5px_-0.5px_0px_rgba(0,0,0,0.8)]"
         />
 
         <div

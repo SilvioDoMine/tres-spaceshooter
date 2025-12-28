@@ -39,13 +39,13 @@ const props = defineProps({
             v-if="opened"
             src="/images/icons/treasure/chest-1-2.png"
             alt="Treasure Opened"
-            class="w-full h-full object-contain drop-shadow-[1px_1px_0px_rgba(0,0,0,1),-1px_-1px_0px_rgba(0,0,0,1)]"
+            class="w-full h-full pointer-events-none object-contain drop-shadow-[1px_1px_0px_rgba(0,0,0,1),-1px_-1px_0px_rgba(0,0,0,1)]"
         />
         <img
             v-else
             src="/images/icons/treasure/chest-1-1.png"
             alt="Treasure Closed"
-            class="w-full h-full object-contain drop-shadow-[1px_1px_0px_rgba(0,0,0,1),-1px_-1px_0px_rgba(0,0,0,1)]"
+            class="w-full h-full pointer-events-none object-contain drop-shadow-[1px_1px_0px_rgba(0,0,0,1),-1px_-1px_0px_rgba(0,0,0,1)]"
         />
 
         <div
