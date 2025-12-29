@@ -58,6 +58,7 @@ function formatCurrency(amount: number): string {
     clear-color="#000814"
     window-size
   >
+    <!-- Adicionar bosses que vão enfretar como salas -->
     <Stars />
     <Stars :size="2" :count="1500" :depth="600" />
   </TresCanvas>

@@ -351,6 +351,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
     gameState.value = 'victory';
     uiModalVictory.open();
+    useMissions().handleEvent('stage-complete', 1);
   }
 
   function gameLevelSelect() {

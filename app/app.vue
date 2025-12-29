@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useCurrentRunStore } from '~/stores/currentRunStore';
+import { useMissions } from '~/composables/useMissions.js';
 
 // Meta tags para prevenir zoom e gestos mobile
 useHead({
@@ -28,6 +29,15 @@ useMobileGestureLock();
 
 const currentRunStore = useCurrentRunStore();
 currentRunStore.initializePermanentState();
+
+const {
+  // Event Handler
+  handleEvent,
+} = useMissions();
+
+onMounted(() => {
+  handleEvent('login');
+});
 
 // watchOnce(paneContainer, (newVal) => {
 //   console.log('Pane container changed:', newVal);

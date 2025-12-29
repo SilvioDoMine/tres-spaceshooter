@@ -2,6 +2,10 @@
 import BaseButton from '~/components/base/Button.vue';
 
 const props = defineProps({
+    missionId: {
+        type: Number,
+        required: true
+    },
     title: {
         type: String,
         required: true
@@ -30,6 +34,30 @@ const progressPercentage = computed(() => {
 const progressText = computed(() => {
     return `${props.currentProgress}/${props.maxProgress}`;
 });
+
+// Ref para o badge de origem (usado para animação)
+const badgeSourceRef = ref(null);
+
+// Estado do botão de resgatar
+const isClaiming = ref(false);
+
+// Função para resgatar recompensa
+const handleClaim = () => {
+    if (isClaiming.value) return;
+
+    isClaiming.value = true;
+
+    // Emite o evento com o ID da missão e o elemento de origem
+    emit('claim', {
+        missionId: props.missionId,
+        sourceElement: badgeSourceRef.value
+    });
+
+    // Reabilita o botão após a animação
+    setTimeout(() => {
+        isClaiming.value = false;
+    }, 1500);
+};
 </script>
 
 <template>
@@ -37,7 +65,7 @@ const progressText = computed(() => {
         <!-- Reward -->
         <div class="z-10 rounded-br-2xl self-stretch flex items-center justify-center relative">
              <!-- Icon reward itself -->
-            <div class="text-white flex items-center justify-center px-1 sm:px-3 rounded-l-2xl rounded-br-2xl h-full font-bold bg-yellow-500 w-full z-2">
+            <div ref="badgeSourceRef" class="text-white flex items-center justify-center px-1 sm:px-3 rounded-l-2xl rounded-br-2xl h-full font-bold bg-yellow-500 w-full z-2">
                 <ImageMissionBadge size="small" description="10" />
             </div>
 
@@ -79,9 +107,10 @@ const progressText = computed(() => {
                 variant="green"
                 size="xs"
                 class="h-fit w-20 sm:w-[95px]"
-                @click="emit('claim')"
+                :disabled="isClaiming"
+                @click="handleClaim"
             >
-                Resgatar
+                {{ isClaiming ? 'Resgatando...' : 'Resgatar' }}
             </BaseButton>
 
             <!-- Claimed: Check icon -->

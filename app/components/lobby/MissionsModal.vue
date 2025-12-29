@@ -2,13 +2,30 @@
 import BaseModal from '~/components/ui/BaseModal.vue';
 import MissionItem from '~/components/lobby/MissionItem.vue';
 import { useMissions } from '~/composables/useMissions.js';
+import { useBadgeAnimation } from '~/composables/useBadgeAnimation.js';
 
-const { getNextResetTime } = useMissions();
+const {
+    getNextResetTime,
+    getCurrentMissions,
+    getTotalPointsEarned,
+    getMilestones,
+
+    claimReward,
+    claimMilestoneReward,
+} = useMissions();
+
+const { animateBadges } = useBadgeAnimation();
 
 // Refs para o countdown
 const countdownHours = ref('00');
 const countdownMinutes = ref('00');
 const countdownSeconds = ref('00');
+
+// Ref para o elemento de destino das animações (primeiro badge na barra de progresso)
+const badgeTargetRef = ref(null);
+
+// Ref para o container scrollável das missões
+const missionsContainerRef = ref(null);
 
 // Função que calcula e atualiza o countdown
 const updateCountdown = () => {
@@ -32,6 +49,7 @@ updateCountdown();
 let intervalId;
 onMounted(() => {
     intervalId = setInterval(updateCountdown, 1000);
+    console.log(getMilestones.value);
 });
 
 // Limpa o interval ao desmontar
@@ -40,6 +58,58 @@ onUnmounted(() => {
         clearInterval(intervalId);
     }
 });
+
+// Função para resgatar recompensa
+const handleClaimReward = ({ missionId, sourceElement }) => {
+    console.log('Attempting to claim reward for mission:', missionId);
+
+    // Salva a posição atual do scroll
+    const scrollPosition = missionsContainerRef.value?.scrollTop || 0;
+
+    // Primeiro tenta resgatar a recompensa
+    const success = claimReward(missionId);
+
+    if (!success) {
+        console.warn('Failed to claim reward - mission not eligible');
+        return;
+    }
+
+    console.log('Claimed reward successfully!');
+
+    // Restaura a posição do scroll após a reordenação e durante a transição
+    const maintainScroll = () => {
+        if (missionsContainerRef.value) {
+            missionsContainerRef.value.scrollTop = scrollPosition;
+        }
+    };
+
+    // Mantém o scroll fixo durante toda a animação (500ms)
+    nextTick(maintainScroll);
+    setTimeout(maintainScroll, 100);
+    setTimeout(maintainScroll, 200);
+    setTimeout(maintainScroll, 300);
+    setTimeout(maintainScroll, 400);
+    setTimeout(maintainScroll, 500);
+
+    // Verifica se os elementos existem
+    if (!sourceElement || !badgeTargetRef.value) {
+        console.error('Source or target element not found');
+        return;
+    }
+
+    // Se o resgate foi bem-sucedido, anima os badges voando
+    animateBadges(sourceElement, badgeTargetRef.value, {
+        numberOfBadges: 15,
+        delayBetweenBadges: 80,
+        onComplete: () => {
+            console.log('Animation completed!');
+        },
+        onEachBadge: () => {
+            // Você pode atualizar um contador aqui se quiser
+            // Por exemplo: coins.value += 1;
+        }
+    });
+};
 </script>
 
 <template>
@@ -72,19 +142,17 @@ onUnmounted(() => {
                                 <div class="relative w-full h-5 bg-linear-to-b from-black/40 via-black/30 to-black/20 border border-black/10 mt-1 overflow-hidden shadow-inner shadow-black/30">
                                     <div 
                                         class="absolute top-0 left-0 h-full bg-linear-to-b from-yellow-500 via-yellow-400 to-yellow-300 border-2 border-black/10 shadow-[inset_0_1px_0px_0px_rgba(255,255,255,0.4),0_1px_2px_0_rgba(255,0,0,1)]"
-                                        :style="{ width: 40 + '%' }"
+                                        :style="{ width: getTotalPointsEarned + '%' }"
                                     >
                                         <div class="progress-bar-highlight"></div>
                                     </div>
                                 </div>
 
                                 <div class="absolute top-1.5 inset-0 -inset-x-2.5 z-20 flex flex-row items-center justify-between">
-                                    <ImageMissionBadge size="small" description="0" />
-                                    <ImageTreasure size="small" :opened="true" description="20" />
-                                    <ImageTreasure size="small" :opened="false" :shake="true" description="40" :notification="true" />
-                                    <ImageTreasure size="small" :opened="false" description="60" />
-                                    <ImageTreasure size="small" :opened="false" description="80" />
-                                    <ImageTreasure size="small" :opened="false" description="100" />
+                                    <div ref="badgeTargetRef">
+                                        <ImageMissionBadge size="small" description="0" />
+                                    </div>
+                                    <ImageTreasure @click="claimMilestoneReward()" v-for="milestone in getMilestones" :key="milestone.points" size="small" :description="`${milestone.points}`" :opened="getTotalPointsEarned >= milestone.points && milestone.claimed" :shake="getTotalPointsEarned >= milestone.points && !milestone.claimed" :notification="false"  />
                                 </div>
                             </div>
                             
@@ -102,61 +170,23 @@ onUnmounted(() => {
                 </div>
 
                 <!-- Missões em si -->
-                <div :class="[
-                    'bg-black/20 w-full rounded-xl p-2 flex flex-col gap-2',
+                <div ref="missionsContainerRef" :class="[
+                    'bg-black/20 w-full rounded-xl p-2',
                     'max-h-[200px] overflow-y-auto',
-                    'snap-y snap-proximity scroll-pt-2',
                     'scrollbar-hide allow-scroll',
-                ]">
-                    <!-- Mission: Claimable (ready to claim reward) -->
-                    <MissionItem
-                        title="Aprimore equipamento 1 vez"
-                        :current-progress="1"
-                        :max-progress="1"
-                        status="claimable"
-                        @claim="() => console.log('Claimed: Aprimore equipamento')"
-                    />
-
-                    <!-- Mission: In Progress -->
-                    <MissionItem
-                        title="Derrote 100 inimigos"
-                        :current-progress="31"
-                        :max-progress="100"
-                        status="in_progress"
-                        @play="() => console.log('Play: Derrote inimigos')"
-                    />
-
-                    <MissionItem
-                        title="Complete 2 partidas"
-                        :current-progress="0"
-                        :max-progress="2"
-                        status="in_progress"
-                        @claim="() => console.log('Claimed: Aprimore equipamento')"
-                    />
-
-                    <MissionItem
-                        title="Adquira Cash pelo menos 1 vez"
-                        :current-progress="0"
-                        :max-progress="1"
-                        status="in_progress"
-                        @claim="() => console.log('Claimed: Aprimore equipamento')"
-                    />
-
-                    <MissionItem
-                        title="Adquira 1 item da loja"
-                        :current-progress="0"
-                        :max-progress="1"
-                        status="in_progress"
-                        @claim="() => console.log('Claimed: Aprimore equipamento')"
-                    />
-
-                    <!-- Mission: Claimed (completed and reward claimed) -->
-                    <MissionItem
-                        title="Entre no Spaceshooter"
-                        :current-progress="1"
-                        :max-progress="1"
-                        status="claimed"
-                    />
+                ]" style="scroll-behavior: auto;">
+                    <TransitionGroup name="mission-list" tag="div" class="flex flex-col gap-2">
+                        <MissionItem
+                            v-for="mission in getCurrentMissions"
+                            :key="mission.id"
+                            :mission-id="mission.id"
+                            :title="mission.description"
+                            :current-progress="mission.progress"
+                            :max-progress="mission.missionGoal"
+                            :status="mission.completed ? (mission.claimed ? 'claimed' : 'claimable') : 'in_progress'"
+                            @claim="handleClaimReward"
+                        />
+                    </TransitionGroup>
 
                 </div>
         </div>
@@ -178,6 +208,26 @@ onUnmounted(() => {
     .scrollbar-hide {
         -ms-overflow-style: none;  /* IE and Edge */
         scrollbar-width: none;  /* Firefox */
+    }
+
+    /* Transition animations for mission reordering */
+    .mission-list-move {
+        transition: all 0.5s ease;
+    }
+
+    .mission-list-enter-active,
+    .mission-list-leave-active {
+        transition: all 0.5s ease;
+    }
+
+    .mission-list-enter-from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    .mission-list-leave-to {
+        opacity: 0;
+        transform: translateY(10px);
     }
 </style>
 
