@@ -18,6 +18,10 @@ const props = defineProps({
         type: Number,
         required: true
     },
+    reward: {
+        type: Number,
+        required: true
+    },
     status: {
         type: String,
         default: 'in_progress',
@@ -66,7 +70,7 @@ const handleClaim = () => {
         <div class="z-10 rounded-br-2xl self-stretch flex items-center justify-center relative">
              <!-- Icon reward itself -->
             <div ref="badgeSourceRef" class="text-white flex items-center justify-center px-1 sm:px-3 rounded-l-2xl rounded-br-2xl h-full font-bold bg-yellow-500 w-full z-2">
-                <ImageMissionBadge size="small" description="10" />
+                <ImageMissionBadge size="small" :description="reward" />
             </div>
 
             <!-- Absolute background notch -->

@@ -183,6 +183,7 @@ const handleClaimReward = ({ missionId, sourceElement }) => {
                             :title="mission.description"
                             :current-progress="mission.progress"
                             :max-progress="mission.missionGoal"
+                            :reward="mission.rewardPoints"
                             :status="mission.completed ? (mission.claimed ? 'claimed' : 'claimable') : 'in_progress'"
                             @claim="handleClaimReward"
                         />
