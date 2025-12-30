@@ -110,6 +110,17 @@ const handleClaimReward = ({ missionId, sourceElement }) => {
         }
     });
 };
+
+const handleClaimMilestoneReward = () => {
+    const result = claimMilestoneReward();
+
+    if (! result) {
+        return;
+    }
+
+    confettiOnPageSides(100);
+    confettiOnBottom(100);
+};
 </script>
 
 <template>
@@ -152,7 +163,7 @@ const handleClaimReward = ({ missionId, sourceElement }) => {
                                     <div ref="badgeTargetRef">
                                         <ImageMissionBadge size="small" description="0" />
                                     </div>
-                                    <ImageTreasure @click="claimMilestoneReward()" v-for="milestone in getMilestones" :key="milestone.points" size="small" :description="`${milestone.points}`" :opened="getTotalPointsEarned >= milestone.points && milestone.claimed" :shake="getTotalPointsEarned >= milestone.points && !milestone.claimed" :notification="false"  />
+                                    <ImageTreasure @click="handleClaimMilestoneReward" v-for="milestone in getMilestones" :key="milestone.points" size="small" :description="`${milestone.points}`" :opened="getTotalPointsEarned >= milestone.points && milestone.claimed" :shake="getTotalPointsEarned >= milestone.points && !milestone.claimed" :notification="false"  />
                                 </div>
                             </div>
                             

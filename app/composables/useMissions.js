@@ -245,14 +245,19 @@ export function useMissions() {
     };
 
     const claimMilestoneReward = () => {
+        let anyClaimed = false;
+
         // Claim all eligible milestone rewards
         getMilestones.value.forEach(milestone => {
             if (getTotalPointsEarned.value >= milestone.points && !milestone.claimed) {
                 missionSettings.value.milestonesClaimed.push(milestone.points);
+                anyClaimed = true;
             }
         });
 
         saveMissionsData();
+
+        return anyClaimed;
     }
 
     const handleEvent = (eventType, amount = 1, params = []) => {
