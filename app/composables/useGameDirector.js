@@ -59,6 +59,9 @@ export function useGameDirector() {
     //   'condition', currentRunStore.isWaveInProgress && enemyManager.activeEnemies.value.length === 0, 
     // );
 
+    currentRunStore.stageTimer += delta;
+    currentRunStore.levelTimer += delta;
+
     if (currentRunStore.isWaveInProgress && enemyManager.activeEnemies.value.length === 0) {
       currentRunStore.isWaveInProgress = false;
       

@@ -345,6 +345,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
     levelAccount.addExp(expGained);
     enemyManager.missionsOnComplete();
+    useMissions().handleEvent('play-time', parseFloat((levelTimer.value / 60).toFixed(1))); // em minutos com float de até 1 casa decimal
   }
 
   function gameVictory(message: string = 'Congratulations! You have won.') {
