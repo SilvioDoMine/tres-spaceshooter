@@ -49,17 +49,14 @@ const isInitialized = ref(false);
 
 export function useAudio() {
     function getGeneralVolume() {
-        console.log('Getting general volume:', audioSettings.value.volumeGeneral / 100);
         return audioSettings.value.volumeGeneral / 100;
     }
 
     function getBackgroundVolume() {
-        console.log('Getting background volume:', audioSettings.value.volumeBackground / 100);
         return audioSettings.value.volumeBackground / 100;
     }
 
     function getEffectsVolume() {
-        console.log('Getting effects volume:', audioSettings.value.volumeEffects / 100);
         return audioSettings.value.volumeEffects / 100;
     }
 
@@ -124,9 +121,7 @@ export function useAudio() {
 
             source.buffer = soundBuffers.get(name);
 
-            console.log(`Playing sound: ${name} with multiplier: ${volumeMultiplier}`);
-            console.log('General Volume:', getGeneralVolume());
-            console.log('Effects Volume:', getEffectsVolume());
+            // console.log(`Playing sound: ${name} with multiplier: ${volumeMultiplier}`);
             // Volume = geral * efeitos * multiplicador
             const finalVolume =
                 getGeneralVolume() *
