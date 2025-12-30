@@ -245,7 +245,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
 
     enemyManager.activeEnemies.value.forEach(enemy => {
       // if enemy is spawning, ignore
-      if (enemy.state === 'spawning') return;
+      if (enemy.state !== 'active') return;
 
       const dist = Math.hypot(
         enemy.position.x - playerPos.x,
