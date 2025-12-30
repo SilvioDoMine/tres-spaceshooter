@@ -43,6 +43,10 @@ watch(isOpen, (newVal) => {
     confettiOnBottom(2000);
   }
 });
+
+// Level Thing
+const levelAccount = useLevelAccount();
+const expReward = computed(() => levelAccount.calculateExpReward());
 </script>
 
 <template>
@@ -98,11 +102,11 @@ watch(isOpen, (newVal) => {
       rarity="gray"
       size="sm"
       :clickable="true"
-      quantity="100"
-      v-if="false"
+      :quantity="`${expReward}`"
+      v-if="expReward > 0"
     >
       <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">
-        <SvgExpIcon size="35" />
+        <SvgExpIcon :size="35" />
       </p>
     </BaseAbilityIcon>
   </div>
