@@ -153,7 +153,7 @@ export function useMissions() {
 
     const getCurrentMissions = computed(() => {
         // Ordena e retorna as missões atuais com informações completas
-        // Ordenação: claimable (completada, não reclamada) > in_progress (não completada) > claimed (reclamada)
+        // Ordenação: claimable (completada, não reclamada) > in_progress (não completada, pela proximidade de completar) > claimed (reclamada)
         return missionSettings.value.missions.map(missionStatus => {
             const missionInfo = dailyMissions.find(m => m.id === missionStatus.id);
             return {
@@ -168,7 +168,23 @@ export function useMissions() {
                 return 0; // claimed
             };
 
-            return getPriority(b) - getPriority(a);
+            const priorityA = getPriority(a);
+            const priorityB = getPriority(b);
+
+            // Se as prioridades são diferentes, ordena pela prioridade
+            if (priorityA !== priorityB) {
+                return priorityB - priorityA;
+            }
+
+            // Se ambas são IN_PROGRESS (prioridade 1), ordena pela proximidade de completar
+            if (priorityA === 1 && priorityB === 1) {
+                const progressPercentA = a.progress / a.missionGoal;
+                const progressPercentB = b.progress / b.missionGoal;
+                return progressPercentB - progressPercentA; // Maior progresso primeiro
+            }
+
+            // Mantém a ordem original para os outros casos
+            return 0;
         });
     });
 
