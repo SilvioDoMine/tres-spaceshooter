@@ -344,6 +344,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     console.log(`Player gained ${expGained} EXP from victory.`);
 
     levelAccount.addExp(expGained);
+    enemyManager.missionsOnComplete();
   }
 
   function gameVictory(message: string = 'Congratulations! You have won.') {

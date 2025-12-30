@@ -2,8 +2,13 @@ export const useEnemyManagerStore = defineStore('enemyManagerStore', () => {
   // Enemy manager state and actions would go here
   const activeEnemies = ref([]);
 
+  // Killed enemies count for the current run, by enemy type and count
+  // example : { "goblin": 5, "orc": 2 }
+  const killedEnemies = ref({});
+
   return {
     activeEnemies,
+    killedEnemies,
   }
 });
 

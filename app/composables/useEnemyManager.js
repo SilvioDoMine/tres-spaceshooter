@@ -1,5 +1,6 @@
 import { useEnemyManagerStore } from '~/stores/enemyManagerStore';
 import { useCurrentRunStore } from '~/stores/currentRunStore';
+import { useMissions } from '~/composables/useMissions';
 import { storeToRefs } from 'pinia';
 
 export const baseStats = {
@@ -127,8 +128,9 @@ export const baseStats = {
 export function useEnemyManager() {
   const enemyManagerStore = useEnemyManagerStore();
   const useCurrentRun = useCurrentRunStore();
+  const { handleEvent } = useMissions();
 
-  const { activeEnemies } = storeToRefs(enemyManagerStore);
+  const { activeEnemies, killedEnemies } = storeToRefs(enemyManagerStore);
   
   const update = (delta) => {
     // Atualiza o timer de spawn e morte dos inimigos
@@ -248,6 +250,15 @@ export function useEnemyManager() {
         const maxExp = enemy.drops?.exp?.max || 0;
         const expDropped = Math.floor(Math.random() * (maxExp - minExp + 1)) + minExp;
         useCurrentRun.addExp(expDropped);
+
+        // Atualiza a contagem de inimigos mortos no run atual
+        if (killedEnemies.value[enemy.type]) {
+          killedEnemies.value[enemy.type] += 1;
+        } else {
+          killedEnemies.value[enemy.type] = 1;
+        }
+
+        console.log(`Enemy Manager: Enemy of type "${enemy.type}" killed. Total killed this run: ${killedEnemies.value[enemy.type]}`);
       }
     } else {
       if (type === 'shot') {
@@ -263,6 +274,7 @@ export function useEnemyManager() {
    */
   function cleanup() {
     activeEnemies.value = [];
+    killedEnemies.value = {};
   }
 
   /**
@@ -301,11 +313,23 @@ export function useEnemyManager() {
     return { x, y, z };
   }
 
+  function missionsOnComplete() {
+    const enemiesCount = Object.values(killedEnemies.value)
+      .reduce((total, count) => total + count, 0);
+
+    if (enemiesCount >= 0) {
+      handleEvent('kill-enemies', enemiesCount);
+    }
+  }
+
   return {
     activeEnemies,
     takeDamage,
     update,
     spawnEnemyWave,
     cleanup,
+
+    // missions
+    missionsOnComplete,
   };
 }
