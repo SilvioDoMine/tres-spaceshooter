@@ -197,6 +197,7 @@ const handleClaimMilestoneReward = () => {
                             :reward="mission.rewardPoints"
                             :status="mission.completed ? (mission.claimed ? 'claimed' : 'claimable') : 'in_progress'"
                             @claim="handleClaimReward"
+                            @play="useModal('missions-modal').close()"
                         />
                     </TransitionGroup>
 
