@@ -10,14 +10,41 @@ import BaseModal from '~/components/ui/BaseModal.vue';
         <!-- content box -->
         <div class="flex flex-col gap-4 pointer-events-auto">
 
-                <!-- Settings Controls -->
+                <!-- Offers Cards -->
                 <div class="bg-orange-200 flex flex-col gap-2 items-center w-full rounded-md drop-shadow-2xl shadow-orange-400 p-2">
 
                     <BaseCheckersCard
-                        variant="blue"
                         class="w-full"
+                        variant="blue"
+                        header="Oferta diária"
+                        padding="p-0"
                     >
-                        Oferda Diária
+                        <div class="flex justify-between items-center w-full p-2">
+                            <!-- Rewards -->
+                            <div>
+                                <BaseAbilityIcon
+                                    rarity="purple"
+                                    size="sm"
+                                    :clickable="true"
+                                    :quantity="`10`"
+                                >
+                                    <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">
+                                        <SvgCashIcon :size="35" />
+                                    </p>
+                                </BaseAbilityIcon>
+                            </div>
+                            <!-- Actions -->
+                            <div>
+                                <BaseButton
+                                    variant="green"
+                                    size="xs"
+                                    @click=""
+                                >
+                                    <BaseNotification />
+                                    Resgatar
+                                </BaseButton>
+                            </div>
+                        </div>
                     </BaseCheckersCard>
 
 
@@ -46,6 +73,7 @@ import BaseModal from '~/components/ui/BaseModal.vue';
                         size="sm"
                         @click=""
                     >
+                        <BaseNotification />
                         Resgatar Tudo
                     </BaseButton>
                 </div>

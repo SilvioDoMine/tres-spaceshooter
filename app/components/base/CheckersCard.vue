@@ -35,6 +35,13 @@ defineProps({
   padding: {
     type: String,
     default: 'p-1'
+  },
+  /**
+   * Título do header (opcional)
+   */
+  header: {
+    type: String,
+    default: null
   }
 })
 </script>
@@ -60,6 +67,16 @@ defineProps({
         backgroundSize: `${checkersSize}px ${checkersSize}px`
       }"
     />
+
+    <!-- Header (opcional) -->
+    <div
+      v-if="header || $slots.header"
+      class="relative z-10 bg-black/20 px-3 py-2 rounded-t-lg"
+    >
+      <slot name="header">
+        <p class="title-text text-white">{{ header }}</p>
+      </slot>
+    </div>
 
     <!-- Content -->
     <div class="relative z-10">
