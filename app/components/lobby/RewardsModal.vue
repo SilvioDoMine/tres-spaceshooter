@@ -40,8 +40,8 @@ const openWithRewards = (rewards) => {
 watch(isOpen, (newVal) => {
   if (newVal) {
     console.log('Modal aberto com displayedGold:', displayedGold.value, 'displayedExp:', displayedExp.value);
-    confettiOnPageSides(2000);
-    confettiOnBottom(2000);
+    confettiOnPageSides(500);
+    confettiOnBottom(500);
   } else {
     // Resetar valores quando fechar
     console.log('Modal fechado, resetando valores');
