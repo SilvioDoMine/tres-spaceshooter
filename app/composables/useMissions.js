@@ -59,19 +59,24 @@ const dailyMissions = [
 
 const dailyMilestones = {
     20: {
-        reward: 'Small Treasure Chest'
+        gold: 100,
+        exp: 100,
     },
     40: {
-        reward: 'Medium Treasure Chest'
+        gold: 200,
+        exp: 200,
     },
     60: {
-        reward: 'Large Treasure Chest'
+        gold: 300,
+        exp: 300,
     },
     80: {
-        reward: 'Epic Treasure Chest'
+        gold: 400,
+        exp: 400,
     },
     100: {
-        reward: 'Legendary Treasure Chest'
+        gold: 500,
+        exp: 500,
     },
 }
 
@@ -191,17 +196,22 @@ export function useMissions() {
     const getMilestones = computed(() => {
         // Retorna os marcos diários com status de reivindicação
         const milestones = Object.entries(dailyMilestones).map(([points, info]) => {
-            console.log('points:', points);
-            console.log('info:', info);
-            console.log('missionSettings:', missionSettings.value);
+            // console.log('points:', points);
+            // console.log('info:', info);
+            // console.log('missionSettings:', missionSettings.value);
+            // console.log({
+            //     points: parseInt(points),
+            //     reward: info,
+            //     claimed: missionSettings.value.milestonesClaimed.includes(parseInt(points)),
+            // });
             return {
                 points: parseInt(points),
-                reward: info.reward,
+                reward: info,
                 claimed: missionSettings.value.milestonesClaimed.includes(parseInt(points)),
             };
         });
 
-        console.log('Milestones:', milestones);
+        // console.log('Milestones:', milestones);
 
         return milestones;
     });
@@ -245,19 +255,32 @@ export function useMissions() {
     };
 
     const claimMilestoneReward = () => {
-        let anyClaimed = false;
+        const claimedRewards = {
+            gold: 0,
+            exp: 0,
+        };
 
         // Claim all eligible milestone rewards
         getMilestones.value.forEach(milestone => {
             if (getTotalPointsEarned.value >= milestone.points && !milestone.claimed) {
+                // Adiciona os prêmios ao jogador aqui (ouro, experiência, etc.)
+                useCurrentRunStore().totalGold += dailyMilestones[milestone.points].gold;
+                useLevelAccount().addExp(dailyMilestones[milestone.points].exp);
+
+                // Acumula as recompensas
+                claimedRewards.gold += dailyMilestones[milestone.points].gold;
+                claimedRewards.exp += dailyMilestones[milestone.points].exp;
+
                 missionSettings.value.milestonesClaimed.push(milestone.points);
-                anyClaimed = true;
             }
         });
 
         saveMissionsData();
 
-        return anyClaimed;
+        console.log('Recompensas reivindicadas nas missões:', claimedRewards);
+
+        // Retorna null se nenhuma recompensa foi recuperada, ou o objeto com as recompensas
+        return claimedRewards.gold > 0 || claimedRewards.exp > 0 ? claimedRewards : null;
     }
 
     const handleEvent = (eventType, amount = 1, params = []) => {

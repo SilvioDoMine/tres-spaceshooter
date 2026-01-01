@@ -111,15 +111,26 @@ const handleClaimReward = ({ missionId, sourceElement }) => {
     });
 };
 
-const handleClaimMilestoneReward = () => {
-    const result = claimMilestoneReward();
+// Ref para o modal de recompensas
+const rewardsModalRef = ref(null);
 
-    if (! result) {
+const handleClaimMilestoneReward = () => {
+    const rewards = claimMilestoneReward();
+
+    if (! rewards) {
         return;
     }
 
     confettiOnPageSides(100);
     confettiOnBottom(100);
+
+    // Abre o modal de recompensas com as recompensas recuperadas
+    // Usando nextTick para garantir que o modal esteja montado
+    nextTick(() => {
+        if (rewardsModalRef.value) {
+            rewardsModalRef.value.openWithRewards(rewards);
+        }
+    });
 };
 </script>
 
@@ -203,6 +214,9 @@ const handleClaimMilestoneReward = () => {
 
                 </div>
         </div>
+
+        <!-- Modal de Recompensas -->
+        <LobbyRewardsModal ref="rewardsModalRef" />
     </BaseModal>
 </template>
 
