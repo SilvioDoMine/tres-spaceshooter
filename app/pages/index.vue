@@ -25,8 +25,19 @@ const missionsModal = useModal('missions-modal');
 const offersModal = useModal('offers-modal');
 const rewardsModal = useModal('rewards-modal');
 
+// Ref para o modal de recompensas
+const rewardsModalRef = ref(null);
+
 function openProfileModal() {
   profileModal.open();
+}
+
+// Função para abrir o modal de recompensas com as recompensas
+function handleOpenRewards(rewards) {
+  console.log('handleOpenRewards chamado com:', rewards);
+  if (rewardsModalRef.value) {
+    rewardsModalRef.value.openWithRewards(rewards);
+  }
 }
 
 async function handleButtonClick() {
@@ -237,9 +248,9 @@ function formatCurrency(amount: number): string {
         <LobbyProfileModal />
         <LobbyChangeNameModal />
         <LobbySettingsModal />
-        <LobbyMissionsModal />
+        <LobbyMissionsModal @openRewards="handleOpenRewards" />
         <LobbyOffersModal />
-        <LobbyRewardsModal />
+        <LobbyRewardsModal ref="rewardsModalRef" />
       </ClientOnly>
     </div>
   </div>

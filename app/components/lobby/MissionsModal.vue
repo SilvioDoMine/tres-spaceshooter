@@ -16,6 +16,9 @@ const {
 
 const { animateBadges } = useBadgeAnimation();
 
+// Define emits
+const emit = defineEmits(['openRewards']);
+
 // Refs para o countdown
 const countdownHours = ref('00');
 const countdownMinutes = ref('00');
@@ -111,9 +114,6 @@ const handleClaimReward = ({ missionId, sourceElement }) => {
     });
 };
 
-// Ref para o modal de recompensas
-const rewardsModalRef = ref(null);
-
 const handleClaimMilestoneReward = () => {
     const rewards = claimMilestoneReward();
 
@@ -124,13 +124,8 @@ const handleClaimMilestoneReward = () => {
     confettiOnPageSides(100);
     confettiOnBottom(100);
 
-    // Abre o modal de recompensas com as recompensas recuperadas
-    // Usando nextTick para garantir que o modal esteja montado
-    nextTick(() => {
-        if (rewardsModalRef.value) {
-            rewardsModalRef.value.openWithRewards(rewards);
-        }
-    });
+    // Emite um evento para a página principal abrir o modal de recompensas
+    emit('openRewards', rewards);
 };
 </script>
 
@@ -214,9 +209,6 @@ const handleClaimMilestoneReward = () => {
 
                 </div>
         </div>
-
-        <!-- Modal de Recompensas -->
-        <LobbyRewardsModal ref="rewardsModalRef" />
     </BaseModal>
 </template>
 

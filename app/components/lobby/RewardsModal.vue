@@ -24,20 +24,31 @@ const displayedExp = ref(0);
 
 // Função para abrir o modal com recompensas
 const openWithRewards = (rewards) => {
-  displayedGold.value = rewards.gold || 0;
-  displayedExp.value = rewards.exp || 0;
-  open();
+  console.log('openWithRewards chamado com:', rewards);
+  displayedGold.value = rewards?.gold || 0;
+  displayedExp.value = rewards?.exp || 0;
+  console.log('displayedGold setado para:', displayedGold.value);
+  console.log('displayedExp setado para:', displayedExp.value);
+
+  // Usar nextTick para garantir que os valores sejam atualizados antes de abrir
+  nextTick(() => {
+    open();
+  });
 };
 
-defineExpose({ open, close, isOpen, openWithRewards });
-
-// Quando abrir o modal, executa o código
+// Resetar valores quando o modal fechar
 watch(isOpen, (newVal) => {
   if (newVal) {
+    console.log('Modal aberto com displayedGold:', displayedGold.value, 'displayedExp:', displayedExp.value);
     confettiOnPageSides(2000);
     confettiOnBottom(2000);
+  } else {
+    // Resetar valores quando fechar
+    console.log('Modal fechado, resetando valores');
   }
 });
+
+defineExpose({ open, close, isOpen, openWithRewards });
 
 // Função para fechar o modal
 const handleQuit = () => {
