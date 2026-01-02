@@ -51,6 +51,7 @@ import BaseModal from '~/components/ui/BaseModal.vue';
                         class="w-full"
                         variant="blue"
                         padding="p-0"
+                        v-if="false"
                     >
                         <!--  -->
                         <div class="p-2 flex flex-row justify-between w-full gap-4">
@@ -167,7 +168,7 @@ import BaseModal from '~/components/ui/BaseModal.vue';
                             </div>
                         </div>
                         <div class="flex title-text title-text-red flex-col p-2 gap-2">
-                            <p>Resgate adicionalmente todos os dias</p>
+                            <p>Resgate adicionalmente todos os dias:</p>
                             <div class="flex flex-row gap-2">
                                 <BaseAbilityIcon
                                     rarity="purple"
