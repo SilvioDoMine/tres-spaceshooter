@@ -96,14 +96,18 @@ function handleContentClick(e) {
     >
         <!-- Modal Content -->
         <div
-          :class="['w-full relative rounded-md shadow-md', maxWidth, bgColor, shadowColor]"
+          :class="[
+            'w-full relative rounded-md shadow-md flex flex-col',
+            'max-h-[calc(100vh-2rem)]',
+            maxWidth, bgColor, shadowColor
+          ]"
           @click="handleContentClick"
         >
           <!-- Close Button -->
           <button
             v-if="showCloseButton"
             @click="handleClose"
-            class="absolute top-2 cursor-pointer right-2 w-7 h-7 text-amber-900 rounded-full flex items-center justify-center hover:rotate-90 hover:scale-90 transition"
+            class="absolute top-2 cursor-pointer right-2 w-7 h-7 text-amber-900 rounded-full flex items-center justify-center hover:rotate-90 hover:scale-90 transition z-20"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
               <path fill="currentColor" d="m12 13.4l2.9 2.9q.275.275.7.275t.7-.275t.275-.7t-.275-.7L13.4 12l2.9-2.9q.275-.275.275-.7t-.275-.7t-.7-.275t-.7.275L12 10.6L9.1 7.7q-.275-.275-.7-.275t-.7.275t-.275.7t.275.7l2.9 2.9l-2.9 2.9q-.275.275-.275.7t.275.7t.7.275t.7-.275zm0 8.6q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22m0-2q3.35 0 5.675-2.325T20 12t-2.325-5.675T12 4T6.325 6.325T4 12t2.325 5.675T12 20m0-8"/>
@@ -127,8 +131,8 @@ function handleContentClick(e) {
             <div class="modal-diamond"></div>
           </div>
 
-          <!-- Content Slot -->
-          <div :class="['p-4', title ? 'mt-10' : '']">
+          <!-- Content Slot with Scroll -->
+          <div :class="['p-4 overflow-y-auto', title ? 'mt-10' : '']">
             <slot />
           </div>
         </div>
@@ -137,6 +141,29 @@ function handleContentClick(e) {
 </template>
 
 <style scoped>
+/* Scrollbar customizada */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+  width: 8px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
 /* Header do Modal */
 .modal-header {
   position: absolute;
