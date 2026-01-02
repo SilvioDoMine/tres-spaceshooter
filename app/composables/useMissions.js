@@ -312,6 +312,18 @@ export function useMissions() {
         }
     };
 
+    const shouldDisplayGeneralNotification = () => {
+        // Verifica se há missões concluídas não reivindicadas
+        const hasClaimableMissions = getCurrentMissions.value.some(mission => mission.completed && !mission.claimed);
+
+        // Verifica se há marcos reivindicáveis
+        const hasClaimableMilestones = getMilestones.value.some(milestone =>
+            getTotalPointsEarned.value >= milestone.points && !milestone.claimed
+        );
+
+        return hasClaimableMissions || hasClaimableMilestones;
+    };
+
     return {
         getNextResetTime,
         saveMissionsData,
@@ -322,6 +334,7 @@ export function useMissions() {
         getMilestones,
         claimReward,
         claimMilestoneReward,
+        shouldDisplayGeneralNotification,
 
         // Event Handler
         handleEvent,
