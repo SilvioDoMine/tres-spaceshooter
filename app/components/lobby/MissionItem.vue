@@ -1,5 +1,6 @@
 <script setup lang="js">
 import BaseButton from '~/components/base/Button.vue';
+import Notification from '../base/Notification.vue';
 
 const props = defineProps({
     missionId: {
@@ -114,6 +115,7 @@ const handleClaim = () => {
                 :disabled="isClaiming"
                 @click="handleClaim"
             >
+                <BaseNotification v-if="!isClaiming" />
                 {{ isClaiming ? 'Resgatando...' : 'Resgatar' }}
             </BaseButton>
 
