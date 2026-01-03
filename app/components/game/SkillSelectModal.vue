@@ -22,6 +22,39 @@ const getSkillColorClass = (rarity) => {
     }
 };
 
+// Função para selecionar skill pelo índice (0, 1, 2)
+const selectSkillByIndex = (index) => {
+    const skill = skillStore.skillOptions[index];
+    if (skill) {
+        skillStore.selectSkill(skill);
+        currentRunStore.gameResume(currentRunStore.levelConfig);
+    }
+};
+
+// Listener de teclado para as teclas 1, 2, 3
+const handleKeyPress = (event) => {
+    // Só processa se o modal estiver aberto
+    if (!skillStore.isModalOpen || !currentRunStore.isPaused) return;
+
+    const key = event.key;
+    if (key === '1') {
+        selectSkillByIndex(0);
+    } else if (key === '2') {
+        selectSkillByIndex(1);
+    } else if (key === '3') {
+        selectSkillByIndex(2);
+    }
+};
+
+// Adiciona/remove listeners quando o modal abre/fecha
+onMounted(() => {
+    window.addEventListener('keydown', handleKeyPress);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeyPress);
+});
+
 // When modal is closed and opens up, we should throw confetti
 watch(
     () => skillStore.isModalOpen,
@@ -36,7 +69,7 @@ watch(
                 origin: { x: 0 },
                 ticks: 100,
             });
-            
+
             confettiCustomParade(duration, {
                 particleCount: 7,
                 angle: 120,
@@ -68,18 +101,22 @@ watch(
         >
         <!-- Cards -->
         <div class="flex sm:flex-row transition-all flex-col gap-4 items-center justify-center w-full sm:px-4 sm:h-full">
-            <div 
-                v-for="skill in skillStore.skillOptions"
+            <div
+                v-for="(skill, index) in skillStore.skillOptions"
                 :key="skill.id"
                 class="relative flex cursor-pointer gap-4 sm:flex-col sm:items-center sm:w-1/3 md:w-72 md:h-full md:justify-center"
             >
 
                 <!-- Card -->
-                <div 
-                    class="w-64 sm:w-full md:w-72 p-3 group transition-transform hover:scale-101 active:scale-110 flex flex-col gap-4 rounded-lg grow-0 md:grow md:max-h-96"
+                <div
+                    class="w-64 sm:w-full md:w-72 p-3 group transition-transform hover:scale-101 active:scale-110 flex flex-col gap-4 rounded-lg grow-0 md:grow md:max-h-96 relative"
                     :class="getSkillColorClass(skill.rarity)"
                     @click="skillStore.selectSkill(skill); currentRunStore.gameResume(currentRunStore.levelConfig);"
                 >
+                    <!-- Keyboard Indicator Badge -->
+                    <div class="absolute -top-2 -left-2 bg-white text-black font-bold rounded-full w-8 h-8 flex items-center justify-center shadow-lg border-2 border-gray-800 text-lg z-10">
+                        {{ index + 1 }}
+                    </div>
                     <div class="bg-gray-800 hover:bg-gray-700 text-white rounded-md flex gap-4 md:gap-10 flex-col p-4 grow-0 md:grow justify-center">
                         <div class="flex gap-2 lg:gap-8 items-center md:flex-col">
                             <!-- Image Icon Big -->
