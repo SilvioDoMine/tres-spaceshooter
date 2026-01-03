@@ -108,6 +108,50 @@ const loadOffersData = () => {
 
 const offerSettings = ref(loadOffersData());
 
+// Ofertas resetam diariamente às 20PM Horário de Brasília (UTC-3)
+const resetHourUTC = 23; // 20PM BRT é 23PM UTC
+
+/**
+ * Retorna o próximo horário de reset
+ * @returns {Date}
+ */
+const getNextResetTime = () => {
+    const now = new Date();
+    const nextReset = new Date(now);
+    nextReset.setUTCHours(resetHourUTC, 0, 0, 0);
+
+    if (now >= nextReset) {
+        // Se já passou do horário de reset hoje, agenda para amanhã
+        nextReset.setUTCDate(nextReset.getUTCDate() + 1);
+    }
+
+    return nextReset;
+};
+
+/**
+ * Verifica se uma data está no mesmo dia de reset
+ * @param {Date} date - Data para verificar
+ * @returns {boolean}
+ */
+const isSameResetDay = (date) => {
+    if (!date) return false;
+
+    const lastClaim = new Date(date);
+    const now = new Date();
+
+    // Calcula o dia de reset baseado no horário de reset
+    const getResetDay = (d) => {
+        const adjustedDate = new Date(d);
+        // Se for antes do horário de reset, considera o dia anterior
+        if (adjustedDate.getUTCHours() < resetHourUTC) {
+            adjustedDate.setUTCDate(adjustedDate.getUTCDate() - 1);
+        }
+        return adjustedDate.toISOString().split('T')[0];
+    };
+
+    return getResetDay(lastClaim) === getResetDay(now);
+};
+
 /**
  * Determina o estado de uma oferta
  * @param {Object} offer - Oferta com purchased e lastClaimedAt
@@ -130,15 +174,11 @@ const getOfferState = (offer) => {
         return 'claimable'; // Nunca resgatou
     }
 
-    // Verifica se já passou 24h desde o último resgate
-    const lastClaim = new Date(offer.lastClaimedAt);
-    const now = new Date();
-    const hoursSinceLastClaim = (now - lastClaim) / (1000 * 60 * 60);
-
-    if (hoursSinceLastClaim >= 24) {
-        return 'claimable';
-    } else {
+    // Verifica se já passou do horário de reset desde o último resgate
+    if (isSameResetDay(offer.lastClaimedAt)) {
         return 'claimed'; // Já resgatou hoje
+    } else {
+        return 'claimable'; // Pode resgatar novamente
     }
 };
 
@@ -156,12 +196,68 @@ export function useOffers() {
         });
     });
 
+    const claimOfferReward = (offerId) => {
+        // Se não encontrar a oferta, ou ela já foi resgatada hoje, não faz nada
+        const offerIndex = offerSettings.value.offers.findIndex(o => o.id === offerId);
+        if (offerIndex === -1) return null;
+
+        const offerState = offerSettings.value.offers[offerIndex];
+        const currentState = getOfferState(offerState);
+
+        if (currentState !== 'claimable') {
+            return null; // Não pode resgatar
+        }
+
+        // Distribuir as recompensas
+        const offerPackage = offerPackages.find(pkg => pkg.id === offerId);
+        const rewards = { gold: 0, cash: 0 };
+
+        if (offerPackage) {
+            const { gold, cash } = offerPackage.dailyRewards || {};
+
+            if (gold && gold > 0) {
+                useCurrentRunStore().totalGold += gold;
+                rewards.gold = gold;
+            }
+
+            if (cash && cash > 0) {
+                const { addCash } = useCash();
+                addCash(cash);
+                rewards.cash = cash;
+            }
+        }
+
+        // Atualiza o último resgate para agora
+        offerSettings.value.offers[offerIndex].lastClaimedAt = new Date().toISOString();
+        saveOffersData();
+        return rewards;
+    };
+
+    const purchaseOffer = (offerId) => {
+        // Marca a oferta como comprada
+        const offerIndex = offerSettings.value.offers.findIndex(o => o.id === offerId);
+        if (offerIndex === -1) return false;
+
+        offerSettings.value.offers[offerIndex].purchased = true;
+        saveOffersData();
+        return true;
+    };
+
     const saveOffersData = () => {
         localStorage.setItem('offersData', JSON.stringify(offerSettings.value));
     };
 
+    const shouldDisplayGeneralNotification = computed(() => {
+        return getOffers.value.some(offer => offer.state === 'claimable');
+    });
+
     return {
         getOffers,
         saveOffersData,
+        getNextResetTime,
+
+        claimOfferReward,
+        purchaseOffer,
+        shouldDisplayGeneralNotification,
     };
 }

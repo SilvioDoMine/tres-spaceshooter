@@ -16,19 +16,26 @@ const props = defineProps({
     type: Number,
     default: 0,
   },
+  cash: {
+    type: Number,
+    default: 0,
+  },
 });
 
 // Refs para armazenar as recompensas exibidas
 const displayedGold = ref(0);
 const displayedExp = ref(0);
+const displayedCash = ref(0);
 
 // Função para abrir o modal com recompensas
 const openWithRewards = (rewards) => {
   console.log('openWithRewards chamado com:', rewards);
   displayedGold.value = rewards?.gold || 0;
   displayedExp.value = rewards?.exp || 0;
+  displayedCash.value = rewards?.cash || 0;
   console.log('displayedGold setado para:', displayedGold.value);
   console.log('displayedExp setado para:', displayedExp.value);
+  console.log('displayedCash setado para:', displayedCash.value);
 
   // Usar nextTick para garantir que os valores sejam atualizados antes de abrir
   nextTick(() => {
@@ -79,6 +86,7 @@ const handleQuit = () => {
   <!-- Grid de habilidades -->
   <div class="abilities-grid">
     <BaseAbilityIcon
+      v-if="displayedGold > 0"
       rarity="gray"
       size="sm"
       :clickable="true"
@@ -92,6 +100,21 @@ const handleQuit = () => {
     </BaseAbilityIcon>
 
     <BaseAbilityIcon
+      v-if="displayedCash > 0"
+      rarity="gray"
+      size="sm"
+      :clickable="true"
+      :quantity="`${displayedCash}`"
+    >
+      <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">
+        <span class="drop-shadow-xs drop-shadow-black text-green-500">
+          <SvgCashIcon :size="25" />
+        </span>
+      </p>
+    </BaseAbilityIcon>
+
+    <BaseAbilityIcon
+      v-if="displayedExp > 0"
       rarity="gray"
       size="sm"
       :clickable="true"
