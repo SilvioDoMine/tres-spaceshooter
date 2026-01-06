@@ -134,8 +134,11 @@ onBeforeRender(({ delta, elapsed }) => {
           :position="[0, 0, 1]"
           center
           :sprite="true"
+          :z-index-range="[0, 0]"
+          pointer-events="none"
+          style="pointer-events: none !important; z-index: 0 !important;"
         >
-          <div class="flex flex-col items-center justify-center pointer-events-none select-none min-w-[300px]">
+          <div class="flex flex-col items-center justify-center pointer-events-none select-none min-w-[300px]" style="pointer-events: none !important;">
             <div class="text-4xl filter drop-shadow-lg opacity-80 mb-2">
               🔒
             </div>
