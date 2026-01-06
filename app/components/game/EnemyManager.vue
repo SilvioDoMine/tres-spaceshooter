@@ -2,9 +2,28 @@
 import { shallowRef } from 'vue';
 import { useLoop } from '@tresjs/core';
 import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
+import EnemySquare from '~/components/game/enemies/EnemySquare.vue';
+import EnemyCone from '~/components/game/enemies/EnemyCone.vue';
+import EnemyDodecahedron from '~/components/game/enemies/EnemyDodecahedron.vue';
+// Componentes de exemplo (você pode comentar os que não quiser usar)
+import EnemySphere from '~/components/game/enemies/EnemySphere.vue';
+import EnemyTorus from '~/components/game/enemies/EnemyTorus.vue';
+import EnemyComposite from '~/components/game/enemies/EnemyComposite.vue';
 
 const enemyManager = useEnemyManager();
 const activeEnemies = enemyManager.activeEnemies;
+
+// Mapeamento de shapes para componentes
+// Para adicionar um novo tipo de inimigo, basta criar o componente e adicioná-lo aqui
+const enemyComponents = {
+  square: EnemySquare,
+  cone: EnemyCone,
+  dodecahedron: EnemyDodecahedron,
+  // Componentes de exemplo:
+  sphere: EnemySphere,
+  torus: EnemyTorus,
+  composite: EnemyComposite,
+};
 
 // Map para armazenar refs dos meshes de cada inimigo
 // Chave: enemy.id, Valor: { visualMesh, uiGroup }
@@ -107,42 +126,13 @@ onUnmounted(() => {
       v-for="enemy in activeEnemies"
       :key="enemy.id"
     >
-      <!-- Geometria visual do inimigo SQUARE -->
-      <TresMesh
-        v-if="enemy.shape === 'square'"
-        :ref="setVisualMeshRef(enemy.id)"
-        :name="`enemy-visual-${enemy.id}`"
-      >
-        <TresMeshStandardMaterial :color="baseStats[enemy.type].color" />
-        <TresBoxGeometry
-          :args="[baseStats[enemy.type].size, baseStats[enemy.type].size, baseStats[enemy.type].size]"
-        />
-      </TresMesh>
-
-      <!-- Geometria visual do inimigo CONE -->
-      <TresMesh
-        v-else-if="enemy.shape === 'cone'"
-        :ref="setVisualMeshRef(enemy.id)"
-        :name="`enemy-visual-${enemy.id}`"
-      >
-        <TresMeshStandardMaterial :color="baseStats[enemy.type].color" />
-        <TresConeGeometry
-          :args="[baseStats[enemy.type].size * 0.5, baseStats[enemy.type].size, 16]"
-          :rotateX="Math.PI / 2"
-        />
-      </TresMesh>
-
-      <!-- Geometria visual do inimigo DODECAHEDRON -->
-      <TresMesh
-        v-else-if="enemy.shape === 'dodecahedron'"
-        :ref="setVisualMeshRef(enemy.id)"
-        :name="`enemy-visual-${enemy.id}`"
-      >
-        <TresMeshStandardMaterial :color="baseStats[enemy.type].color" />
-        <TresDodecahedronGeometry
-          :args="[baseStats[enemy.type].size * 0.6]"
-        />
-      </TresMesh>
+      <!-- Componente dinâmico baseado no shape do inimigo -->
+      <component
+        :is="enemyComponents[enemy.shape]"
+        :enemy="enemy"
+        :base-stats="baseStats"
+        :set-visual-mesh-ref="setVisualMeshRef"
+      />
 
       <!-- UI elements (NÃO ROTACIONAM) -->
       <TresGroup

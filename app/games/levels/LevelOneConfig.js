@@ -21,6 +21,7 @@
 // O SCRIPT (Configuração do Nível 1)
 export const LEVEL_1 = {
   levelId: 'level_open_space_001',
+  chapter: 1,
   width: 10,
   height: 20,
   rewardExperience: 80, // Experiência concedida ao completar finalizar o nível
@@ -46,7 +47,7 @@ export const LEVEL_1 = {
       waves: [
         {
           enemies: [
-            { enemyType: 'asteroid', count: 2, delay: 1.5 },
+            { enemyType: 'sphereEnemy', count: 2, delay: 1.5 },
           ]
         },
         {
@@ -81,7 +82,7 @@ export const LEVEL_1 = {
       width: 30,
       height: 30,
       waves: [
-        { enemies: [ { enemyType: 'miniboss', count: 1, delay: 3 } ] }
+        { enemies: [{ enemyType: 'miniboss', count: 1, delay: 3 }] }
       ],
       devDescription: 'Sala do chefe intermediário do nível. Após vencer, o nível é concluído e novo inimigo introduzido.',
       door: {
@@ -140,10 +141,10 @@ export const LEVEL_1 = {
       width: 20,
       height: 30,
       waves: [
-        { enemies: [ { enemyType: 'ufo', count: 4 }, { enemyType: 'asteroid', count: 6, delay: 1.5 } ] },
-        { enemies: [ { enemyType: 'ufo', count: 6 }, { enemyType: 'asteroid', count: 8, delay: 1.5 } ] },
-        { enemies: [ { enemyType: 'ufo', count: 8 }, { enemyType: 'asteroid', count: 10, delay: 1.5 } ] },
-        { enemies: [ { enemyType: 'ufo', count: 10 }, { enemyType: 'asteroid', count: 12, delay: 1.5 } ] },
+        { enemies: [{ enemyType: 'ufo', count: 4 }, { enemyType: 'asteroid', count: 6, delay: 1.5 }] },
+        { enemies: [{ enemyType: 'ufo', count: 6 }, { enemyType: 'asteroid', count: 8, delay: 1.5 }] },
+        { enemies: [{ enemyType: 'ufo', count: 8 }, { enemyType: 'asteroid', count: 10, delay: 1.5 }] },
+        { enemies: [{ enemyType: 'ufo', count: 10 }, { enemyType: 'asteroid', count: 12, delay: 1.5 }] },
       ],
       devDescription: 'Terceira sala lança 4 UFOs + 6 asteroides, depois 6 UFOs + 8 asteroides e então é liberado para a próxima sala.',
       door: {
@@ -158,7 +159,7 @@ export const LEVEL_1 = {
       width: 30,
       height: 30,
       waves: [
-        { enemies: [ { enemyType: 'boss', count: 1, delay: 3 } ] }
+        { enemies: [{ enemyType: 'boss', count: 1, delay: 3 }] }
       ],
       devDescription: 'Sala do chefe final do nível. Após vencer, o nível é concluído após eu sair da portinha.',
       door: {
@@ -176,21 +177,21 @@ export const LEVEL_1 = {
         {
           enemies: [
             { enemyType: 'ufofast', count: 2, delay: 1.5 },
-            { enemyType: 'asteroid', count: 4, delay: 1.5},
+            { enemyType: 'asteroid', count: 4, delay: 1.5 },
           ]
         },
         {
           enemies: [
             { enemyType: 'ufofast', count: 2, delay: 1.5 },
-            { enemyType: 'asteroid', count: 6, delay: 1.5},
-            { enemyType: 'ufo', count: 2, delay: 1.5}
+            { enemyType: 'asteroid', count: 6, delay: 1.5 },
+            { enemyType: 'ufo', count: 2, delay: 1.5 }
           ]
         },
         {
           enemies: [
             { enemyType: 'ufofast', count: 4, delay: 1.5 },
-            { enemyType: 'asteroid', count: 8, delay: 1.5},
-            { enemyType: 'ufo', count: 3, delay: 1.5}
+            { enemyType: 'asteroid', count: 8, delay: 1.5 },
+            { enemyType: 'ufo', count: 3, delay: 1.5 }
           ],
         },
       ],
@@ -207,7 +208,7 @@ export const LEVEL_1 = {
       width: 30,
       height: 30,
       waves: [
-        { enemies: [ { enemyType: 'kamikazeBoss', count: 1, delay: 3 } ] }
+        { enemies: [{ enemyType: 'kamikazeBoss', count: 1, delay: 3 }] }
       ],
       devDescription: 'Chefe final do nível que utiliza ataques kamikaze.',
       door: {
@@ -226,21 +227,21 @@ export const LEVEL_1 = {
           enemies: [
             { enemyType: 'kamikaze', count: 2, delay: 1.5 },
             { enemyType: 'ufofast', count: 2, delay: 1.5 },
-            { enemyType: 'asteroid', count: 4, delay: 1.5},
+            { enemyType: 'asteroid', count: 4, delay: 1.5 },
           ]
         },
         {
           enemies: [
             { enemyType: 'kamikaze', count: 3, delay: 1.5 },
             { enemyType: 'ufofast', count: 3, delay: 1.5 },
-            { enemyType: 'asteroid', count: 6, delay: 1.5},
+            { enemyType: 'asteroid', count: 6, delay: 1.5 },
           ]
         },
         {
           enemies: [
             { enemyType: 'kamikaze', count: 4, delay: 1.5 },
             { enemyType: 'ufofast', count: 4, delay: 1.5 },
-            { enemyType: 'asteroid', count: 8, delay: 1.5},
+            { enemyType: 'asteroid', count: 8, delay: 1.5 },
           ],
         },
       ],

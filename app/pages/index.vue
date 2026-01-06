@@ -17,6 +17,41 @@ const levelAccount = useLevelAccount();
 const currentRunStore = useCurrentRunStore();
 const router = useRouter();
 const isAnimating = ref(false);
+const isChangingLevel = ref(false);
+
+const maxUnlockedLevel = ref(1);
+const currentLevel = ref(1);
+const maxLevels = 3; // Matching the 3 bosses in LevelSelect
+
+const isLocked = computed(() => currentLevel.value > maxUnlockedLevel.value);
+
+function nextLevel() {
+  if (currentLevel.value < maxLevels) {
+    isChangingLevel.value = true;
+    currentLevel.value++;
+    setTimeout(() => {
+      isChangingLevel.value = false;
+    }, 600);
+  }
+}
+
+function prevLevel() {
+  if (currentLevel.value > 1) {
+    isChangingLevel.value = true;
+    currentLevel.value--;
+    setTimeout(() => {
+      isChangingLevel.value = false;
+    }, 600);
+  }
+}
+
+function returnToUnlocked() {
+  isChangingLevel.value = true;
+  currentLevel.value = maxUnlockedLevel.value;
+  setTimeout(() => {
+    isChangingLevel.value = false;
+  }, 600);
+}
 
 // ✅ NOVO SISTEMA DE MODAIS REUTILIZÁVEL
 // Exemplo de uso do composable useModal
@@ -65,6 +100,47 @@ function formatCurrency(amount: number): string {
 }
 
 const missions = useMissions();
+
+const levelDescriptions = {
+  1: 'Limpe todas as salas',
+  2: 'Limpe todas as salas',
+  3: 'Sobreviva por 6 minutos'
+}
+
+// Computed para verificar se algum modal está aberto
+const isAnyModalOpen = computed(() =>
+  profileModal.isOpen.value ||
+  settingsModal.isOpen.value ||
+  missionsModal.isOpen.value ||
+  offersModal.isOpen.value ||
+  rewardsModal.isOpen.value
+);
+
+// Controles de teclado
+function handleKeyPress(event: KeyboardEvent) {
+  // Só permite navegação se nenhum modal estiver aberto
+  if (isAnyModalOpen.value) return;
+
+  const key = event.key.toLowerCase();
+
+  // Seta esquerda ou tecla 'a' para voltar
+  if (key === 'arrowleft' || key === 'a') {
+    prevLevel();
+  }
+  // Seta direita ou tecla 'd' para avançar
+  else if (key === 'arrowright' || key === 'd') {
+    nextLevel();
+  }
+}
+
+// Adicionar e remover event listener
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyPress);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyPress);
+});
 </script>
 
 <template>
@@ -74,8 +150,8 @@ const missions = useMissions();
     window-size
   >
     <!-- Adicionar bosses que vão enfretar como salas -->
-    <Stars />
-    <Stars :size="2" :count="1500" :depth="600" />
+    
+    <LobbyLevelSelect v-model="currentLevel" :max-unlocked-level="maxUnlockedLevel" />
   </TresCanvas>
   
   <div id="lobby-stuff" class="w-full h-full absolute top-0 left-0 right-0 bottom-0 pointer-events-none">
@@ -194,8 +270,41 @@ const missions = useMissions();
       </div>
 
 
+      <!-- Level Navigator -->
+      <div class="absolute top-1/2 left-0 w-full -translate-y-1/2 flex justify-between px-4 pointer-events-none">
+        
+        <!-- Left Arrow -->
+        <div 
+          v-if="currentLevel > 1"
+          @click="prevLevel"
+          class="pointer-events-auto cursor-pointer bg-white/10 hover:bg-white/20 p-4 rounded-full backdrop-blur-md transition-all active:scale-95"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="white" d="M15.41 7.41L14 6l-6 6l6 6l1.41-1.41L10.83 12z"/></svg>
+        </div>
+        <div v-else class="w-16"></div> <!-- Spacer -->
+
+        <!-- Right Arrow -->
+        <div 
+          v-if="currentLevel < maxLevels"
+          @click="nextLevel"
+          class="pointer-events-auto cursor-pointer bg-white/10 hover:bg-white/20 p-4 rounded-full backdrop-blur-md transition-all active:scale-95"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="white" d="M10 6L8.59 7.41L13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+        </div>
+        <div v-else class="w-16"></div> <!-- Spacer -->
+
+      </div>
+      
+      <!-- Level Title -->
+      <div class="absolute title-text top-32 left-0 w-full text-center pointer-events-none">
+        <h2 class="text-3xl font-bold text-white drop-shadow-md">Capítulo {{ currentLevel }}</h2>
+        <p class="text-white/70 text-sm">{{ levelDescriptions[currentLevel] || 'BOSS BATTLE' }}</p>
+      </div>
       <!-- Tailwind shine golden button with shimmer effect on the bottom middle of the page -->
-      <div class="absolute bottom-30 left-1/2 -translate-x-1/2 w-full px-4 flex justify-center">
+      <div 
+        class="absolute bottom-30 left-1/2 -translate-x-1/2 w-full px-4 flex justify-center transition-all duration-500 ease-in-out pointer-events-none"
+        :class="(isChangingLevel || isLocked) ? 'translate-y-40 opacity-0' : 'translate-y-0 opacity-100'"
+      >
         <div class="w-full max-w-md pointer-events-auto">
           <button
             @click="handleButtonClick"
@@ -244,6 +353,19 @@ const missions = useMissions();
             </div>
           </button>
         </div>
+      </div>
+
+      <!-- Return Text for Locked Levels -->
+      <div 
+        class="absolute bottom-40 left-1/2 -translate-x-1/2 w-full text-center transition-all duration-500 ease-in-out pointer-events-none"
+        :class="isLocked ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'"
+      >
+        <p 
+          @click="returnToUnlocked"
+          class="text-white/60 title-text font-bold tracking-widest text-sm cursor-pointer hover:text-white transition-colors pointer-events-auto animate-pulse"
+        >
+          TOQUE PARA VOLTAR AO CAPÍTULO ATUAL
+        </p>
       </div>
 
       <!-- Modals -->

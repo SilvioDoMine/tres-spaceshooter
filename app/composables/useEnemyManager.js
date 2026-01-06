@@ -14,8 +14,8 @@ export const baseStats = {
     deathSound: 'hit-hard3',
     hitSound: 'hit-soft2',
     drops: {
-      exp: {min: 60, max: 100},
-      gold: {min: 0, max: 10}
+      exp: { min: 60, max: 100 },
+      gold: { min: 0, max: 10 }
     }
   },
   ufo: {
@@ -32,8 +32,8 @@ export const baseStats = {
     deathSound: 'hit-hard3',
     hitSound: 'hit-soft2',
     drops: {
-      exp: {min: 100, max: 250},
-      gold: {min: 5, max: 15}
+      exp: { min: 100, max: 250 },
+      gold: { min: 5, max: 15 }
     }
   },
   ufofast: {
@@ -50,12 +50,12 @@ export const baseStats = {
     deathSound: 'hit-hard2',
     hitSound: 'hit-soft2',
     drops: {
-      exp: {min: 200, max: 350},
-      gold: {min: 10, max: 25}
+      exp: { min: 200, max: 350 },
+      gold: { min: 10, max: 25 }
     }
   },
   kamikaze: {
-    color: 'red',
+    color: '#ff4d4d',
     shape: 'cone',
     size: 1,
     speed: 3.5,
@@ -66,8 +66,8 @@ export const baseStats = {
     deathSound: 'hit-hard3',
     hitSound: 'hit-soft3',
     drops: {
-      exp: {min: 150, max: 300},
-      gold: {min: 10, max: 20}
+      exp: { min: 150, max: 300 },
+      gold: { min: 10, max: 20 }
     }
   },
   miniboss: {
@@ -84,8 +84,8 @@ export const baseStats = {
     deathSound: 'enemy-death1',
     hitSound: 'hit-soft3',
     drops: {
-      exp: {min: 400, max: 600},
-      gold: {min: 100, max: 200}
+      exp: { min: 400, max: 600 },
+      gold: { min: 100, max: 200 }
     }
   },
   boss: {
@@ -102,12 +102,12 @@ export const baseStats = {
     deathSound: 'enemy-death2',
     hitSound: 'hit-soft3',
     drops: {
-      exp: {min: 0, max: 0},
-      gold: {min: 100, max: 200}
+      exp: { min: 0, max: 0 },
+      gold: { min: 100, max: 200 }
     }
   },
   kamikazeBoss: {
-    color: 'red',
+    color: '#ff4d4d',
     shape: 'cone',
     size: 2,
     speed: 3,
@@ -118,8 +118,60 @@ export const baseStats = {
     deathSound: 'enemy-death3',
     hitSound: 'hit-soft3',
     drops: {
-      exp: {min: 500, max: 800},
-      gold: {min: 150, max: 300}
+      exp: { min: 500, max: 800 },
+      gold: { min: 150, max: 300 }
+    }
+  },
+
+  // ==================== INIMIGOS EXEMPLO ====================
+  // Estes são exemplos de como criar novos tipos de inimigos
+  // Você pode modificá-los, removê-los ou criar novos baseados neles
+
+  // Exemplo 1: Inimigo Esfera Simples
+  sphereEnemy: {
+    color: 'cyan',
+    shape: 'sphere', // ← Este nome deve corresponder ao mapeamento no EnemyManager
+    speed: 2.5,
+    health: 100,
+    onHitDamage: 150,
+    size: 1.2,
+    deathSound: 'hit-hard3',
+    hitSound: 'hit-soft2',
+    drops: {
+      exp: { min: 80, max: 120 },
+      gold: { min: 10, max: 20 }
+    }
+  },
+
+  // Exemplo 2: Inimigo Torus (disco) com animação customizada
+  torusEnemy: {
+    color: 'orange',
+    shape: 'torus', // ← Este inimigo tem rotação customizada no componente
+    speed: 2.0,
+    health: 140,
+    onHitDamage: 180,
+    size: 1.0,
+    deathSound: 'hit-hard3',
+    hitSound: 'hit-soft2',
+    drops: {
+      exp: { min: 100, max: 150 },
+      gold: { min: 15, max: 25 }
+    }
+  },
+
+  // Exemplo 3: Inimigo Composto (corpo + satélites)
+  compositeEnemy: {
+    color: 'purple',
+    shape: 'composite', // ← Este inimigo tem múltiplas partes visuais
+    speed: 1.8,
+    health: 200,
+    onHitDamage: 220,
+    size: 1.5,
+    deathSound: 'enemy-death1',
+    hitSound: 'hit-soft3',
+    drops: {
+      exp: { min: 150, max: 250 },
+      gold: { min: 20, max: 40 }
     }
   }
 };
@@ -131,7 +183,7 @@ export function useEnemyManager() {
   const { handleEvent } = useMissions();
 
   const { activeEnemies, killedEnemies } = storeToRefs(enemyManagerStore);
-  
+
   const update = (delta) => {
     // Atualiza o timer de spawn e morte dos inimigos
     activeEnemies.value.forEach(enemy => {
@@ -177,7 +229,7 @@ export function useEnemyManager() {
         // Pego os stats base do inimigo
         const enemyStats = baseStats[enemyType];
 
-        if (! enemyStats) {
+        if (!enemyStats) {
           console.warn(`Enemy Manager: Unknown enemy type "${enemyType}"`);
           return;
         }
@@ -208,7 +260,7 @@ export function useEnemyManager() {
     // Lógica para aplicar dano ao inimigo
     const enemy = activeEnemies.value.find(e => e.id === enemyId);
 
-    if (! enemy) {
+    if (!enemy) {
       console.warn(`Enemy Manager: No enemy found with ID "${enemyId}" to take damage.`);
       return;
     }
