@@ -47,11 +47,6 @@ export const LEVEL_1 = {
       waves: [
         {
           enemies: [
-            { enemyType: 'sphereEnemy', count: 2, delay: 1.5 },
-          ]
-        },
-        {
-          enemies: [
             { enemyType: 'asteroid', count: 2, delay: 1.5 },
             { enemyType: 'asteroid', count: 4, delay: 2.5 },
           ]
@@ -75,6 +70,18 @@ export const LEVEL_1 = {
         size: { width: 4, height: 8 },
       },
       playerStartPosition: { x: 0, y: 0, z: 0 },
+    },
+     {
+      width: 10,
+      height: 20,
+      stageId: 'S4_Upgrade_Select',
+      type: 'upgrade',
+      devDescription: 'Sala de seleção de upgrade após a segunda sala de combate.',
+      door: {
+        position: { x: 0, y: 0, z: -9 },
+        size: { width: 4, height: 8 },
+      },
+      playerStartPosition: { x: 0, y: 0, z: 8 },
     },
     {
       stageId: 'S2_Miniboss',
@@ -123,18 +130,6 @@ export const LEVEL_1 = {
       },
       playerStartPosition: { x: 0, y: 0, z: 0 },
     },
-    // {
-    //   width: 10,
-    //   height: 20,
-    //   stageId: 'S4_Upgrade_Select',
-    //   type: 'upgrade',
-    //   devDescription: 'Sala de seleção de upgrade após a segunda sala de combate.',
-    //   door: {
-    //     position: { x: 0, y: 0, z: -9 },
-    //     size: { width: 4, height: 8 },
-    //   },
-    //   playerStartPosition: { x: 0, y: 0, z: 0 },
-    // },
     {
       stageId: 'S5_Combat_More',
       type: 'combat',

@@ -128,18 +128,18 @@ export const baseStats = {
   // Você pode modificá-los, removê-los ou criar novos baseados neles
 
   // Exemplo 1: Inimigo Esfera Simples
-  sphereEnemy: {
+  angel: {
     color: 'cyan',
-    shape: 'sphere', // ← Este nome deve corresponder ao mapeamento no EnemyManager
-    speed: 2.5,
-    health: 100,
-    onHitDamage: 150,
+    shape: 'sphere',
+    speed: 0,
+    health: 1,
+    onHitDamage: 0,
     size: 1.2,
     deathSound: 'hit-hard3',
     hitSound: 'hit-soft2',
     drops: {
-      exp: { min: 80, max: 120 },
-      gold: { min: 10, max: 20 }
+      exp: { min: 0, max: 0 },
+      gold: { min: 0, max: 0 }
     }
   },
 
@@ -252,6 +252,25 @@ export function useEnemyManager() {
       }
     });
   }
+
+  const spawnAngel = () => {
+    const enemyStats = baseStats['angel'];
+
+    const newEnemy = {
+      id: `angel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      type: 'angel',
+      position: { x: 0, y: 0, z: -2 },
+      cooldownShot: enemyStats.cooldownTotalShot, // tempo inicial para o inimigo poder atirar
+      state: 'angel', // Estado inicial: spawning (invulnerável)
+      spawnTimer: 0, // Tempo em segundos até ficar ativo
+      totalSpawnTime: 0, // Armazena o tempo total para calcular o progresso
+      spawnProgress: 1, // 0 a 1, usado para efeitos visuais
+      ...enemyStats,
+    };
+
+    // Adiciono o inimigo à lista de inimigos ativos
+    activeEnemies.value.push(newEnemy);
+  };
 
   /**
    * Quando um inimigo toma dano
@@ -379,6 +398,7 @@ export function useEnemyManager() {
     takeDamage,
     update,
     spawnEnemyWave,
+    spawnAngel,
     cleanup,
 
     // missions

@@ -14,6 +14,20 @@ export function useEnemyAI() {
     const { playerPosition, isPlaying } = storeToRefs(currentRunStore);
 
     const behaviors = {
+        angel: (enemy, deltaTime) => {
+            // Fica parado, se o jogador chegar 2 pixels próximo nós iremos dar 1 upgrade de skill
+            const directionZ = playerPosition.value.z - enemy.position.z;
+            const directionX = playerPosition.value.x - enemy.position.x;
+            const length = Math.sqrt(directionZ * directionZ + directionX * directionX);
+
+            if (length <= 2) {
+                console.log(`Angel ${enemy.id} deu um upgrade ao jogador!`);
+
+                useSkillStore().startSkillSelection();
+                // destrói o angel após dar o upgrade
+                enemyManager.takeDamage(enemy.id, enemy.health, 'systemkill');
+            }
+        },
         asteroid: (enemy, deltaTime) => {
             // Comportamento simples para asteroides: movem-se lentamente na direção do jogador no eixo Y e Z
             const directionZ = playerPosition.value.z - enemy.position.z;
@@ -513,7 +527,8 @@ export function useEnemyAI() {
                 return;
             }
 
-            if (enemy.state !== 'active') {
+            // Se state não tiver na array ['active', 'spawning', 'dying'], não faz nada
+            if (! ['active', 'angel'].includes(enemy.state)) {
                 return;
             }
 

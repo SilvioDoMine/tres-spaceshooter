@@ -85,7 +85,22 @@ export function useGameDirector() {
   }
 
   const handleUpgradenStage = (delta, stage) => {
-    console.log('Game Director: Atualizando estágio de upgrade.');
+    // Spawna o angel para o upgrade, e só libera
+    // a saída quando escolher o upgrade do Angel
+    if (currentRunStore.isStageCompleted) {
+      return;
+    }
+    
+    if (! currentRunStore.isWaveInProgress) {
+      enemyManager.spawnAngel();
+      currentRunStore.isWaveInProgress = true;
+      return;
+    }
+
+    if (currentRunStore.isWaveInProgress && enemyManager.activeEnemies.value.length === 0) {
+      console.log('Game Director: Upgrade selecionado. Estágio de upgrade completo.');
+      currentRunStore.completeStage();
+    }
   }
   
   return {
