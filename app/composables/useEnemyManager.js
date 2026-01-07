@@ -4,13 +4,41 @@ import { useMissions } from '~/composables/useMissions';
 import { storeToRefs } from 'pinia';
 
 export const baseStats = {
+  miniasteroid: {
+    color: 'gray',
+    shape: 'dodecahedron',
+    speed: 1.5,
+    health: 90,
+    onHitDamage: 400,
+    size: 0.75,
+    deathSound: 'hit-hard3',
+    hitSound: 'hit-soft2',
+    drops: {
+      exp: { min: 60, max: 100 },
+      gold: { min: 0, max: 10 }
+    }
+  },
   asteroid: {
     color: 'gray',
     shape: 'dodecahedron',
     speed: 3,
-    health: 65,
-    onHitDamage: 100,
+    health: 600,
+    onHitDamage: 900,
     size: 1.25,
+    deathSound: 'hit-hard3',
+    hitSound: 'hit-soft2',
+    drops: {
+      exp: { min: 60, max: 100 },
+      gold: { min: 0, max: 10 }
+    }
+  },
+  asteroidBoss: {
+    color: 'gray',
+    shape: 'dodecahedron',
+    speed: 2,
+    health: 2500,
+    onHitDamage: 9999,
+    size: 2.25,
     deathSound: 'hit-hard3',
     hitSound: 'hit-soft2',
     drops: {
@@ -93,7 +121,7 @@ export const baseStats = {
     shape: 'square',
     size: 3,
     speed: 1.1,
-    health: 1200,
+    health: 4000,
     onHitDamage: 999,
     distanceKeep: 20,
     shotDamage: 300,
@@ -161,7 +189,7 @@ export const baseStats = {
 
   // Exemplo 3: Inimigo Composto (corpo + satélites)
   compositeEnemy: {
-    color: 'purple',
+    color: 'fuchsia',
     shape: 'composite', // ← Este inimigo tem múltiplas partes visuais
     speed: 1.8,
     health: 200,
@@ -175,6 +203,119 @@ export const baseStats = {
     }
   }
 };
+
+const onDeathBehavior = {
+  asteroid: (enemy) => {
+    // Spawna de 1 a 3 miniasteroids ao morrer em cone nas costas voando na direção oposta
+    const enemyManager = useEnemyManager();
+    const currentRun = useCurrentRunStore();
+    const miniasteroidCount = Math.floor(Math.random() * 3) + 1; // 1 a 3
+
+    // Calcula direção do player pro asteroid (direção em que ele estava vindo)
+    const dirToPlayer = {
+      x: currentRun.playerPosition.x - enemy.position.x,
+      z: currentRun.playerPosition.z - enemy.position.z,
+    };
+    const length = Math.sqrt(dirToPlayer.x ** 2 + dirToPlayer.z ** 2);
+
+    // Direção invertida (oposta ao movimento) - asteroids vão pra trás
+    const baseDirection = {
+      x: -dirToPlayer.x / length,
+      z: -dirToPlayer.z / length,
+    };
+
+    for (let i = 0; i < miniasteroidCount; i++) {
+      // Distribui em cone: ângulo varia de -60° a +60° dependendo do índice
+      const coneAngle = ((i / (miniasteroidCount - 1 || 1)) - 0.5) * (Math.PI / 1.5); // -60° a +60°
+      const speed = 4 + Math.random() * 2; // Velocidade entre 2 e 4
+
+      // Adiciona um pequeno random extra ao ângulo pra não ficar muito uniforme
+      const finalAngle = coneAngle + (Math.random() - 0.5) * 0.3; // ±0.15 rad de variação
+
+      // Rotaciona a direção base pelo ângulo do cone
+      const cos = Math.cos(finalAngle);
+      const sin = Math.sin(finalAngle);
+      const rotatedDirection = {
+        x: baseDirection.x * cos - baseDirection.z * sin,
+        z: baseDirection.x * sin + baseDirection.z * cos,
+      };
+
+      // Posição de spawn: forma um cone atrás do asteroid
+      const coneDepth = 0.5 + Math.random() * 0.3; // Profundidade no cone (0.5-0.8)
+      const coneWidth = Math.abs(finalAngle) * 1.5; // Largura proporcional ao ângulo
+
+      const spawnPosition = {
+        x: enemy.position.x + baseDirection.x * coneDepth + rotatedDirection.x * coneWidth,
+        y: enemy.position.y,
+        z: enemy.position.z + baseDirection.z * coneDepth + rotatedDirection.z * coneWidth,
+      };
+
+      enemyManager.spawnEnemy('miniasteroid', {
+        position: spawnPosition,
+        delay: 0,
+        state: 'active', // Já spawna ativo
+        overrides: {
+          speed: speed,
+          direction: { ...rotatedDirection }, // Define direção inicial
+        }
+      });
+    }
+  },
+  asteroidBoss: (enemy) => {
+    // Ao morrer, spawna 2 asteroidBoss menores.
+    // Caso a vida seja menor que 300, não spawna mais.
+    if (enemy.maxHealth <= 300) return;
+
+    const enemyManager = useEnemyManager();
+    const currentRun = useCurrentRunStore();
+
+    // Calcula direção base (do asteroid pro player)
+    const dirToPlayer = {
+      x: currentRun.playerPosition.x - enemy.position.x,
+      z: currentRun.playerPosition.z - enemy.position.z,
+    };
+    const length = Math.sqrt(dirToPlayer.x ** 2 + dirToPlayer.z ** 2);
+
+    const baseDirection = {
+      x: dirToPlayer.x / length,
+      z: dirToPlayer.z / length,
+    };
+
+    for (let i = 0; i < 2; i++) {
+      const angle = (i === 0) ? Math.PI / 6 : -Math.PI / 6; // 30° e -30° (spread menor)
+      const speed = 2 + Math.random(); // Velocidade entre 2 e 3
+
+      // Rotaciona a direção base pelo ângulo
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      const rotatedDirection = {
+        x: baseDirection.x * cos - baseDirection.z * sin,
+        z: baseDirection.x * sin + baseDirection.z * cos,
+      };
+
+      // Spawna com uma pequena separação lateral
+      const lateralOffset = 1.5 * (i === 0 ? 1 : -1);
+      const spawnPosition = {
+        x: enemy.position.x + lateralOffset * baseDirection.z,
+        y: enemy.position.y,
+        z: enemy.position.z - lateralOffset * baseDirection.x,
+      };
+
+      enemyManager.spawnEnemy('asteroidBoss', {
+        position: spawnPosition,
+        delay: 0,
+        state: 'active',
+        overrides: {
+          speed: speed,
+          health: enemy.maxHealth / 2,
+          maxHealth: enemy.maxHealth / 2, // Metade da vida do boss original
+          // Opcional: dar uma direção inicial levemente desviada
+          initialDirection: { ...rotatedDirection },
+        }
+      });
+    }
+  }
+}
 
 // Lógica para gerenciar inimigos: spawn, atualização, remoção, etc.
 export function useEnemyManager() {
@@ -217,7 +358,57 @@ export function useEnemyManager() {
     );
   };
 
+  /**
+   * Spawna um único inimigo
+   * @param {string} enemyType - Tipo do inimigo (ex: 'asteroid', 'ufo')
+   * @param {object} options - Opções de spawn
+   * @param {object} options.position - Posição customizada { x, y, z } (padrão: aleatória)
+   * @param {number} options.delay - Delay até ficar ativo em segundos (padrão: 1.5)
+   * @param {string} options.state - Estado inicial (padrão: 'spawning')
+   * @param {object} options.overrides - Propriedades para sobrescrever stats base
+   * @returns {object} - O inimigo criado
+   */
+  const spawnEnemy = (enemyType, options = {}) => {
+    const enemyStats = baseStats[enemyType];
+
+    if (!enemyStats) {
+      console.warn(`Enemy Manager: Unknown enemy type "${enemyType}"`);
+      return null;
+    }
+
+    const {
+      position = generateRandomSpawnPosition(),
+      delay = 1.5,
+      state = 'spawning',
+      overrides = {},
+    } = options;
+
+    // Crio um novo inimigo
+    const newEnemy = {
+      id: `${enemyType}_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
+      type: enemyType,
+      position: { ...position },
+      cooldownShot: enemyStats.cooldownTotalShot,
+      state: state,
+      spawnTimer: delay,
+      totalSpawnTime: delay,
+      spawnProgress: state === 'spawning' ? 0 : 1,
+      maxHealth: enemyStats.health,
+      ...enemyStats,
+      ...overrides, // Permite sobrescrever qualquer propriedade
+    };
+
+    // Adiciono o inimigo à lista de inimigos ativos
+    activeEnemies.value.push(newEnemy);
+
+    return newEnemy;
+  };
+
   const spawnEnemyWave = (waveConfig) => {
+    const multiplier = (stageLevel) => {
+      return 1 + (stageLevel - 1) * 0.5; // Exemplo: 10% a mais por nível de estágio acima do 1
+    }
+
     // Spawna inimigos conforme a configuração da wave
     waveConfig.enemies.forEach(enemyGroup => {
       // Desestruturação para obter tipo, quantidade e delay
@@ -225,51 +416,21 @@ export function useEnemyManager() {
 
       // Spawna a quantidade especificada de inimigos do tipo dado
       for (let i = 0; i < count; i++) {
-
-        // Pego os stats base do inimigo
-        const enemyStats = baseStats[enemyType];
-
-        if (!enemyStats) {
-          console.warn(`Enemy Manager: Unknown enemy type "${enemyType}"`);
-          return;
-        }
-
-        // Crio um novo inimigo com posição aleatória
-        const newEnemy = {
-          id: `${enemyType}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${i}`,
-          type: enemyType,
-          position: generateRandomSpawnPosition(),
-          cooldownShot: enemyStats.cooldownTotalShot, // tempo inicial para o inimigo poder atirar
-          state: 'spawning', // Estado inicial: spawning (invulnerável)
-          spawnTimer: delay, // Tempo em segundos até ficar ativo (vem da configuração da wave)
-          totalSpawnTime: delay, // Armazena o tempo total para calcular o progresso
-          spawnProgress: 0, // 0 a 1, usado para efeitos visuais
-          ...enemyStats,
-        };
-
-        // Adiciono o inimigo à lista de inimigos ativos
-        activeEnemies.value.push(newEnemy);
+        spawnEnemy(enemyType, {
+          maxHealth: Math.floor(baseStats[enemyType].health * multiplier(useCurrentRun.currentStage.level)),
+          health: Math.floor(baseStats[enemyType].health * multiplier(useCurrentRun.currentStage.level)),
+          damage: Math.floor(baseStats[enemyType].onHitDamage * multiplier(useCurrentRun.currentStage.level)),
+        });
       }
     });
-  }
+  };
 
   const spawnAngel = () => {
-    const enemyStats = baseStats['angel'];
-
-    const newEnemy = {
-      id: `angel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      type: 'angel',
+    spawnEnemy('angel', {
       position: { x: 0, y: 0, z: -2 },
-      cooldownShot: enemyStats.cooldownTotalShot, // tempo inicial para o inimigo poder atirar
-      state: 'angel', // Estado inicial: spawning (invulnerável)
-      spawnTimer: 0, // Tempo em segundos até ficar ativo
-      totalSpawnTime: 0, // Armazena o tempo total para calcular o progresso
-      spawnProgress: 1, // 0 a 1, usado para efeitos visuais
-      ...enemyStats,
-    };
-
-    // Adiciono o inimigo à lista de inimigos ativos
-    activeEnemies.value.push(newEnemy);
+      delay: 0,
+      state: 'angel',
+    });
   };
 
   /**
@@ -298,6 +459,8 @@ export function useEnemyManager() {
       damage
     );
 
+    const onDeathBehaviorFunc = onDeathBehavior[enemy.type];
+
     // Se a saúde do inimigo chegar a zero ou menos, inicia animação de morte
     const randomPitch = 0.9 + Math.random() * 0.2; // Entre 0.9 e 1.1
 
@@ -308,6 +471,11 @@ export function useEnemyManager() {
       enemy.deathProgress = 0;
 
       if (type === 'shot') {
+        // Executa o onDeathBehavior se existir
+        if (onDeathBehaviorFunc) {
+          onDeathBehaviorFunc(enemy);
+        }
+
         // Reproduz som de inimigo morto
         useAudio().playSound(enemy.deathSound, 1, randomPitch);
 
@@ -334,7 +502,6 @@ export function useEnemyManager() {
     } else {
       if (type === 'shot') {
         // Reproduz som de hit suave
-
         useAudio().playSound(enemy.hitSound, 1, randomPitch);
       }
     }
@@ -397,6 +564,7 @@ export function useEnemyManager() {
     activeEnemies,
     takeDamage,
     update,
+    spawnEnemy,
     spawnEnemyWave,
     spawnAngel,
     cleanup,

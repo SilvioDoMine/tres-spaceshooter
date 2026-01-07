@@ -143,7 +143,7 @@ onUnmounted(() => {
         <GameHealthBar
           v-if="enemy.state === 'active'"
           :current-health="enemy.health"
-          :max-health="baseStats[enemy.type].health"
+          :max-health="enemy.maxHealth"
           :width="baseStats[enemy.type].size * 0.9"
           :height="0.2"
           :position="[0, 0, -baseStats[enemy.type].size * 0.7]"

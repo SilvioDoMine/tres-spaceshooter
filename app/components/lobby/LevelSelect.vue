@@ -1,24 +1,21 @@
 <script setup lang="ts">
 import { useLoop } from '@tresjs/core';
 import { shallowRef, ref, watch, computed } from 'vue'
-import * as THREE from 'three'
 import { Html } from '@tresjs/cientos'
 
 // Import Enemy Components
 import EnemySquare from '~/components/game/enemies/EnemySquare.vue';
 import EnemyCone from '~/components/game/enemies/EnemyCone.vue';
 import EnemyDodecahedron from '~/components/game/enemies/EnemyDodecahedron.vue';
+import EnemyComposite from '../game/enemies/EnemyComposite.vue';
 
 // Import Background Component
 import BgStarField from '~/components/lobby/backgrounds/BgStarField.vue';
 
-const props = defineProps<{
-  modelValue: number,
-  maxUnlockedLevel: {
-    type: Number,
-    default: 1
-  }
-}>()
+const props = withDefaults(
+  defineProps<{modelValue: number, maxUnlockedLevel?: number}>(),
+  {maxUnlockedLevel: 1},
+)
 
 const emit = defineEmits(['update:modelValue'])
 
@@ -29,7 +26,8 @@ const bossRefs = ref([])
 const componentMap = {
   square: EnemySquare,
   cone: EnemyCone,
-  dodecahedron: EnemyDodecahedron
+  dodecahedron: EnemyDodecahedron,
+  composite: EnemyComposite
 }
 
 // Background Atmosphere Colors
@@ -41,7 +39,7 @@ const atmosphereColors = {
 
 // Boss configurations
 const bosses = [
-  { id: 1, type: 'dodecahedron', displayType: 'Dodecahedron' },
+  { id: 1, type: 'composite', displayType: 'Composite' },
   { id: 2, type: 'square', displayType: 'Square' },
   { id: 3, type: 'cone', displayType: 'Cone' },
 ]
@@ -50,7 +48,8 @@ const bosses = [
 const baseStats = {
   square: { color: 'hotpink', size: 2 },
   cone: { color: '#ff4d4d', size: 2 },
-  dodecahedron: { color: 'gray', size: 2 }
+  dodecahedron: { color: 'gray', size: 2 },
+  composite: { color: 'fuchsia', size: 2 },
 }
 
 // Dummy function to satisfy prop requirement (no-op in lobby)
@@ -91,6 +90,10 @@ onBeforeRender(({ delta, elapsed }) => {
       bossGroup.rotation.x += delta * 0.8
       bossGroup.rotation.y += delta * 0.8
       bossGroup.rotation.z += delta * 0.8
+    } else if (bossType === 'composite') {
+      // Composite has both slow rotation and bobbing
+      bossGroup.rotation.y += delta * 0.3
+      bossGroup.position.y = Math.sin(elapsed * 1) * 0.5
     }
   })
 })
