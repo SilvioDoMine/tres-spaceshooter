@@ -178,7 +178,7 @@ const handlePurchase = () => {
                     v-else-if="offer.state === 'claimed'"
                     class="text-white/60 text-xs font-bold px-3 py-2 bg-black/20 rounded-lg"
                 >
-                    Resgatado
+                    Já Resgatado Hoje
                 </div>
 
                 <!-- Estado: Purchased (sem daily rewards ou não chegou hora) -->
