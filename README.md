@@ -75,3 +75,5 @@ npm run lint:fix
 ## Deployment
 
 Check out the [Nuxt deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+
+Deployed automatically via Coolify on every push to `main`.
