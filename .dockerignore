@@ -1,0 +1,16 @@
+.git
+.github
+.nuxt
+.output
+node_modules
+npm-debug.log*
+*.log
+.env
+.env.*
+.vscode
+.idea
+Dockerfile*
+README.md
+SPATIAL-DILATION.md
+VFX.md
+qa-debris.mjs
