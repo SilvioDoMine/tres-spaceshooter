@@ -51,7 +51,7 @@ watchEffect(() => {
     <div class="mx-auto flex flex-col items-center gap-2">
       <div class="flex flex-col items-center">
          <div class="text-white text-[9px] font-bold px-6 line-clamp-1 bg-white/20 rounded-t-lg">Lv. {{ currentRunStore.currentLevel }}</div>
-          <div class="w-64 h-4 bg-white/20 rounded-full overflow-hidden border-white/20 border-2">
+          <div class="w-[min(16rem,calc(100vw-160px))] h-4 bg-white/20 rounded-full overflow-hidden border-white/20 border-2">
             <div
               class="h-full bg-green-500"
               :class="{ 'transition-all duration-500': shouldTransition }" :style="{ width: `${progressPercentage}%` }"

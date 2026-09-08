@@ -1,3 +1,4 @@
+import { emitImpact } from '~/utils/combatEffects';
 import { defineStore } from 'pinia';
 import { ref, shallowRef } from 'vue';
 import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
@@ -215,6 +216,8 @@ export const useProjectileStore = defineStore('projectileStore', () => {
         useAudio().playSound(enemySound);
       }
     }
+
+    emitImpact(position.x,position.z,false,'shot',ownerType!=='player');
 
     // ✅ OTIMIZAÇÃO: Não mutamos o config compartilhado, aplicamos damage diretamente
     projectiles.value.push({

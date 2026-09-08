@@ -10,6 +10,7 @@ const lobbyStore = useLobbyStore();
 // Settings
 const useAudioPlayer = useAudio();
 const enableParticles = ref(true);
+const shipAppearance = useShipAppearance();
 </script>
 
 <template>
@@ -20,7 +21,7 @@ const enableParticles = ref(true);
         <!-- content box -->
         <div class="flex flex-col gap-4 pointer-events-auto">
 
-                <!-- Settings Controls -->
+                <section class="rounded-lg bg-slate-900 text-cyan-100 p-4 flex flex-col gap-3"><h3>Kestrel-07 · Hangar</h3><label class="flex justify-between">Cor dos painéis<input aria-label="Cor dos painéis" type="color" v-model="shipAppearance.color" /></label><label class="flex justify-between">Propulsores animados<input type="checkbox" v-model="shipAppearance.thrusters" /></label></section><!-- Settings Controls -->
                 <div class="bg-orange-200 flex gap-2 items-center w-full rounded-md drop-shadow-2xl shadow-orange-400 p-2">
 
                     <!-- Stats -->
@@ -121,3 +122,4 @@ const enableParticles = ref(true);
         box-shadow: 0 0px 10px 5px rgb(79, 74, 240);
     }
 </style>
+

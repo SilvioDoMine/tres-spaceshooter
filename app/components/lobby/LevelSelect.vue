@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useLoop } from '@tresjs/core';
+import EnemyRaider from '~/components/game/enemies/EnemyRaider.vue';
 import { shallowRef, ref, watch, computed } from 'vue'
 import { Html } from '@tresjs/cientos'
 
@@ -39,9 +40,9 @@ const atmosphereColors = {
 
 // Boss configurations
 const bosses = [
-  { id: 1, type: 'composite', displayType: 'Composite' },
-  { id: 2, type: 'square', displayType: 'Square' },
-  { id: 3, type: 'cone', displayType: 'Cone' },
+  { id: 1, type: 'composite', displayType: 'SENTINELA • Patrulha orbital' },
+  { id: 2, type: 'square', displayType: 'HARPIA • Interceptador pesado' },
+  { id: 3, type: 'cone', displayType: 'COLOSSO • Comando da frota' },
 ]
 
 // Mock Base Stats for visual representation
@@ -75,6 +76,23 @@ onBeforeRender(({ delta, elapsed }) => {
   bossRefs.value.forEach((bossGroup, index) => {
     if (!bossGroup) return
     
+    const locked = bosses[index].id > props.maxUnlockedLevel
+    bossGroup.traverse((part) => {
+      if (!part.material) return
+      for (const m of (Array.isArray(part.material) ? part.material : [part.material])) {
+        if (!m.color) continue
+        if (!m.userData.originalColor) {
+          m.userData.originalColor = m.color.clone()
+          m.userData.originalOpacity = m.opacity
+          m.userData.originalTransparent = m.transparent
+        }
+        if (m.emissive && !m.userData.originalEmission) m.userData.originalEmission=m.emissive.clone()
+        m.color.copy(m.userData.originalColor)
+        if (locked) m.color.set('#626d7e')
+        if(m.emissive) m.emissive.copy(locked ? m.color.clone().multiplyScalar(0) : m.userData.originalEmission)
+        m.opacity=locked ? .48 : m.userData.originalOpacity; m.transparent=locked || m.userData.originalTransparent
+      }
+    })
     const bossType = bosses[index].type
     
     if (bossType === 'square') {
@@ -103,7 +121,10 @@ onBeforeRender(({ delta, elapsed }) => {
 <template>
   <TresGroup>
     <!-- Environment -->
-    <TresPerspectiveCamera :position="[0, 3, 15]" :look-at="[0, 0 , 0]" />
+    <TresPerspectiveCamera :position="[0, 8, 12]" :look-at="[0, 0 , 0]" />
+    <TresAmbientLight :intensity="1.2" color="#b5d4e7" />
+    <TresDirectionalLight :position="[3,6,5]" :intensity="3" />
+    <TresDirectionalLight :position="[-4,2,-3]" :intensity="2" color="#36b6d1" />
     
     <!-- Dynamic Background -->
     <BgStarField 
@@ -122,7 +143,7 @@ onBeforeRender(({ delta, elapsed }) => {
         <!-- Rotated Boss Model -->
         <TresGroup :ref="(el) => bossRefs[index] = el">
           <component 
-            :is="componentMap[boss.type]"
+            :is="EnemyRaider"
             :enemy="{ id: boss.id, type: boss.type }"
             :baseStats="baseStats"
             :setVisualMeshRef="setVisualMeshRef"
@@ -130,27 +151,19 @@ onBeforeRender(({ delta, elapsed }) => {
           />
         </TresGroup>
 
-        <!-- Static Lock Overlay -->
-        <Html
-          v-if="boss.id > maxUnlockedLevel"
-          transform
-          :position="[0, 0, 1]"
-          center
-          :sprite="true"
-          :z-index-range="[0, 0]"
-          pointer-events="none"
-          style="pointer-events: none !important; z-index: 0 !important;"
-        >
-          <div class="flex flex-col items-center justify-center pointer-events-none select-none min-w-[300px]" style="pointer-events: none !important;">
-            <div class="text-4xl filter drop-shadow-lg opacity-80 mb-2">
-              🔒
-            </div>
-            <div class="text-white text-xs font-bold uppercase tracking-widest bg-black/50 px-3 py-1 rounded backdrop-blur-sm">
-              Conclua o capítulo {{ boss.id - 1 }}
-            </div>
-          </div>
+        <Html v-if="boss.id > maxUnlockedLevel" :position="[0,.5,0]" center :z-index-range="[2,2]" pointer-events="none">
+          <div class="chapter-lock" aria-label="Capítulo bloqueado">🔒</div>
         </Html>
       </TresGroup>
     </TresGroup>
   </TresGroup>
 </template>
+
+<style scoped>
+.chapter-lock{font-size:48px;background:#172b48d9;border:3px solid #89a0bd;border-radius:22px;padding:8px 15px;box-shadow:0 5px 0 #0d192b;filter:drop-shadow(0 4px 10px #0009)}
+.enemy-title{width:250px;max-width:75vw;text-align:center;padding:10px 16px;border:3px solid #3672b4;border-radius:15px;background:linear-gradient(#65b5fa,#2c79c7);box-shadow:0 5px 0 #194b85,inset 0 2px 0 #b7e1ff;color:white;font-family:'Lilita One',sans-serif;text-shadow:0 2px 0 #25528b}
+.enemy-title strong{display:block;font-size:23px;font-weight:400;letter-spacing:.5px}.enemy-title span{display:block;font:13px 'Fredoka One',sans-serif;margin:2px 0 8px}.enemy-title small{display:block;background:#183d6d;border-radius:8px;padding:6px;font:12px 'Lilita One',sans-serif;color:#ffdf85;text-shadow:none}.enemy-title small.ready{color:#d9f3ff;background:#235d99}
+@media(max-width:650px),(max-height:500px){.chapter-lock{font-size:32px;padding:5px 10px;border-radius:15px}}
+</style>
+
+

@@ -144,15 +144,15 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <!-- Dark Blue color-->
-  <TresCanvas
+  <NuxtLink to="/hangar" class="fixed bottom-5 left-5 z-50 rounded-xl border-[3px] border-[#2363a2] bg-linear-to-b from-[#77c6ff] to-[#3185cf] shadow-[0_4px_0_#174879] px-5 py-3 text-white title-text pointer-events-auto">🚀 Hangar</NuxtLink><!-- Dark Blue color-->
+  <div class="lobby-scene"><TresCanvas
     clear-color="#000814"
-    window-size
+    :dpr="[1, 1.5]"
   >
     <!-- Adicionar bosses que vão enfretar como salas -->
     
     <LobbyLevelSelect v-model="currentLevel" :max-unlocked-level="maxUnlockedLevel" />
-  </TresCanvas>
+  </TresCanvas></div>
   
   <div id="lobby-stuff" class="w-full h-full absolute top-0 left-0 right-0 bottom-0 pointer-events-none">
     <!-- Relative full content -->
@@ -170,7 +170,7 @@ onUnmounted(() => {
         </div>
 
         <!-- Half top -->
-        <div class="bg-white/10 w-full h-10 flex justify-between items-center pl-20 pr-2 text-sm">
+        <div class="lobby-topbar bg-white/10 w-full h-10 flex justify-between items-center pl-20 pr-2 text-sm">
           <!-- User Name & Level Bar -->
           <div @click="openProfileModal" class="text-white text-md font-bold flex flex-col cursor-pointer">
             <!-- Level & User -->
@@ -233,7 +233,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Hud Middle -->
-      <div class="absolute top-24 w-full flex px-2 flex-row justify-between pointer-events-none">
+      <div class="lobby-shortcuts absolute top-24 w-full flex px-2 flex-row justify-between pointer-events-none">
         <!-- Left -->
         <div class="flex flex-col gap-2">
           <!-- Settings -->
@@ -271,7 +271,7 @@ onUnmounted(() => {
 
 
       <!-- Level Navigator -->
-      <div class="absolute top-1/2 left-0 w-full -translate-y-1/2 flex justify-between px-4 pointer-events-none">
+      <div class="chapter-arrows absolute top-1/2 left-0 w-full -translate-y-1/2 flex justify-between px-4 pointer-events-none">
         
         <!-- Left Arrow -->
         <div 
@@ -295,14 +295,15 @@ onUnmounted(() => {
 
       </div>
       
+      <div class="chapter-info title-text"><strong>{{ ['SENTINELA','HARPIA','COLOSSO'][currentLevel-1] }}</strong><span>{{ ['Patrulha orbital','Interceptador pesado','Comando da frota'][currentLevel-1] }}</span><small>{{ isLocked ? `🔒 Conclua o capítulo ${currentLevel-1}` : `Adversário do capítulo ${currentLevel}` }}</small></div>
       <!-- Level Title -->
-      <div class="absolute title-text top-32 left-0 w-full text-center pointer-events-none">
+      <div class="chapter-heading absolute title-text top-32 left-0 w-full text-center pointer-events-none">
         <h2 class="text-3xl font-bold text-white drop-shadow-md">Capítulo {{ currentLevel }}</h2>
         <p class="text-white/70 text-sm">{{ levelDescriptions[currentLevel] || 'BOSS BATTLE' }}</p>
       </div>
       <!-- Tailwind shine golden button with shimmer effect on the bottom middle of the page -->
       <div 
-        class="absolute bottom-30 left-1/2 -translate-x-1/2 w-full px-4 flex justify-center transition-all duration-500 ease-in-out pointer-events-none"
+        class="chapter-start absolute bottom-30 left-1/2 -translate-x-1/2 w-full px-4 flex justify-center transition-all duration-500 ease-in-out pointer-events-none"
         :class="(isChangingLevel || isLocked) ? 'translate-y-40 opacity-0' : 'translate-y-0 opacity-100'"
       >
         <div class="w-full max-w-md pointer-events-auto">
@@ -357,7 +358,7 @@ onUnmounted(() => {
 
       <!-- Return Text for Locked Levels -->
       <div 
-        class="absolute bottom-40 left-1/2 -translate-x-1/2 w-full text-center transition-all duration-500 ease-in-out pointer-events-none"
+        class="chapter-return absolute bottom-40 left-1/2 -translate-x-1/2 w-full text-center transition-all duration-500 ease-in-out pointer-events-none"
         :class="isLocked ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'"
       >
         <p 
@@ -382,6 +383,22 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.lobby-scene{position:absolute;inset:0}
+.chapter-info{position:absolute;bottom:26%;left:50%;transform:translateX(-50%);width:250px;text-align:center;padding:10px 16px;border:3px solid #3672b4;border-radius:15px;background:linear-gradient(#65b5fa,#2c79c7);box-shadow:0 5px #194b85,inset 0 2px #b7e1ff;color:white;text-shadow:0 2px #25528b}
+.chapter-info strong{display:block;font-size:23px;font-weight:400}.chapter-info span{display:block;font-size:13px;margin:2px 0 8px}.chapter-info small{display:block;background:#183d6d;border-radius:8px;padding:6px;font-size:12px;color:#ffdf85;text-shadow:none}
+@media(max-width:650px){
+ .lobby-topbar{font-size:11px;gap:4px}.lobby-topbar>div:first-child{min-width:0;flex:1}.lobby-topbar>div:first-child>div{gap:3px}.lobby-topbar>div:first-child>div>div{min-width:0}.lobby-topbar p{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lobby-topbar>div:last-child{gap:3px;flex-shrink:0}.lobby-topbar>div:last-child>div{padding:2px 5px;gap:3px}.lobby-topbar svg{width:18px;height:18px}
+ .chapter-info{bottom:150px;padding:7px 12px;width:min(240px,76vw)}.chapter-info strong{font-size:20px}.chapter-info span{font-size:11px;margin-bottom:5px}.chapter-info small{padding:4px;font-size:11px}
+ .chapter-start{bottom:78px}.chapter-start button{height:56px}.chapter-start button .text-3xl{font-size:24px}.chapter-return{bottom:92px;padding:0 14px}.chapter-return p{font-size:11px}
+ .chapter-arrows{padding:0 8px}.chapter-arrows>div{padding:10px}.chapter-arrows svg{width:24px;height:24px}
+}
+@media(max-height:500px) and (orientation:landscape){
+ .lobby-scene{width:55%}.lobby-shortcuts{top:78px;width:55%}.lobby-shortcuts>div:first-child{flex-direction:row}.chapter-start,.chapter-return{translate:0 0}.chapter-heading{top:78px;left:auto;right:2%;width:42%}.chapter-heading h2{font-size:23px}
+ .chapter-arrows{width:55%;top:58%;padding:0 8px}.chapter-arrows>div{padding:8px}
+ .chapter-info{left:auto;right:3%;transform:none;bottom:100px;width:40%;padding:6px}.chapter-info strong{font-size:19px}.chapter-info span{font-size:11px;margin:0 0 4px}.chapter-info small{font-size:10px;padding:3px}
+ .chapter-start{left:auto;right:1%;transform:none;bottom:24px;width:44%;padding:0 10px}.chapter-start button{height:55px}.chapter-return{left:auto;right:2%;transform:none;bottom:35px;width:42%;padding:0}.chapter-return p{font-size:10px}
+}
+
 @keyframes shine {
   0%   { transform: translateX(-40%) rotate(0deg); }
   100% { transform: translateX(40%) rotate(0deg); }
@@ -435,3 +452,5 @@ onUnmounted(() => {
   }
 }
 </style>
+
+

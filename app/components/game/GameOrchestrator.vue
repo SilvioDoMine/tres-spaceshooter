@@ -26,6 +26,7 @@ const currentRunStore = useCurrentRunStore();
 const projectileStore = useProjectileStore();
 const skillStore = useSkillStore();
 const playerStats = usePlayerStats();
+const flightView = useState("flight-view", () => ({x:0,z:0,width:30,height:23}));
 
 /**
  * Função central de atualização do jogo.
@@ -54,6 +55,17 @@ projectileStore.update(safeDelta);
 // playerCombat.update(safeDelta);
 playerStats.update(safeDelta);
 
+// Compress only distant, off-screen space. Landmarks stay close enough to revisit.
+const pilot=currentRunStore.getPlayerPosition();
+const horizon=Math.max(flightView.value.width,flightView.value.height)*.8+3;
+const retainNearby=(p:{x:number,z:number})=>{
+ const dx=p.x-pilot.x,dz=p.z-pilot.z,d=Math.hypot(dx,dz);
+ if(d>horizon){const step=Math.min(d-horizon,currentRunStore.currentMoveSpeed*safeDelta);p.x-=dx/d*step;p.z-=dz/d*step;}
+};
+enemyManager.activeEnemies.value.forEach(enemy=>{ if(enemy.state!=='active')return; const p=enemy.position; const v=flightView.value; if(Math.abs(p.x-v.x)>v.width*.6 || Math.abs(p.z-v.z)>v.height*.6)retainNearby(p); });
+// The portal stays at its stable room position. Following an escaping player
+// would pull the objective into the spatial-dilation region.
+
 // Gerenciamento de Partida
 gameDirector.update(safeDelta);
 
@@ -71,3 +83,5 @@ onBeforeRender(gameTick);
 <template>
     <slot />
 </template>
+
+

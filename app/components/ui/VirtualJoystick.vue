@@ -105,6 +105,7 @@ function handleEnd() {
     @touchstart="handleStart"
     @touchmove.prevent="handleMove"
     @touchend="handleEnd"
+    @touchcancel="handleEnd"
     @mousedown="handleStart"
     @mousemove="handleMove"
     @mouseup="handleEnd"
@@ -134,14 +135,14 @@ function handleEnd() {
   top: 50%;
   left: 0;
   width: 100vw;
-  height: 50vh;
+  height: 50dvh;
   z-index: 10; /* Acima da cena 3D, mas abaixo dos modais (z-50) */
   pointer-events: all;
   touch-action: none;
 }
 
 /** If the screen is desktop size, hidden */
-@media (min-width: 1024px) {
+@media (min-width: 1024px) and (pointer: fine) {
   .joystick-container {
     display: none;
   }

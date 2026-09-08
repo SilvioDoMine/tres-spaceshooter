@@ -1,3 +1,4 @@
+import { emitImpact } from '~/utils/combatEffects'
 import { defineStore } from 'pinia';
 import { ref, shallowRef } from 'vue';
 import { useEnemyManager } from '~/composables/useEnemyManager';
@@ -155,12 +156,14 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   }
 
   function loadStage(stage: any) {
+    useSpatialDilation().reset(stage);
     console.log('Carregando estágio:', stage);
 
     currentStage.value = stage;
     isStageCompleted.value = false;
     stageTimer.value = 0;
-    doorPosition.value = stage.door.position || null;
+    const door = stage.door?.position;
+    doorPosition.value = door ? { x: Math.max(-stage.width / 2 + 2, Math.min(stage.width / 2 - 2, door.x)), y: 0, z: Math.max(-stage.height / 2 + 5, Math.min(stage.height / 2 - 3, door.z)) } : null;
     doorSize.value = stage.door.size || null;
     isDoorActive.value = false;
     playerPosition.value = { ...stage.playerStartPosition };
@@ -235,33 +238,24 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   }
 
   function canPlayerMoveTo(x: number, y: number, z: number): boolean {
-    // Verifica a colusão com o Stage X e Z
-    const stage = currentStage.value;
-    if (!stage) {
-      return false; // Nenhum estágio carregado
-    }
-
-    const halfWidth = stage.width / 2 - 0.5;
-    const halfHeight = stage.height / 2 - 0.5;
-
-    if (x < -halfWidth || x > halfWidth || z < -halfHeight || z > halfHeight) {
-      return false; // Fora dos limites do mapa
-    }
-
-    return true;
+    return !!currentStage.value && Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z);
   }
 
   function takeDamage(amount: number) {
+    if(amount<=0 || currentHealth.value<=0)return;
+    const previousHealth=currentHealth.value;
     currentHealth.value = Math.max(0, currentHealth.value - amount);
+    const position=getPlayerPosition();
+    emitImpact(position.x,position.z,currentHealth.value===0,'player');
 
     // actual damage amount
-    let actualDamage = Math.min(amount, currentHealth.value);
+    let actualDamage = Math.min(amount, previousHealth);
 
     // emit combat text
     combatTextStore.emitForTarget(
       PlayerBaseStats.id,
       'damage',
-      actualDamage,
+      Math.round(actualDamage),
     );
 
     if (currentHealth.value <= 0) {
@@ -496,3 +490,5 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 if (import.meta.hot) {
   import.meta.hot.accept(acceptHMRUpdate(useCurrentRunStore, import.meta.hot))
 }
+
+

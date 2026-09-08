@@ -1,3 +1,4 @@
+import { createSpatialAudio } from '~/utils/spatialAudio';
 // Carrega configurações do localStorage ou cria padrão
 const loadAudioSettings = () => {
     const saved = localStorage.getItem('audioSettings');
@@ -48,6 +49,13 @@ const soundBuffers = new Map();
 const isInitialized = ref(false);
 
 export function useAudio() {
+    let spatialAudio = null;
+    function updateSpatialAudio(intensity, phase, notice, active) {
+        if (!audioContext || audioContext.state !== 'running') return;
+        if (!spatialAudio && active) spatialAudio = createSpatialAudio(audioContext);
+        spatialAudio?.update(intensity, phase, notice, getGeneralVolume()*getEffectsVolume(), active);
+    }
+    function stopSpatialAudio() { spatialAudio?.dispose(); spatialAudio = null; }
     function getGeneralVolume() {
         return audioSettings.value.volumeGeneral / 100;
     }
@@ -80,7 +88,7 @@ export function useAudio() {
 
     // Inicializa o sistema de áudio
     async function init() {
-        if (isInitialized.value) return;
+        if (isInitialized.value) { if(audioContext?.state === 'suspended') await audioContext.resume(); return; }
 
         try {
             // Web Audio API para efeitos sonoros
@@ -285,6 +293,8 @@ export function useAudio() {
         // Sound effects
         loadSound,
         playSound,
+        updateSpatialAudio,
+        stopSpatialAudio,
 
         // Background music
         playBackgroundMusic,

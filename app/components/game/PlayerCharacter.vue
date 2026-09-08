@@ -6,6 +6,10 @@ import { usePlayerStats } from '~/stores/playerStats';
 import type { TresInstance } from '@tresjs/core';
 import * as THREE from 'three';
 import { CameraUtils } from '~/utils/CameraUtils';
+import { DILATION_CONFIG } from '~/utils/spatialDilation';
+const dilation=useSpatialDilation().state;
+const reducedMotion=useState('spatial-reduced-motion',()=>false);
+const cameraShake=shallowRef({x:0,z:0});let stressTime=0;
 
 // Interface para o Stage
 interface Stage {
@@ -40,34 +44,18 @@ const rangeCircleRef = shallowRef<TresInstance | null>(null);
 const currentPosition = shallowRef({ x: initialPosition.x, y: initialPosition.y, z: initialPosition.z });
 
 // ==================== CONFIGURAÇÃO DA CÂMERA ====================
-const CAMERA_HEIGHT = 75;
+const CAMERA_HEIGHT = 52;
 const CAMERA_FOV = 25;
-const ASPECT_RATIO = typeof window !== 'undefined' ? window.innerWidth / window.innerHeight : 16 / 9;
+const viewportWidth = ref(1280), viewportHeight = ref(720);
+function resizeViewport() { viewportWidth.value = window.innerWidth; viewportHeight.value = window.innerHeight; }
+onMounted(() => { resizeViewport(); window.addEventListener('resize', resizeViewport); });
+onUnmounted(() => window.removeEventListener('resize', resizeViewport));
 
 // Posição calculada da câmera (atualizada a cada frame)
 const cameraPosition = shallowRef({ x: initialPosition.x, y: CAMERA_HEIGHT, z: initialPosition.z });
 
 // Opcional: Se você estiver usando um modelo GLTF
 // const { nodes, materials } = await useGLTF('/models/player.gltf', { draco: true });
-
-// Geometria do triângulo no plano XZ (horizontal)
-// O triângulo aponta para Z- (para frente)
-const geometry = new THREE.BufferGeometry();
-const vertices = new Float32Array([
-  0.0, 0.0, -0.8,   // Ponta (frente)
-  -0.5, 0.0, 0.5,   // Base esquerda (trás)
-  0.5, 0.0, 0.5,    // Base direita (trás)
-]);
-
-// Define os índices para formar o triângulo (ambos os lados visíveis)
-const indices = [
-  0, 1, 2,  // Lado de cima
-  0, 2, 1,  // Lado de baixo (invertido para ver dos dois lados)
-];
-
-geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-geometry.setIndex(indices);
-geometry.computeVertexNormals(); // Calcula as normais para iluminação correta
 
 // Círculo mostrando o range de tiro do jogador
 const rangeCircleGeometry = new THREE.BufferGeometry();
@@ -89,13 +77,18 @@ rangeCircleGeometry.setAttribute(
   new THREE.BufferAttribute(new Float32Array(circleVertices), 3)
 );
 
+const rangeMaterial = new THREE.LineBasicMaterial({ color: 0x48b5ce, opacity: 0.12, transparent: true });
+const rangeLine = new THREE.Line(rangeCircleGeometry, rangeMaterial);
+onUnmounted(() => { rangeCircleGeometry.dispose(); rangeMaterial.dispose(); });
+
 // ==================== GAME LOOP (60 FPS) ====================
 /**
  * Loop principal de atualização do jogador
  * ✅ Otimizado: Mutação direta sem overhead reativo
  */
 const { onBeforeRender } = useLoop();
-onBeforeRender(() => {
+const flightView = useState("flight-view", () => ({ x: 0, z: 0, width: 30, height: 23 }));
+onBeforeRender(({ delta }) => {
   if (!playerMeshRef.value || !hpMeshRef.value || !rangeCircleRef.value) return;
 
   const position = currentRun.getPlayerPosition();
@@ -104,6 +97,10 @@ onBeforeRender(() => {
   // Atualiza posição e rotação do jogador
   playerMeshRef.value.position.set(position.x, position.y, position.z);
   playerMeshRef.value.rotation.set(rotation.x, rotation.y, rotation.z);
+  if(currentRun.isPlaying)stressTime+=Math.min(delta,.1);
+  const stress=reducedMotion.value?0:dilation.value.shake;
+  playerMeshRef.value.rotation.z+=Math.sin(stressTime*29)*stress*DILATION_CONFIG.shipShake;
+  cameraShake.value={x:Math.sin(stressTime*23)*stress*DILATION_CONFIG.cameraShake,z:Math.sin(stressTime*19)*stress*DILATION_CONFIG.cameraShake};
 
   // Atualiza barra de HP
   hpMeshRef.value.position.set(position.x, position.y + 2, position.z);
@@ -114,22 +111,17 @@ onBeforeRender(() => {
 
   currentPosition.value = { x: position.x, y: position.y, z: position.z };
 
-  // Calcula posição da câmera com limites do stage
-  const stage = currentRun.currentStage as Stage | null;
-  if (stage?.width && stage?.height) {
-    const mapBounds = CameraUtils.stageToMapBounds(stage.width, stage.height);
-    cameraPosition.value = CameraUtils.calculateCameraPosition(
-      { x: position.x, z: position.z },
-      mapBounds,
-      CAMERA_HEIGHT,
-      CAMERA_FOV,
-      ASPECT_RATIO
-    );
-  } else {
-    // Fallback: segue o jogador diretamente
-    cameraPosition.value = { x: position.x, y: CAMERA_HEIGHT, z: position.z };
-  }
-});
+  // A bounded look-ahead gives motion at the invisible edge without drifting indefinitely.
+  const move = currentRun.getMoveVector();
+  const blend = 1 - Math.exp(-Math.min(delta, .1) * 3);
+  const target = { x: position.x + move.x * 2.6, z: position.z + move.z * 2.6 };
+  cameraPosition.value = {
+    x: cameraPosition.value.x + (target.x - cameraPosition.value.x) * blend,
+    y: CAMERA_HEIGHT,
+    z: cameraPosition.value.z + (target.z - cameraPosition.value.z) * blend,
+  };
+  const height = 2 * CAMERA_HEIGHT * Math.tan(CAMERA_FOV * Math.PI / 360);
+  flightView.value = { x: cameraPosition.value.x, z: cameraPosition.value.z, height, width: height * viewportWidth.value / Math.max(1, viewportHeight.value) };});
 </script>
 
 <template>
@@ -137,13 +129,11 @@ onBeforeRender(() => {
     ✅ Template ref conecta ao mesh Three.js
     Posição inicial é setada uma vez, depois atualizada via ref
   -->
-  <TresMesh
-    ref="playerMeshRef"
+  <TresGroup ref="playerMeshRef"
     name="PlayerCharacter"
-    :geometry="geometry"
+    :visible="true"
   >
-    <TresMeshStandardMaterial :color="PlayerBaseStats.color" :side="2" />
-  </TresMesh>
+    <GameKestrelShip /></TresGroup>
   <TresMesh
     ref="hpMeshRef"
     name="PlayerHPIndicator"
@@ -172,17 +162,19 @@ onBeforeRender(() => {
   <!-- Círculo mostrando o range de tiro -->
   <primitive
     ref="rangeCircleRef"
-    :object="new THREE.Line(
-      rangeCircleGeometry,
-      new THREE.LineBasicMaterial({ color: 0x00ff00, opacity: 0.3, transparent: true })
-    )"
+    :object="rangeLine"
     name="RangeCircle"
   />
 
   <TresPerspectiveCamera
-    :position="[cameraPosition.x, cameraPosition.y, cameraPosition.z]"
-    :look-at="[cameraPosition.x, 0, cameraPosition.z]"
+    :position="[cameraPosition.x+cameraShake.x, cameraPosition.y, cameraPosition.z+cameraShake.z]"
+    :look-at="[cameraPosition.x+cameraShake.x, 0, cameraPosition.z+cameraShake.z]"
     :fov="CAMERA_FOV"
     name="PlayerCamera"
   />
 </template>
+
+
+
+
+

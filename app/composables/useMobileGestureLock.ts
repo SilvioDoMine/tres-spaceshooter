@@ -53,7 +53,7 @@ export function useMobileGestureLock() {
     }
 
     // Previne zoom com pinch (2+ dedos)
-    if (e.touches.length > 1) {
+    if (e.touches.length > 1 && !(e.target as HTMLElement).closest('canvas')) {
       e.preventDefault();
     }
   };

@@ -1,6 +1,8 @@
 <script setup lang="js">
 import { LEVEL_1 } from '~/games/levels/LevelOneConfig';
 import { useAudio } from '~/composables/useAudio';
+import UiFlightRadar from '~/components/ui/FlightRadar.vue';
+import UiTargetBeacons from '~/components/ui/TargetBeacons.vue';
 
 // Page metadata
 useHead({
@@ -112,6 +114,7 @@ onUnmounted(() => {
   <div class="relative w-full h-dvh">
     <TresCanvas
       clear-color="#000814"
+      :dpr="[1, 1.5]"
       window-size
     >
       <GameOrchestrator>
@@ -140,6 +143,9 @@ onUnmounted(() => {
       <UiVirtualJoystick />
       <UiResources />
       <UiLevel />
+      <UiDamageFeedback /><UiFlightRadar /><UiTargetBeacons /><UiSpatialDilation />
     </ClientOnly>
   </div>
 </template>
+
+

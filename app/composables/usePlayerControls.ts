@@ -16,6 +16,7 @@ import { onMounted, onUnmounted } from 'vue';
 export function usePlayerControls() {
   const currentRun = useCurrentRunStore();
   const projectileStore = useProjectileStore();
+  const dilation = useSpatialDilation();
 
   // Estado interno para rastrear quais teclas estão pressionadas
   const keysPressed = {
@@ -109,21 +110,23 @@ export function usePlayerControls() {
     const speed = currentRun.currentMoveSpeed;
 
     // Calcula o deslocamento em 3D
-    const dx = movement.x * speed * delta;
+    const spatial = dilation.update(position, movement, delta);
+    if(spatial.damage>0){currentRun.takeDamage(spatial.damage);if(currentRun.currentHealth<=0)return}
+    const dx = spatial.x * speed * delta;
     const dy = movement.y * speed * delta;
-    const dz = movement.z * speed * delta;
+    const dz = spatial.z * speed * delta;
 
     // Verifica se pode mover, por exemplo está no limite do mapa
-    if (! currentRun.canPlayerMoveTo(position.x + dx, position.y + dy, position.z + dz)) {
-      // Se não pode mover, sai da função
-      return;
-    }
+    // Resolve each horizontal axis independently so diagonal movement slides
+    // along a boundary instead of freezing the ship and its weapon cooldown.
+    const allowedX = currentRun.canPlayerMoveTo(position.x + dx, position.y, position.z);
+    const allowedZ = currentRun.canPlayerMoveTo(position.x, position.y, position.z + dz);
 
     // ✅ MUTAÇÃO DIRETA: Atualiza valores sem disparar reatividade
     // Com shallowRef, mutations internas não disparam watchers
-    position.x += dx;
+    if (allowedX) position.x += dx;
     position.y += dy;
-    position.z += dz;
+    if (allowedZ) position.z += dz;
 
     // Rotação suave na direção do movimento
     if (dx !== 0 || dy !== 0 || dz !== 0) {

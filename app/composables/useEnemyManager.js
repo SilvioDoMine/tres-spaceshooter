@@ -2,6 +2,7 @@ import { useEnemyManagerStore } from '~/stores/enemyManagerStore';
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { useMissions } from '~/composables/useMissions';
 import { storeToRefs } from 'pinia';
+import { emitImpact } from '~/utils/combatEffects';
 
 export const baseStats = {
   miniasteroid: {
@@ -451,6 +452,7 @@ export function useEnemyManager() {
     }
 
     enemy.health -= damage;
+    emitImpact(enemy.position.x, enemy.position.z, enemy.health <= 0);
 
     // combat text
     useCombatTextStore().emitForTarget(
@@ -523,34 +525,11 @@ export function useEnemyManager() {
    * @returns { x: number, y: number, z: number }
    */
   function generateRandomSpawnPosition() {
-    const stageWidth = useCurrentRun.currentStage.width;
-    const stageHeight = useCurrentRun.currentStage.height;
-
-    const playerX = useCurrentRun.playerPosition.x;
-    const playerZ = useCurrentRun.playerPosition.z;
-
-    // Evitar spawnar muito perto do jogador
-    // Podemos definir uma distância mínima (ex: 5 unidades)
-    // Se não existir espaço suficiente, spawne no limite máximo.
-    const minDistanceFromPlayer = 10;
-
-    // Lembrar de subtrair o tamanho do inimigo das bordas, se necessário
-    // adicionar um espaçamento entre o jogador e o spawn dos inimigos
-    let x, y = 0, z;
-    do {
-      x = Math.random() * stageWidth - stageWidth / 2;
-      z = Math.random() * stageHeight - stageHeight / 2;
-    } while (Math.hypot(x - playerX, z - playerZ) < minDistanceFromPlayer);
-
-
-
-    // let x = Math.random() * stageWidth - stageWidth / 2;
-    // let y = 0; // Altura fixa
-    // let z = Math.random() * stageHeight - stageHeight / 2;
-
-    return { x, y, z };
+    const player = useCurrentRun.getPlayerPosition();
+    const angle = Math.random() * Math.PI * 2;
+    const radius = 12 + Math.random() * 7;
+    return { x: player.x + Math.cos(angle) * radius, y: 0, z: player.z + Math.sin(angle) * radius };
   }
-
   function missionsOnComplete() {
     const enemiesCount = Object.values(killedEnemies.value)
       .reduce((total, count) => total + count, 0);
@@ -573,3 +552,4 @@ export function useEnemyManager() {
     missionsOnComplete,
   };
 }
+

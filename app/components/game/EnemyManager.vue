@@ -1,4 +1,5 @@
 <script setup lang="js">
+import EnemyRaider from './enemies/EnemyRaider.vue';
 import { shallowRef } from 'vue';
 import { useLoop } from '@tresjs/core';
 import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
@@ -71,38 +72,26 @@ onBeforeRender(() => {
 
     if (enemy.state === 'spawning') {
       scale = enemy.spawnProgress;
-      opacity = enemy.spawnProgress * 0.3;
+      opacity = enemy.spawnProgress;
       transparent = true;
     } else if (enemy.state === 'dying') {
       const progress = enemy.deathProgress;
-      scale = 1 - progress;
-      opacity = 1 - progress;
+      scale = 1;
+      opacity = Math.max(0, 1 - progress * 5);
       transparent = true;
-      deathRotation = progress * Math.PI * 2;
+      deathRotation = 0;
     }
 
     // Atualiza escala
     visualMesh.scale.setScalar(scale);
 
     // Atualiza material (opacidade e transparência)
-    if (visualMesh.material) {
-      visualMesh.material.opacity = opacity;
-      visualMesh.material.transparent = transparent;
-    }
+    visualMesh.traverse((part) => { if (!part.material) return; const materials = Array.isArray(part.material) ? part.material : [part.material]; materials.forEach((material) => { material.opacity = opacity; material.transparent = transparent; }); });
 
-    // Atualiza rotação baseado no tipo
-    if (enemy.shape === 'square' || enemy.shape === 'cone') {
-      // Square e Cone: rotação no eixo Y
-      const rotY = (enemy.rotation || 0) + deathRotation;
-      visualMesh.rotation.set(0, rotY, 0);
-    } else if (enemy.shape === 'dodecahedron') {
-      // Dodecahedron: rotação 3D customizada
-      visualMesh.rotation.set(
-        enemy.rotation?.x || 0,
-        deathRotation,
-        enemy.rotation?.z || 0
-      );
-    }
+    // Modular ships keep their hull upright and face their target.
+    const player = useCurrentRunStore().getPlayerPosition();
+    const heading = Math.atan2(enemy.position.x - player.x, enemy.position.z - player.z);
+    visualMesh.rotation.set(0, heading + deathRotation, deathRotation * .2);
   });
 
   // Limpa refs de inimigos removidos
@@ -128,7 +117,7 @@ onUnmounted(() => {
     >
       <!-- Componente dinâmico baseado no shape do inimigo -->
       <component
-        :is="enemyComponents[enemy.shape]"
+        :is="EnemyRaider"
         :enemy="enemy"
         :base-stats="baseStats"
         :set-visual-mesh-ref="setVisualMeshRef"
@@ -160,3 +149,7 @@ onUnmounted(() => {
     </TresGroup>
   </TresGroup>
 </template>
+
+
+
+
