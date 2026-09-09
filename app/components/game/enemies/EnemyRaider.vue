@@ -5,11 +5,14 @@ const seed=[...String(props.enemy.id)].reduce((n,c)=>(Math.imul(n,31)+c.charCode
 const hull=buildRaider(seed)
 const size=computed(()=>props.baseStats[props.enemy.type].size)
 const engine=shallowRef();let time=0
-useLoop().onBeforeRender(({delta})=>{time+=Math.min(delta,.1);if(engine.value)engine.value.scale.z=.9+Math.sin(time*18+seed)*.12})
+useLoop().onBeforeRender(({delta})=>{
+ time+=Math.min(delta,.1);
+ if(engine.value)engine.value.scale.z=.9+Math.sin(time*18+seed)*.12;
+})
 onUnmounted(()=>disposeModel(hull))
 </script>
 <template>
- <TresGroup :position="[enemy.position?.x||0,enemy.position?.y||0,enemy.position?.z||0]" :scale="enemy.state==='spawning'?enemy.spawnProgress:1" :ref="setVisualMeshRef(enemy.id)" :name="`enemy-visual-${enemy.id}`">
+ <TresGroup :ref="setVisualMeshRef(enemy.id)" :name="`enemy-visual-${enemy.id}`">
   <TresGroup :scale="size"><primitive :object="hull" />
    <TresGroup :position="[0,.015,.7]" ref="engine">
     <TresMesh v-for="side in [-1,1]" :key="side" :position="[side*.28,0,.2]" :rotation="[-Math.PI/2,0,0]">

@@ -3,6 +3,7 @@ import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { useMissions } from '~/composables/useMissions';
 import { storeToRefs } from 'pinia';
 import { emitImpact } from '~/utils/combatEffects';
+import { combatTier } from '~/utils/combatPatterns';
 
 export const baseStats = {
   miniasteroid: {
@@ -104,7 +105,7 @@ export const baseStats = {
     shape: 'square',
     size: 3,
     speed: 1.1,
-    health: 600,
+    health: 900,
     onHitDamage: 999,
     distanceKeep: 20,
     shotDamage: 200,
@@ -140,7 +141,7 @@ export const baseStats = {
     shape: 'cone',
     size: 2,
     speed: 3,
-    health: 800,
+    health: 1600,
     onHitDamage: 9999,
     distanceKeep: 10,
     chargeRecoveryCooldown: 1, // Sem cooldown após charge
@@ -384,6 +385,12 @@ export function useEnemyManager() {
       overrides = {},
     } = options;
 
+    const tier=combatTier(useCurrentRun.currentStageIndex);
+    const boss=/boss/i.test(enemyType);
+    // Durable hulls retain their configured health. Player upgrades still deal
+    // their full damage; progression is fixed by room, never by player loadout.
+    const health=Math.round(enemyStats.health*(1+tier*.65));
+    const contact=Math.round((boss?60:enemyType==='kamikaze'?40:24)+tier*18);
     // Crio um novo inimigo
     const newEnemy = {
       id: `${enemyType}_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
@@ -394,8 +401,10 @@ export function useEnemyManager() {
       spawnTimer: delay,
       totalSpawnTime: delay,
       spawnProgress: state === 'spawning' ? 0 : 1,
-      maxHealth: enemyStats.health,
       ...enemyStats,
+      health,
+      maxHealth: health,
+      onHitDamage: enemyType==='angel'?0:contact,
       ...overrides, // Permite sobrescrever qualquer propriedade
     };
 
@@ -418,9 +427,7 @@ export function useEnemyManager() {
       // Spawna a quantidade especificada de inimigos do tipo dado
       for (let i = 0; i < count; i++) {
         spawnEnemy(enemyType, {
-          maxHealth: Math.floor(baseStats[enemyType].health * multiplier(useCurrentRun.currentStage.level)),
-          health: Math.floor(baseStats[enemyType].health * multiplier(useCurrentRun.currentStage.level)),
-          damage: Math.floor(baseStats[enemyType].onHitDamage * multiplier(useCurrentRun.currentStage.level)),
+          delay: Math.max(.8, delay),
         });
       }
     });
@@ -458,7 +465,7 @@ export function useEnemyManager() {
     useCombatTextStore().emitForTarget(
       enemyId,
       'damage',
-      damage
+      Math.round(damage)
     );
 
     const onDeathBehaviorFunc = onDeathBehavior[enemy.type];

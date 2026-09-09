@@ -1,319 +1,122 @@
 import { emitImpact } from '~/utils/combatEffects';
 import { defineStore } from 'pinia';
-import { ref, shallowRef } from 'vue';
+import { shallowRef } from 'vue';
 import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
 import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import { useSkillStore, SkillsList } from '~/stores/SkillStore';
+import { advanceShot, segmentHit } from '~/utils/combatPatterns';
 
+const orb = { speed: 4, damage: 18, size: .22, range: 25, color: '#52caff' };
 export const projectilesType = {
-  player: {
-    speed: PlayerBaseStats.projectiles.shotSpeed,
-    damage: PlayerBaseStats.projectiles.damage,
-    size: PlayerBaseStats.projectiles.size,
-    range: PlayerBaseStats.projectiles.range,
-    color: PlayerBaseStats.color,
-  },
-  ufo: {
-    speed: 12,
-    damage: 100,
-    size: 0.25,
-    range: 10,
-    color: baseStats.ufo.color,
-  },
-  ufofast: {
-    speed: 8,
-    damage: 150,
-    size: 0.3,
-    range: 20,
-    color: baseStats.ufofast.color,
-  },
-  boss: {
-    speed: 8,
-    damage: 200,
-    size: 0.5,
-    range: 20,
-    color: baseStats.boss.color,
-  },
-  miniboss: {
-    speed: 12,
-    damage: 200,
-    size: 0.5,
-    range: 20,
-    color: baseStats.miniboss.color,
-  }
+  player: { speed: PlayerBaseStats.projectiles.shotSpeed, damage: PlayerBaseStats.projectiles.damage,
+    size: PlayerBaseStats.projectiles.size, range: PlayerBaseStats.projectiles.range, color: '#38cfff' },
+  enemyOrb: {...orb}, ufo: {...orb}, ufofast: {...orb}, boss: {...orb}, miniboss: {...orb},
+  enemyPlasma: {...orb, color: '#ff719c'},
+  enemyMissile: {...orb, color: '#ffbf66'},
 };
-
 export const useProjectileStore = defineStore('projectileStore', () => {
-  const enemyManager = useEnemyManager();
-  const currentRunStore = useCurrentRunStore();
-  const playerStats = usePlayerStats();
-  const skillStore = useSkillStore(); // ✅ OTIMIZAÇÃO: Inicializa uma vez fora do loop
-
-  // ✅ OTIMIZAÇÃO: shallowRef para arrays mutados diretamente
+  const enemyManager = useEnemyManager(), currentRunStore = useCurrentRunStore();
+  const playerStats = usePlayerStats(), skillStore = useSkillStore();
   const projectiles = shallowRef([]);
+  let hitGrace = 0, serial = 0;
 
-  function update(deltaTime) {
-    // Atualiza a lógica dos projéteis
-    checkCollisions();
-
-    // ✅ OTIMIZAÇÃO: Filtra projéteis expirados ao invés de splice no loop
-    const projectilesToKeep = [];
-
-    projectiles.value.forEach((projectile) => {
-      // Move o projétil na direção especificada
-      let distance = projectile.speed * deltaTime;
-
-      // If if player projectile, apply projectile speed multiplier
-      if (projectile.ownerType === 'player') {
-        distance *= playerStats.getProjectileSpeedMultiplier;
-      }
-
-      // ✅ MUTAÇÃO DIRETA: Sem overhead de reatividade
-      projectile.position.x += projectile.direction.x * distance;
-      projectile.position.z += projectile.direction.z * distance;
-      projectile.distanceTraveled += distance;
-
-      // Verifica se o projétil atingiu seu alcance máximo
-      let projectileRange = projectile.range;
-
-      if (projectile.ownerType === 'player') {
-        projectileRange *= playerStats.getRangeMultiplier;
-      }
-
-      // Só mantém projéteis que não expiraram E não foram marcados para remoção
-      if (projectile.distanceTraveled < projectileRange && !projectile._markedForRemoval) {
-        projectilesToKeep.push(projectile);
-      }
-    });
-
-    // ✅ Atualiza array uma única vez
-    projectiles.value = projectilesToKeep;
+  function spawnProjectile(type, position, direction, ownerId, ownerType, hits=1, bounces=0, damage=0, ignoreEnemies=[], options={}) {
+    const config = projectilesType[type], norm = Math.hypot(direction.x,direction.z);
+    if (!config || !norm || projectiles.value.length >= 480) return null;
+    if (!options.silent) {
+      if (ownerType === 'player') useAudio().playSound('shoot-player', .65, 1);
+      else if (baseStats[type]?.shotSound) useAudio().playSound(baseStats[type].shotSound,.35);
+      emitImpact(position.x,position.z,false,'shot',ownerType !== 'player');
+    }
+    const projectile = {
+      ...config, ...options, id: 'projectile-'+(++serial), type, ownerId, ownerType,
+      position: {...position}, direction: {x:direction.x/norm,z:direction.z/norm},
+      distanceTraveled: 0, originalHits: hits, currentHits: hits, hitsList: [...ignoreEnemies],
+      bounces, damage: damage || config.damage, trail: [],
+      power: options.power ?? (ownerType === 'player' ? playerStats.getDamageMultiplier : 1),
+    };
+    projectiles.value.push(projectile);
+    return projectile;
   }
-  
-  function checkCollisions() {
-    // ✅ OTIMIZAÇÃO: Marca projéteis para remoção ao invés de splice direto
-    projectiles.value.forEach((projectile) => {
-      if (projectile.ownerType === 'player') {
-        // Verifica colisão com inimigos
-        enemyManager.activeEnemies.value.forEach((enemy) => {
-          // Se inimigo não estiver ativo, ignora
-          if (enemy.state !== 'active') {
-            return;
-          }
-
-          if (
-            isColliding(
-              projectile.position,
-              enemy.position,
-              1 // threshold de colisão - AINDA chumbado porque o tamanho dos inimigos não está definido
-            )
-          ) {
-            if (projectile.hitsList.includes(enemy.id)) {
-              return; // Já atingiu esse inimigo antes
-            }
-
-            projectile.hitsList.push(enemy.id);
-
-            // Aplica dano ao inimigo
-            enemyManager.takeDamage(enemy.id, projectile.damage, 'shot');
-
-            if (projectile.currentHits <= 1) {
-              projectile._markedForRemoval = true; // ✅ Marca para remoção
-            } else {
-              projectile.currentHits -= 1;
-            }
-
-            // if ricochet skill, calculate new direction towards nearest enemy
-            if (skillStore.hasSkill('ricochet_shot')) {
-              const skillLevel = skillStore.getSkillLevel('ricochet_shot');
-              // o range do ricochete é igual ao do projetil normal. Nível aumenta a quantidade de bounces depois.
-              const nearestEnemy = nearestEnemyFromPosition(projectile.position, projectile.range * playerStats.getRangeMultiplier, enemy.id);
-
-              if (! nearestEnemy) {
-                return; // sem inimigos próximos, não faz ricochete
-              }
-
-              // se o inimigo mais próximo for o mesmo que foi atingido, não faz ricochete
-              if (nearestEnemy.id === enemy.id) {
-                return;
-              }
-
-              if (projectile.bounces <= 0) {
-                return; // Não tem bounces restantes
-              }
-
-              const newBounces = projectile.bounces - 1;
-              // Calcula o dano do projétil ricocheteado
-              const newDamage = projectile.damage * SkillsList.ricochet_shot.levels[skillLevel].value;
-
-              // Calcula a direção do projétil para o inimigo mais próximo
-              const dirX = nearestEnemy.position.x - projectile.position.x;
-              const dirZ = nearestEnemy.position.z - projectile.position.z;
-              const length = Math.hypot(dirX, dirZ);
-
-              // Cria um novo projétil na direção do inimigo mais próximo
-              const newDirection = {
-                x: dirX / length,
-                z: dirZ / length,
-              };
-              
-              spawnProjectile(
-                projectile.type,
-                { ...projectile.position },
-                newDirection,
-                projectile.ownerId,
-                projectile.ownerType,
-                projectile.originalHits, // mantém a contagem original de hits
-                newBounces,
-                newDamage,
-                [...projectile.hitsList]
-              )
-            }
-          }
-        });
-      } else if (projectile.ownerType === 'enemy') {
-        // Verifica colisão com o jogador
-        if (
-          isColliding(
-            projectile.position,
-            currentRunStore.getPlayerPosition(),
-            1 // threshold de colisão - AINDA chumbado porque o tamanho do jogador não está definido
-          )
-        ) {
-          currentRunStore.takeDamage(projectile.damage);
-
-          if (projectile.currentHits <= 1) {
-            projectile._markedForRemoval = true; // ✅ Marca para remoção
-          } else {
-            projectile.currentHits -= 1;
+  function nearestEnemyFromPosition(position, maxRange=Infinity, ownerId=null, ignore=[]) {
+    let nearest=null,min=maxRange;
+    for(const enemy of enemyManager.activeEnemies.value) {
+      if(enemy.state!=='active' || enemy.id===ownerId || ignore.includes(enemy.id))continue;
+      const distance=Math.hypot(enemy.position.x-position.x,enemy.position.z-position.z);
+      if(distance<min){nearest=enemy;min=distance;}
+    }
+    return nearest;
+  }
+  function nearestEnemyFromPlayer() {
+    return nearestEnemyFromPosition(currentRunStore.getPlayerPosition(),projectilesType.player.range*playerStats.getRangeMultiplier);
+  }
+  function collide(projectile,start) {
+    if(projectile.ownerType==='enemy') {
+      // A volley cannot cause several damage events in one instant.
+      if(segmentHit(start,projectile.position,currentRunStore.getPlayerPosition(),.32+projectile.size)!==null) {
+        projectile._markedForRemoval=true;
+        if(hitGrace<=0){hitGrace=.65;currentRunStore.takeDamage(projectile.damage);}
+      }
+      return;
+    }
+    const contacts=[];
+    for(const enemy of enemyManager.activeEnemies.value) {
+      if(enemy.state!=='active'||projectile.hitsList.includes(enemy.id))continue;
+      const t=segmentHit(start,projectile.position,enemy.position,Math.max(.38,enemy.size*.48)+.12);
+      if(t!==null)contacts.push({enemy,t});
+    }
+    contacts.sort((a,b)=>a.t-b.t);
+    for(const {enemy,t} of contacts) {
+      if(projectile._markedForRemoval)break;
+      projectile.hitsList.push(enemy.id);
+      enemyManager.takeDamage(enemy.id,projectile.damage,'shot');
+      if(projectile.bounces>0) {
+        const target=nearestEnemyFromPosition(enemy.position,projectile.range*playerStats.getRangeMultiplier,enemy.id,projectile.hitsList);
+        if(target) {
+          projectile.position.x=start.x+(projectile.position.x-start.x)*t;
+          projectile.position.z=start.z+(projectile.position.z-start.z)*t;
+          const dx=target.position.x-projectile.position.x,dz=target.position.z-projectile.position.z,length=Math.hypot(dx,dz);
+          if(length>.001) {
+            projectile.direction={x:dx/length,z:dz/length};projectile.bounces--;
+            const level=skillStore.getSkillLevel('ricochet_shot')||1;
+            projectile.damage*=SkillsList.ricochet_shot.levels[level].value;
+            projectile.distanceTraveled=0;projectile.ricochet=true;projectile.rearTurn=null;
+            projectile.trail.push({...projectile.position});
+            break;
           }
         }
       }
-    });
-  }
-
-  function isColliding(pos1, pos2, threshold) {
-    return Math.hypot(pos1.x - pos2.x, pos1.z - pos2.z) < threshold;
-  }
-
-  function spawnProjectile(type, position, direction, ownerId, ownerType, hits = 1, bounces = 0, damage = 0, ignoreEnemies = []) {
-    const config = projectilesType[type];
-
-    if (! config) {
-      console.warn(`Projectile type "${type}" not recognized.`);
-      return;
+      projectile.currentHits--;
+      if(projectile.currentHits<=0)projectile._markedForRemoval=true;
     }
-
-    // Play sound
-    if (ownerType === 'player') {
-      const randomPitch = 0.5 + Math.random() * 1; // Entre 0.5 e 1.0
-      useAudio().playSound('shoot-player', 1, 1);
-    } else {
-      const enemySound = baseStats[ownerType]?.shotSound;
-
-      if (enemySound) {
-        useAudio().playSound(enemySound);
+  }
+  function update(deltaTime) {
+    hitGrace=Math.max(0,hitGrace-deltaTime);
+    const keep=[];
+    for(const projectile of projectiles.value) {
+      if(projectile._markedForRemoval)continue;
+      const distance=projectile.speed*deltaTime*(projectile.ownerType==='player'?playerStats.getProjectileSpeedMultiplier:1);
+      // Curves use short segments; faster straight shots use swept collisions.
+      const steps=projectile.rearTurn?Math.max(1,Math.ceil(distance/.22)):1;
+      for(let step=0;step<steps;step++) {
+        const start={...projectile.position};
+        advanceShot(projectile,distance/steps);projectile.distanceTraveled+=distance/steps;
+        collide(projectile,start);
+        if(projectile._markedForRemoval)break;
       }
-    }
-
-    emitImpact(position.x,position.z,false,'shot',ownerType!=='player');
-
-    // ✅ OTIMIZAÇÃO: Não mutamos o config compartilhado, aplicamos damage diretamente
-    projectiles.value.push({
-      id: `projectile-${Date.now()}_${Math.random()}`,
-      type: type,
-      ownerId: ownerId,
-      ownerType: ownerType,
-      position: { ...position },
-      direction: { ...direction },
-      distanceTraveled: 0,
-      originalHits: hits,
-      currentHits: hits,
-      hitsList: ignoreEnemies,
-      bounces: bounces,
-      ...config, // speed, size, range, color (mas não damage)
-      damage: damage || config.damage, // ✅ Sobrescreve damage sem mutar config
-    });
-  }
-
-  function cleanup() {
-    projectiles.value = [];
-  }
-
-  function nearestEnemyFromPlayer() {
-    const playerPos = currentRunStore.getPlayerPosition();
-    let nearestEnemy = null;
-    let minDistance = Infinity;
-
-    enemyManager.activeEnemies.value.forEach(enemy => {
-      // if enemy is spawning, ignore
-      if (enemy.state !== 'active') return;
-
-      const dist = Math.hypot(
-        enemy.position.x - playerPos.x,
-        enemy.position.z - playerPos.z
-      );
-
-      if (dist < minDistance) {
-        minDistance = dist;
-        nearestEnemy = enemy;
+      if(projectile.ricochet || projectile.rearTurn) {
+        projectile.trail.push({...projectile.position});
+        while(projectile.trail.length>14)projectile.trail.shift();
       }
-    });
-
-    // Se o inimigo mais próximo estiver longe do range do tiro, retorna null
-    // NOTA: Essa mecanica pode ser removida.
-    if (minDistance > (projectilesType.player.range * playerStats.getRangeMultiplier)) {
-      return null;
+      const range=projectile.range*(projectile.ownerType==='player'?playerStats.getRangeMultiplier:1)
+        +(projectile.rearTurn?(Math.PI+3)*projectile.rearTurn.radius:0);
+      if(!projectile._markedForRemoval && projectile.distanceTraveled<range)keep.push(projectile);
     }
-
-    return nearestEnemy;
+    projectiles.value=keep;
   }
-
-  function nearestEnemyFromPosition(position, maxRange = Infinity, ownerId = null) {
-    let nearestEnemy = null;
-    let minDistance = Infinity;
-
-    enemyManager.activeEnemies.value.forEach(enemy => {
-      // if enemy is not active, ignore
-      if (enemy.state !== 'active') return;
-
-      // Ignore self
-      if (ownerId && enemy.id === ownerId) return;
-
-      const dist = Math.hypot(
-        enemy.position.x - position.x,
-        enemy.position.z - position.z
-      );
-
-      if (dist < minDistance) {
-        minDistance = dist;
-        nearestEnemy = enemy;
-      }
-    });
-
-    // Se o inimigo mais próximo estiver longe do range do tiro, retorna null
-    if (minDistance > maxRange) {
-      return null;
-    }
-
-    return nearestEnemy;
-  }
-
-  return {
-    update,
-    cleanup,
-
-    spawnProjectile,
-    checkCollisions,
-    projectiles,
-
-    nearestEnemyFromPlayer,
-    nearestEnemyFromPosition,
-  };
+  function checkCollisions(){for(const p of projectiles.value)if(!p._markedForRemoval)collide(p,p.position);}
+  function cleanup(){projectiles.value=[];hitGrace=0;}
+  return {update,cleanup,spawnProjectile,checkCollisions,projectiles,nearestEnemyFromPlayer,nearestEnemyFromPosition};
 });
-
-// make sure to pass the right store definition, `useAuth` in this case.
-if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useProjectileStore, import.meta.hot))
-}
+if(import.meta.hot)import.meta.hot.accept(acceptHMRUpdate(useProjectileStore,import.meta.hot));

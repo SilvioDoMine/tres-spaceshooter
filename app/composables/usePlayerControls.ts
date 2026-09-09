@@ -12,6 +12,7 @@
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { useProjectileStore } from '~/stores/projectileStore';
 import { onMounted, onUnmounted } from 'vue';
+import { shotFormation, muzzlePosition, rotateShot } from '~/utils/combatPatterns';
 
 export function usePlayerControls() {
   const currentRun = useCurrentRunStore();
@@ -184,315 +185,39 @@ export function usePlayerControls() {
       // Verifica se o cooldown do tiro terminou
       if (currentRun.shotCooldown <= 0) {
         if (nearestEnemy && nearestEnemy.position) {
-          // Se tem a skill de tiro traseiro, atira pra trás também
-          const { hasSkill, getSkillLevel } = useSkillStore();
-          const hasMultishot = hasSkill('multishot');
-          const skillLevelMultishot = getSkillLevel('multishot');
-          const multishotTimeout = 50; // ms entre os tiros do multishot
+          const skills = useSkillStore();
+          const multi = skills.getSkillLevel('multishot') || 0;
           const damage = PlayerBaseStats.projectiles.damage * usePlayerStats().getDamageMultiplier;
-
-          // Calcula o vetor de direção do jogador para o inimigo
-          const dirX = nearestEnemy.position.x - position.x;
-          const dirZ = nearestEnemy.position.z - position.z;
-
-          // Normaliza o vetor (magnitude = 1)
-          const magnitude = Math.sqrt(dirX * dirX + dirZ * dirZ);
-
+          const dirX = nearestEnemy.position.x - position.x, dirZ = nearestEnemy.position.z - position.z;
+          const magnitude = Math.hypot(dirX, dirZ);
           if (magnitude > 0) {
-            const direction = {
-              x: dirX / magnitude,
-              y: 0, // Y fixo, plano X-Z
-              z: dirZ / magnitude
+            const direction = { x: dirX / magnitude, z: dirZ / magnitude };
+            const hits = 1 + (skills.getSkillLevel('piercing_shot') || 0);
+            const bounces = skills.getSkillLevel('ricochet_shot') || 0;
+            const power = usePlayerStats().getDamageMultiplier;
+            let sounded = false;
+            const fire = (heading: {x:number,z:number}, baseSide = 0, multiplier = 1, rearSide = 0, count = 1 + multi) => {
+              shotFormation(count).forEach((slot, index) => {
+                const origin = muzzlePosition(position, heading, slot.side + baseSide, slot.forward);
+                const efficiency = !multi || index === Math.floor(count/2) ? 1 : SkillsList.multishot.levels[multi].value;
+                projectileStore.spawnProjectile('player', origin, heading, 'player', 'player',
+                  hits, bounces, damage * multiplier * efficiency, [], {
+                    power, silent: sounded,
+                    rearTurn: rearSide ? { origin: {...origin}, forward: {...heading}, side: slot.side < 0 ? -1 : 1,
+                      radius: .65 + Math.abs(slot.side)*.25, traveled: 0 } : null,
+                  });
+                sounded = true;
+              });
             };
-
-            // contagem de hits que o projetil pode dar
-            let hits = 1;
-            // contagem de ricochetes que o projetil pode dar
-            let bounces = 0;
-            
-            if (hasSkill('piercing_shot')) {
-              const skillLevel = getSkillLevel('piercing_shot');
-              hits += skillLevel; // Cada nível adicional adiciona 1 hit extra
+            fire(direction);
+            const rear = skills.getSkillLevel('back_shot') || 0;
+            if (rear) {
+              fire(direction, 0, SkillsList.back_shot.levels[rear].value, 1, Math.max(1 + multi, rear));
             }
-
-            if (hasSkill('ricochet_shot')) {
-              const skillLevel = getSkillLevel('ricochet_shot');
-              bounces += skillLevel; // Cada nível adicional adiciona 1 bounce extra
-              console.log('Ricochet shots bounces:', bounces);
-            }
-
-            // Atira um projetil na direção do inimigo mais próximo
-            projectileStore.spawnProjectile(
-              'player', // type
-              { x: position.x, y: position.y, z: position.z }, // position
-              direction, // direção normalizada
-              'player',
-              'player',
-              hits,
-              bounces,
-              damage
-            );
-
-            if (hasMultishot) {
-              let localDelay = 0;
-              for (let i = 1; i <= skillLevelMultishot; i++) {
-                setTimeout(() => {
-                  projectileStore.spawnProjectile(
-                    'player', // type
-                    { x: position.x, y: position.y, z: position.z }, // position
-                    direction, // direção normalizada
-                    'player',
-                    'player',
-                    hits,
-                    bounces,
-                    damage * SkillsList.multishot.levels[skillLevelMultishot].value
-                  );
-                }, localDelay + multishotTimeout);
-                localDelay += multishotTimeout;
-              }
-            }
-
-            if (hasSkill('back_shot')) {
-              // If level 1, shoots one backwards middle centered
-              // Level 2, shoots two backwards side by side
-              const skillLevel = getSkillLevel('back_shot');
-
-              if (skillLevel == 1) {
-                // Tiro reto para trás
-                const backDirection = {
-                  x: -direction.x,
-                  y: 0,
-                  z: -direction.z
-                };
-
-                projectileStore.spawnProjectile(
-                  'player',
-                  { x: position.x, y: position.y, z: position.z },
-                  backDirection,
-                  'player',
-                  'player',
-                  hits,
-                  bounces,
-                  damage * SkillsList.back_shot.levels[skillLevel].value
-                );
-
-                if (hasMultishot) {
-                  let localDelay = 0;
-                  for (let i = 1; i <= skillLevelMultishot; i++) {
-                    setTimeout(() => {
-                      projectileStore.spawnProjectile(
-                        'player', // type
-                        { x: position.x, y: position.y, z: position.z }, // position
-                        backDirection, // direção normalizada
-                        'player',
-                        'player',
-                        hits,
-                        bounces,
-                        damage * SkillsList.back_shot.levels[skillLevel].value * SkillsList.multishot.levels[skillLevelMultishot].value
-                      );
-                    }, localDelay + multishotTimeout);
-                    localDelay += multishotTimeout;
-                  }
-                }
-              }
-
-              if (skillLevel >= 2) {
-                // Dois tiros pra trás lado a lado na mesma direção pra trás
-                const sideOffset = 0.5; // Ajuste a distância lateral entre os tiros
-
-                const leftBackPosition = {
-                  x: position.x + sideOffset * Math.cos(rotation.y + Math.PI / 2),
-                  y: position.y,
-                  z: position.z + sideOffset * Math.sin(rotation.y + Math.PI / 2)
-                };
-
-                const rightBackPosition = {
-                  x: position.x + sideOffset * Math.cos(rotation.y - Math.PI / 2),
-                  y: position.y,
-                  z: position.z + sideOffset * Math.sin(rotation.y - Math.PI / 2)
-                };
-
-                const backDirection = {
-                  x: -direction.x,
-                  y: 0,
-                  z: -direction.z
-                };
-
-                projectileStore.spawnProjectile(
-                  'player',
-                  leftBackPosition,
-                  backDirection,
-                  'player',
-                  'player',
-                  hits,
-                  bounces,
-                  damage * SkillsList.back_shot.levels[skillLevel].value
-                );
-
-                projectileStore.spawnProjectile(
-                  'player',
-                  rightBackPosition,
-                  backDirection,
-                  'player',
-                  'player',
-                  hits,
-                  bounces,
-                  damage * SkillsList.back_shot.levels[skillLevel].value
-                );
-
-                if (hasMultishot) {
-                  let localDelay = 0;
-                  for (let i = 1; i <= skillLevelMultishot; i++) {
-                    setTimeout(() => {
-                      projectileStore.spawnProjectile(
-                        'player', // type
-                        leftBackPosition, // position
-                        backDirection, // direção normalizada
-                        'player',
-                        'player',
-                        hits,
-                        bounces,
-                        damage * SkillsList.back_shot.levels[skillLevel].value * SkillsList.multishot.levels[skillLevelMultishot].value
-                      );
-
-                      projectileStore.spawnProjectile(
-                        'player', // type
-                        rightBackPosition, // position
-                        backDirection, // direção normalizada
-                        'player',
-                        'player',
-                        hits,
-                        bounces,
-                        damage * SkillsList.back_shot.levels[skillLevel].value * SkillsList.multishot.levels[skillLevelMultishot].value
-                      );
-                    }, localDelay + multishotTimeout);
-                    localDelay += multishotTimeout;
-                  }
-                }
-              }
-            }
-
-            if (hasSkill('diagonal_shot')) {
-              const skillLevel = getSkillLevel('diagonal_shot');
-
-              if (skillLevel === 1) {
-                // Tiro em cone diagonal na frente do player
-                const angleOffset = Math.PI / 4; // 45 graus em radianos
-
-                const leftDirection = {
-                  x: direction.x * Math.cos(angleOffset) - direction.z * Math.sin(angleOffset),
-                  y: 0,
-                  z: direction.x * Math.sin(angleOffset) + direction.z * Math.cos(angleOffset)
-                };
-
-                const rightDirection = {
-                  x: direction.x * Math.cos(-angleOffset) - direction.z * Math.sin(-angleOffset),
-                  y: 0,
-                  z: direction.x * Math.sin(-angleOffset) + direction.z * Math.cos(-angleOffset)
-                };
-
-                projectileStore.spawnProjectile(
-                  'player',
-                  { x: position.x, y: position.y, z: position.z },
-                  leftDirection,
-                  'player',
-                  'player',
-                  hits,
-                  bounces,
-                  damage * SkillsList.diagonal_shot.levels[skillLevel].value
-                );
-
-                projectileStore.spawnProjectile(
-                  'player',
-                  { x: position.x, y: position.y, z: position.z },
-                  rightDirection,
-                  'player',
-                  'player',
-                  hits,
-                  bounces,
-                  damage * SkillsList.diagonal_shot.levels[skillLevel].value
-                );
-
-                if (hasMultishot) {
-                  let localDelay = 0;
-                  for (let i = 1; i <= skillLevelMultishot; i++) {
-                    setTimeout(() => {
-                      projectileStore.spawnProjectile(
-                        'player', // type
-                        { x: position.x, y: position.y, z: position.z }, // position
-                        leftDirection, // direção normalizada
-                        'player',
-                        'player',
-                        hits,
-                        bounces,
-                        damage * SkillsList.diagonal_shot.levels[skillLevel].value * SkillsList.multishot.levels[skillLevelMultishot].value
-                      );
-
-                      projectileStore.spawnProjectile(
-                        'player', // type
-                        { x: position.x, y: position.y, z: position.z }, // position
-                        rightDirection, // direção normalizada
-                        'player',
-                        'player',
-                        hits,
-                        bounces,
-                        damage * SkillsList.diagonal_shot.levels[skillLevel].value * SkillsList.multishot.levels[skillLevelMultishot].value
-                      );
-                    }, localDelay + multishotTimeout);
-                    localDelay += multishotTimeout;
-                  }
-                }
-              }
-
-              if (skillLevel >= 2) {
-                // Disparamos 4 tiros em cone diagonal na frente do player
-                // 2 para esquerda e direita a 90 graus
-                // 2 para esquerda e direita a 45 graus
-                const angles = [
-                  Math.PI / 2,    // direita
-                  Math.PI / 4,    // nordeste
-                  -Math.PI / 4,   // noroeste
-                  -Math.PI / 2    // esquerda
-                ];
-
-                angles.forEach((angleOffset) => {
-                  const diagonalDirection = {
-                    x: direction.x * Math.cos(angleOffset) - direction.z * Math.sin(angleOffset),
-                    y: 0,
-                    z: direction.x * Math.sin(angleOffset) + direction.z * Math.cos(angleOffset)
-                  };
-
-                  projectileStore.spawnProjectile(
-                    'player',
-                    { x: position.x, y: position.y, z: position.z },
-                    diagonalDirection,
-                    'player',
-                    'player',
-                    hits,
-                    bounces,
-                    damage * SkillsList.diagonal_shot.levels[skillLevel].value
-                  );
-
-                  if (hasMultishot) {
-                    let localDelay = 0;
-                    for (let i = 1; i <= skillLevelMultishot; i++) {
-                      setTimeout(() => {
-                        projectileStore.spawnProjectile(
-                          'player', // type
-                          { x: position.x, y: position.y, z: position.z }, // position
-                          diagonalDirection, // direção normalizada
-                          'player',
-                          'player',
-                          hits,
-                          bounces,
-                          damage * SkillsList.diagonal_shot.levels[skillLevel].value * SkillsList.multishot.levels[skillLevelMultishot].value
-                        );
-                      }, localDelay + multishotTimeout);
-                      localDelay += multishotTimeout;
-                    }
-                  }
-                });
-              }
+            const diagonal = skills.getSkillLevel('diagonal_shot') || 0;
+            if (diagonal) {
+              const angles = diagonal >= 2 ? [-Math.PI/2, -Math.PI/4, Math.PI/4, Math.PI/2] : [-Math.PI/4, Math.PI/4];
+              angles.forEach(angle => fire(rotateShot(direction, angle), 0, SkillsList.diagonal_shot.levels[diagonal].value));
             }
 
             // Reseta o cooldown do tiro

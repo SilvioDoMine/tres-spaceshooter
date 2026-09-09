@@ -66,7 +66,8 @@ export const LEVEL_1 = {
       waves: [
         {
           enemies: [
-            { enemyType: 'miniasteroid', count: 4, delay: 0.5 },
+            { enemyType: 'miniasteroid', count: 3, delay: 0.5 },
+            { enemyType: 'ufo', count: 1, delay: 1.2 },
           ]
         },
       ],
@@ -116,7 +117,8 @@ export const LEVEL_1 = {
       waves: [
         {
           enemies: [
-            { enemyType: 'miniasteroid', count: 5, delay: 0.5 },
+            { enemyType: 'miniasteroid', count: 3, delay: 0.5 },
+            { enemyType: 'ufofast', count: 2, delay: 1.2 },
           ]
         },
       ],
@@ -299,7 +301,8 @@ export const LEVEL_1 = {
       waves: [
         {
           enemies: [
-            { enemyType: 'asteroid', count: 6, delay: 0.5 },
+            { enemyType: 'asteroid', count: 4, delay: 0.5 },
+            { enemyType: 'ufofast', count: 2, delay: 1.2 },
           ]
         },
         {

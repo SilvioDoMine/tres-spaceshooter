@@ -1,5 +1,5 @@
 export const DILATION_CONFIG = {
-  startRadius:24, warningRadius:32, criticalRadius:44,
+  startRadius:30, warningRadius:38, criticalRadius:50,
   curveWidth:18, curvePower:2, minimumOutwardSpeed:.002,
   warningDelay:1.5, criticalDelay:3, damageDelay:4,
   damagePerSecond:8, damageInterval:1, alertCooldown:12,

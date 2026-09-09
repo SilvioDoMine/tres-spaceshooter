@@ -107,7 +107,7 @@ export const SkillsList ={
   back_shot: {
     id: 'back_shot',
     name: 'Tiro Traseiro',
-    description: 'Adiciona tiros para trás com 90% da eficiência.',
+    description: 'Projéteis saem da frente, curvam pelas laterais e seguem para trás com 90% do dano.',
     icon: '🔙',
     rarity: 'rare',
     levels: {
@@ -145,7 +145,7 @@ export const SkillsList ={
   multishot: {
     id: 'multishot',
     name: 'Tiros Múltiplos',
-    description: 'Dispara um projeto adicional com 60% da eficiência.',
+    description: 'Dispara projéteis paralelos em formação; os adicionais causam 60% do dano.',
     icon: '🔫',
     rarity: 'epic',
     levels: {

@@ -144,7 +144,6 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NuxtLink to="/hangar" class="fixed bottom-5 left-5 z-50 rounded-xl border-[3px] border-[#2363a2] bg-linear-to-b from-[#77c6ff] to-[#3185cf] shadow-[0_4px_0_#174879] px-5 py-3 text-white title-text pointer-events-auto">🚀 Hangar</NuxtLink><!-- Dark Blue color-->
   <div class="lobby-scene"><TresCanvas
     clear-color="#000814"
     :dpr="[1, 1.5]"
@@ -253,6 +252,14 @@ onUnmounted(() => {
 
         <!-- Right -->
         <div class="flex flex-col gap-2">
+          <NuxtLink to="/hangar" aria-label="Abrir hangar" class="lobby-hangar aspect-square relative rounded-lg flex-col flex items-center justify-center cursor-pointer pointer-events-auto transition hud-button-shake active:translate-y-1 active:shadow-inner">
+            <svg class="mx-2 mt-0.5 text-cyan-100" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <path d="M4 19V9.5L12 4l8 5.5V19M7 19v-6h10v6M9 10h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="m12 7 1.3 2.3L12 12 10.7 9.3 12 7Z" fill="#67e8f9"/>
+            </svg>
+            <span class="bottom-0 text-xs text-white font-semibold">Hangar</span>
+          </NuxtLink>
+
            <!-- Ranking -->
           <!-- <div @click="rewardsModal.open()" class="aspect-square relative bg-white/20 rounded-lg flex-col flex items-center justify-center cursor-pointer pointer-events-auto hover:bg-white/20 transition hud-button-shake active:translate-y-1 active:shadow-inner active:bg-white/30">
             <svg class="mx-2 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none"><path fill="#ffbc44" stroke="#191919" stroke-linecap="round" stroke-linejoin="round" d="M22.522 17.032h-7.174v-4.783a.48.48 0 0 0-.478-.478H9.13a.48.48 0 0 0-.478.478v4.783H1.478A.48.48 0 0 0 1 17.51v4.783a.48.48 0 0 0 .478.478h21.044a.48.48 0 0 0 .478-.478V17.51a.48.48 0 0 0-.478-.478"/><path fill="#e3e3e3" d="M7.696 9.38a3.8 3.8 0 0 1 .373-1.518c.264-.528 1.366-.894 2.75-1.406c.374-.14.314-1.012.148-1.194a2.76 2.76 0 0 1-.718-2.14a1.757 1.757 0 1 1 3.502 0a2.77 2.77 0 0 1-.717 2.14c-.166.183-.227 1.052.147 1.194c1.384.512 2.487.878 2.75 1.406c.23.474.356.992.374 1.518"/><path stroke="#191919" stroke-linecap="round" stroke-linejoin="round" d="M7.696 9.38a3.8 3.8 0 0 1 .373-1.518c.264-.528 1.366-.894 2.75-1.406c.374-.14.314-1.012.148-1.194a2.76 2.76 0 0 1-.718-2.14a1.757 1.757 0 1 1 3.502 0a2.77 2.77 0 0 1-.717 2.14c-.166.183-.227 1.052.147 1.194c1.384.512 2.487.878 2.75 1.406c.23.474.356.992.374 1.518"/><path fill="#e3e3e3" d="M5.985 14.162c-.41-.168-.894-.34-1.414-.534c-.374-.138-.314-1.012-.148-1.193a2.76 2.76 0 0 0 .718-2.141a1.712 1.712 0 0 0-1.75-1.872a1.712 1.712 0 0 0-1.751 1.872a2.76 2.76 0 0 0 .717 2.14c.166.183.227 1.053-.147 1.194c-.438.162-.847.31-1.21.453"/><path stroke="#191919" stroke-linecap="round" stroke-linejoin="round" d="M5.985 14.162c-.41-.168-.894-.34-1.414-.534c-.374-.138-.314-1.012-.148-1.193a2.76 2.76 0 0 0 .718-2.141a1.712 1.712 0 0 0-1.75-1.872a1.712 1.712 0 0 0-1.751 1.872a2.76 2.76 0 0 0 .717 2.14c.166.183.227 1.053-.147 1.194c-.438.162-.847.31-1.21.453"/><path fill="#e3e3e3" d="M18.013 14.162c.411-.168.894-.34 1.414-.534c.374-.138.314-1.011.148-1.193a2.76 2.76 0 0 1-.718-2.14a1.757 1.757 0 1 1 3.502 0a2.76 2.76 0 0 1-.717 2.14c-.166.183-.227 1.052.147 1.194c.438.161.847.31 1.211.452"/><path stroke="#191919" stroke-linecap="round" stroke-linejoin="round" d="M18.013 14.162c.411-.168.894-.34 1.414-.534c.374-.138.314-1.011.148-1.193a2.76 2.76 0 0 1-.718-2.14a1.757 1.757 0 1 1 3.502 0a2.76 2.76 0 0 1-.717 2.14c-.166.183-.227 1.052.147 1.194c.438.161.847.31 1.211.452"/></g></svg>
@@ -386,6 +393,8 @@ onUnmounted(() => {
 .lobby-scene{position:absolute;inset:0}
 .chapter-info{position:absolute;bottom:26%;left:50%;transform:translateX(-50%);width:250px;text-align:center;padding:10px 16px;border:3px solid #3672b4;border-radius:15px;background:linear-gradient(#65b5fa,#2c79c7);box-shadow:0 5px #194b85,inset 0 2px #b7e1ff;color:white;text-shadow:0 2px #25528b}
 .chapter-info strong{display:block;font-size:23px;font-weight:400}.chapter-info span{display:block;font-size:13px;margin:2px 0 8px}.chapter-info small{display:block;background:#183d6d;border-radius:8px;padding:6px;font-size:12px;color:#ffdf85;text-shadow:none}
+.lobby-hangar{background:linear-gradient(180deg,rgba(39,178,231,.9),rgba(31,101,180,.9));border:1px solid rgba(165,236,255,.8);box-shadow:0 3px 0 #164c82,0 0 18px rgba(49,191,242,.28)}
+.lobby-hangar:hover{background:linear-gradient(180deg,rgba(72,201,246,.96),rgba(39,123,207,.96));box-shadow:0 3px 0 #164c82,0 0 24px rgba(75,211,255,.45)}
 @media(max-width:650px){
  .lobby-topbar{font-size:11px;gap:4px}.lobby-topbar>div:first-child{min-width:0;flex:1}.lobby-topbar>div:first-child>div{gap:3px}.lobby-topbar>div:first-child>div>div{min-width:0}.lobby-topbar p{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lobby-topbar>div:last-child{gap:3px;flex-shrink:0}.lobby-topbar>div:last-child>div{padding:2px 5px;gap:3px}.lobby-topbar svg{width:18px;height:18px}
  .chapter-info{bottom:150px;padding:7px 12px;width:min(240px,76vw)}.chapter-info strong{font-size:20px}.chapter-info span{font-size:11px;margin-bottom:5px}.chapter-info small{padding:4px;font-size:11px}

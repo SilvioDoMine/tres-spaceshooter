@@ -19,14 +19,14 @@ export const PlayerBaseStats = {
   id: 'player',
   color: 'yellow',
   maxHealth: 250,
-  moveSpeed: 5.0, // unidades por segundo
+  moveSpeed: 7.0, // unidades por segundo
   regenRate: 0, // porcentagem da vida por segundo
   projectiles: {
-    shotCooldown: 1.25,
-    shotSpeed: 10.0,
+    shotCooldown: .85,
+    shotSpeed: 19.0,
     size: 0.2,
     damage: 50,
-    range: 8,
+    range: 11,
   },
   position: { x: 0, y: 0, z: 0 },
   rotation: { x: 0, y: 0, z: 0 },

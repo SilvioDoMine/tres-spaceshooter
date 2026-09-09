@@ -34,9 +34,18 @@ const enemyRefs = new Map();
 const setVisualMeshRef = (enemyId) => (el) => {
   if (el) {
     if (!enemyRefs.has(enemyId)) {
-      enemyRefs.set(enemyId, { visualMesh: null, uiGroup: null });
+      enemyRefs.set(enemyId, { visualMesh: null, uiGroup: null, materials: [], visualState: null });
     }
-    enemyRefs.get(enemyId).visualMesh = el;
+    const refs = enemyRefs.get(enemyId);
+    refs.visualMesh = el;
+    const materials = new Set();
+    el.traverse((part) => {
+      if (!part.material) return;
+      const partMaterials = Array.isArray(part.material) ? part.material : [part.material];
+      partMaterials.forEach(material => materials.add(material));
+    });
+    refs.materials = [...materials];
+    refs.visualState = null;
   }
 };
 
@@ -44,7 +53,7 @@ const setVisualMeshRef = (enemyId) => (el) => {
 const setUIGroupRef = (enemyId) => (el) => {
   if (el) {
     if (!enemyRefs.has(enemyId)) {
-      enemyRefs.set(enemyId, { visualMesh: null, uiGroup: null });
+      enemyRefs.set(enemyId, { visualMesh: null, uiGroup: null, materials: [], visualState: null });
     }
     enemyRefs.get(enemyId).uiGroup = el;
   }
@@ -53,6 +62,7 @@ const setUIGroupRef = (enemyId) => (el) => {
 // ==================== GAME LOOP (60 FPS) ====================
 const { onBeforeRender } = useLoop();
 onBeforeRender(() => {
+  const player = useCurrentRunStore().getPlayerPosition();
   activeEnemies.value.forEach(enemy => {
     const refs = enemyRefs.get(enemy.id);
     if (!refs?.visualMesh || !refs?.uiGroup) return;
@@ -85,11 +95,18 @@ onBeforeRender(() => {
     // Atualiza escala
     visualMesh.scale.setScalar(scale);
 
-    // Atualiza material (opacidade e transparência)
-    visualMesh.traverse((part) => { if (!part.material) return; const materials = Array.isArray(part.material) ? part.material : [part.material]; materials.forEach((material) => { material.opacity = opacity; material.transparent = transparent; }); });
+    // Cascos detalhados possuem muitas peças. Os materiais são coletados uma vez
+    // e só recebem escrita quando o estado visual realmente muda.
+    const visualState = enemy.state === 'active' ? 'active' : `${enemy.state}:${opacity.toFixed(3)}`;
+    if (refs.visualState !== visualState) {
+      refs.materials.forEach((material) => {
+        material.opacity = opacity;
+        material.transparent = transparent;
+      });
+      refs.visualState = visualState;
+    }
 
     // Modular ships keep their hull upright and face their target.
-    const player = useCurrentRunStore().getPlayerPosition();
     const heading = Math.atan2(enemy.position.x - player.x, enemy.position.z - player.z);
     visualMesh.rotation.set(0, heading + deathRotation, deathRotation * .2);
   });

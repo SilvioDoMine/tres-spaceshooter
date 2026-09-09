@@ -16,10 +16,13 @@ const cometGeometry=new IcosahedronGeometry(.22,1)
 const cometMaterial=new MeshBasicMaterial({color:'#a2cbd3'})
 const comet=new Mesh(cometGeometry,cometMaterial);comet.visible=false;root.add(comet)
 const particles=Array.from({length:count},()=>({age:99,life:0,x:0,y:0,z:0,vx:0,vy:0,vz:0,size:0,kind:0}))
-let cursor=0
+const activeParticles=new Set<number>(),colorCache=new Map<string,Color>()
+let cursor=0,staticAttributesDirty=true
 function particle(x:number,y:number,z:number,color:string,kind:number,size:number,life:number,speed:number,angle=Math.random()*Math.PI*2){
  const i=cursor++%count,p=particles[i];Object.assign(p,{age:0,life,x,y,z,vx:Math.cos(angle)*speed,vy:kind===1?.25:Math.random()*.8,vz:Math.sin(angle)*speed,size,kind})
- const c=new Color(color);colors.set([c.r,c.g,c.b],i*3);kinds[i]=kind
+ const c=colorCache.get(color) || new Color(color);colorCache.set(color,c)
+ colors[i*3]=c.r;colors[i*3+1]=c.g;colors[i*3+2]=c.b;kinds[i]=kind
+ activeParticles.add(i);staticAttributesDirty=true
 }
 const unsubscribe=subscribeImpacts(e=>{
  if(e.kind==='shot'){
@@ -77,14 +80,16 @@ useLoop().onBeforeRender(({delta})=>{
   }
   if(run.currentHealth>0 && run.currentHealth<run.maxHealth*.3 && smokeTime>.12){smokeTime=0;const p=run.getPlayerPosition();particle(p.x,.4,p.z,'#62707c',1,1,.75,.2)}
  }
- for(let i=0;i<count;i++){
+ for(const i of activeParticles){
   const p=particles[i];p.age+=dt;if(p.age>=p.life){alpha[i]=0;continue}
   const t=p.age/p.life;p.x+=p.vx*dt;p.z+=p.vz*dt;p.y+=p.vy*dt
   const drag=Math.exp(-dt*(p.kind===1?1:2));p.vx*=drag;p.vz*=drag
   positions.set([p.x,p.y,p.z],i*3);sizes[i]=p.size*(p.kind===2?1+t*10:p.kind===1?1+t*1.8:1-t*.4)
   alpha[i]=p.kind===1?Math.sin(t*Math.PI)*.38:Math.pow(1-t,1.5)
  }
- for(const name of ['position','tint','radius','opacity','kind'])geometry.getAttribute(name).needsUpdate=true
+ for(const i of activeParticles){if(particles[i].age>=particles[i].life)activeParticles.delete(i)}
+ for(const name of ['position','radius','opacity'])geometry.getAttribute(name).needsUpdate=true
+ if(staticAttributesDirty){geometry.getAttribute('tint').needsUpdate=true;geometry.getAttribute('kind').needsUpdate=true;staticAttributesDirty=false}
 })
 onUnmounted(()=>{unsubscribe();geometry.dispose();material.dispose();cometGeometry.dispose();cometMaterial.dispose()})
 </script>

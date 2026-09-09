@@ -3,12 +3,14 @@ import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { storeToRefs } from 'pinia';
 import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
 import { useProjectileStore } from '~/stores/projectileStore';
+import { useEnemyAttacks } from '~/composables/useEnemyAttacks';
 
 export function useEnemyAI() {
     const enemyManager = useEnemyManager();
     const enemyManagerStore = useEnemyManagerStore();
     const currentRunStore = useCurrentRunStore();
     const projectileStore = useProjectileStore();
+    const attacks = useEnemyAttacks();
     
     const { activeEnemies } = storeToRefs(enemyManagerStore);
     const { playerPosition, isPlaying } = storeToRefs(currentRunStore);
@@ -31,7 +33,7 @@ export function useEnemyAI() {
         miniasteroid: (enemy, deltaTime) => {
             // Escolhe uma direção aleatória no spawn e segue em linha reta
             if (!enemy.direction) {
-                const angle = Math.random() * Math.PI * 2;
+                const angle = Math.atan2(playerPosition.value.z-enemy.position.z,playerPosition.value.x-enemy.position.x)+(Math.random()-.5)*.7;
                 enemy.direction = {
                     x: Math.cos(angle),
                     z: Math.sin(angle),
@@ -42,22 +44,18 @@ export function useEnemyAI() {
             enemy.position.z += enemy.direction.z * enemy.speed * deltaTime;
             enemy.position.x += enemy.direction.x * enemy.speed * deltaTime;
 
-            // Ricochete nas paredes (bounce como uma bola de bilhar)
-            const levelWidth = useCurrentRunStore().currentStage.width;
-            const levelHeight = useCurrentRunStore().currentStage.height;
-
-            // Parede Z (cima/baixo)
-            if (enemy.position.z <= -levelHeight / 2 || enemy.position.z >= levelHeight / 2) {
-                enemy.direction.z = -enemy.direction.z;
-                // Empurra pra dentro do mapa para não ficar preso
-                enemy.position.z = Math.max(-levelHeight / 2 + 0.1, Math.min(levelHeight / 2 - 0.1, enemy.position.z));
-            }
-
-            // Parede X (esquerda/direita)
-            if (enemy.position.x <= -levelWidth / 2 || enemy.position.x >= levelWidth / 2) {
-                enemy.direction.x = -enemy.direction.x;
-                // Empurra pra dentro do mapa para não ficar preso
-                enemy.position.x = Math.max(-levelWidth / 2 + 0.1, Math.min(levelWidth / 2 - 0.1, enemy.position.x));
+            // A arena é infinita. Se o asteroide ficar distante, curva de volta
+            // suavemente; nunca o reposiciona para um limite antigo do mapa.
+            const playerDx = playerPosition.value.x - enemy.position.x;
+            const playerDz = playerPosition.value.z - enemy.position.z;
+            const playerDistance = Math.hypot(playerDx, playerDz);
+            if (playerDistance > 9) {
+                const turn = Math.min(1, deltaTime * 0.9);
+                enemy.direction.x += (playerDx / playerDistance - enemy.direction.x) * turn;
+                enemy.direction.z += (playerDz / playerDistance - enemy.direction.z) * turn;
+                const directionLength = Math.hypot(enemy.direction.x, enemy.direction.z) || 1;
+                enemy.direction.x /= directionLength;
+                enemy.direction.z /= directionLength;
             }
             
             // Inicializa velocidade de rotação aleatória se não existir
@@ -210,16 +208,7 @@ export function useEnemyAI() {
                     z: directionZ / length,
                 };
 
-                projectileStore.spawnProjectile(
-                    'ufo',
-                    { ...enemy.position },
-                    directionNorm,
-                    enemy.id,
-                    'enemy',
-                    1,
-                    1,
-                    baseStats.ufo.shotDamage
-                );
+                // Firing is coordinated by useEnemyAttacks (telegraph and global budget).
 
                 // Reseta o cooldown do tiro
                 enemy.cooldownShot = enemy.cooldownTotalShot;
@@ -271,16 +260,7 @@ export function useEnemyAI() {
                     z: directionZ / length,
                 };
 
-                projectileStore.spawnProjectile(
-                    'ufofast',
-                    { ...enemy.position },
-                    directionNorm,
-                    enemy.id,
-                    'enemy',
-                    1,
-                    1,
-                    baseStats.ufofast.shotDamage
-                );
+                // Firing is coordinated by useEnemyAttacks (telegraph and global budget).
 
                 // Reseta o cooldown do tiro
                 enemy.cooldownShot = enemy.cooldownTotalShot;
@@ -443,16 +423,7 @@ export function useEnemyAI() {
                 z: directionZ / length,
             };
 
-            projectileStore.spawnProjectile(
-                'boss',
-                { ...enemy.position },
-                directionNorm,
-                enemy.id,
-                'enemy',
-                1,
-                1,
-                baseStats.boss.shotDamage,
-            );
+            // Firing is coordinated by useEnemyAttacks (telegraph and global budget).
 
             // Reseta o cooldown do tiro
             enemy.cooldownShot = enemy.cooldownTotalShot;
@@ -500,16 +471,7 @@ export function useEnemyAI() {
                 z: directionZ / length,
             };
 
-            projectileStore.spawnProjectile(
-                'miniboss',
-                { ...enemy.position },
-                directionNorm,
-                enemy.id,
-                'enemy',
-                1,
-                1,
-                baseStats.miniboss.shotDamage
-            );
+            // Firing is coordinated by useEnemyAttacks (telegraph and global budget).
 
             // Reseta o cooldown do tiro
             enemy.cooldownShot = enemy.cooldownTotalShot;
@@ -662,6 +624,7 @@ export function useEnemyAI() {
     };
 
     const update = (deltaTime) => {
+        attacks.update(activeEnemies.value, deltaTime);
         activeEnemies.value.forEach(enemy => {
             // Inimigos em spawning não se movem nem atacam
             if (enemy.state === 'spawning') {
@@ -684,10 +647,36 @@ export function useEnemyAI() {
                 return;
             }
 
-            behavior(enemy, deltaTime);
+            const previousX = enemy.position.x;
+            const previousZ = enemy.position.z;
+
+            if (enemy.type === 'ufo' || enemy.type === 'ufofast') {
+                const dx=playerPosition.value.x-enemy.position.x,dz=playerPosition.value.z-enemy.position.z;
+                const d=Math.hypot(dx,dz);
+                if(d>.001) {
+                    enemy.orbitTime=(enemy.orbitTime||0)+deltaTime;
+                    const radial=d>7?1:d<4?-1:0;
+                    const strafe=Math.sin(enemy.orbitTime*.65)*.65;
+                    const length=Math.max(1,Math.hypot(radial,strafe));
+                    enemy.position.x+=(dx*radial-dz*strafe)/d/length*enemy.speed*deltaTime;
+                    enemy.position.z+=(dz*radial+dx*strafe)/d/length*enemy.speed*deltaTime;
+                }
+            } else behavior(enemy, deltaTime);
 
             // Aplica separação após o comportamento
             applySeparation(enemy, deltaTime);
+
+            // Última barreira contra qualquer salto causado por uma regra de IA.
+            // A investida kamikaze continua com sua velocidade normal de 4x.
+            const dx = enemy.position.x - previousX;
+            const dz = enemy.position.z - previousZ;
+            const moved = Math.hypot(dx, dz);
+            const speedMultiplier = enemy.kamikazeState === 'charging' ? 4.25 : 1.5;
+            const maxStep = (Math.max(0, enemy.speed || 0) * speedMultiplier + 2) * deltaTime;
+            if (moved > maxStep && moved > 0) {
+                enemy.position.x = previousX + dx / moved * maxStep;
+                enemy.position.z = previousZ + dz / moved * maxStep;
+            }
         });
     }
 
