@@ -1,8 +1,6 @@
 name: CI + CD – Tres Spaceshooter
 
 on:
-  push:
-    branches: [ main, staging ]
   workflow_dispatch:
 
 jobs:
