@@ -190,10 +190,16 @@ jobs:
             exit 1
           fi
 
-          atual="$(jq -r '.value' <<<"$entrada")"
-          if [ "$atual" != "$VERSION" ]; then
-            echo "::error::APP_VERSION no Coolify é '$atual', esperado '$VERSION'"
+          # O Coolify mascara o valor das env vars nas respostas da API (vem
+          # null), entao so da para comparar quando ele devolve algo de fato.
+          # O valor nunca e impresso aqui.
+          atual="$(jq -r '.value // empty' <<<"$entrada")"
+          if [ -n "$atual" ] && [ "$atual" != "$VERSION" ]; then
+            echo "::error::APP_VERSION no Coolify diverge da versao deste run"
             exit 1
+          fi
+          if [ -z "$atual" ]; then
+            echo "valor mascarado pela API: conferidas a existencia e as flags"
           fi
 
           # Sem a flag de build a variável não vira build arg, e o Dockerfile
@@ -266,3 +272,33 @@ jobs:
             exit 1
           fi
           echo "deploy de $VERSION concluído"
+
+      - name: Conferir a versão no ar
+        run: |
+          set -euo pipefail
+
+          site=https://hyfight.com.br
+
+          code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 "$site")"
+          if [ "$code" != "200" ]; then
+            echo "::error::$site respondeu HTTP $code depois do deploy"
+            exit 1
+          fi
+          echo "$site respondeu 200"
+
+          # Confirma que o bundle publicado carrega mesmo esta versão. A app é
+          # SPA, então a versão fica no manifesto de build, não no index.html.
+          # Não é fatal: mudanças no layout de build do Nuxt não devem derrubar
+          # um deploy que já está de pé.
+          if curl -sS --max-time 30 "$site" -o /tmp/index.html \
+             && manifest="$(grep -oE '/_nuxt/builds/meta/[^"]+\.json' /tmp/index.html | head -n1)" \
+             && [ -n "$manifest" ] \
+             && curl -sS --max-time 30 "$site$manifest" -o /tmp/meta.json; then
+            if grep -qF "$VERSION" /tmp/meta.json; then
+              echo "versão $VERSION confirmada no bundle publicado"
+            else
+              echo "::warning::não encontrei $VERSION no manifesto de build"
+            fi
+          else
+            echo "::warning::não consegui inspecionar o manifesto de build"
+          fi
