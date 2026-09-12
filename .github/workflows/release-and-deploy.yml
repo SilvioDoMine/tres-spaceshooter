@@ -76,8 +76,10 @@ jobs:
             created=false
             echo "::notice::commit $(git rev-parse --short HEAD) já versionado como $version"
 
-          elif git log -1 --format=%B | grep -qiE '\[(skip[ -]tag|no[ -]tag)\]'; then
+          elif git log -1 --format=%s | grep -qiE '\[(skip[ -]tag|no[ -]tag)\]'; then
             # Escape hatch: commit pede explicitamente para não gerar versão.
+            # Só a primeira linha conta (como [skip ci]): senão um commit que
+            # apenas *menciona* "[skip tag]" no corpo pularia o versionamento.
             version="$(git describe --tags --always --match 'v[0-9]*.[0-9]*.[0-9]*')"
             created=false
             echo "::notice::[skip tag] no commit — nenhuma tag criada, versão: $version"

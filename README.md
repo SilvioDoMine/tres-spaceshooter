@@ -97,7 +97,7 @@ A partir da última tag alcançável, lendo as mensagens dos commits novos:
 | `feat!:`, `fix!:`, `BREAKING CHANGE`, `[major]` | major   |
 | `feat:`, `feat(escopo):`, `[minor]`             | minor   |
 | qualquer outra coisa                            | patch   |
-| `[skip tag]` / `[no tag]`                       | nenhuma |
+| `[skip tag]` / `[no tag]` (na 1ª linha)         | nenhuma |
 
 Como os commits daqui não seguem conventional commits, o padrão é **patch**.
 Para subir minor ou major, escreva `feat:` ou inclua `[minor]` / `[major]` na
