@@ -25,6 +25,32 @@ const maxLevels = 3; // Matching the 3 bosses in LevelSelect
 
 const isLocked = computed(() => currentLevel.value > maxUnlockedLevel.value);
 
+// Aba ativa do lobby (barra do rodapé): capítulos (modo de jogo) ou uma tela cheia no lugar dele.
+// Fora de 'chapters' o HUD sai animado (laterais para os lados, botões de baixo para baixo).
+type LobbyView = 'equipment' | 'chapters' | 'talents';
+const lobbyTabOrder: LobbyView[] = ['equipment', 'chapters', 'talents'];
+const lobbyView = ref<LobbyView>('chapters');
+const isChapterView = computed(() => lobbyView.value === 'chapters');
+
+// Botões ao lado do INICIAR: escondidos por enquanto (a TabBar já cobre Equipamento/Talentos),
+// mas continuam ocupando o espaço para receber outras funções depois.
+const showSideActions = false;
+
+// A tela entra pelo lado da aba: aba à direita entra pela direita, à esquerda pela esquerda.
+const lobbySlide = ref('lobby-slide-next');
+watch(lobbyView, (next, prev) => {
+  lobbySlide.value = lobbyTabOrder.indexOf(next) > lobbyTabOrder.indexOf(prev) ? 'lobby-slide-next' : 'lobby-slide-prev';
+});
+
+function openView(view: LobbyView) {
+  if (isAnimating.value) return;
+  lobbyView.value = view;
+}
+
+function backToChapters() {
+  lobbyView.value = 'chapters';
+}
+
 function nextLevel() {
   if (currentLevel.value < maxLevels) {
     isChangingLevel.value = true;
@@ -77,7 +103,7 @@ function handleOpenRewards(rewards) {
 }
 
 async function handleButtonClick() {
-  if (isAnimating.value || isLocked.value) return;
+  if (isAnimating.value || isLocked.value || !isChapterView.value) return;
 
   isAnimating.value = true;
 
@@ -123,6 +149,12 @@ function handleKeyPress(event: KeyboardEvent) {
 
   const key = event.key.toLowerCase();
 
+  // Fora do modo de capítulos, só o Esc (voltar) vale
+  if (!isChapterView.value) {
+    if (key === 'escape') backToChapters();
+    return;
+  }
+
   // Seta esquerda ou tecla 'a' para voltar
   if (key === 'arrowleft' || key === 'a') {
     prevLevel();
@@ -155,10 +187,10 @@ onUnmounted(() => {
   
   <div id="lobby-stuff" class="w-full h-full absolute top-0 left-0 right-0 bottom-0 pointer-events-none">
     <!-- Relative full content -->
-    <div class="relative w-full h-full">
+    <div class="relative w-full h-full overflow-hidden">
 
-      <!-- Topbar -->
-      <div class="w-full h-17 absolute top-0 pointer-events-auto">
+      <!-- Topbar (fica por cima das telas cheias) -->
+      <div class="w-full h-17 absolute top-0 z-20 pointer-events-auto">
         <!-- Icon absolute 64x64 -->
         <div @click="openProfileModal" class="absolute cursor-pointer top-2 left-2 w-16 h-16 bg-linear-to-b from-gray-400 to-gray-600 rounded flex items-center justify-center">
           <img 
@@ -234,7 +266,7 @@ onUnmounted(() => {
       <!-- Hud Middle -->
       <div class="lobby-shortcuts absolute top-24 w-full flex px-2 flex-row justify-between pointer-events-none">
         <!-- Left -->
-        <div class="flex flex-col gap-2">
+        <div class="lobby-fx flex flex-col gap-2" :class="{ 'is-out-left': !isChapterView }">
           <!-- Settings -->
           <div @click="settingsModal.open()" class="p-2 bg-white/20 rounded-lg inline-flex items-center justify-center cursor-pointer pointer-events-auto hover:bg-white/20 transition hud-button-shake active:translate-y-1 active:shadow-inner active:bg-white/30">
             <svg class="text-white/80" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Material Symbols by Google - https://github.com/google/material-design-icons/blob/master/LICENSE --><path fill="currentColor" d="M10 20q-.825 0-1.412-.587T8 18t.588-1.412T10 16h10q.825 0 1.413.588T22 18t-.587 1.413T20 20zm0-6q-.825 0-1.412-.587T8 12t.588-1.412T10 10h10q.825 0 1.413.588T22 12t-.587 1.413T20 14zm0-6q-.825 0-1.412-.587T8 6t.588-1.412T10 4h10q.825 0 1.413.588T22 6t-.587 1.413T20 8zM4 8q-.825 0-1.412-.587T2 6t.588-1.412T4 4t1.413.588T6 6t-.587 1.413T4 8m0 6q-.825 0-1.412-.587T2 12t.588-1.412T4 10t1.413.588T6 12t-.587 1.413T4 14m0 6q-.825 0-1.412-.587T2 18t.588-1.412T4 16t1.413.588T6 18t-.587 1.413T4 20"/></svg>
@@ -251,7 +283,7 @@ onUnmounted(() => {
         <div></div>
 
         <!-- Right -->
-        <div class="flex flex-col gap-2">
+        <div class="lobby-fx flex flex-col gap-2" :class="{ 'is-out-right': !isChapterView }">
           <NuxtLink to="/hangar" aria-label="Abrir hangar" class="lobby-hangar aspect-square relative rounded-lg flex-col flex items-center justify-center cursor-pointer pointer-events-auto transition hud-button-shake active:translate-y-1 active:shadow-inner">
             <svg class="mx-2 mt-0.5 text-cyan-100" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none">
               <path d="M4 19V9.5L12 4l8 5.5V19M7 19v-6h10v6M9 10h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -278,7 +310,7 @@ onUnmounted(() => {
 
 
       <!-- Level Navigator -->
-      <div class="chapter-arrows absolute top-1/2 left-0 w-full -translate-y-1/2 flex justify-between px-4 pointer-events-none">
+      <div class="chapter-arrows lobby-fx absolute top-1/2 left-0 w-full -translate-y-1/2 flex justify-between px-4 pointer-events-none" :class="{ 'is-out-fade': !isChapterView }">
         
         <!-- Left Arrow -->
         <div 
@@ -302,18 +334,27 @@ onUnmounted(() => {
 
       </div>
       
-      <div class="chapter-info title-text"><strong>{{ ['SENTINELA','HARPIA','COLOSSO'][currentLevel-1] }}</strong><span>{{ ['Patrulha orbital','Interceptador pesado','Comando da frota'][currentLevel-1] }}</span><small>{{ isLocked ? '🔒 Capítulo ainda não disponível' : `Adversário do capítulo ${currentLevel}` }}</small></div>
+      <div class="chapter-info lobby-fx title-text" :class="{ 'is-out-fade': !isChapterView }"><strong>{{ ['SENTINELA','HARPIA','COLOSSO'][currentLevel-1] }}</strong><span>{{ ['Patrulha orbital','Interceptador pesado','Comando da frota'][currentLevel-1] }}</span><small>{{ isLocked ? '🔒 Capítulo ainda não disponível' : `Adversário do capítulo ${currentLevel}` }}</small></div>
       <!-- Level Title -->
-      <div class="chapter-heading absolute title-text top-32 left-0 w-full text-center pointer-events-none">
+      <div class="chapter-heading lobby-fx absolute title-text top-32 left-0 w-full text-center pointer-events-none" :class="{ 'is-out-fade': !isChapterView }">
         <h2 class="text-3xl font-bold text-white drop-shadow-md">Capítulo {{ currentLevel }}</h2>
         <p class="text-white/70 text-sm">{{ levelDescriptions[currentLevel] || 'BOSS BATTLE' }}</p>
       </div>
+      <!-- Barra de ações: Equipamento | INICIAR | Talentos.
+           Mobile: laterais coladas nas bordas da tela. Desktop/tablet: laterais ao lado do INICIAR. -->
+      <div class="lobby-actions absolute bottom-30 left-0 w-full flex items-end justify-center gap-4 px-4 pointer-events-none">
+        <!-- Equipamento (página ainda não existe) -->
+        <button type="button" aria-label="Equipamento" class="lobby-side lobby-side--left lobby-side--equip" :class="{ 'lobby-side--out': !isChapterView, invisible: !showSideActions }" :aria-hidden="!showSideActions" @click="openView('equipment')">
+          <SvgEquipmentIcon class="lobby-side__icon" />
+          <span class="lobby-side__label">Equipamento</span>
+        </button>
+
       <!-- Tailwind shine golden button with shimmer effect on the bottom middle of the page -->
-      <div 
-        class="chapter-start absolute bottom-30 left-1/2 -translate-x-1/2 w-full px-4 flex justify-center transition-all duration-500 ease-in-out pointer-events-none"
-        :class="(isChangingLevel || isLocked) ? 'translate-y-40 opacity-0' : 'translate-y-0 opacity-100'"
+      <div
+        class="chapter-start flex justify-center transition-all duration-500 ease-in-out pointer-events-none"
+        :class="(isChangingLevel || isLocked || !isChapterView) ? 'translate-y-40 opacity-0' : 'translate-y-0 opacity-100'"
       >
-        <div class="w-full max-w-md pointer-events-auto">
+        <div class="w-full pointer-events-auto">
           <button
             @click="handleButtonClick"
             :class="[
@@ -363,10 +404,17 @@ onUnmounted(() => {
         </div>
       </div>
 
+        <!-- Talentos (página ainda não existe) -->
+        <button type="button" aria-label="Talentos" class="lobby-side lobby-side--right lobby-side--talent" :class="{ 'lobby-side--out': !isChapterView, invisible: !showSideActions }" :aria-hidden="!showSideActions" @click="openView('talents')">
+          <SvgTalentIcon class="lobby-side__icon" />
+          <span class="lobby-side__label">Talentos</span>
+        </button>
+      </div>
+
       <!-- Return Text for Locked Levels -->
       <div 
         class="chapter-return absolute bottom-40 left-1/2 -translate-x-1/2 w-full text-center transition-all duration-500 ease-in-out pointer-events-none"
-        :class="isLocked ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'"
+        :class="(isLocked && isChapterView) ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'"
       >
         <p 
           @click="returnToUnlocked"
@@ -375,6 +423,14 @@ onUnmounted(() => {
           TOQUE PARA VOLTAR AO CAPÍTULO ATUAL
         </p>
       </div>
+
+      <!-- Telas cheias que trocam com o modo de capítulos -->
+      <Transition :name="lobbySlide">
+        <LobbyTalentsScreen v-if="lobbyView === 'talents'" />
+        <LobbyEquipmentScreen v-else-if="lobbyView === 'equipment'" />
+      </Transition>
+
+      <LobbyTabBar :model-value="lobbyView" @update:model-value="openView" />
 
       <!-- Modals -->
       <ClientOnly>
@@ -394,18 +450,38 @@ onUnmounted(() => {
 .chapter-info{position:absolute;bottom:26%;left:50%;transform:translateX(-50%);width:250px;text-align:center;padding:10px 16px;border:3px solid #3672b4;border-radius:15px;background:linear-gradient(#65b5fa,#2c79c7);box-shadow:0 5px #194b85,inset 0 2px #b7e1ff;color:white;text-shadow:0 2px #25528b}
 .chapter-info strong{display:block;font-size:23px;font-weight:400}.chapter-info span{display:block;font-size:13px;margin:2px 0 8px}.chapter-info small{display:block;background:#183d6d;border-radius:8px;padding:6px;font-size:12px;color:#ffdf85;text-shadow:none}
 .lobby-hangar{background:linear-gradient(180deg,rgba(39,178,231,.9),rgba(31,101,180,.9));border:1px solid rgba(165,236,255,.8);box-shadow:0 3px 0 #164c82,0 0 18px rgba(49,191,242,.28)}
+.chapter-start{flex:0 1 448px;min-width:0}
+/* Saída/entrada do HUD ao trocar entre capítulos e as outras telas */
+.lobby-fx{transition:translate .5s ease-in-out,opacity .5s ease-in-out,visibility .5s}
+.lobby-fx.is-out-left{translate:-140px 0;opacity:0;visibility:hidden}
+.lobby-fx.is-out-right{translate:140px 0;opacity:0;visibility:hidden}
+.lobby-fx.is-out-fade{opacity:0;visibility:hidden}
+.lobby-slide-next-enter-active,.lobby-slide-next-leave-active,.lobby-slide-prev-enter-active,.lobby-slide-prev-leave-active{transition:translate .4s ease-in-out}
+.lobby-slide-next-enter-from,.lobby-slide-prev-leave-to{translate:100% 0}
+.lobby-slide-next-leave-to,.lobby-slide-prev-enter-from{translate:-100% 0}
+.lobby-side{position:relative;flex-shrink:0;width:112px;height:92px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:0 4px 8px;border:3px solid;border-radius:16px;font-family:'Lilita One',sans-serif;color:white;cursor:pointer;pointer-events:auto;transition:transform .15s ease,box-shadow .15s ease,translate .5s ease-in-out,opacity .5s ease-in-out,visibility .5s;-webkit-tap-highlight-color:transparent}
+.lobby-side--out{translate:0 160px;opacity:0;visibility:hidden}
+.lobby-side:active{transform:translateY(4px)}
+.lobby-side--equip{background:linear-gradient(#6cc2fa,#2a6fc0);border-color:#1d4f8c;box-shadow:0 6px 0 #173f70,0 10px 20px rgba(0,0,0,.3),inset 0 2px #b7e1ff}
+.lobby-side--equip:active{box-shadow:0 2px 0 #173f70,0 4px 10px rgba(0,0,0,.3),inset 0 2px #b7e1ff}
+.lobby-side--talent{background:linear-gradient(#c29af7,#6a3cc0);border-color:#4a2690;box-shadow:0 6px 0 #3a1d72,0 10px 20px rgba(0,0,0,.3),inset 0 2px #e4d2ff}
+.lobby-side--talent:active{box-shadow:0 2px 0 #3a1d72,0 4px 10px rgba(0,0,0,.3),inset 0 2px #e4d2ff}
+.lobby-side__icon{position:absolute;top:-20px;left:50%;translate:-50% 0;width:66px;height:66px;filter:drop-shadow(0 3px 0 rgba(0,0,0,.35));transition:scale .15s ease}
+.lobby-side__label{font-size:15px;line-height:1.2;letter-spacing:.3px;white-space:nowrap;padding:1px 8px;border-radius:8px;background:rgba(8,18,48,.45);text-shadow:0 2px 0 rgba(0,0,0,.45)}
+@media(hover:hover){.lobby-side:hover .lobby-side__icon{scale:1.08}}
 .lobby-hangar:hover{background:linear-gradient(180deg,rgba(72,201,246,.96),rgba(39,123,207,.96));box-shadow:0 3px 0 #164c82,0 0 24px rgba(75,211,255,.45)}
 @media(max-width:650px){
  .lobby-topbar{font-size:11px;gap:4px}.lobby-topbar>div:first-child{min-width:0;flex:1}.lobby-topbar>div:first-child>div{gap:3px}.lobby-topbar>div:first-child>div>div{min-width:0}.lobby-topbar p{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lobby-topbar>div:last-child{gap:3px;flex-shrink:0}.lobby-topbar>div:last-child>div{padding:2px 5px;gap:3px}.lobby-topbar svg{width:18px;height:18px}
- .chapter-info{bottom:150px;padding:7px 12px;width:min(240px,76vw)}.chapter-info strong{font-size:20px}.chapter-info span{font-size:11px;margin-bottom:5px}.chapter-info small{padding:4px;font-size:11px}
- .chapter-start{bottom:78px}.chapter-start button{height:56px}.chapter-start button .text-3xl{font-size:24px}.chapter-return{bottom:92px;padding:0 14px}.chapter-return p{font-size:11px}
+ .chapter-info{bottom:170px;padding:7px 12px;width:min(240px,76vw)}.chapter-info strong{font-size:20px}.chapter-info span{font-size:11px;margin-bottom:5px}.chapter-info small{padding:4px;font-size:11px}
+ .lobby-actions{bottom:94px;justify-content:space-between;gap:8px;padding:0}.chapter-start{flex:1 1 auto}.chapter-start button{height:56px}.chapter-start button .text-3xl{font-size:24px}.chapter-return{bottom:108px;padding:0 104px}.chapter-return p{font-size:11px}
+ .lobby-side{width:92px;height:60px;padding-bottom:5px}.lobby-side--left{border-left:0;border-radius:0 14px 14px 0}.lobby-side--right{border-right:0;border-radius:14px 0 0 14px}.lobby-side__icon{top:-22px;width:50px;height:50px}.lobby-side__label{font-size:12px;padding:1px 5px}
  .chapter-arrows{padding:0 8px}.chapter-arrows>div{padding:10px}.chapter-arrows svg{width:24px;height:24px}
 }
 @media(max-height:500px) and (orientation:landscape){
  .lobby-scene{width:55%}.lobby-shortcuts{top:78px;width:55%}.lobby-shortcuts>div:first-child{flex-direction:row}.chapter-start,.chapter-return{translate:0 0}.chapter-heading{top:78px;left:auto;right:2%;width:42%}.chapter-heading h2{font-size:23px}
  .chapter-arrows{width:55%;top:58%;padding:0 8px}.chapter-arrows>div{padding:8px}
- .chapter-info{left:auto;right:3%;transform:none;bottom:100px;width:40%;padding:6px}.chapter-info strong{font-size:19px}.chapter-info span{font-size:11px;margin:0 0 4px}.chapter-info small{font-size:10px;padding:3px}
- .chapter-start{left:auto;right:1%;transform:none;bottom:24px;width:44%;padding:0 10px}.chapter-start button{height:55px}.chapter-return{left:auto;right:2%;transform:none;bottom:35px;width:42%;padding:0}.chapter-return p{font-size:10px}
+ .chapter-info{left:auto;right:3%;transform:none;bottom:138px;width:40%;padding:6px}.chapter-info strong{font-size:19px}.chapter-info span{font-size:11px;margin:0 0 4px}.chapter-info small{font-size:10px;padding:3px}
+ .lobby-actions{left:auto;right:1%;bottom:70px;width:44%;gap:6px;padding:0 6px;justify-content:center}.chapter-start button{height:55px}.lobby-side{width:68px;height:55px;padding-bottom:4px;border:3px solid;border-radius:12px}.lobby-side__icon{top:-16px;width:40px;height:40px}.lobby-side__label{font-size:9px;padding:1px 3px}.chapter-return{left:auto;right:2%;transform:none;bottom:82px;width:42%;padding:0}.chapter-return p{font-size:10px}
 }
 
 @keyframes shine {
