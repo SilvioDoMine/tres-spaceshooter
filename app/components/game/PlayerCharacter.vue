@@ -113,7 +113,9 @@ onBeforeRender(({ delta }) => {
 
   // A bounded look-ahead gives motion at the invisible edge without drifting indefinitely.
   const move = currentRun.getMoveVector();
-  const blend = 1 - Math.exp(-Math.min(delta, .1) * 3);
+  // Freeze the camera exactly where pause began, including unfinished easing.
+  // Viewport dimensions below still update if the paused window is resized.
+  const blend = currentRun.isPlaying ? 1 - Math.exp(-Math.min(delta, .1) * 3) : 0;
   const target = { x: position.x + move.x * 2.6, z: position.z + move.z * 2.6 };
   cameraPosition.value = {
     x: cameraPosition.value.x + (target.x - cameraPosition.value.x) * blend,

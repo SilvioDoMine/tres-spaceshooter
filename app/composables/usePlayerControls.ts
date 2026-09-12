@@ -11,7 +11,7 @@
  */
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { useProjectileStore } from '~/stores/projectileStore';
-import { onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, watch } from 'vue';
 import { shotFormation, muzzlePosition, rotateShot } from '~/utils/combatPatterns';
 
 export function usePlayerControls() {
@@ -28,6 +28,7 @@ export function usePlayerControls() {
   };
 
   const handleKeyDown = (event: KeyboardEvent) => {
+    if (!currentRun.isPlaying) return;
     const key = event.key;
     if (keysPressed.hasOwnProperty(key)) {
       keysPressed[key as keyof typeof keysPressed] = true;
@@ -56,6 +57,10 @@ export function usePlayerControls() {
    * - Shift = Baixo (Y-)
    */
   const calculateMovementVector = () => {
+    if (!currentRun.isPlaying) {
+      currentRun.setMoveVector(0, 0, 0);
+      return;
+    }
     let dx = 0; // Mudança no eixo X (Horizontal)
     let dy = 0; // Mudança no eixo Y (Vertical)
     let dz = 0; // Mudança no eixo Z (Profundidade/Frente)
@@ -84,6 +89,14 @@ export function usePlayerControls() {
     // ✅ setMoveVector dispara reatividade apenas quando teclas mudam
     currentRun.setMoveVector(dx, dy, dz);
   };
+
+  // Clear held keys on every pause (including upgrade menus), so resuming
+  // cannot replay a movement command issued behind a modal.
+  watch(() => currentRun.isPlaying, (playing) => {
+    if (playing) return;
+    for (const key of Object.keys(keysPressed) as (keyof typeof keysPressed)[]) keysPressed[key] = false;
+    currentRun.setMoveVector(0, 0, 0);
+  }, { flush: 'sync' });
 
   // O composable é responsável por configurar e limpar os listeners
   onMounted(async () => {
