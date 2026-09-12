@@ -32,6 +32,10 @@ const lobbyTabOrder: LobbyView[] = ['equipment', 'chapters', 'talents'];
 const lobbyView = ref<LobbyView>('chapters');
 const isChapterView = computed(() => lobbyView.value === 'chapters');
 
+// Botões ao lado do INICIAR: escondidos por enquanto (a TabBar já cobre Equipamento/Talentos),
+// mas continuam ocupando o espaço para receber outras funções depois.
+const showSideActions = false;
+
 // A tela entra pelo lado da aba: aba à direita entra pela direita, à esquerda pela esquerda.
 const lobbySlide = ref('lobby-slide-next');
 watch(lobbyView, (next, prev) => {
@@ -340,7 +344,7 @@ onUnmounted(() => {
            Mobile: laterais coladas nas bordas da tela. Desktop/tablet: laterais ao lado do INICIAR. -->
       <div class="lobby-actions absolute bottom-30 left-0 w-full flex items-end justify-center gap-4 px-4 pointer-events-none">
         <!-- Equipamento (página ainda não existe) -->
-        <button type="button" aria-label="Equipamento" class="lobby-side lobby-side--left lobby-side--equip" :class="{ 'lobby-side--out': !isChapterView }" @click="openView('equipment')">
+        <button type="button" aria-label="Equipamento" class="lobby-side lobby-side--left lobby-side--equip" :class="{ 'lobby-side--out': !isChapterView, invisible: !showSideActions }" :aria-hidden="!showSideActions" @click="openView('equipment')">
           <SvgEquipmentIcon class="lobby-side__icon" />
           <span class="lobby-side__label">Equipamento</span>
         </button>
@@ -401,7 +405,7 @@ onUnmounted(() => {
       </div>
 
         <!-- Talentos (página ainda não existe) -->
-        <button type="button" aria-label="Talentos" class="lobby-side lobby-side--right lobby-side--talent" :class="{ 'lobby-side--out': !isChapterView }" @click="openView('talents')">
+        <button type="button" aria-label="Talentos" class="lobby-side lobby-side--right lobby-side--talent" :class="{ 'lobby-side--out': !isChapterView, invisible: !showSideActions }" :aria-hidden="!showSideActions" @click="openView('talents')">
           <SvgTalentIcon class="lobby-side__icon" />
           <span class="lobby-side__label">Talentos</span>
         </button>
