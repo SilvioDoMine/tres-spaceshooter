@@ -139,7 +139,7 @@ exposto via `runtimeConfig.public.appVersion`:
 const { appVersion } = useRuntimeConfig().public
 ```
 
-Fora do deploy (dev local) o valor é `dev`.
+Fora do deploy (dev local, sem `.env`) o valor é `DEBUG`.
 
 ## Deployment
 

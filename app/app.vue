@@ -100,11 +100,21 @@ onMounted(() => {
 //   });
 
 // });
+
+// Get current commit version
+// Vem da tag do git em produção (o workflow grava APP_VERSION no Coolify).
+// Sem build versionado, vale 'DEBUG'.
+const appVersion = useAppVersion();
 </script>
 
 <template>
   <div class="game-root">
     <NuxtPage />
+    <!-- pointer-events-none: esta div cobre a tela toda, sem isso ela
+         engole todo clique e toque do jogo. -->
+    <div class="pointer-events-none absolute top-0 right-0 bottom-2 left-0 flex items-end justify-center">
+      <p class="text-white/30">Versão {{ appVersion }}</p>
+    </div>
   </div>
 </template>
 

@@ -14,7 +14,8 @@ export default defineNuxtConfig({
     public: {
       // Preenchido no build pelo Dockerfile a partir do build arg APP_VERSION,
       // que o workflow Release & Deploy grava no Coolify antes de cada deploy.
-      appVersion: process.env.NUXT_PUBLIC_APP_VERSION || 'dev',
+      // Sem nenhuma das duas (dev local sem .env), vira 'DEBUG'.
+      appVersion: process.env.NUXT_PUBLIC_APP_VERSION || process.env.APP_VERSION || 'DEBUG',
     },
   },
   extends: [

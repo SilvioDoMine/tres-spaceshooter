@@ -11,7 +11,7 @@ COPY . .
 # "Inject Build Args to Dockerfile"); o workflow Release & Deploy grava o valor
 # antes de disparar o build. Como a app roda em SPA (ssr: false), o runtimeConfig
 # publico e resolvido no build, entao a versao precisa entrar aqui e nao so em runtime.
-ARG APP_VERSION=dev
+ARG APP_VERSION=DEBUG
 ENV NUXT_PUBLIC_APP_VERSION=$APP_VERSION
 
 ENV NUXT_TELEMETRY_DISABLED=1
@@ -22,7 +22,7 @@ FROM node:22-alpine AS runner
 
 WORKDIR /app
 
-ARG APP_VERSION=dev
+ARG APP_VERSION=DEBUG
 ENV APP_VERSION=$APP_VERSION
 ENV NUXT_PUBLIC_APP_VERSION=$APP_VERSION
 
