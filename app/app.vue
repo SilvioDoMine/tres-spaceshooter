@@ -136,12 +136,4 @@ body {
 .game-root {
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
-
-/* Permite seleção de texto em elementos interativos */
-input,
-textarea,
-button {
-  -webkit-user-select: text;
-  user-select: text;
-}
 </style>
