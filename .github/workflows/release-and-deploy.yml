@@ -147,31 +147,63 @@ jobs:
             curl "${args[@]}" "$COOLIFY_URL/api/v1$path"
           }
 
-          payload="$(jq -nc --arg v "$VERSION" \
-            '{key:"APP_VERSION", value:$v, is_build_time:true, is_preview:false}')"
+          # O nome do campo que marca a variável como de build mudou entre
+          # versões do Coolify (is_buildtime vs is_build_time), e a API recusa
+          # o nome que não conhece com 422. Em vez de fixar um, tentamos as
+          # variantes conhecidas e paramos na primeira aceita.
+          variantes=(
+            '{"is_buildtime":true,"is_runtime":true}'
+            '{"is_build_time":true}'
+            '{}'
+          )
 
-          # PATCH atualiza; se a variável ainda não existir, cria com POST.
-          resp="$(api PATCH "/applications/$APP_UUID/envs" "$payload")"
-          code="$(tail -n1 <<<"$resp")"
-          if [ "${code:0:1}" != "2" ]; then
-            echo "PATCH devolveu $code, tentando criar a variável..."
-            resp="$(api POST "/applications/$APP_UUID/envs" "$payload")"
-            code="$(tail -n1 <<<"$resp")"
-          fi
-          if [ "${code:0:1}" != "2" ]; then
-            echo "::error::não foi possível gravar APP_VERSION (HTTP $code)"
+          gravou=false
+          for flags in "${variantes[@]}"; do
+            payload="$(jq -nc --arg v "$VERSION" --argjson f "$flags" \
+              '{key:"APP_VERSION", value:$v, is_preview:false} + $f')"
+
+            # PATCH atualiza a variável; se ainda não existir, POST cria.
+            for metodo in PATCH POST; do
+              resp="$(api "$metodo" "/applications/$APP_UUID/envs" "$payload")"
+              code="$(tail -n1 <<<"$resp")"
+              if [ "${code:0:1}" = "2" ]; then
+                echo "$metodo aceito com flags $flags"
+                gravou=true
+                break 2
+              fi
+              echo "$metodo com flags $flags -> HTTP $code"
+            done
+          done
+
+          if [ "$gravou" != true ]; then
+            echo "::error::não foi possível gravar APP_VERSION; última resposta:"
             sed '$d' <<<"$resp"
             exit 1
           fi
 
           # Relê do Coolify: garante que o build vai mesmo pegar esta versão.
           resp="$(api GET "/applications/$APP_UUID/envs")"
-          atual="$(sed '$d' <<<"$resp" | jq -r '.[] | select(.key=="APP_VERSION") | .value' | head -n1)"
+          body="$(sed '$d' <<<"$resp")"
+          entrada="$(jq -c '[.[] | select(.key=="APP_VERSION" and (.is_preview != true))] | first // empty' <<<"$body")"
+          if [ -z "$entrada" ]; then
+            echo "::error::APP_VERSION não encontrada no Coolify depois da gravação"
+            exit 1
+          fi
+
+          atual="$(jq -r '.value' <<<"$entrada")"
           if [ "$atual" != "$VERSION" ]; then
             echo "::error::APP_VERSION no Coolify é '$atual', esperado '$VERSION'"
             exit 1
           fi
-          echo "APP_VERSION=$VERSION confirmada no Coolify"
+
+          # Sem a flag de build a variável não vira build arg, e o Dockerfile
+          # cai no default 'dev' — o deploy passaria com a versão errada embutida.
+          buildtime="$(jq -r '.is_buildtime // .is_build_time // "desconhecido"' <<<"$entrada")"
+          if [ "$buildtime" = "false" ]; then
+            echo "::error::APP_VERSION gravada, mas não está marcada como variável de build"
+            exit 1
+          fi
+          echo "APP_VERSION=$VERSION confirmada no Coolify (build=$buildtime)"
 
       - name: Disparar deploy e aguardar
         run: |
