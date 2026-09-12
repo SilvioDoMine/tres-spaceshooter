@@ -1,0 +1,234 @@
+name: Release & Deploy
+
+# Fluxo único de produção:
+#   push em main  -> versiona (cria a tag se ainda não houver) -> grava a versão
+#                    como env var no Coolify -> dispara o deploy -> aguarda o fim
+#   manual        -> permite reimplantar uma tag já existente, ou versionar o
+#                    HEAD de main sem implantar
+#
+# O Auto Deploy do Coolify precisa estar DESLIGADO: quem dispara o build é este
+# workflow, depois de a env var da versão já estar gravada. Se o Auto Deploy
+# estiver ligado, o Coolify começa a buildar no push e o container sobe com a
+# versão anterior.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Tag existente a implantar (vazio = versiona o HEAD de main)'
+        required: false
+        default: ''
+      deploy:
+        description: 'Implantar em produção'
+        type: boolean
+        default: true
+      force:
+        description: 'Forçar rebuild mesmo sem commit novo'
+        type: boolean
+        default: false
+
+# Serializa os runs de produção. cancel-in-progress fica false de propósito:
+# cancelar um deploy pela metade é pior do que esperar o anterior terminar.
+concurrency:
+  group: release-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    name: Versionar
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+      created: ${{ steps.resolve.outputs.created }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Histórico e tags completos: next-version.sh depende de git describe.
+          fetch-depth: 0
+          fetch-tags: true
+          ref: ${{ inputs.version || github.sha }}
+
+      - name: Resolver versão
+        id: resolve
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "$INPUT_VERSION" ]; then
+            # Deploy manual de uma tag existente: nunca cria nem move tag.
+            git rev-parse -q --verify "refs/tags/$INPUT_VERSION^{commit}" >/dev/null \
+              || { echo "::error::a tag '$INPUT_VERSION' não existe no repositório"; exit 1; }
+            version="$INPUT_VERSION"
+            created=false
+            echo "::notice::deploy manual da tag existente $version"
+
+          elif existing="$(git tag --points-at HEAD --list 'v[0-9]*.[0-9]*.[0-9]*' | sort -V | tail -n1)" \
+               && [ -n "$existing" ]; then
+            # Este commit já tem tag (re-run, push vazio, revert de merge...).
+            # Reaproveita em vez de criar uma versão duplicada.
+            version="$existing"
+            created=false
+            echo "::notice::commit $(git rev-parse --short HEAD) já versionado como $version"
+
+          elif git log -1 --format=%B | grep -qiE '\[(skip[ -]tag|no[ -]tag)\]'; then
+            # Escape hatch: commit pede explicitamente para não gerar versão.
+            version="$(git describe --tags --always --match 'v[0-9]*.[0-9]*.[0-9]*')"
+            created=false
+            echo "::notice::[skip tag] no commit — nenhuma tag criada, versão: $version"
+
+          else
+            version="$(./scripts/next-version.sh HEAD)"
+            git config user.name  'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git tag -a "$version" -m "Release $version"
+            # Se outro run tiver criado a mesma tag no meio do caminho, o push
+            # falha aqui em vez de sobrescrever silenciosamente.
+            git push origin "refs/tags/$version"
+            created=true
+            echo "::notice::tag $version criada em $(git rev-parse --short HEAD)"
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "created=$created" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "### Versão: \`$version\`"
+            echo ""
+            echo "- Commit: \`$(git rev-parse --short HEAD)\` — $(git log -1 --format=%s)"
+            echo "- Tag criada agora: \`$created\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    name: Deploy produção
+    needs: version
+    # No push é sempre; no disparo manual respeita a caixinha "deploy".
+    if: ${{ github.event_name == 'push' || inputs.deploy }}
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://hyfight.com.br
+    env:
+      # Repositório é público: URL e uuid ficam fora do arquivo.
+      COOLIFY_URL: ${{ vars.COOLIFY_URL }}
+      COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+      APP_UUID: ${{ vars.COOLIFY_APP_UUID }}
+      VERSION: ${{ needs.version.outputs.version }}
+      # Reimplantar a mesma tag não gera commit novo: sem force o Coolify pode
+      # considerar que não há nada a fazer.
+      FORCE: ${{ github.event_name == 'workflow_dispatch' && (inputs.force || inputs.version != '') }}
+    steps:
+      - name: Conferir credenciais
+        run: |
+          set -euo pipefail
+          : "${COOLIFY_URL:?variável de repositório COOLIFY_URL ausente}"
+          : "${COOLIFY_TOKEN:?secret COOLIFY_TOKEN ausente}"
+          : "${APP_UUID:?variável de repositório COOLIFY_APP_UUID ausente}"
+          : "${VERSION:?versão não resolvida no job anterior}"
+
+      - name: Gravar APP_VERSION no Coolify
+        run: |
+          set -euo pipefail
+
+          # api <método> <caminho> [corpo] -> imprime corpo + última linha = HTTP status
+          api() {
+            local method="$1" path="$2" body="${3:-}"
+            local args=(-sS -w $'\n%{http_code}' -X "$method"
+                        -H "Authorization: Bearer $COOLIFY_TOKEN"
+                        -H 'Content-Type: application/json')
+            [ -n "$body" ] && args+=(-d "$body")
+            curl "${args[@]}" "$COOLIFY_URL/api/v1$path"
+          }
+
+          payload="$(jq -nc --arg v "$VERSION" \
+            '{key:"APP_VERSION", value:$v, is_build_time:true, is_preview:false}')"
+
+          # PATCH atualiza; se a variável ainda não existir, cria com POST.
+          resp="$(api PATCH "/applications/$APP_UUID/envs" "$payload")"
+          code="$(tail -n1 <<<"$resp")"
+          if [ "${code:0:1}" != "2" ]; then
+            echo "PATCH devolveu $code, tentando criar a variável..."
+            resp="$(api POST "/applications/$APP_UUID/envs" "$payload")"
+            code="$(tail -n1 <<<"$resp")"
+          fi
+          if [ "${code:0:1}" != "2" ]; then
+            echo "::error::não foi possível gravar APP_VERSION (HTTP $code)"
+            sed '$d' <<<"$resp"
+            exit 1
+          fi
+
+          # Relê do Coolify: garante que o build vai mesmo pegar esta versão.
+          resp="$(api GET "/applications/$APP_UUID/envs")"
+          atual="$(sed '$d' <<<"$resp" | jq -r '.[] | select(.key=="APP_VERSION") | .value' | head -n1)"
+          if [ "$atual" != "$VERSION" ]; then
+            echo "::error::APP_VERSION no Coolify é '$atual', esperado '$VERSION'"
+            exit 1
+          fi
+          echo "APP_VERSION=$VERSION confirmada no Coolify"
+
+      - name: Disparar deploy e aguardar
+        run: |
+          set -euo pipefail
+
+          api() {
+            local method="$1" path="$2"
+            curl -sS -w $'\n%{http_code}' -X "$method" \
+              -H "Authorization: Bearer $COOLIFY_TOKEN" \
+              "$COOLIFY_URL/api/v1$path"
+          }
+
+          resp="$(api GET "/deploy?uuid=$APP_UUID&force=$FORCE")"
+          code="$(tail -n1 <<<"$resp")"
+          body="$(sed '$d' <<<"$resp")"
+          if [ "${code:0:1}" != "2" ]; then
+            echo "::error::falha ao disparar o deploy (HTTP $code)"
+            echo "$body"
+            exit 1
+          fi
+
+          dep="$(jq -r '.deployments[0].deployment_uuid // empty' <<<"$body")"
+          if [ -z "$dep" ]; then
+            echo "::error::o Coolify não enfileirou nenhum deployment"
+            echo "$body"
+            exit 1
+          fi
+          echo "deployment $dep enfileirado"
+
+          # Espera até 20 min por um status terminal.
+          deadline=$(( SECONDS + 1200 ))
+          status=""
+          while [ "$SECONDS" -lt "$deadline" ]; do
+            sleep 10
+            resp="$(api GET "/deployments/$dep")" || continue
+            body="$(sed '$d' <<<"$resp")"
+            novo="$(jq -r '.status // empty' <<<"$body")"
+            [ -z "$novo" ] && continue
+            if [ "$novo" != "$status" ]; then
+              status="$novo"
+              echo "status: $status"
+            fi
+            case "$status" in
+              finished)            break ;;
+              failed|cancelled)    break ;;
+            esac
+          done
+
+          {
+            echo "### Deploy \`$VERSION\`"
+            echo ""
+            echo "- Status: \`${status:-timeout}\`"
+            echo "- Deployment: \`$dep\`"
+            echo "- <https://hyfight.com.br>"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$status" != "finished" ]; then
+            echo "::error::deploy terminou como '${status:-timeout}'"
+            echo "Logs: $COOLIFY_URL/project/.../deployment/$dep"
+            exit 1
+          fi
+          echo "deploy de $VERSION concluído"
