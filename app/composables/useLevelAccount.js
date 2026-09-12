@@ -1,3 +1,5 @@
+import { calculateChapterReward, playableRoomCount } from '~/utils/progression';
+
 // Carrega configurações do localStorage ou cria padrão
 const loadAccountLevelSettings = () => {
     const saved = localStorage.getItem('accountLevelSettings');
@@ -36,48 +38,31 @@ export function useLevelAccount() {
     const addExp = (amount) => {
         levelSettings.value.currentExp += amount;
 
-        // Verifica se subiu de nível
-        const nextLevel = levelSettings.value.levelAccount + 1;
-        const nextLevelConfig = levelAccountConfiguration[nextLevel];
+        let nextLevel = levelSettings.value.levelAccount + 1;
+        let nextLevelConfig = levelAccountConfiguration[nextLevel];
 
-        if (nextLevelConfig && levelSettings.value.currentExp >= nextLevelConfig.expRequired) {
-            // Subiu de nível
+        while (nextLevelConfig && levelSettings.value.currentExp >= nextLevelConfig.expRequired) {
             levelSettings.value.levelAccount = nextLevel;
-            levelSettings.value.expToNextLevel = nextLevelConfig.expRequired;
-
-            // Opcional: Notificar o jogador que subiu de nível
             console.log(`Parabéns! Você subiu para o nível ${nextLevel}!`);
+            nextLevel += 1;
+            nextLevelConfig = levelAccountConfiguration[nextLevel];
         }
+
+        levelSettings.value.expToNextLevel = nextLevelConfig?.expRequired
+            ?? levelAccountConfiguration[levelSettings.value.levelAccount].expRequired;
 
         saveLevelAccountSettings();
     };
 
-    const calculateExpReward = () => {
-        // O level tem a quantidade de exp distribuído, e contém todos os stages.
-        // stageFinishedIndex é o índice do stage que foi finalizado (0-based)
-        // Vamos dar exp baseado no stage finalizado, se ele chegou no final ganha tudo, se parou no meio ganha proporcionalmente.
-        // Exemplo: level 3 tem 300 de exp total, se parou no stage 1 (de 3), ganha 100 de exp.
-        // Se ele ganhou, recebe 100% da exp, se perdeu vai ganhar somente metade.
-        const level = useCurrentRunStore().levelConfig;
-        const stageFinishedIndex = useCurrentRunStore().currentStageIndex - 1;
+    const calculateExpReward = (levelOverride, roomsReachedOverride, completedOverride) => {
+        const run = useCurrentRunStore();
+        const level = levelOverride ?? run.levelConfig;
+        const roomsReached = roomsReachedOverride ?? playableRoomCount(level, run.currentStageIndex);
+        const completed = completedOverride ?? (run.isVictory || (
+            run.isStageCompleted && roomsReached === playableRoomCount(level)
+        ));
 
-        const totalStages = level.stages.length;
-        let baseExp = level.rewardExperience || 0;
-
-        if (stageFinishedIndex < 0 || stageFinishedIndex >= totalStages) {
-            return 0; // índice inválido
-        }
-
-        if (stageFinishedIndex === totalStages - 1) {
-            return baseExp; // completou o nível, ganha tudo
-        } else {
-            // não completou, ganha metade da exp total
-            baseExp = Math.floor(baseExp / 2);
-        }
-
-        const stageRatio = (stageFinishedIndex + 1) / totalStages;
-        const expEarned = Math.floor(baseExp * stageRatio);
-        return expEarned;
+        return calculateChapterReward(level, roomsReached, completed);
     }
 
     const getCurrentPercentageToNextLevel = () => {

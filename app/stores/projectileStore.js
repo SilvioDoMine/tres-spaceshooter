@@ -5,7 +5,7 @@ import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
 import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import { useSkillStore, SkillsList } from '~/stores/SkillStore';
-import { advanceShot, segmentHit } from '~/utils/combatPatterns';
+import { advanceShot, PROJECTILE_IFRAME, segmentHit } from '~/utils/combatPatterns';
 
 const orb = { speed: 4, damage: 18, size: .22, range: 25, color: '#52caff' };
 export const projectilesType = {
@@ -56,7 +56,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
       // A volley cannot cause several damage events in one instant.
       if(segmentHit(start,projectile.position,currentRunStore.getPlayerPosition(),.32+projectile.size)!==null) {
         projectile._markedForRemoval=true;
-        if(hitGrace<=0){hitGrace=.65;currentRunStore.takeDamage(projectile.damage);}
+        if(hitGrace<=0){hitGrace=PROJECTILE_IFRAME;currentRunStore.takeDamage(projectile.damage);}
       }
       return;
     }
@@ -81,7 +81,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
             projectile.direction={x:dx/length,z:dz/length};projectile.bounces--;
             const level=skillStore.getSkillLevel('ricochet_shot')||1;
             projectile.damage*=SkillsList.ricochet_shot.levels[level].value;
-            projectile.distanceTraveled=0;projectile.ricochet=true;projectile.rearTurn=null;
+            projectile.ricochet=true;projectile.rearTurn=null;
             projectile.trail.push({...projectile.position});
             break;
           }

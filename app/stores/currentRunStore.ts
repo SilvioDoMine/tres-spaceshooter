@@ -7,6 +7,7 @@ import { usePlayerStats } from '~/stores/playerStats';
 import { useCombatTextStore } from '~/stores/useCombatTextStore';
 import { useModal } from '~/composables/useModal';
 import { useLevelAccount } from '~/composables/useLevelAccount';
+import { playableRoomCount } from '~/utils/progression';
 
 // Define o formato básico do vetor de posição 3D
 interface Vector3 {
@@ -169,7 +170,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     playerPosition.value = { ...stage.playerStartPosition };
     isWaveInProgress.value = false;
     roomCurrentWaveIndex.value = 0;
-    currentMoveSpeed.value = PlayerBaseStats.moveSpeed;
+    currentMoveSpeed.value = PlayerBaseStats.moveSpeed * playerStats.getSpeedMultiplier;
 
     // Remoção de modal
     uiModalPause.close();
@@ -193,7 +194,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
       // console.log('Indo para o próximo estágio:', currentStageIndex.value, stage);
       loadStage(stage);
     } else {
-      gameVictoryRewards();
+      gameVictoryRewards(true);
       gameVictory();
     }
   }
@@ -327,13 +328,17 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     uiModalOver.open();
   }
 
-  function gameVictoryRewards() {
+  function gameVictoryRewards(completedChapter = false) {
     console.log('Calculating victory rewards...');
 
     saveGold(Number(totalGold.value) + Number(currentGold.value));
     totalGold.value += currentGold.value;
 
-    const expGained = levelAccount.calculateExpReward(levelConfig.value, currentStageIndex.value + 1);
+    const expGained = levelAccount.calculateExpReward(
+      levelConfig.value,
+      playableRoomCount(levelConfig.value, currentStageIndex.value),
+      completedChapter,
+    );
 
     console.log(`Player gained ${expGained} EXP from victory.`);
 
@@ -380,11 +385,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   }
 
   function addExp(amount: number) {
-    const multiplier = (stageLevel: number) => {
-      return 1 + (stageLevel - 1) * 0.5; // Exemplo: 10% a mais por nível de estágio acima do 1
-    }
-
-    currentExp.value += amount * multiplier(currentStageIndex.value + 1);
+    currentExp.value += amount;
 
     while (currentExp.value >= expToNextLevel.value) {
       levelUp();

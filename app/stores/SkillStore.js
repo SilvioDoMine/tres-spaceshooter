@@ -30,11 +30,11 @@ export const SkillsList ={
     icon: '⚔️',
     rarity: 'uncommon',
     levels: {
-      1: { value: 0.5, description: '+50% de dano base' }, // +50% dano
-      2: { value: 1.0, description: '+50% de dano base' }, // +60% dano
-      3: { value: 1.5, description: '+50% de dano base' }, // +150% dano
-      4: { value: 2.0, description: '+50% de dano base' }, // +200% dano
-      5: { value: 3.0, description: '+100% de dano base' }, // +300% dano
+      1: { value: 1.20, description: 'Dano total: 120% do dano base' },
+      2: { value: 1.40, description: 'Dano total: 140% do dano base' },
+      3: { value: 1.60, description: 'Dano total: 160% do dano base' },
+      4: { value: 1.90, description: 'Dano total: 190% do dano base' },
+      5: { value: 2.25, description: 'Dano total: 225% do dano base' },
     }
   },
   health_percentage: {
@@ -44,11 +44,11 @@ export const SkillsList ={
     icon: '❤️',
     rarity: 'uncommon',
     levels: {
-      1: { value: 0.4, description: '+40% de vida máxima base' }, // +40% vida - valor base pré estacada
-      2: { value: 0.9, description: '+50% de vida máxima base' }, // +50% vida - (valor base + 40%) + 50% = +90%
-      3: { value: 1.5, description: '+60% de vida máxima base' }, // +60% vida - (valor base + 90%) + 60% = +150%
-      4: { value: 2.2, description: '+70% de vida máxima base' }, // +70% vida - (valor base + 150%) + 70% = +220%
-      5: { value: 3.0, description: '+80% de vida máxima base' }, // +80% vida - (valor base + 220%) + 80% = +300%
+      1: { value: 1.20, description: 'HP máximo: 300' },
+      2: { value: 1.40, description: 'HP máximo: 350' },
+      3: { value: 1.70, description: 'HP máximo: 425' },
+      4: { value: 2.10, description: 'HP máximo: 525' },
+      5: { value: 2.60, description: 'HP máximo: 650' },
     }
   },
   health_regeneration: {
@@ -58,11 +58,11 @@ export const SkillsList ={
     icon: '🩹',
     rarity: 'uncommon',
     levels: {
-      1: { value: 0.01, description: '+1% de regeneração por segundo' }, // Tempo para regenerar 100% da vida: 100 segundos
-      2: { value: 0.02, description: '+2% de regeneração por segundo' }, // Tempo para regenerar 100% da vida: 50 segundos
-      3: { value: 0.03, description: '+3% de regeneração por segundo' }, // Tempo para regenerar 100% da vida: ~33 segundos
-      4: { value: 0.04, description: '+4% de regeneração por segundo' }, // Tempo para regenerar 100% da vida: 25 segundos
-      5: { value: 0.05, description: '+5% de regeneração por segundo' }, // Tempo para regenerar 100% da vida: 20 segundos
+      1: { value: 0.004, description: 'Regenera 0,40% da vida máxima por segundo' },
+      2: { value: 0.008, description: 'Regenera 0,80% da vida máxima por segundo' },
+      3: { value: 0.012, description: 'Regenera 1,20% da vida máxima por segundo' },
+      4: { value: 0.016, description: 'Regenera 1,60% da vida máxima por segundo' },
+      5: { value: 0.020, description: 'Regenera 2,00% da vida máxima por segundo' },
     }
   },
   general_speed: {
@@ -72,25 +72,25 @@ export const SkillsList ={
     icon: '👟',
     rarity: 'uncommon',
     levels: {
-      1: { value: 0.1, description: '+15% de velocidade' }, // +15% velocidade
-      2: { value: 0.3, description: '+30% de velocidade' }, // +30% velocidade
-      3: { value: 0.45, description: '+45% de velocidade' }, // +45% velocidade
-      4: { value: 0.6, description: '+60% de velocidade' }, // +60% velocidade
-      5: { value: 0.9, description: '+90% de velocidade' }, // +90% velocidade
+      1: { value: 1.06, projectileValue: 1.08, description: 'Nave +6%; projéteis +8%' },
+      2: { value: 1.12, projectileValue: 1.16, description: 'Nave +12%; projéteis +16%' },
+      3: { value: 1.18, projectileValue: 1.24, description: 'Nave +18%; projéteis +24%' },
+      4: { value: 1.24, projectileValue: 1.32, description: 'Nave +24%; projéteis +32%' },
+      5: { value: 1.30, projectileValue: 1.40, description: 'Nave +30%; projéteis +40%' },
     },
   },
   ricochet_shot: {
     id: 'ricochet_shot',
     name: 'Tiro Ricochete',
-    description: 'Seus projéteis ricocheteiam nos inimigos, com 60% do dano.',
+    description: 'Seus projéteis ricocheteiam nos inimigos, perdendo metade do dano a cada salto.',
     icon: '💥',
     rarity: 'rare',
     levels: {
-      1: { value: 0.6, description: 'Projéteis ricocheteiam 1 vez.' },
-      2: { value: 0.6, description: 'Projéteis ricocheteiam 2 vezes.'},
-      3: { value: 0.6, description: 'Projéteis ricocheteiam 3 vezes.'},
-      4: { value: 0.6, description: 'Projéteis ricocheteiam 4 vezes.'},
-      5: { value: 0.6, description: 'Projéteis ricocheteiam 5 vezes.'},
+      1: { value: 0.5, description: 'Projéteis ricocheteiam 1 vez.' },
+      2: { value: 0.5, description: 'Projéteis ricocheteiam 2 vezes.'},
+      3: { value: 0.5, description: 'Projéteis ricocheteiam 3 vezes.'},
+      4: { value: 0.5, description: 'Projéteis ricocheteiam 4 vezes.'},
+      5: { value: 0.5, description: 'Projéteis ricocheteiam 5 vezes.'},
     },
   },
   diagonal_shot: {
@@ -107,12 +107,12 @@ export const SkillsList ={
   back_shot: {
     id: 'back_shot',
     name: 'Tiro Traseiro',
-    description: 'Projéteis saem da frente, curvam pelas laterais e seguem para trás com 90% do dano.',
+    description: 'Projéteis saem da frente, curvam pelas laterais e seguem para trás com 65% do dano.',
     icon: '🔙',
     rarity: 'rare',
     levels: {
-      1: { value: 0.9, description: 'Dispara +1 projétil para trás.' },
-      2: { value: 0.9, description: 'Dispara +1 projétil para trás.' },
+      1: { value: 0.65, description: 'Dispara 1 projétil para trás com 65% do dano.' },
+      2: { value: 0.65, description: 'Dispara 2 projéteis para trás com 65% do dano cada.' },
     },
   },
   piercing_shot: {
@@ -122,10 +122,10 @@ export const SkillsList ={
     icon: '🎯',
     rarity: 'rare',
     levels: {
-      1: { value: 1, description: 'Projéteis perfuram 1 inimigo.' },
-      2: { value: 2, description: 'Projéteis perfuram 3 inimigos.' },
-      3: { value: 3, description: 'Projéteis perfuram 9 inimigos.' },
-      4: { value: 999, description: 'Projéteis perfuram todos os inimigos.' },
+      1: { value: 2, description: 'Atinge no máximo 2 inimigos no total.' },
+      2: { value: 3, description: 'Atinge no máximo 3 inimigos no total.' },
+      3: { value: 5, description: 'Atinge no máximo 5 inimigos no total.' },
+      4: { value: 8, description: 'Atinge no máximo 8 inimigos no total.' },
     },
   },
   range_extension: {
@@ -135,22 +135,22 @@ export const SkillsList ={
     icon: '📏',
     rarity: 'epic',
     levels: {
-      1: { value: 0.5, description: '+50% de alcance' },
-      2: { value: 1.0, description: '+100% de alcance' },
-      3: { value: 1.5, description: '+150% de alcance' },
-      4: { value: 2.0, description: '+200% de alcance' },
-      5: { value: 3.0, description: '+300% de alcance' },
+      1: { value: 13.5 / 11, description: 'Alcance total: 13,5' },
+      2: { value: 16 / 11, description: 'Alcance total: 16' },
+      3: { value: 19 / 11, description: 'Alcance total: 19' },
+      4: { value: 22 / 11, description: 'Alcance total: 22' },
+      5: { value: 25 / 11, description: 'Alcance total: 25' },
     },
   },
   multishot: {
     id: 'multishot',
     name: 'Tiros Múltiplos',
-    description: 'Dispara projéteis paralelos em formação; os adicionais causam 60% do dano.',
+    description: 'Dispara projéteis paralelos em formação; os adicionais causam 40% do dano.',
     icon: '🔫',
     rarity: 'epic',
     levels: {
-      1: { value: 0.6, description: 'Dispara 2 projéteis.' },
-      2: { value: 0.6, description: 'Dispara 3 projéteis.' },
+      1: { value: 0.4, description: 'Dispara 2 projéteis.' },
+      2: { value: 0.4, description: 'Dispara 3 projéteis.' },
     },
   },
   short_range_shot: {
@@ -411,14 +411,14 @@ export const useSkillStore = defineStore('SkillStore', () => {
           break;
         case 'health_regeneration':
           const regenAmount = skill.levels[skill.currentLevel].value;
-          usePlayerStats().addRegenRate(regenAmount * 100); // Converter para porcentagem
-          console.log(`Aumentada a regeneração de vida em ${regenAmount * 100}% por segundo.`);
+          usePlayerStats().setRegenRate(regenAmount * 100);
+          console.log(`Regeneração definida em ${regenAmount * 100}% por segundo.`);
           break;
         case 'general_speed':
           console.log('Aplicando aumento de velocidade geral da skill.');
           const speedIncrease = skill.levels[skill.currentLevel].value;
           useCurrentRunStore().setMoveSpeed(PlayerBaseStats.moveSpeed * usePlayerStats().getSpeedMultiplier);
-          console.log(`Aumentada a velocidade do jogador em ${speedIncrease * 100}%.`);
+          console.log(`Multiplicador de velocidade da nave definido em ${speedIncrease}.`);
           break;
         case 'flat_gold':
           const goldAmount = skill.levels[skill.currentLevel].value;

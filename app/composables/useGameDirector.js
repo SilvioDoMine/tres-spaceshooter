@@ -1,9 +1,13 @@
 /**
  * O Gerenciador de Roteiro. Lê a config de nível, spawna inimigos, controla a progressão de sala/onda.
  */
+import { WAVE_REST } from '~/utils/combatPatterns';
+
 export function useGameDirector() {
   const enemyManager = useEnemyManager();
   const currentRunStore = useCurrentRunStore()
+  let waveRest = 0;
+  let stageId = null;
 
   const update = (delta) => {
     // Lógica para gerenciar a progressão do jogo:
@@ -15,6 +19,10 @@ export function useGameDirector() {
     if (! stage ) {
       return;
     };
+    if (stage.stageId !== stageId) {
+      stageId = stage.stageId;
+      waveRest = 0;
+    }
 
     if (stage.type === 'combat' || stage.type === 'boss') {
       handleCombatStage(delta, stage);
@@ -46,6 +54,10 @@ export function useGameDirector() {
     // console.log('Game Director: Estágio de combate. Onda atual:', currentWaveIndex);
 
     if (! currentRunStore.isWaveInProgress) {
+      if (waveRest > 0) {
+        waveRest = Math.max(0, waveRest - delta);
+        return;
+      }
       enemyManager.spawnEnemyWave(currentWave);
       currentRunStore.isWaveInProgress = true;
       return;
@@ -68,6 +80,7 @@ export function useGameDirector() {
       // if there are more waves, advance to the next wave
       if (currentWaveIndex + 1 < waves.length) {
         currentRunStore.roomCurrentWaveIndex += 1;
+        waveRest = WAVE_REST;
       } else {
         console.log('Game Director: Todas as ondas completadas. Estágio de combate completo.');
         currentRunStore.completeStage();

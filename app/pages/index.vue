@@ -77,7 +77,7 @@ function handleOpenRewards(rewards) {
 }
 
 async function handleButtonClick() {
-  if (isAnimating.value) return;
+  if (isAnimating.value || isLocked.value) return;
 
   isAnimating.value = true;
 
@@ -85,7 +85,7 @@ async function handleButtonClick() {
   await new Promise(resolve => setTimeout(resolve, 300));
 
   // Navega para a rota
-  router.push('/play/1');
+  router.push(`/play/${currentLevel.value}`);
 }
 
 function formatCurrency(amount: number): string {
@@ -302,7 +302,7 @@ onUnmounted(() => {
 
       </div>
       
-      <div class="chapter-info title-text"><strong>{{ ['SENTINELA','HARPIA','COLOSSO'][currentLevel-1] }}</strong><span>{{ ['Patrulha orbital','Interceptador pesado','Comando da frota'][currentLevel-1] }}</span><small>{{ isLocked ? `🔒 Conclua o capítulo ${currentLevel-1}` : `Adversário do capítulo ${currentLevel}` }}</small></div>
+      <div class="chapter-info title-text"><strong>{{ ['SENTINELA','HARPIA','COLOSSO'][currentLevel-1] }}</strong><span>{{ ['Patrulha orbital','Interceptador pesado','Comando da frota'][currentLevel-1] }}</span><small>{{ isLocked ? '🔒 Capítulo ainda não disponível' : `Adversário do capítulo ${currentLevel}` }}</small></div>
       <!-- Level Title -->
       <div class="chapter-heading absolute title-text top-32 left-0 w-full text-center pointer-events-none">
         <h2 class="text-3xl font-bold text-white drop-shadow-md">Capítulo {{ currentLevel }}</h2>

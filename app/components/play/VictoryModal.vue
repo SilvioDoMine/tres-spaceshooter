@@ -2,6 +2,7 @@
 import { useModal } from '~/composables/useModal';
 import PlayModal from '~/components/play/PlayModal.vue';
 import BaseAbilityIcon from '~/components/base/AbilityIcon.vue';
+import { playableRoomCount } from '~/utils/progression';
 
 const MODAL_ID = 'play-victory-modal';
 
@@ -46,7 +47,14 @@ watch(isOpen, (newVal) => {
 
 // Level Thing
 const levelAccount = useLevelAccount();
-const expReward = computed(() => levelAccount.calculateExpReward());
+const currentRun = useCurrentRunStore();
+const totalRooms = computed(() => playableRoomCount(currentRun.levelConfig));
+const chapter = computed(() => currentRun.levelConfig?.chapter || 1);
+const expReward = computed(() => levelAccount.calculateExpReward(
+  currentRun.levelConfig,
+  totalRooms.value,
+  true,
+));
 </script>
 
 <template>
@@ -72,9 +80,10 @@ const expReward = computed(() => levelAccount.calculateExpReward());
 
       <!-- Status da fase -->
       <div class="flex flex-col items-center text-white title-text">
-        <h2 class="text-lg text-rose-200 text-shadow-xl text-shadow-blue-900">Nível alcançado</h2>
-        <p class="text-7xl font-mono font-bold text-shadow-[4px_5px_0px_rgba(0,0,0,1)] text-shadow-blue-900">{{ useCurrentRunStore().currentLevel - 1 }}</p>
-        <p class="title-text-red text-xl">Fase 1</p>
+        <h2 class="text-lg text-rose-200 text-shadow-xl text-shadow-blue-900">Nível final da nave</h2>
+        <p class="text-7xl font-mono font-bold text-shadow-[4px_5px_0px_rgba(0,0,0,1)] text-shadow-blue-900">{{ currentRun.currentLevel }}</p>
+        <p class="title-text-red text-xl">Capítulo {{ chapter }}</p>
+        <p class="text-xs text-white/80 mt-2">{{ totalRooms }}/{{ totalRooms }} salas concluídas</p>
       </div>
 
     </div>
@@ -113,7 +122,10 @@ const expReward = computed(() => levelAccount.calculateExpReward());
 
   <!-- Slot de actions para os botões grandes -->
   <template #actions>
-    <p @click="handleQuit" class="title-text text-white animate-pulse animate">Toque para continuar</p class="text-title text-white">
+    <div class="text-center">
+      <p class="text-sm text-white/75 mb-2">Capítulo {{ chapter }} concluído. O Capítulo 2 ainda não está disponível.</p>
+      <p @click="handleQuit" class="title-text text-white animate-pulse cursor-pointer">Voltar ao lobby</p>
+    </div>
   </template>
 </PlayModal>
 </template>

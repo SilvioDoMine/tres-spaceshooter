@@ -3,7 +3,8 @@ import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { useMissions } from '~/composables/useMissions';
 import { storeToRefs } from 'pinia';
 import { emitImpact } from '~/utils/combatEffects';
-import { combatTier } from '~/utils/combatPatterns';
+import { enemyCategory, normalAsteroidFragmentStats, roomProgress, scaledEnemyExperience, scaledEnemyHealth } from '~/utils/combatPatterns';
+import { playableRoomCount } from '~/utils/progression';
 
 export const baseStats = {
   miniasteroid: {
@@ -11,12 +12,13 @@ export const baseStats = {
     shape: 'dodecahedron',
     speed: 1.5,
     health: 90,
+    baseXP: 20,
     onHitDamage: 400,
     size: 0.75,
     deathSound: 'hit-hard3',
     hitSound: 'hit-soft2',
     drops: {
-      exp: { min: 60, max: 100 },
+      exp: { min: 20, max: 20 },
       gold: { min: 0, max: 10 }
     }
   },
@@ -24,13 +26,14 @@ export const baseStats = {
     color: 'gray',
     shape: 'dodecahedron',
     speed: 3,
-    health: 600,
+    health: 500,
+    baseXP: 90,
     onHitDamage: 900,
     size: 1.25,
     deathSound: 'hit-hard3',
     hitSound: 'hit-soft2',
     drops: {
-      exp: { min: 60, max: 100 },
+      exp: { min: 90, max: 90 },
       gold: { min: 0, max: 10 }
     }
   },
@@ -38,13 +41,16 @@ export const baseStats = {
     color: 'gray',
     shape: 'dodecahedron',
     speed: 2,
-    health: 2500,
+    health: 2600,
+    baseXP: 900,
+    fixedXP: true,
+    asteroidGeneration: 0,
     onHitDamage: 9999,
     size: 2.25,
     deathSound: 'hit-hard3',
     hitSound: 'hit-soft2',
     drops: {
-      exp: { min: 60, max: 100 },
+      exp: { min: 900, max: 900 },
       gold: { min: 0, max: 10 }
     }
   },
@@ -53,7 +59,8 @@ export const baseStats = {
     shape: 'square',
     size: 1,
     speed: 2,
-    health: 120,
+    health: 130,
+    baseXP: 40,
     onHitDamage: 150,
     distanceKeep: 10,
     shotDamage: 50,
@@ -62,7 +69,7 @@ export const baseStats = {
     deathSound: 'hit-hard3',
     hitSound: 'hit-soft2',
     drops: {
-      exp: { min: 100, max: 250 },
+      exp: { min: 40, max: 40 },
       gold: { min: 5, max: 15 }
     }
   },
@@ -72,6 +79,7 @@ export const baseStats = {
     size: 1,
     speed: 2.2,
     health: 180,
+    baseXP: 55,
     onHitDamage: 500,
     distanceKeep: 20,
     shotDamage: 100,
@@ -80,7 +88,7 @@ export const baseStats = {
     deathSound: 'hit-hard2',
     hitSound: 'hit-soft2',
     drops: {
-      exp: { min: 200, max: 350 },
+      exp: { min: 55, max: 55 },
       gold: { min: 10, max: 25 }
     }
   },
@@ -89,14 +97,15 @@ export const baseStats = {
     shape: 'cone',
     size: 1,
     speed: 3.5,
-    health: 80,
+    health: 120,
+    baseXP: 60,
     onHitDamage: 300,
     distanceKeep: 7,
     chargeRecoveryCooldown: 3, // Cooldown após charge (segundos)
     deathSound: 'hit-hard3',
     hitSound: 'hit-soft3',
     drops: {
-      exp: { min: 150, max: 300 },
+      exp: { min: 60, max: 60 },
       gold: { min: 10, max: 20 }
     }
   },
@@ -105,7 +114,8 @@ export const baseStats = {
     shape: 'square',
     size: 3,
     speed: 1.1,
-    health: 900,
+    health: 1400,
+    baseXP: 300,
     onHitDamage: 999,
     distanceKeep: 20,
     shotDamage: 200,
@@ -114,7 +124,7 @@ export const baseStats = {
     deathSound: 'enemy-death1',
     hitSound: 'hit-soft3',
     drops: {
-      exp: { min: 400, max: 600 },
+      exp: { min: 300, max: 300 },
       gold: { min: 100, max: 200 }
     }
   },
@@ -123,7 +133,9 @@ export const baseStats = {
     shape: 'square',
     size: 3,
     speed: 1.1,
-    health: 4000,
+    health: 7800,
+    baseXP: 0,
+    fixedXP: true,
     onHitDamage: 999,
     distanceKeep: 20,
     shotDamage: 300,
@@ -178,13 +190,14 @@ export const baseStats = {
     color: 'orange',
     shape: 'torus', // ← Este inimigo tem rotação customizada no componente
     speed: 2.0,
-    health: 140,
+    health: 180,
+    baseXP: 70,
     onHitDamage: 180,
     size: 1.0,
     deathSound: 'hit-hard3',
     hitSound: 'hit-soft2',
     drops: {
-      exp: { min: 100, max: 150 },
+      exp: { min: 70, max: 70 },
       gold: { min: 15, max: 25 }
     }
   },
@@ -194,13 +207,14 @@ export const baseStats = {
     color: 'fuchsia',
     shape: 'composite', // ← Este inimigo tem múltiplas partes visuais
     speed: 1.8,
-    health: 200,
+    health: 220,
+    baseXP: 80,
     onHitDamage: 220,
     size: 1.5,
     deathSound: 'enemy-death1',
     hitSound: 'hit-soft3',
     drops: {
-      exp: { min: 150, max: 250 },
+      exp: { min: 80, max: 80 },
       gold: { min: 20, max: 40 }
     }
   }
@@ -208,17 +222,18 @@ export const baseStats = {
 
 const onDeathBehavior = {
   asteroid: (enemy) => {
-    // Spawna de 1 a 3 miniasteroids ao morrer em cone nas costas voando na direção oposta
+    // Todo asteroide grande se divide em exatamente dois fragmentos.
     const enemyManager = useEnemyManager();
     const currentRun = useCurrentRunStore();
-    const miniasteroidCount = Math.floor(Math.random() * 3) + 1; // 1 a 3
+    const fragmentStats = normalAsteroidFragmentStats(enemy.room);
+    const miniasteroidCount = fragmentStats.count;
 
     // Calcula direção do player pro asteroid (direção em que ele estava vindo)
     const dirToPlayer = {
       x: currentRun.playerPosition.x - enemy.position.x,
       z: currentRun.playerPosition.z - enemy.position.z,
     };
-    const length = Math.sqrt(dirToPlayer.x ** 2 + dirToPlayer.z ** 2);
+    const length = Math.sqrt(dirToPlayer.x ** 2 + dirToPlayer.z ** 2) || 1;
 
     // Direção invertida (oposta ao movimento) - asteroids vão pra trás
     const baseDirection = {
@@ -258,15 +273,20 @@ const onDeathBehavior = {
         state: 'active', // Já spawna ativo
         overrides: {
           speed: speed,
+          health: fragmentStats.health,
+          maxHealth: fragmentStats.health,
+          baseXP: fragmentStats.baseXP,
+          fixedXP: false,
+          room: enemy.room,
+          isAsteroidFragment: true,
           direction: { ...rotatedDirection }, // Define direção inicial
         }
       });
     }
   },
   asteroidBoss: (enemy) => {
-    // Ao morrer, spawna 2 asteroidBoss menores.
-    // Caso a vida seja menor que 300, não spawna mais.
-    if (enemy.maxHealth <= 300) return;
+    const generation = enemy.asteroidGeneration || 0;
+    if (generation >= 2) return;
 
     const enemyManager = useEnemyManager();
     const currentRun = useCurrentRunStore();
@@ -276,7 +296,7 @@ const onDeathBehavior = {
       x: currentRun.playerPosition.x - enemy.position.x,
       z: currentRun.playerPosition.z - enemy.position.z,
     };
-    const length = Math.sqrt(dirToPlayer.x ** 2 + dirToPlayer.z ** 2);
+    const length = Math.sqrt(dirToPlayer.x ** 2 + dirToPlayer.z ** 2) || 1;
 
     const baseDirection = {
       x: dirToPlayer.x / length,
@@ -285,7 +305,10 @@ const onDeathBehavior = {
 
     for (let i = 0; i < 2; i++) {
       const angle = (i === 0) ? Math.PI / 6 : -Math.PI / 6; // 30° e -30° (spread menor)
-      const speed = 2 + Math.random(); // Velocidade entre 2 e 3
+      const speed = 2 + Math.random();
+      const nextGeneration = generation + 1;
+      const fragmentHealth = nextGeneration === 1 ? 700 : 250;
+      const fragmentXP = nextGeneration === 1 ? 100 : 25;
 
       // Rotaciona a direção base pelo ângulo
       const cos = Math.cos(angle);
@@ -309,8 +332,12 @@ const onDeathBehavior = {
         state: 'active',
         overrides: {
           speed: speed,
-          health: enemy.maxHealth / 2,
-          maxHealth: enemy.maxHealth / 2, // Metade da vida do boss original
+          health: fragmentHealth,
+          maxHealth: fragmentHealth,
+          baseXP: fragmentXP,
+          fixedXP: true,
+          asteroidGeneration: nextGeneration,
+          room: 10,
           // Opcional: dar uma direção inicial levemente desviada
           initialDirection: { ...rotatedDirection },
         }
@@ -385,12 +412,16 @@ export function useEnemyManager() {
       overrides = {},
     } = options;
 
-    const tier=combatTier(useCurrentRun.currentStageIndex);
-    const boss=/boss/i.test(enemyType);
-    // Durable hulls retain their configured health. Player upgrades still deal
-    // their full damage; progression is fixed by room, never by player loadout.
-    const health=Math.round(enemyStats.health*(1+tier*.65));
-    const contact=Math.round((boss?60:enemyType==='kamikaze'?40:24)+tier*18);
+    const room = playableRoomCount(useCurrentRun.levelConfig, useCurrentRun.currentStageIndex);
+    const progress = roomProgress(room);
+    const category = enemyCategory(enemyType);
+    const exactBossHealth = enemyType === 'asteroidBoss' || enemyType === 'boss';
+    const health = exactBossHealth ? enemyStats.health : scaledEnemyHealth(enemyStats.health, room);
+    const contact = enemyType === 'kamikaze'
+      ? Math.round(34 + 18 * progress)
+      : category === 'boss'
+        ? Math.round(48 + 16 * progress)
+        : Math.round(22 + 14 * progress);
     // Crio um novo inimigo
     const newEnemy = {
       id: `${enemyType}_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
@@ -402,6 +433,7 @@ export function useEnemyManager() {
       totalSpawnTime: delay,
       spawnProgress: state === 'spawning' ? 0 : 1,
       ...enemyStats,
+      room,
       health,
       maxHealth: health,
       onHitDamage: enemyType==='angel'?0:contact,
@@ -415,10 +447,6 @@ export function useEnemyManager() {
   };
 
   const spawnEnemyWave = (waveConfig) => {
-    const multiplier = (stageLevel) => {
-      return 1 + (stageLevel - 1) * 0.5; // Exemplo: 10% a mais por nível de estágio acima do 1
-    }
-
     // Spawna inimigos conforme a configuração da wave
     waveConfig.enemies.forEach(enemyGroup => {
       // Desestruturação para obter tipo, quantidade e delay
@@ -479,12 +507,12 @@ export function useEnemyManager() {
       enemy.totalDeathTime = 0.8;
       enemy.deathProgress = 0;
 
-      if (type === 'shot') {
-        // Executa o onDeathBehavior se existir
-        if (onDeathBehaviorFunc) {
-          onDeathBehaviorFunc(enemy);
-        }
+      // Fragmentation is part of the enemy itself, independent of how it died.
+      if (onDeathBehaviorFunc) {
+        onDeathBehaviorFunc(enemy);
+      }
 
+      if (type === 'shot') {
         // Reproduz som de inimigo morto
         useAudio().playSound(enemy.deathSound, 1, randomPitch);
 
@@ -494,9 +522,9 @@ export function useEnemyManager() {
         const goldDropped = Math.floor(Math.random() * (maxGold - minGold + 1)) + minGold;
         useCurrentRun.currentGold += goldDropped;
 
-        const minExp = enemy.drops?.exp?.min || 0;
-        const maxExp = enemy.drops?.exp?.max || 0;
-        const expDropped = Math.floor(Math.random() * (maxExp - minExp + 1)) + minExp;
+        const expDropped = enemy.fixedXP
+          ? (enemy.baseXP || 0)
+          : scaledEnemyExperience(enemy.baseXP || 0, enemy.room);
         useCurrentRun.addExp(expDropped);
 
         // Atualiza a contagem de inimigos mortos no run atual

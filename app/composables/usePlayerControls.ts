@@ -23,13 +23,15 @@ export function usePlayerControls() {
   const keysPressed = {
     w: false, a: false, s: false, d: false,
     ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false,
-    ' ': false, // Espaço para subir (Y+)
-    Shift: false, // Shift para descer (Y-)
   };
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (!currentRun.isPlaying) return;
     const key = event.key;
+    if (key === ' ' || key === 'Shift') {
+      event.preventDefault();
+      return;
+    }
     if (keysPressed.hasOwnProperty(key)) {
       keysPressed[key as keyof typeof keysPressed] = true;
       calculateMovementVector();
@@ -38,6 +40,10 @@ export function usePlayerControls() {
 
   const handleKeyUp = (event: KeyboardEvent) => {
     const key = event.key;
+    if (key === ' ' || key === 'Shift') {
+      event.preventDefault();
+      return;
+    }
     if (keysPressed.hasOwnProperty(key)) {
       keysPressed[key as keyof typeof keysPressed] = false;
       calculateMovementVector();
@@ -53,8 +59,7 @@ export function usePlayerControls() {
    * - S/ArrowDown = Trás (diminui Z-)
    * - A/ArrowLeft = Esquerda (diminui X-)
    * - D/ArrowRight = Direita (aumenta X+)
-   * - Space = Cima (Y+)
-   * - Shift = Baixo (Y-)
+   * O combate acontece somente no plano X/Z.
    */
   const calculateMovementVector = () => {
     if (!currentRun.isPlaying) {
@@ -62,7 +67,6 @@ export function usePlayerControls() {
       return;
     }
     let dx = 0; // Mudança no eixo X (Horizontal)
-    let dy = 0; // Mudança no eixo Y (Vertical)
     let dz = 0; // Mudança no eixo Z (Profundidade/Frente)
 
     // W = Cima na tela (Z-), S = Baixo na tela (Z+)
@@ -74,20 +78,15 @@ export function usePlayerControls() {
     if (keysPressed.a || keysPressed.ArrowLeft) dx -= 1;  // Esquerda
     if (keysPressed.d || keysPressed.ArrowRight) dx += 1; // Direita
 
-    // Space = Cima (Y+), Shift = Baixo (Y-)
-    if (keysPressed[' ']) dy += 1;    // Cima
-    if (keysPressed.Shift) dy -= 1;   // Baixo
-
-    // Normalização 3D (para que mover na diagonal/vertical não seja mais rápido)
-    const magnitude = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    // Normalização no plano para que mover na diagonal não seja mais rápido.
+    const magnitude = Math.sqrt(dx * dx + dz * dz);
     if (magnitude > 0) {
       dx /= magnitude;
-      dy /= magnitude;
       dz /= magnitude;
     }
 
     // ✅ setMoveVector dispara reatividade apenas quando teclas mudam
-    currentRun.setMoveVector(dx, dy, dz);
+    currentRun.setMoveVector(dx, 0, dz);
   };
 
   // Clear held keys on every pause (including upgrade menus), so resuming
@@ -123,11 +122,10 @@ export function usePlayerControls() {
     const movement = currentRun.getMoveVector();
     const speed = currentRun.currentMoveSpeed;
 
-    // Calcula o deslocamento em 3D
+    // Calcula o deslocamento no plano X/Z.
     const spatial = dilation.update(position, movement, delta);
     if(spatial.damage>0){currentRun.takeDamage(spatial.damage);if(currentRun.currentHealth<=0)return}
     const dx = spatial.x * speed * delta;
-    const dy = movement.y * speed * delta;
     const dz = spatial.z * speed * delta;
 
     // Verifica se pode mover, por exemplo está no limite do mapa
@@ -139,11 +137,11 @@ export function usePlayerControls() {
     // ✅ MUTAÇÃO DIRETA: Atualiza valores sem disparar reatividade
     // Com shallowRef, mutations internas não disparam watchers
     if (allowedX) position.x += dx;
-    position.y += dy;
+    position.y = 0;
     if (allowedZ) position.z += dz;
 
     // Rotação suave na direção do movimento
-    if (dx !== 0 || dy !== 0 || dz !== 0) {
+    if (dx !== 0 || dz !== 0) {
       // Calcula o ângulo desejado baseado na direção do movimento
       const targetRotation = Math.atan2(-movement.x, -movement.z);
 
@@ -170,7 +168,7 @@ export function usePlayerControls() {
     }
 
     // Se o jogador tiver parado, vamos atirar um projetil se estiver dentro do cd correto
-    if ((dx !== 0 || dy !== 0 || dz !== 0) === false) {
+    if ((dx !== 0 || dz !== 0) === false) {
       // Aponta para o inimigo mais próximo e rotaciona o personagem nessa direção
       const nearestEnemy = projectileStore.nearestEnemyFromPlayer();
 
@@ -205,14 +203,15 @@ export function usePlayerControls() {
           const magnitude = Math.hypot(dirX, dirZ);
           if (magnitude > 0) {
             const direction = { x: dirX / magnitude, z: dirZ / magnitude };
-            const hits = 1 + (skills.getSkillLevel('piercing_shot') || 0);
+            const piercing = skills.getSkillLevel('piercing_shot') || 0;
+            const hits = piercing ? SkillsList.piercing_shot.levels[piercing].value : 1;
             const bounces = skills.getSkillLevel('ricochet_shot') || 0;
             const power = usePlayerStats().getDamageMultiplier;
             let sounded = false;
-            const fire = (heading: {x:number,z:number}, baseSide = 0, multiplier = 1, rearSide = 0, count = 1 + multi) => {
+            const fire = (heading: {x:number,z:number}, baseSide = 0, multiplier = 1, rearSide = 0, count = 1 + multi, formationPenalty = true) => {
               shotFormation(count).forEach((slot, index) => {
                 const origin = muzzlePosition(position, heading, slot.side + baseSide, slot.forward);
-                const efficiency = !multi || index === Math.floor(count/2) ? 1 : SkillsList.multishot.levels[multi].value;
+                const efficiency = !formationPenalty || !multi || index === Math.floor(count/2) ? 1 : SkillsList.multishot.levels[multi].value;
                 projectileStore.spawnProjectile('player', origin, heading, 'player', 'player',
                   hits, bounces, damage * multiplier * efficiency, [], {
                     power, silent: sounded,
@@ -225,7 +224,7 @@ export function usePlayerControls() {
             fire(direction);
             const rear = skills.getSkillLevel('back_shot') || 0;
             if (rear) {
-              fire(direction, 0, SkillsList.back_shot.levels[rear].value, 1, Math.max(1 + multi, rear));
+              fire(direction, 0, SkillsList.back_shot.levels[rear].value, 1, rear, false);
             }
             const diagonal = skills.getSkillLevel('diagonal_shot') || 0;
             if (diagonal) {

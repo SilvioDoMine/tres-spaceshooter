@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia';
 import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
 import { useProjectileStore } from '~/stores/projectileStore';
 import { useEnemyAttacks } from '~/composables/useEnemyAttacks';
+import { COLLISION_IFRAME, createIFrameGate } from '~/utils/combatPatterns';
 
 export function useEnemyAI() {
     const enemyManager = useEnemyManager();
@@ -11,6 +12,10 @@ export function useEnemyAI() {
     const currentRunStore = useCurrentRunStore();
     const projectileStore = useProjectileStore();
     const attacks = useEnemyAttacks();
+    const collisionGate = createIFrameGate(COLLISION_IFRAME);
+    const applyCollisionDamage = damage => {
+        if (collisionGate.consume()) currentRunStore.takeDamage(damage);
+    };
     
     const { activeEnemies } = storeToRefs(enemyManagerStore);
     const { playerPosition, isPlaying } = storeToRefs(currentRunStore);
@@ -86,7 +91,7 @@ export function useEnemyAI() {
                 // Aqui você pode implementar a lógica de dano ao jogador
                 console.log(`Miniasteroid ${enemy.id} colidiu com o jogador!`);
 
-                currentRunStore.takeDamage(enemy.onHitDamage);
+                applyCollisionDamage(enemy.onHitDamage);
                 // destrói o asteroide após a colisão
                 enemyManager.takeDamage(enemy.id, enemy.health, 'collision');
             }
@@ -126,7 +131,7 @@ export function useEnemyAI() {
                 // Aqui você pode implementar a lógica de dano ao jogador
                 console.log(`Asteroid ${enemy.id} colidiu com o jogador!`);
 
-                currentRunStore.takeDamage(enemy.onHitDamage);
+                applyCollisionDamage(enemy.onHitDamage);
                 // destrói o asteroide após a colisão
                 enemyManager.takeDamage(enemy.id, enemy.health, 'collision');
             }
@@ -166,7 +171,7 @@ export function useEnemyAI() {
                 // Aqui você pode implementar a lógica de dano ao jogador
                 console.log(`Asteroid ${enemy.id} colidiu com o jogador!`);
 
-                currentRunStore.takeDamage(enemy.onHitDamage);
+                applyCollisionDamage(enemy.onHitDamage);
                 // destrói o asteroide após a colisão
                 enemyManager.takeDamage(enemy.id, enemy.health, 'collision');
             }
@@ -219,7 +224,7 @@ export function useEnemyAI() {
                 // Aqui você pode implementar a lógica de dano ao jogador
                 console.log(`UFO ${enemy.id} colidiu com o jogador!`);
 
-                currentRunStore.takeDamage(enemy.onHitDamage);
+                applyCollisionDamage(enemy.onHitDamage);
                 enemyManager.takeDamage(enemy.id, enemy.health, 'collision');
             }
         },
@@ -271,7 +276,7 @@ export function useEnemyAI() {
                 // Aqui você pode implementar a lógica de dano ao jogador
                 console.log(`UFOFAST ${enemy.id} colidiu com o jogador!`);
 
-                currentRunStore.takeDamage(enemy.onHitDamage);
+                applyCollisionDamage(enemy.onHitDamage);
                 enemyManager.takeDamage(enemy.id, enemy.health, 'collision');
             } 
         },
@@ -376,7 +381,7 @@ export function useEnemyAI() {
                 // Aqui você pode implementar a lógica de dano ao jogador
                 console.log(`Kamikaze ${enemy.id} colidiu com o jogador!`);
 
-                currentRunStore.takeDamage(enemy.onHitDamage);
+                applyCollisionDamage(enemy.onHitDamage);
                 enemyManager.takeDamage(enemy.id, enemy.health, 'collision');
             }
         },
@@ -402,7 +407,7 @@ export function useEnemyAI() {
                 // detecta colisão com o jogador e dá dano
                 console.log(`Boss ${enemy.id} colidiu com o jogador!`);
 
-                currentRunStore.takeDamage(enemy.onHitDamage);
+                applyCollisionDamage(enemy.onHitDamage);
                 enemyManager.takeDamage(enemy.id, enemy.health, 'collision');
                 return;
             }
@@ -450,7 +455,7 @@ export function useEnemyAI() {
                 // detecta colisão com o jogador e dá dano
                 console.log(`Miniboss ${enemy.id} colidiu com o jogador!`);
 
-                currentRunStore.takeDamage(enemy.onHitDamage);
+                applyCollisionDamage(enemy.onHitDamage);
                 enemyManager.takeDamage(enemy.id, enemy.health, 'collision');
                 return;
             }
@@ -577,7 +582,7 @@ export function useEnemyAI() {
                 // Aqui você pode implementar a lógica de dano ao jogador
                 console.log(`Kamikaze ${enemy.id} colidiu com o jogador!`);
 
-                currentRunStore.takeDamage(enemy.onHitDamage);
+                applyCollisionDamage(enemy.onHitDamage);
                 enemyManager.takeDamage(enemy.id, enemy.health, 'collision');
             }
         },
@@ -624,6 +629,7 @@ export function useEnemyAI() {
     };
 
     const update = (deltaTime) => {
+        collisionGate.update(deltaTime);
         attacks.update(activeEnemies.value, deltaTime);
         activeEnemies.value.forEach(enemy => {
             // Inimigos em spawning não se movem nem atacam

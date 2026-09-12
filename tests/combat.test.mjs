@@ -3,7 +3,8 @@ import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import * as patterns from '../app/utils/combatPatterns.js';
-const {shotFormation,advanceShot,segmentHit,attackProfile,attackDirections,combatTier}=patterns;
+import { playableRoomCount } from '../app/utils/progression.js';
+const {shotFormation,advanceShot,segmentHit,attackProfile,attackDirections}=patterns;
 
 test('two parallel muzzles and five-shot arrow preserve symmetry',()=>{
  const pair=shotFormation(2);
@@ -32,23 +33,23 @@ test('swept hit detects a target crossed between frames',()=>{
 });
 
 test('enemy ammunition varies without increasing salvo damage or density',()=>{
- assert.equal(attackProfile('asteroid',0).projectile,'enemyOrb');
- assert.equal(attackProfile('ufo',0).projectile,'enemyPlasma');
- for(const tier of [0,.5,1]){
-  const plasma=attackProfile('ufofast',tier,1),missile=attackProfile('ufofast',tier,2);
+ assert.equal(attackProfile('asteroid',2).projectile,'enemyOrb');
+ assert.equal(attackProfile('ufo',2).projectile,'enemyPlasma');
+ for(const room of [2,10,20]){
+  const plasma=attackProfile('ufofast',room,1),missile=attackProfile('ufofast',room,2);
   assert.equal(missile.projectile,'enemyMissile');
-  for(const field of ['count','speed','damage','cooldown','charge','range'])assert.equal(missile[field],plasma[field]);
+  for(const field of ['count','speed','damage','interval','charge','range'])assert.equal(missile[field],plasma[field]);
  }
 });
 test('all progression tiers keep attacks bounded and leave ring gaps',()=>{
- for(let stage=0;stage<100;stage++)for(const type of ['miniasteroid','asteroid','ufo','ufofast','boss','asteroidBoss']){
-  const p=attackProfile(type,combatTier(stage));
-  assert.ok(p.speed<7 && p.damage<=36 && p.cooldown>=1.8 && p.count<=10);
+ for(let room=2;room<=20;room++)for(const type of ['miniasteroid','asteroid','ufo','ufofast','boss','asteroidBoss']){
+  const p=attackProfile(type,room,0,type==='boss'?{health:7800,maxHealth:7800}:{});
+  assert.ok(p.speed<=6.9 && p.damage<=32 && p.interval>=1.45 && p.count<=10);
   const directions=attackDirections(p,{x:1,z:0},0);
   assert.equal(directions.length,p.count);
   directions.forEach(d=>assert.ok(Math.abs(Math.hypot(d.x,d.z)-1)<1e-9));
  }
- assert.equal(attackProfile('asteroid',0).count,5);
+ assert.equal(attackProfile('asteroid',2).count,5);
 });
 
 function storeHarness(){
@@ -59,7 +60,7 @@ function storeHarness(){
  const context=vm.createContext({...patterns,Math,console,
   defineStore:(_id,setup)=>setup, shallowRef:value=>({value}),emitImpact:()=>{},useAudio:()=>({playSound:()=>{}}),
   PlayerBaseStats:{projectiles:{shotSpeed:19,damage:50,size:.2,range:11}},
-  baseStats:{},SkillsList:{ricochet_shot:{levels:{1:{value:.6}}}},
+  baseStats:{},SkillsList:{ricochet_shot:{levels:{1:{value:.5}}}},
   useEnemyManager:()=>({activeEnemies:{value:enemies},takeDamage:(id,n)=>hits.push({id,n})}),
   useCurrentRunStore:()=>({getPlayerPosition:()=>player,takeDamage:n=>damage.push(n)}),
   usePlayerStats:()=>({getProjectileSpeedMultiplier:1,getRangeMultiplier:1,getDamageMultiplier:1}),
@@ -76,10 +77,10 @@ test('ricochet continues once, keeps trail and never hits previous target again'
  store.update(.1);
  assert.equal(hits.length,1);
  const shot=store.projectiles.value[0];
- assert.equal(shot.ricochet,true);assert.ok(shot.trail.length);
+ assert.equal(shot.ricochet,true);assert.ok(shot.trail.length);assert.ok(shot.distanceTraveled>0);
  store.update(.2);
  assert.deepEqual(hits.map(h=>h.id),['a','b']);
- assert.equal(hits[1].n,30);
+ assert.equal(hits[1].n,25);
  assert.equal(store.projectiles.value.length,0);
 });
 test('a removed shot cannot hit two overlapping enemies; volley grants damage grace',()=>{
@@ -94,7 +95,7 @@ test('a removed shot cannot hit two overlapping enemies; volley grants damage gr
 });
 test('enemy shots wait for telegraph, honor visibility and global projectile budget',()=>{
  const bullets=[],run={currentStageIndex:1,getPlayerPosition:()=>({x:0,z:0})};
- const context=vm.createContext({...patterns,Math,
+ const context=vm.createContext({...patterns,playableRoomCount,Math,
   useCurrentRunStore:()=>run,useProjectileStore:()=>({projectiles:bullets,spawnProjectile:(...args)=>bullets.push({ownerType:'enemy',args})}),
   useState:()=>({value:{x:0,z:0,width:30,height:23}})
  });

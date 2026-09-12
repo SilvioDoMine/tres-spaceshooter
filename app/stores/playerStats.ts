@@ -10,8 +10,6 @@ export const usePlayerStats = defineStore('playerStats', () => {
   const regenRate = ref(0); // Porcentagem da vida por segundo
   const bonusDamageFlat = ref(50);
 
-  const timePassedSinceLastRegen = ref(0);
-
   function update (delta: number) {
     // Atualizações contínuas dos atributos do jogador, se necessário
     // Exemplo: Regeneração de vida ao longo do tempo, buffs temporários, etc.
@@ -31,27 +29,10 @@ export const usePlayerStats = defineStore('playerStats', () => {
     }
 
     // Regeneração de vida ao longo do tempo
-    if (regenRate.value > 0) {
-
-      if (timePassedSinceLastRegen.value >= 1.0) { // Aplica a regeneração a cada segundo
-        if (! useCurrentRunStore().isWaveInProgress) {
-          return;
-        }
-
-        const currentHealth = useCurrentRunStore().currentHealth;
-        const maxHealth = useCurrentRunStore().maxHealth;
-        const regenAmount = (regenRate.value / 100) * maxHealth * timePassedSinceLastRegen.value;
-
-        const heal = Math.min(Math.ceil(regenAmount), maxHealth - currentHealth);
-
-        useCurrentRunStore().healPlayer(heal);
-
-        console.log('Regenerated', heal, 'health for player', 'currentHealth:', currentHealth, 'maxHealth:', maxHealth);
-
-        timePassedSinceLastRegen.value = 0;
-      } else {
-        timePassedSinceLastRegen.value += delta;
-      }
+    const run = useCurrentRunStore();
+    if (regenRate.value > 0 && run.isPlaying && run.isWaveInProgress) {
+      const regenAmount = (regenRate.value / 100) * run.maxHealth * delta;
+      run.healPlayer(Math.min(regenAmount, run.maxHealth - run.currentHealth));
     }
   };
 
@@ -67,8 +48,7 @@ export const usePlayerStats = defineStore('playerStats', () => {
           throw new Error(`Skill level ${skill.currentLevel} not found for skill ${skill.id}`);
         }
 
-        const multiplier = skillLevel.value;
-        damageMultiplier += damageMultiplier * multiplier;
+        damageMultiplier = skillLevel.value;
       }
     });
 
@@ -86,8 +66,7 @@ export const usePlayerStats = defineStore('playerStats', () => {
           throw new Error(`Skill level ${skill.currentLevel} not found for skill ${skill.id}`);
         }
 
-        const multiplier = skillLevel.value;
-        healthMultiplier += healthMultiplier * multiplier;
+        healthMultiplier = skillLevel.value;
       }
     });
 
@@ -105,8 +84,7 @@ export const usePlayerStats = defineStore('playerStats', () => {
           throw new Error(`Skill level ${skill.currentLevel} not found for skill ${skill.id}`);
         }
 
-        const multiplier = skillLevel.value;
-        speedMultiplier += speedMultiplier * multiplier;
+        speedMultiplier = skillLevel.value;
       }
     });
 
@@ -124,8 +102,7 @@ export const usePlayerStats = defineStore('playerStats', () => {
           throw new Error(`Skill level ${skill.currentLevel} not found for skill ${skill.id}`);
         }
 
-        const multiplier = skillLevel.value;
-        projectileSpeedMultiplier += projectileSpeedMultiplier * multiplier;
+        projectileSpeedMultiplier = skillLevel.projectileValue;
       }
     });
 
@@ -134,6 +111,10 @@ export const usePlayerStats = defineStore('playerStats', () => {
 
   function addRegenRate(amount: number) {
     regenRate.value += amount;
+  }
+
+  function setRegenRate(amount: number) {
+    regenRate.value = amount;
   }
 
   function removeRegenRate(amount: number) {
@@ -166,8 +147,7 @@ export const usePlayerStats = defineStore('playerStats', () => {
           throw new Error(`Skill level ${skill.currentLevel} not found for skill ${skill.id}`);
         }
 
-        const multiplier = skillLevel.value;
-        rangeMultiplier += rangeMultiplier * multiplier;
+        rangeMultiplier = skillLevel.value;
       }
     });
 
@@ -185,6 +165,7 @@ export const usePlayerStats = defineStore('playerStats', () => {
     heal,
 
     addRegenRate,
+    setRegenRate,
     removeRegenRate,
 
     getDamageMultiplier,
