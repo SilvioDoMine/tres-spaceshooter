@@ -279,18 +279,22 @@ jobs:
 
           site=https://hyfight.com.br
 
-          code="$(curl -sS -o /tmp/index.html -w '%{http_code}' --max-time 30 "$site")"
-          if [ "$code" != "200" ]; then
-            echo "::error::$site respondeu HTTP $code depois do deploy"
-            exit 1
-          fi
-
+          # O Coolify marca o deploy como finished antes de o container novo
+          # assumir o trafego, entao a primeira chamada pode dar timeout ou
+          # ainda pegar a versao anterior. Tenta por ate ~2 minutos.
           # A app e SPA: o Nuxt embute o runtimeConfig publico no index.html,
           # entao a versao realmente servida da para conferir direto aqui.
-          if grep -qF "$VERSION" /tmp/index.html; then
-            echo "$site no ar servindo $VERSION"
-          else
-            echo "::error::$site respondeu 200 mas nao esta servindo $VERSION"
-            echo "encontrado: $(grep -oE 'appVersion:"[^"]*"' /tmp/index.html | head -n1)"
-            exit 1
-          fi
+          code=""
+          for i in $(seq 1 12); do
+            code="$(curl -sS -o /tmp/index.html -w '%{http_code}' --max-time 15 "$site" || true)"
+            if [ "$code" = "200" ] && grep -qF "$VERSION" /tmp/index.html; then
+              echo "$site no ar servindo $VERSION"
+              exit 0
+            fi
+            echo "tentativa $i: HTTP ${code:-sem resposta}, aguardando..."
+            sleep 10
+          done
+
+          echo "::error::$site nao passou a servir $VERSION em 2 minutos (ultimo HTTP ${code:-sem resposta})"
+          echo "encontrado: $(grep -oE 'appVersion:"[^"]*"' /tmp/index.html 2>/dev/null | head -n1 || true)"
+          exit 1
