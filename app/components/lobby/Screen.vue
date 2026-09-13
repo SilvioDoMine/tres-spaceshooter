@@ -8,7 +8,11 @@ withDefaults(defineProps<{ title: string; theme?: 'blue' | 'purple' }>(), { them
   <section class="lobby-screen pointer-events-auto" :class="`lobby-screen--${theme}`" :aria-label="title">
     <!-- Faixa opaca: o conteúdo rola por baixo dela -->
     <header class="lobby-screen__header">
-      <h2 class="lobby-screen__title">{{ title }}</h2>
+      <h2 class="lobby-screen__title">
+        <i aria-hidden="true">✦</i>
+        <span>{{ title }}</span>
+        <i aria-hidden="true">✦</i>
+      </h2>
       <div class="lobby-screen__divider" aria-hidden="true"><span></span><i></i><span></span></div>
       <!-- Pendurado na borda esquerda, logo abaixo da faixa -->
       <div v-if="$slots['header-start']" class="lobby-screen__header-start"><slot name="header-start" /></div>
@@ -31,25 +35,31 @@ withDefaults(defineProps<{ title: string; theme?: 'blue' | 'purple' }>(), { them
 </template>
 
 <style scoped>
-.lobby-screen{position:absolute;top:0;left:0;right:0;bottom:72px;z-index:10;display:flex;flex-direction:column;padding-top:72px;color:white}
+.lobby-screen{position:absolute;top:0;left:0;right:0;bottom:72px;z-index:10;display:flex;flex-direction:column;color:white}
 .lobby-screen--blue{
-  --band:linear-gradient(#2f6fc4,#24569e);--pill:linear-gradient(#7cc0ff,#4a90e2);--pill-edge:#1d4a88;
+  --band:linear-gradient(#2f6fc4,#24569e);--title-tint:#cfe8ff;--pill-edge:#1d4a88;
   background:linear-gradient(#4aa3ec 0%,#2d6fbf 30%,#1d3566 60%,#161f3f 100%);
 }
 .lobby-screen--purple{
-  --band:linear-gradient(#5a45b8,#4a389e);--pill:linear-gradient(#9b86f0,#735bd6);--pill-edge:#3b2a86;
+  --band:linear-gradient(#5a45b8,#4a389e);--title-tint:#dcd0ff;--pill-edge:#3b2a86;
   background:linear-gradient(#5f47b8 0%,#4b3a95 45%,#322b66 100%);
 }
 .lobby-screen__header{
-  position:relative;z-index:2;display:flex;justify-content:center;padding:10px 16px 16px;
+  /* A faixa começa no topo, por trás da topbar (72px), para a cor ficar contínua com ela */
+  position:relative;z-index:2;display:flex;justify-content:center;padding:82px 16px 16px;
   background:var(--band);border-bottom:3px solid rgba(255,255,255,.14);box-shadow:0 8px 14px rgba(10,6,40,.28);
 }
+/* Título de destaque (não é aba): texto grande com contorno, brilho atrás e estrelinhas */
 .lobby-screen__title{
-  width:min(520px,100%);margin:0;padding:6px 24px;text-align:center;border-radius:999px;
-  border:3px solid var(--pill-edge);background:var(--pill);
-  box-shadow:inset 0 3px 0 rgba(255,255,255,.35),inset 0 -3px 0 rgba(0,0,0,.12),0 4px 0 rgba(0,0,0,.2);
-  font:26px 'Lilita One',sans-serif;color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.35);
+  position:relative;display:flex;align-items:center;justify-content:center;gap:12px;margin:0;padding:4px 0 2px;
+  font:34px/1.1 'Lilita One',sans-serif;letter-spacing:.5px;
 }
+.lobby-screen__title::before{content:'';position:absolute;inset:-6px -40px;z-index:-1;border-radius:50%;background:radial-gradient(closest-side,rgba(255,255,255,.22),rgba(255,255,255,0))}
+.lobby-screen__title span{
+  color:transparent;background:linear-gradient(#fff 40%,var(--title-tint));-webkit-background-clip:text;background-clip:text;
+  filter:drop-shadow(0 2px 0 var(--pill-edge)) drop-shadow(0 -1px 0 var(--pill-edge)) drop-shadow(1.5px 0 0 var(--pill-edge)) drop-shadow(-1.5px 0 0 var(--pill-edge)) drop-shadow(0 4px 6px rgba(0,0,0,.3));
+}
+.lobby-screen__title i{font-style:normal;font-size:.5em;color:#ffd27a;filter:drop-shadow(0 2px 0 var(--pill-edge))}
 /* Separador: linha que clareia no centro com um losango */
 .lobby-screen__divider{position:absolute;left:10%;right:10%;bottom:-10px;display:flex;align-items:center;pointer-events:none}
 .lobby-screen__divider span{flex:1;height:4px;border-radius:2px;background:linear-gradient(to right,rgba(255,255,255,0),rgba(255,255,255,.9))}
@@ -63,6 +73,6 @@ withDefaults(defineProps<{ title: string; theme?: 'blue' | 'purple' }>(), { them
 .lobby-screen__empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:rgba(255,255,255,.6);font-family:'Lilita One',sans-serif}
 .lobby-screen__empty span{font-size:40px;color:#ffe09a}
 .lobby-screen__empty p{margin:0;font-size:20px}
-@media(max-width:650px){.lobby-screen__title{font-size:22px;padding:4px 28px}}
-@media(max-height:500px) and (orientation:landscape){.lobby-screen{bottom:56px;padding-top:68px}.lobby-screen__header{padding:4px 16px 10px}.lobby-screen__title{font-size:18px;padding:2px 24px}.lobby-screen__header-start{top:calc(100% + 8px)}.lobby-screen__body{padding:8px}.lobby-screen__body.has-footer{padding-bottom:84px}}
+@media(max-width:650px){.lobby-screen__title{font-size:30px}}
+@media(max-height:500px) and (orientation:landscape){.lobby-screen{bottom:56px}.lobby-screen__header{padding:72px 16px 10px}.lobby-screen__title{font-size:22px;padding:0}.lobby-screen__header-start{top:calc(100% + 8px)}.lobby-screen__body{padding:8px}.lobby-screen__body.has-footer{padding-bottom:84px}}
 </style>
