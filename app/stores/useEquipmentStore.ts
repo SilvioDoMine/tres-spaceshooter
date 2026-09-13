@@ -126,14 +126,7 @@ export const useEquipmentStore = defineStore('equipment', () => {
     save();
   }
 
-  if (import.meta.client) {
-    // Debug: grantEquipment('canhao-plasma', 'gray', 3) ou grantEquipment(null, 'purple', 2) para aleatório
-    Object.assign(window, {
-      resetEquipment,
-      grantEquipment: (defId: string | null, rarity: EquipmentRarity = 'gray', count = 1) =>
-        Array.from({ length: count }, () => (defId ? grant(defId, rarity) : grantRandom(rarity))),
-    });
-  }
+  // Comandos de debug no console (giveItem, grantEquipment, resetEquipment): ~/plugins/equipmentDebug.client.ts
 
   return {
     items,
