@@ -2,7 +2,7 @@
 import { getEquipment, type OwnedEquipment } from '~/utils/equipment';
 import type { EquipmentSlot } from '~/data/equipment';
 
-// Card quadrado do item (moldura pela raridade). Sem item, mostra a silhueta do slot vazio.
+// Card quadrado do item (moldura rebaixada pela raridade, ver BaseRarityFrame). Sem item, mostra a silhueta do slot vazio.
 const props = defineProps<{
   item?: OwnedEquipment | null;
   /** Slot mostrado quando está vazio */
@@ -18,59 +18,34 @@ const def = computed(() => (props.item ? getEquipment(props.item.defId) : null))
 </script>
 
 <template>
-  <div
+  <BaseRarityFrame
     class="icard"
-    :class="[item ? `is-${item.rarity}` : 'is-empty', { 'is-dimmed': dimmed, 'is-selected': selected }]"
+    :class="{ 'is-dimmed': dimmed, 'is-selected': selected }"
+    :rarity="item ? item.rarity : 'empty'"
   >
-    <div class="icard__art">
-      <LobbyEquipmentItemIcon v-if="def" :def-id="def.id" />
-      <LobbyEquipmentItemIcon v-else-if="slot" :slot="slot" class="icard__ghost" />
-    </div>
+    <LobbyEquipmentItemIcon v-if="def" :def-id="def.id" class="icard__art" />
+    <LobbyEquipmentItemIcon v-else-if="slot" :slot="slot" class="icard__art icard__ghost" />
 
-    <span v-if="def" class="icard__slot"><LobbyEquipmentItemIcon :slot="def.slot" /></span>
-    <span v-if="equippedBadge" class="icard__equipped">E</span>
-    <span v-if="upgrade" class="icard__upgrade" aria-label="Melhoria disponível">
-      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2 18 11h-5v7H7v-7H2z" /></svg>
-    </span>
-    <span v-if="fusable" class="icard__fusable" aria-label="Pode fundir">!</span>
-    <span v-if="selected" class="icard__check" aria-hidden="true">
-      <svg viewBox="0 0 24 24"><path d="m3 13 6 6L21 6" /></svg>
-    </span>
-  </div>
+    <template #overlay>
+      <span v-if="def" class="icard__slot"><LobbyEquipmentItemIcon :slot="def.slot" /></span>
+      <span v-if="equippedBadge" class="icard__equipped">E</span>
+      <span v-if="upgrade" class="icard__upgrade" aria-label="Melhoria disponível">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2 18 11h-5v7H7v-7H2z" /></svg>
+      </span>
+      <span v-if="fusable" class="icard__fusable" aria-label="Pode fundir">!</span>
+      <span v-if="selected" class="icard__check" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="m3 13 6 6L21 6" /></svg>
+      </span>
+    </template>
+  </BaseRarityFrame>
 </template>
 
 <style scoped>
 .icard {
-  --edge: #6b7384;
-  --light: #d7dde6;
-  --dark: #8d96a6;
-  --glow: transparent;
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  border-radius: 16%;
-  border: 3px solid var(--edge);
-  background: linear-gradient(160deg, var(--light), var(--dark));
-  box-shadow:
-    0 4px 0 rgba(0, 0, 0, 0.35),
-    inset 0 3px 0 rgba(255, 255, 255, 0.35),
-    inset 0 0 0 2px var(--glow);
-  container-type: inline-size;
   transition:
     filter 0.2s ease,
     opacity 0.2s ease,
     translate 0.2s ease;
-}
-.icard.is-green { --edge: #257a35; --light: #8ff09a; --dark: #3fae50; }
-.icard.is-blue { --edge: #1f4f9c; --light: #8fcbff; --dark: #3d82e0; }
-.icard.is-purple { --edge: #5a2a99; --light: #d6a6ff; --dark: #9350e0; }
-.icard.is-orange { --edge: #a3570d; --light: #ffe08a; --dark: #f29a24; --glow: #fff2b0; }
-.icard.is-red { --edge: #8e1b1b; --light: #ff9a8a; --dark: #e03434; --glow: #ffd07a; }
-.icard.is-empty {
-  --edge: rgba(255, 255, 255, 0.28);
-  background: rgba(10, 18, 40, 0.45);
-  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.2);
-  border-style: dashed;
 }
 .icard.is-dimmed {
   filter: grayscale(0.7) brightness(0.55);
@@ -79,29 +54,32 @@ const def = computed(() => (props.item ? getEquipment(props.item.defId) : null))
   translate: 0 -2px;
 }
 .icard__art {
-  position: absolute;
-  inset: 14%;
-  filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.25));
+  width: 100%;
+  height: 100%;
 }
 .icard__ghost {
   color: rgba(255, 255, 255, 0.3);
 }
+/* Selo do slot no canto, por cima do anel (como no Archero) */
 .icard__slot {
   position: absolute;
-  left: 4%;
-  top: 4%;
-  width: 24%;
-  height: 24%;
-  padding: 4%;
+  z-index: 2;
+  left: -3%;
+  top: -3%;
+  width: 27%;
+  height: 27%;
+  padding: 4.5%;
   border-radius: 50%;
-  background: rgba(20, 16, 40, 0.75);
-  border: 2px solid rgba(255, 255, 255, 0.85);
+  background: radial-gradient(circle at 40% 35%, #3a3452, #15122a);
+  border: max(1.5px, 2.2cqw) solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 max(1px, 1.5cqw) 0 rgba(0, 0, 0, 0.35);
   color: #fff;
 }
 .icard__equipped {
   position: absolute;
-  right: 4%;
-  bottom: 4%;
+  z-index: 2;
+  right: 5%;
+  bottom: 7%;
   display: grid;
   place-items: center;
   width: 26%;
@@ -114,6 +92,7 @@ const def = computed(() => (props.item ? getEquipment(props.item.defId) : null))
 }
 .icard__upgrade {
   position: absolute;
+  z-index: 2;
   right: -6%;
   bottom: -6%;
   width: 34%;
@@ -133,6 +112,7 @@ const def = computed(() => (props.item ? getEquipment(props.item.defId) : null))
 }
 .icard__fusable {
   position: absolute;
+  z-index: 2;
   right: -7%;
   top: -7%;
   display: grid;
@@ -149,6 +129,7 @@ const def = computed(() => (props.item ? getEquipment(props.item.defId) : null))
 }
 .icard__check {
   position: absolute;
+  z-index: 2;
   inset: 0;
   display: grid;
   place-items: center;

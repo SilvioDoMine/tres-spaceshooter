@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// Ícone de recompensa/habilidade (ouro, gemas, exp...) na mesma moldura rebaixada dos equipamentos.
 const props = defineProps({
   /** Raridade do item/habilidade */
   rarity: {
@@ -18,7 +19,7 @@ const props = defineProps({
     required: false,
     default: '',
   },
-  /** Mostrar quantidade no canto inferior esquerdo */
+  /** Mostrar quantidade no canto inferior direito */
   quantity: {
     type: String,
     default: '',
@@ -32,31 +33,10 @@ const props = defineProps({
 
 const emit = defineEmits(['click']);
 
-// Classes de tamanho
 const sizeClasses = {
-  sm: 'w-16 h-16 p-1.5',
-  md: 'w-20 h-20 p-2',
-  lg: 'w-24 h-24 p-2.5',
-};
-
-// Classes de borda (cor mais clara da raridade)
-const borderClasses = {
-  gray: 'border-gray-300',
-  green: 'border-green-300',
-  blue: 'border-blue-400',
-  purple: 'border-fuchsia-500',
-  orange: 'border-orange-400',
-  red: 'border-red-500',
-};
-
-// Classes de gradiente interno (cores mais escuras com gradiente)
-const gradientClasses = {
-  gray: 'from-gray-500 via-gray-400 to-gray-500',
-  green: 'from-green-600 via-green-500 to-green-600',
-  blue: 'from-blue-700 via-blue-600 to-blue-700',
-  purple: 'from-fuchsia-900 via-fuchsia-800 to-fuchsia-900',
-  orange: 'from-orange-700 via-orange-800 to-orange-900',
-  red: 'from-red-700 via-red-800 to-red-900',
+  sm: 'w-16',
+  md: 'w-20',
+  lg: 'w-24',
 };
 
 function handleClick() {
@@ -69,52 +49,61 @@ function handleClick() {
 <template>
   <div
     :class="[
-      'relative flex items-center justify-center',
-      'rounded-2xl border-4',
-      'shadow-[inset_0_2px_0_rgba(255,255,255,0.1),0_2px_0_0_rgba(0,0,0,0.15),0_3px_0_0_rgba(0,0,0,0.12),0_4px_0_0_rgba(0,0,0,0.09),0_5px_8px_rgba(0,0,0,0.25)]',
-      'transition-transform duration-150',
+      'aicon relative shrink-0 transition-transform duration-150',
       sizeClasses[size],
-      borderClasses[rarity],
-      clickable && 'cursor-pointer hover:scale-105 active:scale-95 active:shadow-[inset_0_2px_0_rgba(255,255,255,0.1),0_1px_0_0_rgba(0,0,0,0.15),0_2px_0_0_rgba(0,0,0,0.12),0_3px_4px_rgba(0,0,0,0.25)]',
-      !clickable && 'cursor-default',
+      clickable ? 'cursor-pointer hover:scale-105 active:scale-95' : 'cursor-default',
     ]"
     @click="handleClick"
   >
-    <!-- Inner container with inset shadow and gradient -->
-    <div
-      :class="[
-        'absolute inset-0 rounded-xl',
-        'bg-linear-to-b',
-        'shadow-[inset_0_2px_8px_rgba(0,0,0,0.4),inset_0_0px_0px_rgba(0,0,0,0.3)]',
-        gradientClasses[rarity],
-      ]"
-    />
-
-    <!-- Content area (slot para ícone ou imagem) -->
-    <div
-      class="relative z-10 w-full h-full flex items-center justify-center"
-    >
+    <BaseRarityFrame :rarity="rarity">
       <slot />
-    </div>
 
-    <!-- Badge (opcional) -->
-    <div
-      v-if="badge"
-      class="absolute title-text -top-1 -left-1 min-w-6 h-6 px-1.5 flex items-center justify-center bg-linear-to-b border-2 rounded-md rotate-45 font-['Fredoka_One'] text-xs text-white text-shadow-[0_1px_2px_rgba(0,0,0,0.4)] shadow-[0_2px_4px_rgba(0,0,0,0.3)] drop-shadow-xs drop-shadow-black sm:min-w-5 sm:h-5 sm:text-[0.625rem]"
-      :class="[
-        borderClasses[rarity],
-        gradientClasses[rarity],
-      ]"
-    >
-      <p class="-rotate-45">{{ badge }}</p>
-    </div>
+      <template #overlay>
+        <!-- Badge (opcional) -->
+        <div v-if="badge" class="aicon__badge" :class="`is-${rarity}`">
+          <p>{{ badge }}</p>
+        </div>
 
-    <!-- Quantity (opcional) -->
-    <div
-      v-if="quantity"
-      class="absolute bottom-0 text-xs right-1 title-text text-white drop-shadow-[0_2px_2px_rgba(0,0,0,1)] z-20"
-    >
-      {{ quantity }}
-    </div>
+        <!-- Quantidade (opcional) -->
+        <div v-if="quantity" class="aicon__quantity title-text">{{ quantity }}</div>
+      </template>
+    </BaseRarityFrame>
   </div>
 </template>
+
+<style scoped>
+.aicon__badge {
+  position: absolute;
+  z-index: 2;
+  top: -6%;
+  left: -6%;
+  display: grid;
+  place-items: center;
+  min-width: 30%;
+  height: 30%;
+  padding: 0 4%;
+  rotate: 45deg;
+  border-radius: 22%;
+  background: linear-gradient(#4a5166, #262b3a);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  font: 16cqw/1 'Fredoka One', sans-serif;
+  color: #fff;
+}
+.aicon__badge p {
+  margin: 0;
+  rotate: -45deg;
+}
+.aicon__quantity {
+  position: absolute;
+  z-index: 2;
+  right: 9%;
+  bottom: 6%;
+  font-size: max(11px, 17cqw);
+  line-height: 1;
+  color: #fff;
+  -webkit-text-stroke: max(2.5px, 4cqw) #1a1f2e;
+  paint-order: stroke fill;
+  white-space: nowrap;
+}
+</style>
