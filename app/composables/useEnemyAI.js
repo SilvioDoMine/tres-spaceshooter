@@ -5,6 +5,7 @@ import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
 import { useProjectileStore } from '~/stores/projectileStore';
 import { useEnemyAttacks } from '~/composables/useEnemyAttacks';
 import { COLLISION_IFRAME, createIFrameGate } from '~/utils/combatPatterns';
+import { useEquipmentEffectsStore } from '~/stores/useEquipmentEffectsStore';
 
 export function useEnemyAI() {
     const enemyManager = useEnemyManager();
@@ -12,9 +13,10 @@ export function useEnemyAI() {
     const currentRunStore = useCurrentRunStore();
     const projectileStore = useProjectileStore();
     const attacks = useEnemyAttacks();
+    const equipmentEffects = useEquipmentEffectsStore();
     const collisionGate = createIFrameGate(COLLISION_IFRAME);
     const applyCollisionDamage = damage => {
-        if (collisionGate.consume()) currentRunStore.takeDamage(damage);
+        if (collisionGate.consume()) currentRunStore.takeDamage(damage, 'collision');
     };
     
     const { activeEnemies } = storeToRefs(enemyManagerStore);
@@ -645,6 +647,12 @@ export function useEnemyAI() {
             if (! ['active', 'angel'].includes(enemy.state)) {
                 return;
             }
+            if ((enemy.stunTimer || 0) > 0) {
+                enemy.stunTimer = Math.max(0, enemy.stunTimer - deltaTime);
+                enemy.attackCharge = 0;
+                return;
+            }
+            const movementDelta = deltaTime * equipmentEffects.enemyTimeScale(enemy);
 
             const behavior = behaviors[enemy.type];
 
@@ -660,14 +668,14 @@ export function useEnemyAI() {
                 const dx=playerPosition.value.x-enemy.position.x,dz=playerPosition.value.z-enemy.position.z;
                 const d=Math.hypot(dx,dz);
                 if(d>.001) {
-                    enemy.orbitTime=(enemy.orbitTime||0)+deltaTime;
+                    enemy.orbitTime=(enemy.orbitTime||0)+movementDelta;
                     const radial=d>7?1:d<4?-1:0;
                     const strafe=Math.sin(enemy.orbitTime*.65)*.65;
                     const length=Math.max(1,Math.hypot(radial,strafe));
-                    enemy.position.x+=(dx*radial-dz*strafe)/d/length*enemy.speed*deltaTime;
-                    enemy.position.z+=(dz*radial+dx*strafe)/d/length*enemy.speed*deltaTime;
+                    enemy.position.x+=(dx*radial-dz*strafe)/d/length*enemy.speed*movementDelta;
+                    enemy.position.z+=(dz*radial+dx*strafe)/d/length*enemy.speed*movementDelta;
                 }
-            } else behavior(enemy, deltaTime);
+            } else behavior(enemy, movementDelta);
 
             // Aplica separação após o comportamento
             applySeparation(enemy, deltaTime);

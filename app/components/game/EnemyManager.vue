@@ -162,6 +162,14 @@ onUnmounted(() => {
           :position="[0, 0, -baseStats[enemy.type].size]"
           :entity-id="enemy.id"
         />
+        <TresMesh
+          v-if="enemy.equipmentMarked && enemy.state === 'active'"
+          :position="[0, 0.18, 0]"
+          :rotation="[-Math.PI / 2, 0, 0]"
+        >
+          <TresTorusGeometry :args="[baseStats[enemy.type].size * 0.72, 0.055, 6, 24]" />
+          <TresMeshBasicMaterial color="#ffcf57" :transparent="true" :opacity="0.75" />
+        </TresMesh>
       </TresGroup>
     </TresGroup>
   </TresGroup>

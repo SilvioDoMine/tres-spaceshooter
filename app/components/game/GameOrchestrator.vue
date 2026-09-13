@@ -8,6 +8,8 @@ import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { useProjectileStore } from '~/stores/projectileStore';
 import { useSkillStore } from '~/stores/SkillStore';
 import { usePlayerStats } from '~/stores/playerStats';
+import { useHeartStore } from '~/stores/useHeartStore';
+import { useEquipmentEffectsStore } from '~/stores/useEquipmentEffectsStore';
 
 /**
  * Funções para controlar o loop de renderização.
@@ -53,6 +55,8 @@ enemyAI.update(safeDelta);
 projectileStore.update(safeDelta);
 // playerCombat.update(safeDelta);
 playerStats.update(safeDelta);
+useHeartStore().update();
+useEquipmentEffectsStore().update(safeDelta);
 
 // Gerenciamento de Partida
 gameDirector.update(safeDelta);

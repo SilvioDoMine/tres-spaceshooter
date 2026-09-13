@@ -141,7 +141,7 @@ export function aggregateTalentBonuses(stars: TalentStars): TalentBonuses {
 
 /**
  * Atributos base já com os talentos: (base + fixo) × (1 + %).
- * VEL ATQ reduz o intervalo entre tiros. Pronto para o jogo usar (ainda não ligado).
+ * VEL ATQ reduz o intervalo entre tiros.
  */
 export function applyTalentBonuses(base: TalentBaseStats, bonuses: TalentBonuses) {
   const multiplier = (percent: number) => 1 + percent / 100;

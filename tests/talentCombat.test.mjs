@@ -1,0 +1,175 @@
+import assert from 'node:assert/strict';
+import { registerHooks } from 'node:module';
+import test from 'node:test';
+import { readFileSync } from 'node:fs';
+import { stripTypeScriptTypes } from 'node:module';
+import vm from 'node:vm';
+import { ref, shallowRef, computed, reactive } from 'vue';
+
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    try { return nextResolve(specifier, context); }
+    catch (error) {
+      if (specifier.startsWith('.') && !specifier.endsWith('.ts')) return nextResolve(specifier + '.ts', context);
+      throw error;
+    }
+  },
+});
+const { TALENTS } = await import('../app/data/talents.ts');
+const { aggregateTalentBonuses, emptyTalentBonuses } = await import('../app/utils/talents.ts');
+const { computePlayerStats } = await import('../app/utils/equipment.ts');
+const { combatAttributes, incomingHit, outgoingHit } = await import('../app/utils/shipAttributes.ts');
+const base = { maxHealth: 250, moveSpeed: 7, projectiles: { damage: 50, shotCooldown: .85 } };
+const attrs = overrides => combatAttributes({ ...emptyTalentBonuses(), ...overrides });
+
+test('critical rolls per contact, adding bonus to 2x without multiplying the projectile permanently', () => {
+  const stats = attrs({ critRatePercent: 25, critDamagePercent: 30 });
+  const critical = outgoingHit(50, stats, () => .249);
+  assert.equal(critical.critical, true);
+  assert.ok(Math.abs(critical.damage - 115) < 1e-10);
+  assert.deepEqual(outgoingHit(50, stats, () => .25), { critical: false, damage: 50 });
+  assert.equal(outgoingHit(25, stats, () => .9).damage, 25); // bounce keeps its own base
+  assert.equal(outgoingHit(50, attrs({}), () => 0).critical, false);
+});
+
+test('dodge affects attacks only; collision applies flat then percent and clamps at zero', () => {
+  const stats = attrs({ dodgePercent: 100, collisionReductionFlat: 15, collisionReductionPercent: 10 });
+  assert.deepEqual(incomingHit(100, 'attack', stats, () => 0), { damage: 0, dodged: true });
+  assert.deepEqual(incomingHit(100, 'collision', stats, () => 0), { damage: 76.5, dodged: false });
+  assert.equal(incomingHit(10, 'collision', stats).damage, 0);
+  assert.equal(incomingHit(100, 'environment', stats).damage, 100);
+});
+
+test('all maxed cards feed ship attributes with unchanged catalog amounts', () => {
+  const stars = Object.fromEntries(TALENTS.map(t => [t.id, t.maxStars]));
+  const stats = computePlayerStats(base, aggregateTalentBonuses(stars), emptyTalentBonuses());
+  assert.equal(TALENTS.length, 25);
+  assert.equal(stats.maxHealth, 460);
+  assert.equal(stats.damage, 92);
+  assert.equal(stats.criticalChance, .15);
+  assert.equal(stats.criticalDamage, 2.55);
+  assert.equal(stats.dodgeChance, .15);
+  assert.equal(stats.heartHeal, 120); // (25 base + 25 + 50) * 1.2
+  assert.equal(stats.levelUpHealFraction, .1);
+  assert.equal(stats.startingSkillChoices, 1);
+  assert.equal(stats.skillRerolls, 2);
+  assert.equal(stats.battleGoldMultiplier, 1.2);
+  assert.equal(stats.collisionReductionFlat, 45);
+  assert.equal(stats.collisionReductionFraction, .1);
+  assert.ok(Math.abs(stats.moveSpeed - 7.35) < 1e-10);
+  assert.equal(stats.shotCooldown, .85 / 1.05);
+});
+
+test('refinement scales flat equipment stats, leaving percent and talents untouched', () => {
+  const talents = { ...emptyTalentBonuses(), damageFlat: 10, gearBaseStatsPercent: 10 };
+  const gear = { ...emptyTalentBonuses(), damageFlat: 20, critRatePercent: 5, heartHealFlat: 10 };
+  const stats = computePlayerStats(base, talents, gear);
+  assert.equal(stats.damage, 82);
+  assert.equal(stats.criticalChance, .05);
+  assert.equal(stats.heartHeal, 36);
+});
+
+// Executa os stores reais com Vue; isola apenas áudio, persistência e cena 3D.
+function runHarness(overrides = {}) {
+  const messages = [];
+  const permanent = computePlayerStats(base, { ...emptyTalentBonuses(), ...overrides }, emptyTalentBonuses());
+  const equipmentEffects = {
+    initialize() {}, cleanup() {}, onDodge() {}, blockIncoming: () => false,
+    onPlayerDamaged() {},
+  };
+  const context = vm.createContext({
+    ref, shallowRef, computed, Math, console: { log() {}, warn() {} },
+    computePlayerStats, emptyTalentBonuses, incomingHit,
+    COMBAT_BASE: { heartDropChance: .1 },
+    defineStore: (_id, setup) => { let store; return () => store ??= reactive(setup()); },
+    useEquipmentStore: () => ({ stats: permanent }),
+    useEquipmentEffectsStore: () => equipmentEffects,
+    useEnemyManager: () => ({ cleanup() {} }),
+    useCombatTextStore: () => ({ emitForTarget: (...args) => messages.push(args) }),
+    useModal: () => ({ open() {}, close() {} }),
+    useLevelAccount: () => ({}),
+    useAudio: () => ({ playSound() {}, startBackgroundMusicAbafado() {}, stopBackgroundMusicAbafado() {} }),
+    useSpatialDilation: () => ({ reset() {} }),
+    emitImpact() {},
+  });
+  function load(file, names) {
+    let source = readFileSync(new URL('../app/' + file, import.meta.url), 'utf8')
+      .replace(/^import .*$/gm, '').replace(/if\s*\(import.meta.hot\)[\s\S]*$/, '')
+      .replaceAll('export ', '').replaceAll('import.meta.server', 'true');
+    if (file.endsWith('.ts')) source = stripTypeScriptTypes(source);
+    vm.runInContext(source + '\n' + names.map(n => 'globalThis.' + n + '=' + n + ';').join('\n'), context);
+  }
+  load('stores/SkillStore.js', ['useSkillStore']);
+  load('stores/playerStats.ts', ['usePlayerStats']);
+  load('stores/useHeartStore.ts', ['useHeartStore']);
+  load('stores/currentRunStore.ts', ['useCurrentRunStore', 'PlayerBaseStats']);
+  const stage = { type: 'intro', width: 30, height: 30, door: {}, playerStartPosition: { x: 0, y: 0, z: 0 } };
+  const config = { stages: [stage] };
+  const run = context.useCurrentRunStore();
+  run.gameStart(config);
+  return { context, run, stats: context.usePlayerStats(), skills: context.useSkillStore(),
+    hearts: context.useHeartStore(), config, messages, permanent };
+}
+
+test('run starts with permanent attributes, initial choice and extra reroll; upgrades and rooms retain them', () => {
+  const { run, stats, skills, config } = runHarness({
+    maxHealthFlat: 50, damageFlat: 10, moveSpeedPercent: 5,
+    attackSpeedPercent: 5, startingSkillChoices: 1, skillRerolls: 1,
+  });
+  assert.equal(run.maxHealth, 300);
+  assert.equal(run.currentHealth, 300);
+  assert.equal(stats.damage, 60);
+  assert.equal(run.shotCooldownTotal, .85 / 1.05);
+  assert.equal(run.skillRerollCount, 2);
+  assert.equal(skills.upgradeQueueCount, 1);
+  skills.update(.01);
+  const option = skills.skillOptions[0];
+  assert.equal(option.reRolls, 2);
+  skills.refreshSkill(option);
+  const refreshed = skills.skillOptions[0];
+  assert.equal(refreshed.reRolls, 1);
+  skills.refreshSkill(refreshed);
+  assert.equal(skills.skillOptions[0].reRolls, 0);
+  skills.refreshSkill(skills.skillOptions[0]);
+  assert.equal(skills.skillOptions[0].reRolls, 0);
+  skills.currentSkills = [{ id: 'general_speed', currentLevel: 1, levels: { 1: { value: 1.3 } } }];
+  run.loadStage(config.stages[0]);
+  assert.ok(Math.abs(run.currentMoveSpeed - 7.35 * 1.3) < 1e-10);
+  run.gameStart(config);
+  assert.equal(stats.getSpeedMultiplier, 1);
+  assert.ok(Math.abs(run.currentMoveSpeed - 7.35) < 1e-10);
+});
+
+test('actual run heals on level-up, accumulates fractional gold, and distinguishes attack/collision/environment', () => {
+  const { run, messages } = runHarness({ maxHealthFlat: 50, levelUpHealPercent: 10,
+    battleGoldPercent: 20, dodgePercent: 100, collisionReductionFlat: 15, collisionReductionPercent: 10 });
+  run.takeDamage(100, 'attack');
+  assert.equal(run.currentHealth, 300);
+  assert.equal(messages.at(-1)[1], 'dodge');
+  run.takeDamage(100, 'collision');
+  assert.equal(run.currentHealth, 223.5);
+  run.takeDamage(10, 'environment');
+  assert.equal(run.currentHealth, 213.5);
+  run.addExp(100);
+  assert.equal(run.currentHealth, 243.5);
+  for (let i = 0; i < 5; i++) run.addGold(1);
+  assert.equal(run.currentGold, 6);
+});
+
+test('hearts collect with bonuses, remain when full or paused, and clear on room changes', () => {
+  const { run, hearts, config } = runHarness({ heartHealFlat: 75, heartHealPercent: 20 });
+  hearts.tryDrop({ x: 0, z: 0 }, () => 0);
+  hearts.update();
+  assert.equal(hearts.hearts.length, 1);
+  run.takeDamage(150, 'environment');
+  run.gameState = 'paused';
+  hearts.update();
+  assert.equal(run.currentHealth, 100);
+  run.gameState = 'playing';
+  hearts.update();
+  assert.equal(run.currentHealth, 220);
+  assert.equal(hearts.hearts.length, 0);
+  hearts.tryDrop({ x: 10, z: 10 }, () => 0);
+  run.loadStage(config.stages[0]);
+  assert.equal(hearts.hearts.length, 0);
+});

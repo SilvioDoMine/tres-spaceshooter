@@ -1,16 +1,25 @@
 import { useSkillStore } from "~/stores/SkillStore";
 import { PlayerBaseStats, useCurrentRunStore } from "~/stores/currentRunStore";
 import { useCombatTextStore } from "~/stores/useCombatTextStore";
+import { computePlayerStats, type PlayerStats } from '~/utils/equipment';
+import { emptyTalentBonuses } from '~/utils/talents';
 
 const REGEN_TEXT_INTERVAL = 1; // segundos entre textos de regeneração
 
 /**
- * Atributos permanentes (Dano, Vida)
- * Talentos + equipamentos ainda não entram aqui: os valores finais prontos estão em
- * useEquipmentStore().stats (e os bônus separados em gearBonuses / useTalentStore().bonuses).
+ * Snapshot de atributos permanentes + multiplicadores das habilidades da partida.
+ * O combate lê atributos, nunca ids de cartas.
 */
 export const usePlayerStats = defineStore('playerStats', () => {
   const skillStore = useSkillStore();
+  const attributes = shallowRef(computePlayerStats(PlayerBaseStats, emptyTalentBonuses(), emptyTalentBonuses()));
+  function initialize(stats: PlayerStats) {
+    attributes.value = { ...stats, bonuses: { ...stats.bonuses } };
+    amountToHeal.value = 0;
+    regenRate.value = 0;
+    pendingRegenText = 0;
+    regenTextTimer = 0;
+  }
   const amountToHeal = ref(0);
   const regenRate = ref(0); // Porcentagem da vida por segundo
   const bonusDamageFlat = ref(50);
@@ -145,7 +154,7 @@ export const usePlayerStats = defineStore('playerStats', () => {
   }
 
   function healthAfterSkillUpgrade(maxHealthBefore: number): void {
-    let newMaxHealth = PlayerBaseStats.maxHealth * getHealthMultiplier.value;
+    let newMaxHealth = attributes.value.maxHealth * getHealthMultiplier.value;
     const amountToHeal = newMaxHealth - maxHealthBefore;
     console.log('Healing player for', amountToHeal, 'after skill upgrade');
     heal(amountToHeal);
@@ -178,6 +187,11 @@ export const usePlayerStats = defineStore('playerStats', () => {
   });
 
   return {
+    attributes,
+    initialize,
+    damage: computed(() => attributes.value.damage * getDamageMultiplier.value),
+    maxHealth: computed(() => attributes.value.maxHealth * getHealthMultiplier.value),
+    moveSpeed: computed(() => attributes.value.moveSpeed * getSpeedMultiplier.value),
     update, // Essencial para ser chamado pelo useGameLoop
 
     healthAfterSkillUpgrade,

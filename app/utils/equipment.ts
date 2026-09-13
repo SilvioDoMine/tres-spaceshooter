@@ -13,6 +13,7 @@ import {
 } from '../data/equipment';
 import { TALENT_STATS, type TalentStat } from '../data/talents';
 import { applyTalentBonuses, emptyTalentBonuses, type TalentBaseStats, type TalentBonuses } from './talents';
+import { combatAttributes } from './shipAttributes';
 
 export interface OwnedEquipment {
   uid: number;
@@ -73,12 +74,76 @@ export function aggregateGearBonuses(items: OwnedEquipment[]): TalentBonuses {
 
 export type PlayerStats = ReturnType<typeof computePlayerStats>;
 
+export interface EquipmentEffects {
+  plasmaEvery: number; plasmaMultiplier: number; plasmaRadius: number;
+  ionExtraHits: number; ionBounces: number;
+  dodgeAttackSpeedPercent: number; dodgeAttackSpeedDuration: number;
+  nebulaOrbCount: number; nebulaOrbDamageMultiplier: number;
+  lockOnCount: number; lockOnCriticalBonus: number;
+  quantumEchoChance: number; quantumEchoCanCrit: boolean;
+  fusionRegenPercent: number; fusionRegenInCombat: boolean;
+  solarFlareStun: number;
+  aegisCooldown: number;
+  prismReflectPercent: number;
+  cometTrailWidth: number; cometTrailDamageMultiplier: number;
+  vortexRadius: number; vortexSlowPercent: number; vortexDamagePercent: number;
+}
+
+export const emptyEquipmentEffects = (): EquipmentEffects => ({
+  plasmaEvery: 0, plasmaMultiplier: 1, plasmaRadius: 2.6,
+  ionExtraHits: 0, ionBounces: 0,
+  dodgeAttackSpeedPercent: 0, dodgeAttackSpeedDuration: 0,
+  nebulaOrbCount: 0, nebulaOrbDamageMultiplier: 0,
+  lockOnCount: 0, lockOnCriticalBonus: 0,
+  quantumEchoChance: 0, quantumEchoCanCrit: false,
+  fusionRegenPercent: 0, fusionRegenInCombat: false,
+  solarFlareStun: 0,
+  aegisCooldown: 0,
+  prismReflectPercent: 0,
+  cometTrailWidth: 0, cometTrailDamageMultiplier: 0,
+  vortexRadius: 6, vortexSlowPercent: 0, vortexDamagePercent: 0,
+});
+
+/** Converte os effectIds equipados em parâmetros gerais. A versão mítica substitui a épica. */
+export function aggregateGearEffects(items: OwnedEquipment[]): EquipmentEffects {
+  const effects = emptyEquipmentEffects();
+  const active = new Set<string>();
+  for (const item of items) for (const { ability, unlocked } of itemAbilities(item.defId, item.rarity)) {
+    if (unlocked && ability.effectId) active.add(ability.effectId);
+  }
+  if (active.has('plasma-burst-plus')) Object.assign(effects, { plasmaEvery: 3, plasmaMultiplier: 2 });
+  else if (active.has('plasma-burst')) Object.assign(effects, { plasmaEvery: 5, plasmaMultiplier: 1.5 });
+  if (active.has('ion-pierce-plus')) Object.assign(effects, { ionExtraHits: 2, ionBounces: 1 });
+  else if (active.has('ion-pierce')) effects.ionExtraHits = 1;
+  if (active.has('falcon-dash-plus')) Object.assign(effects, { dodgeAttackSpeedPercent: 40, dodgeAttackSpeedDuration: 4 });
+  else if (active.has('falcon-dash')) Object.assign(effects, { dodgeAttackSpeedPercent: 20, dodgeAttackSpeedDuration: 3 });
+  if (active.has('nebula-orbs-plus')) Object.assign(effects, { nebulaOrbCount: 4, nebulaOrbDamageMultiplier: .5 });
+  else if (active.has('nebula-orbs')) Object.assign(effects, { nebulaOrbCount: 2, nebulaOrbDamageMultiplier: .25 });
+  if (active.has('lock-on-plus')) Object.assign(effects, { lockOnCount: 3, lockOnCriticalBonus: .3 });
+  else if (active.has('lock-on')) Object.assign(effects, { lockOnCount: 1, lockOnCriticalBonus: .15 });
+  if (active.has('quantum-echo-plus')) Object.assign(effects, { quantumEchoChance: .2, quantumEchoCanCrit: true });
+  else if (active.has('quantum-echo')) effects.quantumEchoChance = .1;
+  if (active.has('fusion-regen-plus')) Object.assign(effects, { fusionRegenPercent: 2, fusionRegenInCombat: true });
+  else if (active.has('fusion-regen')) effects.fusionRegenPercent = 1;
+  if (active.has('solar-flare-plus')) effects.solarFlareStun = 1.5;
+  else if (active.has('solar-flare')) effects.solarFlareStun = -1;
+  if (active.has('aegis-shield-plus')) effects.aegisCooldown = 5;
+  else if (active.has('aegis-shield')) effects.aegisCooldown = 8;
+  if (active.has('prism-reflect-plus')) effects.prismReflectPercent = 40;
+  else if (active.has('prism-reflect')) effects.prismReflectPercent = 20;
+  if (active.has('comet-trail-plus')) Object.assign(effects, { cometTrailWidth: 1.5, cometTrailDamageMultiplier: .5 });
+  else if (active.has('comet-trail')) Object.assign(effects, { cometTrailWidth: .9, cometTrailDamageMultiplier: .25 });
+  if (active.has('vortex-slow-plus')) Object.assign(effects, { vortexSlowPercent: 35, vortexDamagePercent: 10 });
+  else if (active.has('vortex-slow')) effects.vortexSlowPercent = 20;
+  return effects;
+}
+
 /**
  * Atributos finais do jogador somando base, talentos e equipamentos.
  * O fixo dos equipamentos é ampliado por "Atributos base dos equipamentos" (talento).
- * Pronto para o jogo usar (ainda não ligado).
+ * Compartilhado pelo lobby e pelo snapshot inicial da partida.
  */
-export function computePlayerStats(base: TalentBaseStats, talents: TalentBonuses, gear: TalentBonuses) {
+export function computePlayerStats(base: TalentBaseStats, talents: TalentBonuses, gear: TalentBonuses, effects = emptyEquipmentEffects()) {
   const gearMultiplier = 1 + talents.gearBaseStatsPercent / 100;
   const bonuses = emptyTalentBonuses();
   for (const stat of Object.keys(bonuses) as TalentStat[]) {
@@ -88,6 +153,8 @@ export function computePlayerStats(base: TalentBaseStats, talents: TalentBonuses
 
   const applied = applyTalentBonuses(base, bonuses);
   return {
+    ...combatAttributes(bonuses),
+    effects,
     damage: Math.round(applied.damage),
     maxHealth: Math.round(applied.maxHealth),
     baseDamage: base.projectiles.damage,

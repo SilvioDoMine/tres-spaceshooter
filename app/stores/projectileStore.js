@@ -56,7 +56,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
       // A volley cannot cause several damage events in one instant.
       if(segmentHit(start,projectile.position,currentRunStore.getPlayerPosition(),.32+projectile.size)!==null) {
         projectile._markedForRemoval=true;
-        if(hitGrace<=0){hitGrace=PROJECTILE_IFRAME;currentRunStore.takeDamage(projectile.damage);}
+        if(hitGrace<=0){hitGrace=PROJECTILE_IFRAME;currentRunStore.takeDamage(projectile.damage, {source:'attack',attackerId:projectile.ownerId});}
       }
       return;
     }
@@ -70,7 +70,16 @@ export const useProjectileStore = defineStore('projectileStore', () => {
     for(const {enemy,t} of contacts) {
       if(projectile._markedForRemoval)break;
       projectile.hitsList.push(enemy.id);
-      enemyManager.takeDamage(enemy.id,projectile.damage,'shot');
+      enemyManager.takeDamage(enemy.id,projectile.damage,'shot',{
+        canCrit: projectile.canCrit !== false,
+        aoe: false,
+      });
+      if(projectile.aoeRadius>0 && !projectile.aoeTriggered) {
+        projectile.aoeTriggered=true;
+        enemyManager.damageArea(enemy.position,projectile.aoeRadius,projectile.damage,enemy.id,{
+          canCrit: projectile.canCrit !== false,
+        });
+      }
       if(projectile.bounces>0) {
         const target=nearestEnemyFromPosition(enemy.position,projectile.range*playerStats.getRangeMultiplier,enemy.id,projectile.hitsList);
         if(target) {

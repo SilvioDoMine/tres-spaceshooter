@@ -19,6 +19,9 @@ const props = defineProps({
 
 
 function getColor(text) {
+    if (text.type === 'critical') return '#ffc657';
+    if (text.type === 'dodge') return '#75efff';
+    if (text.type === 'shield') return '#a7f5ff';
     if (text.entityId !== PlayerBaseStats.id) {
         return 'white';
     }

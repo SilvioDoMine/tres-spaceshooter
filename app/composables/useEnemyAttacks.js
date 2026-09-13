@@ -11,7 +11,7 @@ export function useEnemyAttacks() {
     const room=playableRoomCount(run.levelConfig,run.currentStageIndex);
     const player=run.getPlayerPosition();
     for(const enemy of enemies) {
-      if(enemy.state!=='active' || enemy.type==='angel' || enemy.type==='kamikaze') { enemy.attackCharge=0;continue; }
+      if(enemy.state!=='active' || enemy.type==='angel' || enemy.type==='kamikaze' || (enemy.stunTimer || 0) > 0) { enemy.attackCharge=0;continue; }
       if(!enemy.attackClock)enemy.attackClock={remaining:1+Math.random()*1.6,volley:0,charging:false};
       const clock=enemy.attackClock, profile=attackProfile(enemy.type,room,clock.volley,enemy);
       if(profile.movementSpeed)enemy.speed=profile.movementSpeed;

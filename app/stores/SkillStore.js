@@ -308,18 +308,23 @@ export const useSkillStore = defineStore('SkillStore', () => {
         // check if all skills from rarityPool are maxed out
         if (availableSkills.length === 0) {
             console.log('Todas as skills da raridade selecionada estão no nível máximo ou não há skills disponíveis.', rarityPool);
-            // call itself with removing current rarityPool rarity
-            const newRarityPool = rarities.filter(r => !rarityPool.includes(r));
-            if (newRarityPool.length === 0) {
+            // A raridade sorteada pode não ter nenhuma opção elegível. Procura
+            // diretamente nas demais raridades para não criar uma recursão infinita.
+            rarityPool = ['poor', 'common', 'uncommon', 'rare', 'epic', 'legendary'];
+            availableSkills = allSkills.filter((skill) => {
+                const currentSkill = currentSkills.value.find(s => s.id === skill.id);
+                const isMaxedOut = currentSkill
+                    ? currentSkill.currentLevel >= Object.keys(skill.levels).length
+                    : false;
+
+                return !skillOptions.value.some(s => s.id === skill.id) && !isMaxedOut;
+            });
+            newQty = Math.min(qty, availableSkills.length);
+
+            if (newQty === 0) {
                 console.log('Nenhuma skill disponível para seleção.');
-
-                // Retorna todas as skills de rarity poor como fallback
-                // Aqui tem uma chance de dar loop infinito se não tiver skills poor disponíveis
-                return skillSelectRandom(qty, true, ['poor']);
+                return [];
             }
-
-            console.log('Tentando nova raridade:', qty, newRarityPool);
-            return skillSelectRandom(qty, true, newRarityPool);
         }
 
         while (selectedSkills.length < newQty) {
@@ -358,6 +363,7 @@ export const useSkillStore = defineStore('SkillStore', () => {
     }
 
     function refreshSkill(skill) {
+        if (!isModalOpen.value || skill.reRolls <= 0) return;
 
         // Index é a posição da skill a ser atualizada
         const index = skillOptions.value.findIndex(s => s.id === skill.id);
@@ -406,7 +412,7 @@ export const useSkillStore = defineStore('SkillStore', () => {
       // Após a adição do nível da skill
       switch (skill.id) {
         case 'health_percentage':
-          useCurrentRunStore().setMaxHealth( PlayerBaseStats.maxHealth * usePlayerStats().getHealthMultiplier );
+          useCurrentRunStore().setMaxHealth(usePlayerStats().maxHealth);
           usePlayerStats().healthAfterSkillUpgrade(maxHealthBefore);
           break;
         case 'health_regeneration':
@@ -417,13 +423,13 @@ export const useSkillStore = defineStore('SkillStore', () => {
         case 'general_speed':
           console.log('Aplicando aumento de velocidade geral da skill.');
           const speedIncrease = skill.levels[skill.currentLevel].value;
-          useCurrentRunStore().setMoveSpeed(PlayerBaseStats.moveSpeed * usePlayerStats().getSpeedMultiplier);
+          useCurrentRunStore().setMoveSpeed(usePlayerStats().moveSpeed);
           console.log(`Multiplicador de velocidade da nave definido em ${speedIncrease}.`);
           break;
         case 'flat_gold':
           const goldAmount = skill.levels[skill.currentLevel].value;
           console.log(`Concedido ${goldAmount} de ouro ao jogador pela skill Flat Gold.`);
-          useCurrentRunStore().currentGold += goldAmount;
+          useCurrentRunStore().addGold(goldAmount);
           break;
       }
 

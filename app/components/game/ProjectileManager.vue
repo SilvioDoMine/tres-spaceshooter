@@ -65,7 +65,7 @@ useLoop().onBeforeRender(({delta})=>{
  time+=Math.min(delta,.1);materials.forEach(m=>m.uniforms.time.value=time);
  const counts=Array(batches.length).fill(0);let trailCount=0;
  for(const p of store.projectiles){
-  const tier=p.ownerType==='enemy'?(p.type==='enemyMissile'?6:p.type==='enemyPlasma'?5:4):p.power>=2.5?3:p.power>=1.75?2:p.power>1?1:0;
+  const tier=p.ownerType==='enemy'?(p.type==='enemyMissile'?6:p.type==='enemyPlasma'?5:4):p.burst?3:p.echo?2:p.power>=2.5?3:p.power>=1.75?2:p.power>1?1:0;
   const size=p.ownerType==='enemy'?1:1+Math.min(.55,Math.max(0,p.power-1)*.35);
   dummy.position.set(p.position.x,1,p.position.z);
   dummy.rotation.set(0,Math.atan2(p.direction.x,p.direction.z),0);

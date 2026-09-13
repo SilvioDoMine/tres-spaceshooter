@@ -16,6 +16,7 @@ registerHooks({
 
 const {
   aggregateGearBonuses,
+  aggregateGearEffects,
   canFuse,
   computePlayerStats,
   fusableUids,
@@ -132,4 +133,42 @@ test('starter kit is only the common plasma cannon, equipped', () => {
   assert.deepEqual(kit.items, [cannon(1)]);
   assert.equal(kit.equipped.weapon, 1);
   assert.equal(kit.nextUid, 2);
+});
+
+test('epic equipment effects are active and mythic variants replace them', () => {
+  const item = (defId, rarity) => ({ uid: Math.random(), defId, rarity });
+  const epic = aggregateGearEffects([
+    item('canhao-plasma', 'purple'), item('lanca-ionica', 'purple'),
+    item('asas-falcao', 'purple'), item('asas-nebula', 'purple'),
+    item('cockpit-mira', 'purple'), item('cockpit-quantico', 'purple'),
+    item('gerador-fusao', 'purple'), item('gerador-solar', 'purple'),
+    item('campo-egide', 'purple'), item('campo-prisma', 'purple'),
+    item('propulsor-cometa', 'purple'), item('propulsor-vortice', 'purple'),
+  ]);
+  assert.deepEqual(
+    [epic.plasmaEvery, epic.plasmaMultiplier, epic.ionExtraHits, epic.ionBounces,
+      epic.dodgeAttackSpeedPercent, epic.nebulaOrbCount, epic.lockOnCount,
+      epic.quantumEchoChance, epic.fusionRegenPercent, epic.solarFlareStun,
+      epic.aegisCooldown, epic.prismReflectPercent, epic.cometTrailDamageMultiplier,
+      epic.vortexSlowPercent, epic.vortexDamagePercent],
+    [5, 1.5, 1, 0, 20, 2, 1, .1, 1, -1, 8, 20, .25, 20, 0],
+  );
+  const mythic = aggregateGearEffects([
+    item('canhao-plasma', 'red'), item('lanca-ionica', 'red'),
+    item('asas-falcao', 'red'), item('asas-nebula', 'red'),
+    item('cockpit-mira', 'red'), item('cockpit-quantico', 'red'),
+    item('gerador-fusao', 'red'), item('gerador-solar', 'red'),
+    item('campo-egide', 'red'), item('campo-prisma', 'red'),
+    item('propulsor-cometa', 'red'), item('propulsor-vortice', 'red'),
+  ]);
+  assert.deepEqual(
+    [mythic.plasmaEvery, mythic.plasmaMultiplier, mythic.ionExtraHits, mythic.ionBounces,
+      mythic.dodgeAttackSpeedPercent, mythic.dodgeAttackSpeedDuration, mythic.nebulaOrbCount,
+      mythic.nebulaOrbDamageMultiplier, mythic.lockOnCount, mythic.lockOnCriticalBonus,
+      mythic.quantumEchoChance, mythic.quantumEchoCanCrit, mythic.fusionRegenPercent,
+      mythic.fusionRegenInCombat, mythic.solarFlareStun, mythic.aegisCooldown,
+      mythic.prismReflectPercent, mythic.cometTrailDamageMultiplier,
+      mythic.vortexSlowPercent, mythic.vortexDamagePercent],
+    [3, 2, 2, 1, 40, 4, 4, .5, 3, .3, .2, true, 2, true, 1.5, 5, 40, .5, 35, 10],
+  );
 });
