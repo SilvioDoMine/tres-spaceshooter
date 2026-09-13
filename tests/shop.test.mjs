@@ -29,6 +29,9 @@ const {
   rollDailyShop,
   sanitizeShopState,
   formatCountdown,
+  shopSectionBadges,
+  emptySeen,
+  isGemPromoActive,
 } = await import('../app/utils/shop.ts');
 const { CHESTS, DAILY_SHOP_SLOTS, GEM_PACKS } = await import('../app/data/shop.ts');
 const { mulberry32 } = await import('../app/utils/talents.ts');
@@ -141,6 +144,26 @@ test('virar o dia regenera loja e estoque do ouro, mantendo o resto', () => {
   assert.equal(next.keys.silver, 5);
 });
 
+test('avisos das sub-abas: diária e ouro até ver no dia, gemas só com promoção nova', () => {
+  const day1 = Date.UTC(2026, 8, 13, 12);
+  const sameShopDay = Date.UTC(2026, 8, 14, 6, 59); // antes das 04:00 GMT-3 do dia seguinte
+  const nextShopDay = Date.UTC(2026, 8, 14, 7, 0);
+
+  const unseen = shopSectionBadges(emptySeen(), null, day1);
+  assert.deepEqual(unseen, { daily: true, gold: true, gems: false });
+
+  const seen = { daily: day1, gold: day1, gemsPromoId: null };
+  assert.deepEqual(shopSectionBadges(seen, null, sameShopDay), { daily: false, gold: false, gems: false });
+  assert.deepEqual(shopSectionBadges(seen, null, nextShopDay), { daily: true, gold: true, gems: false });
+
+  const promo = { id: 'promo-1', startsAt: '2026-09-13T00:00:00Z', endsAt: '2026-09-20T00:00:00Z' };
+  assert.equal(isGemPromoActive(promo, day1), true);
+  assert.equal(isGemPromoActive(promo, Date.UTC(2026, 8, 21)), false);
+  assert.equal(shopSectionBadges(seen, promo, day1).gems, true);
+  assert.equal(shopSectionBadges({ ...seen, gemsPromoId: 'promo-1' }, promo, day1).gems, false);
+  assert.equal(shopSectionBadges({ ...seen, gemsPromoId: 'promo-1' }, { ...promo, id: 'promo-2' }, day1).gems, true);
+});
+
 test('saneamento descarta lixo e mantém dados válidos', () => {
   const now = Date.UTC(2026, 8, 13, 12);
   assert.equal(sanitizeShopState(null, now), null);
@@ -150,6 +173,7 @@ test('saneamento descarta lixo e mantém dados válidos', () => {
   valid.keys.obsidian = 3;
   valid.chests.silver = { pity: 4, freeClaimedAt: now - 1000 };
   valid.gemPacksPurchased = ['gems-80'];
+  valid.seen = { daily: now - 5000, gold: null, gemsPromoId: 'promo-x' };
   assert.deepEqual(sanitizeShopState(JSON.parse(JSON.stringify(valid)), now), valid);
 
   const broken = sanitizeShopState(

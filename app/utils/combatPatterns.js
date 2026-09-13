@@ -47,6 +47,8 @@ export function segmentHit(start, end, target, radius) {
 }
 
 export const PROJECTILE_IFRAME = .50;
+// Raio do jogador contra projéteis inimigos (a Kestrel tem ~1,7 de envergadura e ~1,4 de comprimento no jogo)
+export const PLAYER_HITBOX_RADIUS = .5;
 export const COLLISION_IFRAME = .35;
 export const ENEMY_VOLLEY_GATE = .25;
 export const WAVE_REST = 1.25;
@@ -63,14 +65,24 @@ export function hpMultiplier(room = 2) {
 export function xpMultiplier(room = 2) {
   return Number((1 + .08 * (clampRoom(room) - 2)).toFixed(2));
 }
-export function scaledEnemyHealth(baseHealth, room) {
-  return Number((baseHealth * hpMultiplier(room)).toFixed(6));
+// A cada capítulo os inimigos comuns aguentam mais e batem mais forte (os bosses têm valores próprios).
+function clampChapter(chapter = 1) {
+  return Math.max(1, Math.min(3, Number(chapter) || 1));
+}
+export function chapterHealthMultiplier(chapter = 1) {
+  return Number((1 + .45 * (clampChapter(chapter) - 1)).toFixed(2));
+}
+export function chapterDamageMultiplier(chapter = 1) {
+  return Number((1 + .25 * (clampChapter(chapter) - 1)).toFixed(2));
+}
+export function scaledEnemyHealth(baseHealth, room, chapter = 1) {
+  return Number((baseHealth * hpMultiplier(room) * chapterHealthMultiplier(chapter)).toFixed(6));
 }
 export function scaledEnemyExperience(baseXP, room) {
   return Math.round(baseXP * xpMultiplier(room));
 }
-export function normalAsteroidFragmentStats(room) {
-  return { count: 2, health: Number((scaledEnemyHealth(90, room) * .70).toFixed(6)), baseXP: 5 };
+export function normalAsteroidFragmentStats(room, chapter = 1) {
+  return { count: 2, health: Number((scaledEnemyHealth(90, room, chapter) * .70).toFixed(6)), baseXP: 5 };
 }
 export const ASTEROID_BOSS_STAGES = Object.freeze([
   Object.freeze({ generation: 0, count: 1, health: 2600, xp: 900 }),
@@ -95,10 +107,11 @@ export function createIFrameGate(duration) {
 }
 
 export function enemyCategory(type, enemy = {}) {
-  if (type === 'miniasteroid') return 'mini';
-  if (type === 'ufofast' || type === 'torusEnemy' || type === 'compositeEnemy') return 'elite';
+  if (type === 'miniasteroid' || type === 'hiveDrone') return 'mini';
+  if (type === 'ufofast' || type === 'torusEnemy' || type === 'compositeEnemy' || type === 'miniHive' || type === 'miniHarpy') return 'elite';
   if (type === 'asteroidBoss' && (enemy.asteroidGeneration || 0) > 0) return 'fragment';
   if (type === 'asteroidBoss' || type === 'miniboss' || type === 'boss') return 'boss';
+  if (CHAPTER_BOSSES.includes(type)) return 'boss';
   return 'common';
 }
 
@@ -108,6 +121,9 @@ export function finalBossPhase(enemy = {}) {
 }
 
 export function attackProfile(type, room = 2, volley = 0, enemy = {}) {
+  if (CHAPTER_BOSSES.includes(type)) return chapterBossProfile(type, volley, enemy);
+  if (type === 'miniHive') return miniHiveProfile(room);
+  if (type === 'miniHarpy') return miniHarpyProfile(enemy);
   const progress = roomProgress(room);
   const generation = type === 'asteroidBoss' ? (enemy.asteroidGeneration || 0) : 0;
   if (generation === 1) {
@@ -153,8 +169,117 @@ export function attackProfile(type, room = 2, volley = 0, enemy = {}) {
 export function attackDirections(profile, aim, volley) {
   const angle = Math.atan2(aim.z, aim.x);
   return Array.from({ length: profile.count }, (_, i) => {
-    const offset = profile.pattern === 'ring' ? Math.PI*2*(i+.5)/profile.count + volley*.23
-      : profile.pattern === 'fan' ? (i-(profile.count-1)/2)*.28 : 0;
+    let offset = 0;
+    if (profile.pattern === 'ring') offset = Math.PI*2*(i+.5)/profile.count + volley*.23;
+    else if (profile.pattern === 'fan') offset = (i-(profile.count-1)/2)*(profile.spread ?? .28);
+    // Braços igualmente espaçados que avançam a cada rajada
+    else if (profile.pattern === 'spiral') offset = Math.PI*2*i/profile.count + volley*(profile.twist ?? .32);
+    // Metade para cada lado, perpendicular à mira
+    else if (profile.pattern === 'broadside') {
+      const half = Math.ceil(profile.count/2), left = i < half;
+      const k = left ? i : i - half, n = left ? half : profile.count - half;
+      offset = (left ? 1 : -1)*Math.PI/2 + (k-(n-1)/2)*(profile.spread ?? .22);
+    }
     return { x: Math.cos(angle+offset), z: Math.sin(angle+offset) };
   });
+}
+
+// ==================== BOSSES DOS CAPÍTULOS 2 E 3 ====================
+export const CHAPTER_BOSSES = Object.freeze(['hiveBoss', 'harpyBoss', 'bastionBoss', 'colossusBoss']);
+
+const bossShot = (pattern, projectile, count, values) => ({ category: 'boss', pattern, projectile, count, range: 25, ...values });
+
+// As duas saídas na proa da Colmeia (em múltiplos do tamanho do inimigo; mesmas posições de buildHive)
+export const HIVE_MUZZLES = Object.freeze([Object.freeze({ side: -.32, forward: 1.14 }), Object.freeze({ side: .32, forward: 1.14 })]);
+// lockLead: acompanha o jogador durante a carga e só trava a mira esse tempo antes do disparo.
+// recoil: depois de disparar, a Colmeia fica parada apontando para onde atirou (grace period).
+export const HIVE_HUNT_SHOT = Object.freeze({ interval: 1.8, charge: .7, lockLead: .12, speed: 18, damage: 40, range: 34, recoil: .9 });
+// Torreta: recarga, 3 tiros seguidos (sem a trava global entre rajadas) e recarrega de novo
+export const HIVE_TURRET_SALVO = Object.freeze({ volleys: 3, windUp: 1, followUpCharge: .05, gap: .1, cooldown: .5, lockLead: .12, speed: 28, damage: 60, range: 36, recoil: .5 });
+
+// Canhões nas pontas das asas da Harpia (buildHarpy) e a rajada que ela dispara parada
+export const HARPY_WING_GUNS = Object.freeze([Object.freeze({ side: -1.12, forward: .41 }), Object.freeze({ side: 1.12, forward: .41 })]);
+// A Harpia é o boss final do capítulo: seu tiro é um pouco mais rápido que o mais rápido da Colmeia
+export const HARPY_SHOT_SPEED = HIVE_TURRET_SALVO.speed + 4;
+// Cada tiro que acerta pesa muito (150–200); o i-frame de projétil (0,5 s) limita a rajada a ~2 hits por segundo
+export const HARPY_GLIDE_SHOT = Object.freeze({ charge: .5, lockLead: .12, speed: HARPY_SHOT_SPEED, damage: 180, range: 30 });
+export const HARPY_BURST_SHOT = Object.freeze({ interval: .32, charge: .12, lockLead: .06, speed: HARPY_SHOT_SPEED, damage: 160, range: 30 });
+
+/** Mini-harpia: mesmos tiros da Harpia (planando e rajada pelas asas), mais lentos e fracos. */
+export const MINI_HARPY_SHOT = Object.freeze({ speed: 18, damage: 14, range: 26, glideInterval: 2.8, burstInterval: .38 });
+export function miniHarpyProfile(enemy = {}) {
+  const { speed, damage, range, glideInterval, burstInterval } = MINI_HARPY_SHOT;
+  const shot = { category: 'elite', pattern: 'aim', projectile: 'harpyShot', count: 1, speed, damage, range };
+  return enemy.harpyMode === 'burst'
+    ? { ...shot, burst: true, interval: burstInterval, charge: .12, lockLead: .06, muzzles: HARPY_WING_GUNS, converge: true }
+    : { ...shot, interval: glideInterval, charge: .5, lockLead: .12 };
+}
+
+/** Mini-colmeia: mesma rajada dupla, mais fraca, escalando com a sala. */
+export function miniHiveProfile(room = 2) {
+  const progress = roomProgress(room);
+  return { category: 'elite', pattern: 'aim', projectile: 'hiveShot', count: 1, muzzles: HIVE_MUZZLES, converge: true, lockLead: .12,
+    interval: 2.6 - .4 * progress, charge: .7, speed: 12 + 1.5 * progress, damage: Math.round(18 + 8 * progress), range: 30, recoil: .7 };
+}
+
+/** Rajadas de cada boss; dependem do estado que a IA escreve no inimigo (hangar, vida, fase). */
+export function chapterBossProfile(type, volley = 0, enemy = {}) {
+  if (type === 'hiveBoss') {
+    // Pelas duas saídas da proa, convergindo no jogador (sem ponto cego entre as balas)
+    const aimed = { muzzles: HIVE_MUZZLES, converge: true };
+    if (enemy.hiveMode !== 'turret') return bossShot('aim', 'hiveShot', 1, { ...HIVE_HUNT_SHOT, ...aimed });
+    // Torreta: `interval - charge` é a espera até a próxima carga começar
+    const { volleys, windUp, followUpCharge, gap, cooldown, speed, damage, range, recoil, lockLead } = HIVE_TURRET_SALVO;
+    const step = volley % volleys;
+    const charge = step === 0 ? windUp : followUpCharge;
+    return bossShot('aim', 'enemyLance', 1, {
+      ...aimed, speed, damage, range, recoil, lockLead, charge, salvoStep: step,
+      ignoreVolleyGate: step > 0,
+      interval: step === volleys - 1 ? cooldown + charge : charge + gap,
+    });
+  }
+  if (type === 'bastionBoss') {
+    const enraged = enemy.maxHealth ? enemy.health / enemy.maxHealth <= .5 : false;
+    const timing = { interval: enraged ? .9 : 1.15, charge: .35, enraged };
+    return volley % 4 === 3
+      ? bossShot('fan', 'enemyPlasma', 3, { ...timing, speed: 5.6, damage: 26 })
+      : bossShot('spiral', 'enemyOrb', enraged ? 6 : 4, { ...timing, speed: 4.4, damage: 18, twist: .38 });
+  }
+  const phase = finalBossPhase(enemy);
+  if (type === 'harpyBoss') {
+    // Parada: disparos rápidos e seguidos pelos canhões das asas, convergindo no jogador
+    if (enemy.harpyMode === 'burst') {
+      return bossShot('aim', 'harpyShot', 1, { ...HARPY_BURST_SHOT, phase, burst: true, muzzles: HARPY_WING_GUNS, converge: true });
+    }
+    // Planando: um tiro de vez em quando
+    return bossShot('aim', 'harpyShot', 1, { ...HARPY_GLIDE_SHOT, phase, interval: phase === 3 ? 1.9 : 2.4 });
+  }
+  // Colosso: baterias em leque, bordada na fase 2 e espiral do reator na fase 3
+  if (phase === 1) {
+    const timing = { phase, interval: 1.8, charge: .9, speed: 6, damage: 34 };
+    return volley % 2
+      ? bossShot('fan', 'enemyMissile', 3, { ...timing, spread: .12 })
+      : bossShot('fan', 'enemyPlasma', 6, { ...timing, spread: .2 });
+  }
+  if (phase === 2) {
+    const timing = { phase, interval: 1.6, charge: .85, speed: 6.4, damage: 36 };
+    return volley % 2
+      ? bossShot('broadside', 'enemyPlasma', 12, { ...timing, spread: .18 })
+      : bossShot('fan', 'enemyPlasma', 5, timing);
+  }
+  return volley % 2
+    ? bossShot('fan', 'enemyMissile', 3, { phase, interval: 1.1, charge: .6, speed: 7, damage: 38, spread: .3 })
+    : bossShot('spiral', 'enemyOrb', 6, { phase, interval: 1.1, charge: .6, speed: 5.4, damage: 28, twist: .45 });
+}
+
+// Quatro placas de ±0,42 rad no anel do Bastião. shieldRotation é a rotação do anel no mundo (eixo Y).
+export const BASTION_SHIELD_HALF_ARC = .42;
+export function bastionShieldBlocks(enemy, point) {
+  if (enemy?.type !== 'bastionBoss' || typeof enemy.shieldRotation !== 'number') return false;
+  const angle = Math.atan2(point.z - enemy.position.z, point.x - enemy.position.x);
+  for (let i = 0; i < 4; i++) {
+    const diff = angle - (i * Math.PI / 2 - enemy.shieldRotation);
+    if (Math.abs(Math.atan2(Math.sin(diff), Math.cos(diff))) < BASTION_SHIELD_HALF_ARC) return true;
+  }
+  return false;
 }

@@ -1,5 +1,5 @@
 <script setup lang="js">
-import { LEVEL_1 } from '~/games/levels/LevelOneConfig';
+import { LEVELS } from '~/games/levels';
 import { useAudio } from '~/composables/useAudio';
 import UiFlightRadar from '~/components/ui/FlightRadar.vue';
 import UiTargetBeacons from '~/components/ui/TargetBeacons.vue';
@@ -19,9 +19,11 @@ const route = useRoute();
 const currentRunStore = useCurrentRunStore();
 const audio = useAudio();
 
-const levels = {
-  1: LEVEL_1,
-};
+// Trocar de capítulo (/play/1 → /play/2) remonta a página e inicia uma partida nova
+definePageMeta({ key: route => route.fullPath });
+
+const levels = LEVELS;
+const chapterProgress = useChapterProgressStore();
 
 const audioInitialized = ref(false);
 
@@ -82,6 +84,12 @@ onMounted(async () => {
 
   if (!levels[currentId]) {
     console.error('Level not found:', route.params.id );
+    navigateTo('/');
+    return;
+  }
+
+  if (!chapterProgress.isUnlocked(currentId)) {
+    console.warn('Chapter locked:', currentId);
     navigateTo('/');
     return;
   }

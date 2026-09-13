@@ -11,14 +11,13 @@ const stageHeight = ref(1);
 
 // Determine atmosphere color based on chapter
 const atmosphereColor = computed(() => {
-  // If no level config or chapter, default to white
-  return '#432097';
+  return currentRun.levelConfig?.theme?.atmosphere ?? '#432097';
 });
 
 // Determine galaxy opacity based on chapter
 const galaxyOpacity = computed(() => {
   const chapter = currentRun.levelConfig?.chapter || 1;
-  return chapter > 1 ? 0.5 : 0.35;
+  return currentRun.levelConfig?.theme?.galaxyOpacity ?? (chapter > 1 ? 0.5 : 0.35);
 });
 
 // Determine level/chapter for effects

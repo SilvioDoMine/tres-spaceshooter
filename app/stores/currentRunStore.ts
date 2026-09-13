@@ -5,6 +5,7 @@ import { useEnemyManager } from '~/composables/useEnemyManager';
 import { useSkillStore } from '~/stores/SkillStore';
 import { useEnemyManagerStore } from '~/stores/enemyManagerStore';
 import { useStatisticsStore } from '~/stores/useStatisticsStore';
+import { useChapterProgressStore } from '~/stores/useChapterProgressStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import { useCombatTextStore } from '~/stores/useCombatTextStore';
 import { useModal } from '~/composables/useModal';
@@ -201,6 +202,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
       // console.log('Indo para o próximo estágio:', currentStageIndex.value, stage);
       loadStage(stage);
     } else {
+      // Vencer o capítulo libera o próximo
+      useChapterProgressStore().markCompleted(Number(levelConfig.value?.chapter) || 1);
       gameVictoryRewards(true);
       gameVictory();
     }

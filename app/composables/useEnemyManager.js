@@ -3,7 +3,7 @@ import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { useMissions } from '~/composables/useMissions';
 import { storeToRefs } from 'pinia';
 import { emitImpact } from '~/utils/combatEffects';
-import { enemyCategory, normalAsteroidFragmentStats, roomProgress, scaledEnemyExperience, scaledEnemyHealth } from '~/utils/combatPatterns';
+import { chapterDamageMultiplier, enemyCategory, normalAsteroidFragmentStats, roomProgress, scaledEnemyExperience, scaledEnemyHealth } from '~/utils/combatPatterns';
 import { playableRoomCount } from '~/utils/progression';
 
 export const baseStats = {
@@ -148,6 +148,147 @@ export const baseStats = {
       gold: { min: 100, max: 200 }
     }
   },
+  // ==================== BOSSES DOS CAPÍTULOS 2 E 3 ====================
+  // Modelo próprio (EnemyBoss). Movimento em utils/bossBehaviors.js, rajadas em chapterBossProfile.
+  // Vida exata (não escala com sala nem capítulo).
+  hiveBoss: {
+    color: '#d8952a',
+    shape: 'square',
+    model: 'hive',
+    exactStats: true,
+    size: 3,
+    speed: 1,
+    health: 5200,
+    baseXP: 0,
+    fixedXP: true,
+    onHitDamage: 999,
+    distanceKeep: 20,
+    shotDamage: 200,
+    cooldownTotalShot: 2,
+    shotSound: 'shoot7',
+    deathSound: 'enemy-death1',
+    hitSound: 'hit-soft3',
+    drops: {
+      exp: { min: 0, max: 0 },
+      gold: { min: 150, max: 250 }
+    }
+  },
+  // Mini-colmeia: aparece depois da Colmeia (Capítulo 2 sala 11+ e Capítulo 3). Escala com sala e capítulo.
+  miniHive: {
+    color: '#d8952a',
+    shape: 'square',
+    model: 'hive',
+    size: 1.4,
+    speed: .9,
+    health: 420,
+    baseXP: 110,
+    shotSound: 'shoot7',
+    deathSound: 'enemy-death1',
+    hitSound: 'hit-soft3',
+    drops: {
+      exp: { min: 110, max: 110 },
+      gold: { min: 20, max: 40 }
+    }
+  },
+  // Caça kamikaze lançado pelas colmeias (dano de contato vem de quem lança). Não atira nem dá recompensa.
+  hiveDrone: {
+    color: '#ffb13b',
+    shape: 'cone',
+    size: .7,
+    speed: 3,
+    health: 60,
+    baseXP: 0,
+    fixedXP: true,
+    holdFire: true,
+    deathSound: 'hit-hard3',
+    hitSound: 'hit-soft2',
+    drops: {
+      exp: { min: 0, max: 0 },
+      gold: { min: 0, max: 0 }
+    }
+  },
+  // Mini-harpia: aparece depois da Harpia (Capítulo 3). Escala com sala e capítulo.
+  miniHarpy: {
+    color: '#ff4f9e',
+    shape: 'square',
+    model: 'harpy',
+    size: 1.3,
+    speed: 1.2,
+    health: 380,
+    baseXP: 120,
+    deathSound: 'enemy-death1',
+    hitSound: 'hit-soft3',
+    drops: {
+      exp: { min: 120, max: 120 },
+      gold: { min: 25, max: 45 }
+    }
+  },
+  harpyBoss: {
+    color: '#ff4f9e',
+    shape: 'square',
+    model: 'harpy',
+    exactStats: true,
+    size: 3.2,
+    speed: 1.2,
+    health: 9500,
+    baseXP: 0,
+    fixedXP: true,
+    onHitDamage: 999,
+    distanceKeep: 20,
+    shotDamage: 300,
+    cooldownTotalShot: 1,
+    shotSound: 'shoot2',
+    deathSound: 'enemy-death2',
+    hitSound: 'hit-soft3',
+    drops: {
+      exp: { min: 0, max: 0 },
+      gold: { min: 200, max: 300 }
+    }
+  },
+  bastionBoss: {
+    color: '#62f2ff',
+    shape: 'square',
+    model: 'bastion',
+    exactStats: true,
+    size: 3,
+    speed: .8,
+    health: 7000,
+    baseXP: 0,
+    fixedXP: true,
+    onHitDamage: 999,
+    distanceKeep: 20,
+    shotDamage: 250,
+    cooldownTotalShot: 2,
+    shotSound: 'shoot7',
+    deathSound: 'enemy-death1',
+    hitSound: 'hit-soft3',
+    drops: {
+      exp: { min: 0, max: 0 },
+      gold: { min: 250, max: 350 }
+    }
+  },
+  colossusBoss: {
+    color: '#ff5a26',
+    shape: 'square',
+    model: 'colossus',
+    exactStats: true,
+    size: 4.5,
+    speed: .9,
+    health: 13000,
+    baseXP: 0,
+    fixedXP: true,
+    onHitDamage: 999,
+    distanceKeep: 20,
+    shotDamage: 350,
+    cooldownTotalShot: 1,
+    shotSound: 'shoot2',
+    deathSound: 'enemy-death2',
+    hitSound: 'hit-soft3',
+    drops: {
+      exp: { min: 0, max: 0 },
+      gold: { min: 300, max: 450 }
+    }
+  },
   kamikazeBoss: {
     color: '#ff4d4d',
     shape: 'cone',
@@ -225,7 +366,7 @@ const onDeathBehavior = {
     // Todo asteroide grande se divide em exatamente dois fragmentos.
     const enemyManager = useEnemyManager();
     const currentRun = useCurrentRunStore();
-    const fragmentStats = normalAsteroidFragmentStats(enemy.room);
+    const fragmentStats = normalAsteroidFragmentStats(enemy.room, currentRun.levelConfig?.chapter || 1);
     const miniasteroidCount = fragmentStats.count;
 
     // Calcula direção do player pro asteroid (direção em que ele estava vindo)
@@ -343,7 +484,18 @@ const onDeathBehavior = {
         }
       });
     }
-  }
+  },
+  hiveBoss: (enemy) => dismissSummons(enemy),
+  miniHive: (enemy) => dismissSummons(enemy),
+  colossusBoss: (enemy) => dismissSummons(enemy),
+}
+
+// Os reforços chamados por um boss caem junto com ele
+function dismissSummons(boss) {
+  const enemyManager = useEnemyManager();
+  enemyManager.activeEnemies.value
+    .filter(enemy => enemy.summonerId === boss.id && enemy.state !== 'dying')
+    .forEach(enemy => enemyManager.takeDamage(enemy.id, enemy.health, 'systemkill'));
 }
 
 // Lógica para gerenciar inimigos: spawn, atualização, remoção, etc.
@@ -415,13 +567,16 @@ export function useEnemyManager() {
     const room = playableRoomCount(useCurrentRun.levelConfig, useCurrentRun.currentStageIndex);
     const progress = roomProgress(room);
     const category = enemyCategory(enemyType);
-    const exactBossHealth = enemyType === 'asteroidBoss' || enemyType === 'boss';
-    const health = exactBossHealth ? enemyStats.health : scaledEnemyHealth(enemyStats.health, room);
-    const contact = enemyType === 'kamikaze'
-      ? Math.round(34 + 18 * progress)
+    const exactBossHealth = enemyType === 'asteroidBoss' || enemyType === 'boss' || Boolean(enemyStats.exactStats);
+    const chapter = useCurrentRun.levelConfig?.chapter || 1;
+    const health = exactBossHealth ? enemyStats.health : scaledEnemyHealth(enemyStats.health, room, chapter);
+    // Os bosses dos capítulos já têm valores próprios; os demais escalam com o capítulo
+    const contactScale = enemyStats.exactStats ? 1 : chapterDamageMultiplier(chapter);
+    const contact = Math.round(contactScale * (enemyType === 'kamikaze'
+      ? 34 + 18 * progress
       : category === 'boss'
-        ? Math.round(48 + 16 * progress)
-        : Math.round(22 + 14 * progress);
+        ? 48 + 16 * progress
+        : 22 + 14 * progress));
     // Crio um novo inimigo
     const newEnemy = {
       id: `${enemyType}_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
@@ -484,6 +639,11 @@ export function useEnemyManager() {
     // Inimigos em spawning ou morrendo são invulneráveis
     if (enemy.state === 'spawning' || enemy.state === 'dying') {
       return;
+    }
+
+    // Blindagem/ponto fraco dos bosses (hangar da Colmeia, reator do Colosso)
+    if (type === 'shot' && enemy.damageTakenMultiplier) {
+      damage *= enemy.damageTakenMultiplier;
     }
 
     enemy.health -= damage;

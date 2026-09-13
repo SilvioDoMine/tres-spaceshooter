@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { CHESTS, GEM_PACKS, GEM_PROMO_BONUS_ACTIVE, GOLD_PACKS, type ChestType } from '~/data/shop';
+import { CHESTS, GEM_PACKS, GEM_PROMO, GEM_PROMO_BONUS_ACTIVE, GOLD_PACKS, type ChestType } from '~/data/shop';
 import { useCash } from '~/composables/useCash';
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { useEquipmentStore } from '~/stores/useEquipmentStore';
@@ -19,6 +19,8 @@ import {
   openChestBatch,
   refreshShopState,
   sanitizeShopState,
+  shopSectionBadges,
+  emptySeen,
   type ChestOpenMode,
   type PixCharge,
   type ShopState,
@@ -219,9 +221,19 @@ export const useShopStore = defineStore('shop', () => {
 
   // -- Badges ------------------------------------------------------------------------------
 
-  const hasDailyPending = computed(() =>
-    state.value.daily.offers.some(offer => offerRemaining(offer) > 0 && canPay(offer.price.currency, offer.price.amount)),
-  );
+  /** "!" das sub-abas: Loja Diária e Ouro até serem vistos no dia; Gemas com promoção nova não vista */
+  const sectionBadges = computed(() => shopSectionBadges(state.value.seen, GEM_PROMO, now.value));
+
+  type SeenSection = 'daily' | 'gold' | 'gems';
+
+  /** Marca a seção como vista (chamado quando ela aparece na tela ou a sub-aba é tocada) */
+  function markSeen(section: SeenSection) {
+    if (!sectionBadges.value[section]) return;
+    const seen = { ...state.value.seen };
+    if (section === 'gems') seen.gemsPromoId = GEM_PROMO?.id ?? null;
+    else seen[section] = Date.now();
+    commit({ ...state.value, seen });
+  }
   const hasChestPending = computed(() =>
     (Object.keys(CHESTS) as ChestType[]).some(type => isFreeReady(type) || state.value.keys[type] > 0),
   );
@@ -279,7 +291,9 @@ export const useShopStore = defineStore('shop', () => {
     creditGemPack,
     pendingPix,
     setPendingPix,
-    hasDailyPending,
+    sectionBadges,
+    markSeen,
+    resetSeen: () => commit({ ...state.value, seen: emptySeen() }),
     hasChestPending,
     hasPending,
     resetShop,

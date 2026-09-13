@@ -6,10 +6,11 @@ import { useProjectileStore } from '~/stores/projectileStore';
 const store=useProjectileStore(),root=new Group(),dummy=new Object3D();
 const geometry=new PlaneGeometry(.8,1.9);geometry.rotateX(Math.PI/2);geometry.translate(0,0,-.45);
 const orbGeometry=new PlaneGeometry(.72,.72);orbGeometry.rotateX(Math.PI/2);
-const palette=['#38cfff','#82edff','#c7a3ff','#ffc777','#50caff','#ff719c','#ffbf66'];
+// 7 = lança da Colmeia (bola esticada, dourada), 8 = tiro da Colmeia (bola âmbar), 9 = tiro da Harpia (bola magenta)
+const palette=['#38cfff','#82edff','#c7a3ff','#ffc777','#50caff','#ff719c','#ffbf66','#fff06a','#ffa53d','#ff5fb0'];
 const materials=palette.map((color,index)=>new ShaderMaterial({
  transparent:true,depthWrite:false,side:2,blending:AdditiveBlending,
- uniforms:{time:{value:0},tint:{value:new Color(color)},orb:{value:Math.max(0,index-3)}},
+ uniforms:{time:{value:0},tint:{value:new Color(color)},orb:{value:index>=7?1:Math.max(0,index-3)}},
  vertexShader:'varying vec2 v;void main(){v=uv;gl_Position=projectionMatrix*modelViewMatrix*instanceMatrix*vec4(position,1.);}',
  fragmentShader:`
  varying vec2 v;uniform float time;uniform vec3 tint;uniform float orb;
@@ -65,11 +66,13 @@ useLoop().onBeforeRender(({delta})=>{
  time+=Math.min(delta,.1);materials.forEach(m=>m.uniforms.time.value=time);
  const counts=Array(batches.length).fill(0);let trailCount=0;
  for(const p of store.projectiles){
-  const tier=p.ownerType==='enemy'?(p.type==='enemyMissile'?6:p.type==='enemyPlasma'?5:4):p.power>=2.5?3:p.power>=1.75?2:p.power>1?1:0;
-  const size=p.ownerType==='enemy'?1:1+Math.min(.55,Math.max(0,p.power-1)*.35);
+  const tier=p.ownerType==='enemy'?(p.type==='enemyLance'?7:p.type==='hiveShot'?8:p.type==='harpyShot'?9:p.type==='enemyMissile'?6:p.type==='enemyPlasma'?5:4):p.power>=2.5?3:p.power>=1.75?2:p.power>1?1:0;
+  // Bolas inimigas crescem junto com a hitbox (tamanho padrão .22 = escala 1)
+  const ball=tier===4||tier>=7;
+  const size=p.ownerType==='enemy'?(ball?Math.max(1,(p.size||.22)/.22):1):1+Math.min(.55,Math.max(0,p.power-1)*.35);
   dummy.position.set(p.position.x,1,p.position.z);
   dummy.rotation.set(0,Math.atan2(p.direction.x,p.direction.z),0);
-  dummy.scale.set(size,1,p.ownerType==='enemy'?(tier===6?1.8:tier===5?1.35:1):1+Math.min(.4,(p.power-1)*.2));
+  dummy.scale.set(size,1,p.ownerType==='enemy'?(tier===7?size*1.9:tier===6?1.8:tier===5?1.35:size):1+Math.min(.4,(p.power-1)*.2));
   dummy.updateMatrix();batches[tier].setMatrixAt(counts[tier]++,dummy.matrix);
   for(let i=1;i<p.trail.length;i++){
    const a=p.trail[i-1],b=p.trail[i],dx=b.x-a.x,dz=b.z-a.z,length=Math.hypot(dx,dz);

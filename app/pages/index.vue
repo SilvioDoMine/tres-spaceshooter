@@ -3,6 +3,7 @@ import { useLobbyStore } from '~/stores/useLobbyStore';
 import { useModal } from '~/composables/useModal';
 import { useMissions } from '~/composables/useMissions';
 import { useLevelAccount } from '~/composables/useLevelAccount';
+import { CHAPTER_COUNT, CHAPTER_INFO } from '~/games/levels';
 
 // Page metadata
 useHead({
@@ -19,9 +20,12 @@ const router = useRouter();
 const isAnimating = ref(false);
 const isChangingLevel = ref(false);
 
-const maxUnlockedLevel = ref(1);
+// Capítulos liberados vêm do progresso salvo; o lobby abre no último liberado
+const chapterProgress = useChapterProgressStore();
+const maxUnlockedLevel = computed(() => chapterProgress.maxUnlocked);
 const currentLevel = ref(1);
-const maxLevels = 3; // Matching the 3 bosses in LevelSelect
+const maxLevels = CHAPTER_COUNT;
+onMounted(() => { currentLevel.value = chapterProgress.maxUnlocked; });
 
 const isLocked = computed(() => currentLevel.value > maxUnlockedLevel.value);
 
@@ -149,11 +153,9 @@ function formatCurrency(amount: number): string {
 
 const missions = useMissions();
 
-const levelDescriptions = {
-  1: 'Limpe todas as salas',
-  2: 'Limpe todas as salas',
-  3: 'Sobreviva por 6 minutos'
-}
+const levelDescriptions = Object.fromEntries(
+  Object.entries(CHAPTER_INFO).map(([chapter, info]) => [chapter, info.description]),
+);
 
 // Computed para verificar se algum modal está aberto
 const isAnyModalOpen = computed(() =>
@@ -356,7 +358,7 @@ onUnmounted(() => {
 
       </div>
       
-      <div class="chapter-info lobby-fx title-text" :class="{ 'is-out-fade': !isChapterView }"><strong>{{ ['SENTINELA','HARPIA','COLOSSO'][currentLevel-1] }}</strong><span>{{ ['Patrulha orbital','Interceptador pesado','Comando da frota'][currentLevel-1] }}</span><small>{{ isLocked ? '🔒 Capítulo ainda não disponível' : `Adversário do capítulo ${currentLevel}` }}</small></div>
+      <div class="chapter-info lobby-fx title-text" :class="{ 'is-out-fade': !isChapterView }"><strong>{{ CHAPTER_INFO[currentLevel]?.boss }}</strong><span>{{ CHAPTER_INFO[currentLevel]?.subtitle }}</span><small>{{ isLocked ? '🔒 Capítulo ainda não disponível' : `Adversário do capítulo ${currentLevel}` }}</small></div>
       <!-- Level Title -->
       <div class="chapter-heading lobby-fx absolute title-text top-32 left-0 w-full text-center pointer-events-none" :class="{ 'is-out-fade': !isChapterView }">
         <h2 class="text-3xl font-bold text-white drop-shadow-md">Capítulo {{ currentLevel }}</h2>

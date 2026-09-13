@@ -1,5 +1,6 @@
 <script setup lang="js">
 import EnemyRaider from './enemies/EnemyRaider.vue';
+import EnemyBoss from './enemies/EnemyBoss.vue';
 import { shallowRef } from 'vue';
 import { useLoop } from '@tresjs/core';
 import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
@@ -107,7 +108,8 @@ onBeforeRender(() => {
     }
 
     // Modular ships keep their hull upright and face their target.
-    const heading = Math.atan2(enemy.position.x - player.x, enemy.position.z - player.z);
+    // Quem voa com rumo próprio (caças das colmeias) aponta para onde vai, não para o jogador.
+    const heading = enemy.visualHeading ?? Math.atan2(enemy.position.x - player.x, enemy.position.z - player.z);
     visualMesh.rotation.set(0, heading + deathRotation, deathRotation * .2);
   });
 
@@ -134,7 +136,7 @@ onUnmounted(() => {
     >
       <!-- Componente dinâmico baseado no shape do inimigo -->
       <component
-        :is="EnemyRaider"
+        :is="baseStats[enemy.type].model ? EnemyBoss : EnemyRaider"
         :enemy="enemy"
         :base-stats="baseStats"
         :set-visual-mesh-ref="setVisualMeshRef"

@@ -2,7 +2,7 @@ import { Group, Mesh, MeshStandardMaterial, BufferGeometry, Shape, ExtrudeGeomet
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 
 // Bake small manufactured details into one mesh per finish, rather than one draw per panel.
-function builder(colors: string[]) {
+export function builder(colors: string[]) {
   const bins: BufferGeometry[][] = colors.map(() => [])
   const materials = colors.map((color, i) => new MeshStandardMaterial({ color, metalness: i === 2 ? .65 : .35, roughness: i === 2 ? .24 : .58, ...(i === 4 ? { emissive: color, emissiveIntensity: 1.4 } : {}) }))
   function add(geo: BufferGeometry, finish: number, pos = [0,0,0], rot = [0,0,0]) {

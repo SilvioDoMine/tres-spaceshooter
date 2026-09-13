@@ -5,7 +5,7 @@ import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
 import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import { useSkillStore, SkillsList } from '~/stores/SkillStore';
-import { advanceShot, PROJECTILE_IFRAME, segmentHit } from '~/utils/combatPatterns';
+import { advanceShot, bastionShieldBlocks, PLAYER_HITBOX_RADIUS, PROJECTILE_IFRAME, segmentHit } from '~/utils/combatPatterns';
 
 const orb = { speed: 4, damage: 18, size: .22, range: 25, color: '#52caff' };
 export const projectilesType = {
@@ -14,6 +14,11 @@ export const projectilesType = {
   enemyOrb: {...orb}, ufo: {...orb}, ufofast: {...orb}, boss: {...orb}, miniboss: {...orb},
   enemyPlasma: {...orb, color: '#ff719c'},
   enemyMissile: {...orb, color: '#ffbf66'},
+  // Colmeia: tiro do modo caça e lança da torreta (grandes, para não passar raspando)
+  hiveShot: {...orb, size: .42, color: '#ffa53d'},
+  enemyLance: {...orb, size: .45, color: '#fff06a'},
+  // Harpia: rápido e com hitbox grande
+  harpyShot: {...orb, size: .42, color: '#ff5fb0'},
 };
 export const useProjectileStore = defineStore('projectileStore', () => {
   const enemyManager = useEnemyManager(), currentRunStore = useCurrentRunStore();
@@ -54,7 +59,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
   function collide(projectile,start) {
     if(projectile.ownerType==='enemy') {
       // A volley cannot cause several damage events in one instant.
-      if(segmentHit(start,projectile.position,currentRunStore.getPlayerPosition(),.32+projectile.size)!==null) {
+      if(segmentHit(start,projectile.position,currentRunStore.getPlayerPosition(),PLAYER_HITBOX_RADIUS+projectile.size)!==null) {
         projectile._markedForRemoval=true;
         if(hitGrace<=0){hitGrace=PROJECTILE_IFRAME;currentRunStore.takeDamage(projectile.damage);}
       }
@@ -69,6 +74,13 @@ export const useProjectileStore = defineStore('projectileStore', () => {
     contacts.sort((a,b)=>a.t-b.t);
     for(const {enemy,t} of contacts) {
       if(projectile._markedForRemoval)break;
+      // Escudos do Bastião absorvem o tiro que chega pela placa
+      const contact={x:start.x+(projectile.position.x-start.x)*t,z:start.z+(projectile.position.z-start.z)*t};
+      if(bastionShieldBlocks(enemy,contact)) {
+        projectile._markedForRemoval=true;
+        emitImpact(contact.x,contact.z,false,'shot',true);
+        break;
+      }
       projectile.hitsList.push(enemy.id);
       enemyManager.takeDamage(enemy.id,projectile.damage,'shot');
       if(projectile.bounces>0) {

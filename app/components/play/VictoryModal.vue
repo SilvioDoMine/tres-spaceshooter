@@ -3,6 +3,7 @@ import { useModal } from '~/composables/useModal';
 import PlayModal from '~/components/play/PlayModal.vue';
 import BaseAbilityIcon from '~/components/base/AbilityIcon.vue';
 import { playableRoomCount } from '~/utils/progression';
+import { CHAPTER_COUNT } from '~/games/levels';
 
 const MODAL_ID = 'play-victory-modal';
 
@@ -35,6 +36,11 @@ function handleQuit() {
   useRouter().push('/');
 }
 
+function handleNextChapter() {
+  close();
+  useRouter().push(`/play/${nextChapter.value}`);
+}
+
 defineExpose({ open, close, isOpen });
 
 // Quando abrir o modal, executa o código
@@ -50,6 +56,7 @@ const levelAccount = useLevelAccount();
 const currentRun = useCurrentRunStore();
 const totalRooms = computed(() => playableRoomCount(currentRun.levelConfig));
 const chapter = computed(() => currentRun.levelConfig?.chapter || 1);
+const nextChapter = computed(() => chapter.value < CHAPTER_COUNT ? chapter.value + 1 : null);
 const expReward = computed(() => levelAccount.calculateExpReward(
   currentRun.levelConfig,
   totalRooms.value,
@@ -97,7 +104,7 @@ const expReward = computed(() => levelAccount.calculateExpReward(
       rarity="gray"
       size="sm"
       :clickable="true"
-      :quantity="useCurrentRunStore().currentGold"
+      :quantity="`${useCurrentRunStore().currentGold}`"
       v-if="useCurrentRunStore().currentGold > 0"
     >
       <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">
@@ -127,7 +134,11 @@ const expReward = computed(() => levelAccount.calculateExpReward(
   <!-- Slot de actions para os botões grandes -->
   <template #actions>
     <div class="text-center">
-      <p class="text-sm text-white/75 mb-2">Capítulo {{ chapter }} concluído. O Capítulo 2 ainda não está disponível.</p>
+      <template v-if="nextChapter">
+        <p class="text-sm text-white/75 mb-3">Capítulo {{ chapter }} concluído. Capítulo {{ nextChapter }} liberado!</p>
+        <button type="button" class="game-button mb-3" @click="handleNextChapter">Próximo capítulo</button>
+      </template>
+      <p v-else class="text-sm text-white/75 mb-2">Você concluiu todos os capítulos!</p>
       <p @click="handleQuit" class="title-text text-white animate-pulse cursor-pointer">Voltar ao lobby</p>
     </div>
   </template>

@@ -14,11 +14,25 @@ const active = ref<ShopSection>('daily');
 const body = () => screen.value?.$el.querySelector<HTMLElement>('.lobby-screen__body') ?? null;
 
 const tabs = computed(() => [
-  { id: 'daily' as const, label: 'Loja Diária', badge: shop.hasDailyPending },
+  { id: 'daily' as const, label: 'Loja Diária', badge: shop.sectionBadges.daily },
   { id: 'chests' as const, label: 'Baús', badge: shop.hasChestPending },
-  { id: 'gems' as const, label: 'Gemas', badge: false },
-  { id: 'gold' as const, label: 'Ouro', badge: false },
+  { id: 'gems' as const, label: 'Gemas', badge: shop.sectionBadges.gems },
+  { id: 'gold' as const, label: 'Ouro', badge: shop.sectionBadges.gold },
 ]);
+
+// "Visto": a seção precisa ficar na tela por um instante (dá tempo de o jogador notar o "!")
+const SEEN_DWELL_MS = 1000;
+const seenTimers = new Map<ShopSection, ReturnType<typeof setTimeout>>();
+
+function markSeen(section: ShopSection) {
+  if (section !== 'chests') shop.markSeen(section);
+}
+
+function setVisible(section: ShopSection, visible: boolean) {
+  clearTimeout(seenTimers.get(section));
+  seenTimers.delete(section);
+  if (visible) seenTimers.set(section, setTimeout(() => markSeen(section), SEEN_DWELL_MS));
+}
 
 // Enquanto a rolagem é por toque na sub-aba, o observador não troca a aba ativa no meio do caminho
 let lockUntil = 0;
@@ -28,6 +42,7 @@ function scrollTo(section: ShopSection, smooth = true) {
   const target = container?.querySelector<HTMLElement>(`[data-shop-section="${section}"]`);
   if (!container || !target) return;
   active.value = section;
+  markSeen(section);
   lockUntil = Date.now() + 700;
   const top = target.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
   container.scrollTo({ top: top - 8, behavior: smooth ? 'smooth' : 'auto' });
@@ -47,6 +62,7 @@ onMounted(() => {
         const id = (entry.target as HTMLElement).dataset.shopSection as ShopSection;
         if (entry.isIntersecting) visible.set(id, entry.boundingClientRect.top);
         else visible.delete(id);
+        setVisible(id, entry.isIntersecting);
       }
       if (Date.now() < lockUntil || !visible.size) return;
       active.value = [...visible.entries()].sort((a, b) => a[1] - b[1])[0]![0];
@@ -58,7 +74,10 @@ onMounted(() => {
   if (props.focus) nextTick(() => scrollTo(props.focus!.section, false));
 });
 
-onBeforeUnmount(() => observer?.disconnect());
+onBeforeUnmount(() => {
+  observer?.disconnect();
+  seenTimers.forEach(timer => clearTimeout(timer));
+});
 
 watch(
   () => props.focus?.nonce,

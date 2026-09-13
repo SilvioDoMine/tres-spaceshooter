@@ -141,6 +141,19 @@ export const GEM_PACKS: GemPack[] = [
 /** Promoção: com a flag ligada o bônus vale em toda compra */
 export const GEM_PROMO_BONUS_ACTIVE = false;
 
+/**
+ * Promoção de gemas em andamento (acende o "!" da sub-aba Gemas até o jogador ver).
+ * Troque o `id` a cada promoção nova para o aviso voltar. null = sem promoção.
+ */
+export interface GemPromo {
+  id: string;
+  /** ISO, ex.: '2026-09-20T07:00:00Z' */
+  startsAt: string;
+  endsAt?: string;
+}
+
+export const GEM_PROMO: GemPromo | null = null;
+
 // -- Ouro (comprado com gemas) ------------------------------------------------------
 
 export interface GoldPack {

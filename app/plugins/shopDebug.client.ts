@@ -26,6 +26,8 @@ export default defineNuxtPlugin(() => {
     forceShopReset: () => useShopStore().forceDailyReset(),
     simulatePixPayment,
     resetShop: () => useShopStore().resetShop(),
+    // Volta os "!" de Loja Diária/Ouro/Gemas como se nada tivesse sido visto
+    resetShopSeen: () => useShopStore().resetSeen(),
     // Estatísticas: simula uma partida terminada (libera o baú grátis) ou zera tudo
     simulateMatch: (victory = false) =>
       useStatisticsStore().recordMatch({ victory, durationSec: 60, enemiesKilled: 0, goldEarned: 0, roomsReached: 1 }),

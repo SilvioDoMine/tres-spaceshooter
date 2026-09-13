@@ -5,6 +5,7 @@ import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
 import { useProjectileStore } from '~/stores/projectileStore';
 import { useEnemyAttacks } from '~/composables/useEnemyAttacks';
 import { COLLISION_IFRAME, createIFrameGate } from '~/utils/combatPatterns';
+import { createBossBehaviors, HARPY } from '~/utils/bossBehaviors';
 
 export function useEnemyAI() {
     const enemyManager = useEnemyManager();
@@ -588,6 +589,9 @@ export function useEnemyAI() {
         },
     }
 
+    // Bosses dos capítulos 2 e 3 (hangar, investida, escudos, escoltas)
+    Object.assign(behaviors, createBossBehaviors({ enemyManager, activeEnemies, playerPosition, applyCollisionDamage }));
+
     /**
      * Aplica separação entre inimigos para evitar que fiquem sobrepostos
      * @param {object} enemy - O inimigo atual
@@ -678,7 +682,9 @@ export function useEnemyAI() {
             const dz = enemy.position.z - previousZ;
             const moved = Math.hypot(dx, dz);
             const speedMultiplier = enemy.kamikazeState === 'charging' ? 4.25 : 1.5;
-            const maxStep = (Math.max(0, enemy.speed || 0) * speedMultiplier + 2) * deltaTime;
+            const maxStep = enemy.dashState === 'dash'
+                ? (HARPY.dashSpeed + 2) * deltaTime
+                : (Math.max(0, enemy.speed || 0) * speedMultiplier + 2) * deltaTime;
             if (moved > maxStep && moved > 0) {
                 enemy.position.x = previousX + dx / moved * maxStep;
                 enemy.position.z = previousZ + dz / moved * maxStep;

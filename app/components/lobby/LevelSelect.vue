@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useLoop } from '@tresjs/core';
 import EnemyRaider from '~/components/game/enemies/EnemyRaider.vue';
+import EnemyBoss from '~/components/game/enemies/EnemyBoss.vue';
 import { shallowRef, ref, watch, computed } from 'vue'
 import { Html } from '@tresjs/cientos'
 
@@ -41,8 +42,8 @@ const atmosphereColors = {
 // Boss configurations
 const bosses = [
   { id: 1, type: 'composite', displayType: 'SENTINELA • Patrulha orbital' },
-  { id: 2, type: 'square', displayType: 'HARPIA • Interceptador pesado' },
-  { id: 3, type: 'cone', displayType: 'COLOSSO • Comando da frota' },
+  { id: 2, type: 'square', model: 'harpy', displayType: 'HARPIA • Interceptador pesado' },
+  { id: 3, type: 'cone', model: 'colossus', displayType: 'COLOSSO • Comando da frota' },
 ]
 
 // Mock Base Stats for visual representation
@@ -68,8 +69,9 @@ const { onBeforeRender } = useLoop()
 
 onBeforeRender(({ delta, elapsed }) => {
   if (groupRef.value) {
-    // Smoothly interpolate current x to target x
-    groupRef.value.position.x += (targetX.value - groupRef.value.position.x) * delta * 5
+    // Smoothly interpolate current x to target x. O fator é limitado a 1: com um frame longo
+    // (delta > 0.4s) ele passava do alvo e divergia, jogando o carrossel para o infinito.
+    groupRef.value.position.x += (targetX.value - groupRef.value.position.x) * Math.min(1, delta * 5)
   }
 
   // Animate individual bosses
@@ -143,7 +145,8 @@ onBeforeRender(({ delta, elapsed }) => {
         <!-- Rotated Boss Model -->
         <TresGroup :ref="(el) => bossRefs[index] = el">
           <component 
-            :is="EnemyRaider"
+            :is="boss.model ? EnemyBoss : EnemyRaider"
+            :model="boss.model"
             :enemy="{ id: boss.id, type: boss.type }"
             :baseStats="baseStats"
             :setVisualMeshRef="setVisualMeshRef"

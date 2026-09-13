@@ -13,6 +13,7 @@ import {
   type ChestType,
   type DailySlotConfig,
   type GemPack,
+  type GemPromo,
   type GoldPack,
   type ShopPrice,
 } from '../data/shop';
@@ -175,6 +176,41 @@ export const gemPackCredit = (pack: GemPack, purchasedIds: string[], promo: bool
 export const goldPackRemaining = (pack: GoldPack, bought: number) =>
   pack.stock === null ? Infinity : Math.max(0, pack.stock - bought);
 
+// -- Avisos ("!") das sub-abas ----------------------------------------------------------------
+
+/** Seções da Loja que guardam "visto" */
+export interface ShopSeen {
+  /** Quando a Loja Diária foi vista (o aviso volta quando o dia da loja vira) */
+  daily: number | null;
+  /** Quando a seção de Ouro foi vista (idem) */
+  gold: number | null;
+  /** Última promoção de gemas vista */
+  gemsPromoId: string | null;
+}
+
+export const emptySeen = (): ShopSeen => ({ daily: null, gold: null, gemsPromoId: null });
+
+/** Visto no dia da loja atual (vira às 04:00 GMT-3) */
+export const seenThisShopDay = (seenAt: number | null, now: number) =>
+  seenAt !== null && resetDayKey(seenAt) === resetDayKey(now);
+
+/** Promoção dentro da janela de datas */
+export function isGemPromoActive(promo: GemPromo | null, now: number) {
+  if (!promo) return false;
+  const start = Date.parse(promo.startsAt);
+  const end = promo.endsAt ? Date.parse(promo.endsAt) : Infinity;
+  return Number.isFinite(start) && now >= start && now < end;
+}
+
+/** "!" de cada sub-aba (Baús vem das chaves/grátis, calculado na store) */
+export function shopSectionBadges(seen: ShopSeen, promo: GemPromo | null, now: number) {
+  return {
+    daily: !seenThisShopDay(seen.daily, now),
+    gold: !seenThisShopDay(seen.gold, now),
+    gems: isGemPromoActive(promo, now) && seen.gemsPromoId !== promo!.id,
+  };
+}
+
 // -- Estado salvo ----------------------------------------------------------------------------
 
 export interface PixCharge {
@@ -194,6 +230,7 @@ export interface ShopState {
   chests: Record<ChestType, ChestProgress>;
   gemPacksPurchased: string[];
   pendingPix: PixCharge | null;
+  seen: ShopSeen;
 }
 
 export function freshShopState(seed: number, now: number): ShopState {
@@ -206,6 +243,7 @@ export function freshShopState(seed: number, now: number): ShopState {
     chests: { silver: { pity: 0, freeClaimedAt: null }, obsidian: { pity: 0, freeClaimedAt: null } },
     gemPacksPurchased: [],
     pendingPix: null,
+    seen: emptySeen(),
   };
 }
 
@@ -289,7 +327,17 @@ export function sanitizeShopState(raw: unknown, now: number): ShopState | null {
         }
       : null;
 
-  return refreshShopState({ seed: data.seed >>> 0, daily, gold, keys, chests, gemPacksPurchased, pendingPix }, now);
+  const seenAt = (value: unknown) => {
+    const number = Number(value);
+    return value !== null && Number.isFinite(number) && number > 0 && number <= now ? number : null;
+  };
+  const seen: ShopSeen = {
+    daily: seenAt(data.seen?.daily),
+    gold: seenAt(data.seen?.gold),
+    gemsPromoId: typeof data.seen?.gemsPromoId === 'string' ? data.seen.gemsPromoId : null,
+  };
+
+  return refreshShopState({ seed: data.seed >>> 0, daily, gold, keys, chests, gemPacksPurchased, pendingPix, seen }, now);
 }
 
 /** "R$ 6,90" */

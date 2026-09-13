@@ -1,21 +1,11 @@
-const door = () => ({ position: { x: 0, y: 0, z: -9 }, size: { width: 4, height: 8 } });
-const start = (z = 0) => ({ x: 0, y: 0, z });
-const group = (enemyType, count, delay = .8) => ({ enemyType, count, delay });
-const wave = (...enemies) => ({ enemies });
-const combat = (room, waves, type = 'combat') => ({
-  stageId: `${room}_${type === 'boss' ? 'Boss' : 'Combat'}`,
-  type,
-  width: 30,
-  height: type === 'boss' ? 30 : 24,
-  waves,
-  door: door(),
-  playerStartPosition: start(),
-});
+import { combat, group, intro, wave } from './helpers.js';
+
 // The intro is outside the room count; the following entries are playable rooms 1–20.
 export const LEVEL_1 = {
   levelId: 'level_open_space_001', chapter: 1, width: 10, height: 20, rewardExperience: 80,
+  theme: { atmosphere: '#432097', galaxyOpacity: .35 },
   stages: [
-    { stageId: '1_Combat_Intro', type: 'intro', width: 10, height: 20, waves: [], door: door(), playerStartPosition: start() },
+    intro(),
     combat(1, [wave(group('miniasteroid', 2))]),
     combat(2, [wave(group('miniasteroid', 3))]),
     combat(3, [wave(group('miniasteroid', 3), group('ufo', 1))]),
