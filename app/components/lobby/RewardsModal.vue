@@ -27,6 +27,7 @@ const displayedGold = ref(0);
 const displayedExp = ref(0);
 const displayedCash = ref(0);
 const displayedEquipment = ref([]);
+const displayedKeys = ref([]); // [tipo, quantidade]
 
 // Função para abrir o modal com recompensas
 const openWithRewards = (rewards) => {
@@ -35,6 +36,7 @@ const openWithRewards = (rewards) => {
   displayedExp.value = rewards?.exp || 0;
   displayedCash.value = rewards?.cash || 0;
   displayedEquipment.value = rewards?.equipment || [];
+  displayedKeys.value = Object.entries(rewards?.keys || {}).filter(([, amount]) => amount > 0);
   console.log('displayedGold setado para:', displayedGold.value);
   console.log('displayedExp setado para:', displayedExp.value);
   console.log('displayedCash setado para:', displayedCash.value);
@@ -124,6 +126,19 @@ const handleQuit = () => {
     >
       <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">
         <SvgExpIcon :size="35" />
+      </p>
+    </BaseAbilityIcon>
+
+    <BaseAbilityIcon
+      v-for="[type, amount] in displayedKeys"
+      :key="`key-${type}`"
+      rarity="gray"
+      size="sm"
+      :clickable="true"
+      :quantity="`${amount}`"
+    >
+      <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">
+        <SvgKeyIcon :size="30" :type="type" />
       </p>
     </BaseAbilityIcon>
 

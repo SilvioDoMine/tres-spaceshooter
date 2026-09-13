@@ -1,5 +1,4 @@
-import { MILESTONE_EQUIPMENT } from '~/data/equipment';
-import { useEquipmentStore } from '~/stores/useEquipmentStore';
+import { useShopStore } from '~/stores/useShopStore';
 
 const dailyMissions = [
     {
@@ -72,6 +71,7 @@ const dailyMilestones = {
     60: {
         gold: 300,
         exp: 300,
+        keys: { silver: 1 }, // 1 Chave de Prata
     },
     80: {
         gold: 400,
@@ -80,6 +80,7 @@ const dailyMilestones = {
     100: {
         gold: 500,
         exp: 500,
+        keys: { obsidian: 1 }, // todas as missões concluídas: 1 Chave de Obsidiana
     },
 }
 
@@ -262,24 +263,27 @@ export function useMissions() {
             gold: 0,
             exp: 0,
             equipment: [],
+            keys: { silver: 0, obsidian: 0 },
         };
 
         // Claim all eligible milestone rewards
         getMilestones.value.forEach(milestone => {
             if (getTotalPointsEarned.value >= milestone.points && !milestone.claimed) {
+                const reward = dailyMilestones[milestone.points];
+
                 // Adiciona os prêmios ao jogador aqui (ouro, experiência, etc.)
-                useCurrentRunStore().addPersistentGold(dailyMilestones[milestone.points].gold);
-                useLevelAccount().addExp(dailyMilestones[milestone.points].exp);
+                useCurrentRunStore().addPersistentGold(reward.gold);
+                useLevelAccount().addExp(reward.exp);
 
                 // Acumula as recompensas
-                claimedRewards.gold += dailyMilestones[milestone.points].gold;
-                claimedRewards.exp += dailyMilestones[milestone.points].exp;
+                claimedRewards.gold += reward.gold;
+                claimedRewards.exp += reward.exp;
 
-                // Alguns marcos também dão um equipamento aleatório
-                const equipmentRarity = MILESTONE_EQUIPMENT[milestone.points];
-                if (equipmentRarity) {
-                    claimedRewards.equipment.push(useEquipmentStore().grantRandom(equipmentRarity));
-                }
+                // Alguns marcos dão chaves de baú
+                Object.entries(reward.keys ?? {}).forEach(([type, amount]) => {
+                    useShopStore().addKeys(type, amount);
+                    claimedRewards.keys[type] += amount;
+                });
 
                 missionSettings.value.milestonesClaimed.push(milestone.points);
             }

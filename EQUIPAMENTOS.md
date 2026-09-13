@@ -125,10 +125,10 @@ Um grupo (mesmo item + raridade) é fundível quando:
 | Fonte | O quê |
 |---|---|
 | Início do jogo | Só o **Canhão de Plasma Comum**, já equipado. |
-| Missões diárias | Marco de **100 pontos**: 1 item **Comum** aleatório. |
-| Fim de partida | Toda partida terminada (**vitória ou derrota**): 1 item **Comum** aleatório (aparece no modal de fim de jogo). |
+| Missões diárias | Não dão item direto: marco de **60 pontos** dá 1 **Chave de Prata** e o de **100 pontos** dá 1 **Chave de Obsidiana** (usadas nos baús da Loja). |
+| Fim de partida | Só na **vitória**: 1 item **Comum** aleatório (aparece no modal de vitória). Derrota rende apenas ouro e EXP. |
 
-Configurável em `app/data/equipment.ts`: `MILESTONE_EQUIPMENT` e `MATCH_END_EQUIPMENT_RARITY`.
+Configurável em `dailyMilestones` (`app/composables/useMissions.js`) e `MATCH_END_EQUIPMENT_RARITY` (`app/data/equipment.ts`).
 
 ---
 
