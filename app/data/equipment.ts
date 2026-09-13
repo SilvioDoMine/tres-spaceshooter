@@ -42,8 +42,8 @@ export const EQUIPMENT_SLOTS: Record<
 
 /**
  * Habilidade liberada quando o item chega na raridade `unlock`.
- * Com `stat`, soma nos atributos (como os talentos). Com `effectId`, é um efeito de gameplay
- * descrito em `text` (ainda não ligado no jogo).
+ * Com `stat`, soma nos atributos (como os talentos). Com `effectId`, ativa o comportamento
+ * normalizado por aggregateGearEffects quando a partida começa.
  */
 export interface EquipmentAbility {
   unlock: EquipmentRarity;

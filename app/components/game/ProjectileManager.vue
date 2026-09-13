@@ -66,7 +66,7 @@ useLoop().onBeforeRender(({delta})=>{
  time+=Math.min(delta,.1);materials.forEach(m=>m.uniforms.time.value=time);
  const counts=Array(batches.length).fill(0);let trailCount=0;
  for(const p of store.projectiles){
-  const tier=p.ownerType==='enemy'?(p.type==='enemyLance'?7:p.type==='hiveShot'?8:p.type==='harpyShot'?9:p.type==='enemyMissile'?6:p.type==='enemyPlasma'?5:4):p.power>=2.5?3:p.power>=1.75?2:p.power>1?1:0;
+  const tier=p.ownerType==='enemy'?(p.type==='enemyLance'?7:p.type==='hiveShot'?8:p.type==='harpyShot'?9:p.type==='enemyMissile'?6:p.type==='enemyPlasma'?5:4):p.burst?3:p.echo?2:p.power>=2.5?3:p.power>=1.75?2:p.power>1?1:0;
   // Bolas inimigas crescem junto com a hitbox (tamanho padrão .22 = escala 1)
   const ball=tier===4||tier>=7;
   const size=p.ownerType==='enemy'?(ball?Math.max(1,(p.size||.22)/.22):1):1+Math.min(.55,Math.max(0,p.power-1)*.35);

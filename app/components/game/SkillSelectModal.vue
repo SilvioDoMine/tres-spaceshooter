@@ -144,7 +144,8 @@ watch(
                 <!-- Refresh Button League of Legends style -->
                  <button
                     @click="skillStore.refreshSkill(skill)"
-                    :disabled="skill.reRolls < currentRunStore.skillRerollCount"
+                    :disabled="skill.reRolls <= 0"
+                    :title="`Trocas restantes: ${skill.reRolls}`"
                     class="bg-gray-500 disabled:opacity-0 cursor-pointer rounded-full p-2 hover:bg-gray-400 hover:scale-95 active:scale-120 transition sm:w-fit"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">

@@ -12,8 +12,8 @@ export function useEnemyAttacks() {
     const chapterDamage=chapterDamageMultiplier(run.levelConfig?.chapter);
     const player=run.getPlayerPosition();
     for(const enemy of enemies) {
-      // A Harpia não atira na investida; caças e a mini-colmeia lançando também seguram o fogo
-      if(enemy.state!=='active' || enemy.type==='angel' || enemy.type==='kamikaze' || enemy.dashState || enemy.holdFire) { enemy.attackCharge=0;continue; }
+      // Atordoados não atiram; a Harpia não atira na investida; caças e a mini-colmeia lançando também seguram o fogo
+      if(enemy.state!=='active' || enemy.type==='angel' || enemy.type==='kamikaze' || (enemy.stunTimer || 0) > 0 || enemy.dashState || enemy.holdFire) { enemy.attackCharge=0;continue; }
       if(!enemy.attackClock)enemy.attackClock={remaining:1+Math.random()*1.6,volley:0,charging:false};
       const clock=enemy.attackClock, profile=attackProfile(enemy.type,room,clock.volley,enemy);
       if(profile.movementSpeed)enemy.speed=profile.movementSpeed;

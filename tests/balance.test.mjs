@@ -35,7 +35,7 @@ test('shot upgrades match formation, damage, piercing, rear fire and range', () 
 test('speed values persist when a stage is loaded and do not affect cooldown', () => {
   assert.deepEqual(Object.values(SkillsList.general_speed.levels).map(x => x.value), [1.06,1.12,1.18,1.24,1.30]);
   assert.deepEqual(Object.values(SkillsList.general_speed.levels).map(x => x.projectileValue), [1.08,1.16,1.24,1.32,1.40]);
-  assert.match(runSource, /function loadStage[\s\S]*?currentMoveSpeed\.value = PlayerBaseStats\.moveSpeed \* playerStats\.getSpeedMultiplier/);
+  assert.match(runSource, /function loadStage[\s\S]*?currentMoveSpeed\.value = playerStats\.moveSpeed/);
   assert.equal(7*1.3,9.1); assert.equal(19*1.4,26.599999999999998);
   assert.match(runSource, /shotCooldown: \.85/);
 });

@@ -5,6 +5,10 @@ import { storeToRefs } from 'pinia';
 import { emitImpact } from '~/utils/combatEffects';
 import { chapterDamageMultiplier, enemyCategory, normalAsteroidFragmentStats, roomProgress, scaledEnemyExperience, scaledEnemyHealth } from '~/utils/combatPatterns';
 import { playableRoomCount } from '~/utils/progression';
+import { outgoingHit } from '~/utils/shipAttributes';
+import { useHeartStore } from '~/stores/useHeartStore';
+import { usePlayerStats } from '~/stores/playerStats';
+import { useEquipmentEffectsStore } from '~/stores/useEquipmentEffectsStore';
 
 export const baseStats = {
   miniasteroid: {
@@ -627,7 +631,7 @@ export function useEnemyManager() {
   /**
    * Quando um inimigo toma dano
    */
-  function takeDamage(enemyId, damage, type) {
+  function takeDamage(enemyId, damage, type, options = {}) {
     // Lógica para aplicar dano ao inimigo
     const enemy = activeEnemies.value.find(e => e.id === enemyId);
 
@@ -641,18 +645,25 @@ export function useEnemyManager() {
       return;
     }
 
-    // Blindagem/ponto fraco dos bosses (hangar da Colmeia, reator do Colosso)
+    // Blindagem/ponto fraco dos bosses (reator do Colosso)
     if (type === 'shot' && enemy.damageTakenMultiplier) {
       damage *= enemy.damageTakenMultiplier;
     }
 
+    const equipmentEffects = useEquipmentEffectsStore();
+    const playerDamage = ['shot', 'equipment', 'reflect'].includes(type);
+    if (playerDamage) damage *= equipmentEffects.damageMultiplierFor(enemy);
+    const hit = type === 'shot' && options.canCrit !== false
+      ? outgoingHit(damage, usePlayerStats().attributes, Math.random, equipmentEffects.criticalBonusFor(enemyId))
+      : { damage, critical: false };
+    damage = hit.damage;
     enemy.health -= damage;
     emitImpact(enemy.position.x, enemy.position.z, enemy.health <= 0);
 
     // combat text
     useCombatTextStore().emitForTarget(
       enemyId,
-      'damage',
+      hit.critical ? 'critical' : 'damage',
       Math.round(damage)
     );
 
@@ -672,7 +683,7 @@ export function useEnemyManager() {
         onDeathBehaviorFunc(enemy);
       }
 
-      if (type === 'shot') {
+      if (playerDamage) {
         // Reproduz som de inimigo morto
         useAudio().playSound(enemy.deathSound, 1, randomPitch);
 
@@ -680,7 +691,8 @@ export function useEnemyManager() {
         const minGold = enemy.drops?.gold?.min || 0;
         const maxGold = enemy.drops?.gold?.max || 0;
         const goldDropped = Math.floor(Math.random() * (maxGold - minGold + 1)) + minGold;
-        useCurrentRun.currentGold += goldDropped;
+        useCurrentRun.addGold(goldDropped);
+        useHeartStore().tryDrop(enemy.position);
 
         const expDropped = enemy.fixedXP
           ? (enemy.baseXP || 0)
@@ -697,11 +709,19 @@ export function useEnemyManager() {
         console.log(`Enemy Manager: Enemy of type "${enemy.type}" killed. Total killed this run: ${killedEnemies.value[enemy.type]}`);
       }
     } else {
-      if (type === 'shot') {
+      if (playerDamage) {
         // Reproduz som de hit suave
         useAudio().playSound(enemy.hitSound, 1, randomPitch);
       }
     }
+  }
+
+  function damageArea(position, radius, damage, excludedId = null, options = {}) {
+    const targets = activeEnemies.value.filter(enemy => enemy.state === 'active' && enemy.id !== excludedId
+      && Math.hypot(enemy.position.x - position.x, enemy.position.z - position.z) <= radius + enemy.size * .35);
+    for (const enemy of targets) takeDamage(enemy.id, damage, 'shot', options);
+    emitImpact(position.x, position.z, false, 'hit');
+    return targets.length;
   }
 
   /**
@@ -737,6 +757,7 @@ export function useEnemyManager() {
   return {
     activeEnemies,
     takeDamage,
+    damageArea,
     update,
     spawnEnemy,
     spawnEnemyWave,

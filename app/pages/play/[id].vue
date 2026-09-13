@@ -130,6 +130,8 @@ onUnmounted(() => {
         <GamePlayerCharacter />
         <GameEnemyManager />
         <GameProjectileManager />
+        <GameHeartPickups />
+        <GameEquipmentEffects />
         
         <GameWorld />
         <!-- <OrbitControls /> -->

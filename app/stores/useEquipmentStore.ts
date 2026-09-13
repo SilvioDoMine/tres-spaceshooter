@@ -4,6 +4,7 @@ import { PlayerBaseStats } from '~/stores/currentRunStore';
 import { useTalentStore } from '~/stores/useTalentStore';
 import {
   aggregateGearBonuses,
+  aggregateGearEffects,
   computePlayerStats,
   definitionOf,
   fusableUids as findFusableUids,
@@ -73,7 +74,8 @@ export const useEquipmentStore = defineStore('equipment', () => {
   const unequippedItems = computed(() => inventory.value.items.filter(item => !isEquipped(inventory.value, item.uid)));
 
   const gearBonuses = computed(() => aggregateGearBonuses(equippedItems.value));
-  const stats = computed(() => computePlayerStats(PlayerBaseStats, talentStore.bonuses, gearBonuses.value));
+  const gearEffects = computed(() => aggregateGearEffects(equippedItems.value));
+  const stats = computed(() => computePlayerStats(PlayerBaseStats, talentStore.bonuses, gearBonuses.value, gearEffects.value));
 
   const fusableUids = computed(() => findFusableUids(inventory.value));
   const hasFusable = computed(() => fusableUids.value.size > 0);
@@ -134,6 +136,7 @@ export const useEquipmentStore = defineStore('equipment', () => {
     equippedItems,
     unequippedItems,
     gearBonuses,
+    gearEffects,
     stats,
     fusableUids,
     hasFusable,

@@ -14,6 +14,9 @@ import { playableRoomCount } from '~/utils/progression';
 import { MATCH_END_EQUIPMENT_RARITY } from '~/data/equipment';
 import { useEquipmentStore } from '~/stores/useEquipmentStore';
 import type { OwnedEquipment } from '~/utils/equipment';
+import { incomingHit, type DamageContext, type DamageSource } from '~/utils/shipAttributes';
+import { useHeartStore } from '~/stores/useHeartStore';
+import { useEquipmentEffectsStore } from '~/stores/useEquipmentEffectsStore';
 
 // Define o formato básico do vetor de posição 3D
 interface Vector3 {
@@ -94,6 +97,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   const currentExp = ref(0);
   const currentLevel = ref(1);
   const currentGold = ref(0);
+  let goldRemainder = 0;
   const runEquipment = ref<OwnedEquipment | null>(null); // Equipamento ganho ao fim da partida
 
   const expToNextLevel = ref(getExpForLevel(currentLevel.value));
@@ -150,6 +154,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     shotCooldownTotal.value = PlayerBaseStats.projectiles.shotCooldown;
     shotCooldown.value = PlayerBaseStats.projectiles.shotCooldown;
     currentGold.value = 0;
+    goldRemainder = 0;
     runEquipment.value = null;
     currentExp.value = 0;
     currentLevel.value = 1;
@@ -162,6 +167,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
     enemyManager.cleanup();
     skillStore.cleanup();
+    useHeartStore().cleanup();
+    useEquipmentEffectsStore().cleanup();
   }
 
   function loadStage(stage: any) {
@@ -178,7 +185,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     playerPosition.value = { ...stage.playerStartPosition };
     isWaveInProgress.value = false;
     roomCurrentWaveIndex.value = 0;
-    currentMoveSpeed.value = PlayerBaseStats.moveSpeed * playerStats.getSpeedMultiplier;
+    currentMoveSpeed.value = playerStats.moveSpeed;
+    useHeartStore().cleanup();
 
     // Remoção de modal
     uiModalPause.close();
@@ -191,7 +199,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
     // Mesmo se tiver completado, se for uma sala de introdução, mantém a velocidade normal
     if (currentStage.value.type !== 'intro') {
-      currentMoveSpeed.value = PlayerBaseStats.moveSpeed * 3;
+      currentMoveSpeed.value = playerStats.moveSpeed * 3;
     }
   }
 
@@ -252,10 +260,25 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     return !!currentStage.value && Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z);
   }
 
-  function takeDamage(amount: number) {
+  function takeDamage(amount: number, context: DamageSource | DamageContext = 'environment') {
     if(amount<=0 || currentHealth.value<=0)return;
+    const { source, attackerId } = typeof context === 'string' ? { source: context, attackerId: undefined } : context;
+    const equipmentEffects = useEquipmentEffectsStore();
+    const hit = incomingHit(amount, source, playerStats.attributes);
+    if (hit.dodged) {
+      combatTextStore.emitForTarget(PlayerBaseStats.id, 'dodge', 'DESVIO');
+      equipmentEffects.onDodge();
+      return;
+    }
+    if (equipmentEffects.blockIncoming(source)) {
+      combatTextStore.emitForTarget(PlayerBaseStats.id, 'shield', 'BLOQUEIO');
+      return;
+    }
+    amount = hit.damage;
+    if (amount <= 0) return;
     const previousHealth=currentHealth.value;
     currentHealth.value = Math.max(0, currentHealth.value - amount);
+    equipmentEffects.onPlayerDamaged(previousHealth, currentHealth.value, source, attackerId);
     const position=getPlayerPosition();
     emitImpact(position.x,position.z,currentHealth.value===0,'player');
 
@@ -285,7 +308,9 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
       return;
     }
 
-    currentHealth.value = Math.min(currentHealth.value + amount, maxHealth.value);
+    amount = Math.min(amount, Math.max(0, maxHealth.value - currentHealth.value));
+    if (amount <= 0 || currentHealth.value <= 0) return;
+    currentHealth.value += amount;
 
     if (!showText) {
       return;
@@ -313,10 +338,18 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
   function gameStart(levelConfiguration: any) {
     endRun(); // Reseta qualquer estado de jogo anterior
+    playerStats.initialize(useEquipmentStore().stats);
+    useEquipmentEffectsStore().initialize(playerStats.attributes.effects);
+    maxHealth.value = playerStats.maxHealth;
+    currentHealth.value = maxHealth.value;
+    shotCooldownTotal.value = playerStats.attributes.shotCooldown;
+    shotCooldown.value = shotCooldownTotal.value;
+    skillRerollCount.value = playerStats.attributes.skillRerolls;
 
     initializeLevel(levelConfiguration);
 
     gameState.value = 'playing';
+    for (let i = 0; i < playerStats.attributes.startingSkillChoices; i++) gameLevelSelect();
   }
 
   function gamePause() {
@@ -419,8 +452,10 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   }
 
   function addGold(amount: number) {
-    currentGold.value += amount;
-    saveGold(currentGold.value);
+    const reward = Math.max(0, amount) * playerStats.attributes.battleGoldMultiplier + goldRemainder;
+    const wholeGold = Math.floor(reward + 1e-9);
+    currentGold.value += wholeGold;
+    goldRemainder = Math.max(0, reward - wholeGold);
   }
 
   /** Soma no gold persistente e salva (loja, missões, ofertas) */
@@ -440,6 +475,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
   function levelUp() {
     currentLevel.value += 1;
+    healPlayer(maxHealth.value * playerStats.attributes.levelUpHealFraction);
     currentExp.value = currentExp.value - expToNextLevel.value;
     expToNextLevel.value = getExpForLevel(currentLevel.value);
     console.log(`Parabéns! Você alcançou o nível ${currentLevel.value}!`);
@@ -486,6 +522,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     totalGold, // Gold total persistente
     spendGold, // Gasta do gold persistente e salva
     addPersistentGold, // Soma no gold persistente e salva
+    addGold,
     currentGold, // Gold na partida atual
     currentExp, // Experiência na partida atual
     getExpForLevel, // Função para obter o nível atual do jogador (baseado em EXP)

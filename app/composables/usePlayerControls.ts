@@ -13,11 +13,13 @@ import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { useProjectileStore } from '~/stores/projectileStore';
 import { onMounted, onUnmounted, watch } from 'vue';
 import { shotFormation, muzzlePosition, rotateShot } from '~/utils/combatPatterns';
+import { useEquipmentEffectsStore } from '~/stores/useEquipmentEffectsStore';
 
 export function usePlayerControls() {
   const currentRun = useCurrentRunStore();
   const projectileStore = useProjectileStore();
   const dilation = useSpatialDilation();
+  const equipmentEffects = useEquipmentEffectsStore();
 
   // Estado interno para rastrear quais teclas estão pressionadas
   const keysPressed = {
@@ -197,31 +199,41 @@ export function usePlayerControls() {
       if (currentRun.shotCooldown <= 0) {
         if (nearestEnemy && nearestEnemy.position) {
           const skills = useSkillStore();
+          const volley = equipmentEffects.prepareVolley();
           const multi = skills.getSkillLevel('multishot') || 0;
-          const damage = PlayerBaseStats.projectiles.damage * usePlayerStats().getDamageMultiplier;
+          const damage = usePlayerStats().damage;
           const dirX = nearestEnemy.position.x - position.x, dirZ = nearestEnemy.position.z - position.z;
           const magnitude = Math.hypot(dirX, dirZ);
           if (magnitude > 0) {
             const direction = { x: dirX / magnitude, z: dirZ / magnitude };
             const piercing = skills.getSkillLevel('piercing_shot') || 0;
-            const hits = piercing ? SkillsList.piercing_shot.levels[piercing].value : 1;
-            const bounces = skills.getSkillLevel('ricochet_shot') || 0;
+            const hits = (piercing ? SkillsList.piercing_shot.levels[piercing].value : 1) + volley.extraHits;
+            const bounces = (skills.getSkillLevel('ricochet_shot') || 0) + volley.extraBounces;
             const power = usePlayerStats().getDamageMultiplier;
             let sounded = false;
-            const fire = (heading: {x:number,z:number}, baseSide = 0, multiplier = 1, rearSide = 0, count = 1 + multi, formationPenalty = true) => {
+            const fire = (heading: {x:number,z:number}, baseSide = 0, multiplier = 1, rearSide = 0, count = 1 + multi, formationPenalty = true, special = false) => {
               shotFormation(count).forEach((slot, index) => {
                 const origin = muzzlePosition(position, heading, slot.side + baseSide, slot.forward);
                 const efficiency = !formationPenalty || !multi || index === Math.floor(count/2) ? 1 : SkillsList.multishot.levels[multi].value;
+                const isSpecial = special && index === Math.floor(count / 2);
+                const burstMultiplier = isSpecial ? volley.damageMultiplier : 1;
                 projectileStore.spawnProjectile('player', origin, heading, 'player', 'player',
-                  hits, bounces, damage * multiplier * efficiency, [], {
-                    power, silent: sounded,
+                  hits, bounces, damage * multiplier * efficiency * burstMultiplier, [], {
+                    power: power * burstMultiplier, silent: sounded,
+                    burst: isSpecial && volley.burst,
+                    aoeRadius: isSpecial ? volley.aoeRadius : 0,
                     rearTurn: rearSide ? { origin: {...origin}, forward: {...heading}, side: slot.side < 0 ? -1 : 1,
                       radius: .65 + Math.abs(slot.side)*.25, traveled: 0 } : null,
                   });
                 sounded = true;
               });
             };
-            fire(direction);
+            fire(direction, 0, 1, 0, 1 + multi, true, true);
+            if (volley.echo) {
+              const echoOrigin = muzzlePosition(position, direction, 0, -.35);
+              projectileStore.spawnProjectile('player', echoOrigin, direction, 'player', 'player',
+                hits, bounces, damage, [], { power, silent: true, echo: true, canCrit: volley.echoCanCrit });
+            }
             const rear = skills.getSkillLevel('back_shot') || 0;
             if (rear) {
               fire(direction, 0, SkillsList.back_shot.levels[rear].value, 1, rear, false);
@@ -233,7 +245,7 @@ export function usePlayerControls() {
             }
 
             // Reseta o cooldown do tiro
-            currentRun.shotCooldown = currentRun.shotCooldownTotal;
+            currentRun.shotCooldown = equipmentEffects.effectiveShotCooldown(currentRun.shotCooldownTotal);
           }
         }
       }
