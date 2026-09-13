@@ -8,6 +8,9 @@ import { useCombatTextStore } from '~/stores/useCombatTextStore';
 import { useModal } from '~/composables/useModal';
 import { useLevelAccount } from '~/composables/useLevelAccount';
 import { playableRoomCount } from '~/utils/progression';
+import { MATCH_END_EQUIPMENT_RARITY } from '~/data/equipment';
+import { useEquipmentStore } from '~/stores/useEquipmentStore';
+import type { OwnedEquipment } from '~/utils/equipment';
 
 // Define o formato básico do vetor de posição 3D
 interface Vector3 {
@@ -88,6 +91,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   const currentExp = ref(0);
   const currentLevel = ref(1);
   const currentGold = ref(0);
+  const runEquipment = ref<OwnedEquipment | null>(null); // Equipamento ganho ao fim da partida
 
   const expToNextLevel = ref(getExpForLevel(currentLevel.value));
 
@@ -143,6 +147,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     shotCooldownTotal.value = PlayerBaseStats.projectiles.shotCooldown;
     shotCooldown.value = PlayerBaseStats.projectiles.shotCooldown;
     currentGold.value = 0;
+    runEquipment.value = null;
     currentExp.value = 0;
     currentLevel.value = 1;
     expToNextLevel.value = getExpForLevel(currentLevel.value);
@@ -347,6 +352,10 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     console.log(`Player gained ${expGained} EXP from victory.`);
 
     levelAccount.addExp(expGained);
+
+    // Toda partida terminada (vitória ou derrota) dá um equipamento aleatório
+    runEquipment.value = useEquipmentStore().grantRandom(MATCH_END_EQUIPMENT_RARITY);
+
     enemyManager.missionsOnComplete();
     useMissions().handleEvent('play-time', parseFloat((levelTimer.value / 60).toFixed(1))); // em minutos com float de até 1 casa decimal
   }
@@ -499,6 +508,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
     // permanent state
     initializePermanentState,
+    runEquipment,
   };
 });
 

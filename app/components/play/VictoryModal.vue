@@ -89,7 +89,7 @@ const expReward = computed(() => levelAccount.calculateExpReward(
     </div>
   </BaseCardFancy>
 
-  <BaseSectionDivider :text="useCurrentRunStore().currentGold > 0 ? 'Recompensas' : 'Não há recompensas'" />
+  <BaseSectionDivider :text="useCurrentRunStore().currentGold > 0 || useCurrentRunStore().runEquipment ? 'Recompensas' : 'Não há recompensas'" />
 
   <!-- Grid de habilidades -->
   <div class="abilities-grid">
@@ -118,6 +118,10 @@ const expReward = computed(() => levelAccount.calculateExpReward(
         <SvgExpIcon :size="35" />
       </p>
     </BaseAbilityIcon>
+
+    <div v-if="useCurrentRunStore().runEquipment" class="w-16">
+      <LobbyEquipmentItemCard :item="useCurrentRunStore().runEquipment" />
+    </div>
   </div>
 
   <!-- Slot de actions para os botões grandes -->

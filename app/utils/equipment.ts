@@ -202,14 +202,15 @@ export function upgradeableUids(inventory: EquipmentInventory) {
 
 // -- Inventário -----------------------------------------------------------------
 
-/** Kit inicial: um item comum de cada slot, com a arma já equipada */
+export const STARTER_ITEM_ID = 'canhao-plasma';
+
+/** Kit inicial: só o Canhão de Plasma comum, já equipado */
 export function starterInventory(): EquipmentInventory {
-  const items = SLOT_ORDER.map((slot, index) => ({
-    uid: index + 1,
-    defId: EQUIPMENT_ITEMS.find(item => item.slot === slot)!.id,
-    rarity: 'gray' as EquipmentRarity,
-  }));
-  return { nextUid: items.length + 1, items, equipped: { ...emptyEquippedSlots(), weapon: 1 } };
+  return {
+    nextUid: 2,
+    items: [{ uid: 1, defId: STARTER_ITEM_ID, rarity: 'gray' }],
+    equipped: { ...emptyEquippedSlots(), weapon: 1 },
+  };
 }
 
 /** Sorteia qual item de uma raridade o jogador ganha */

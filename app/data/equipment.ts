@@ -228,8 +228,8 @@ export const EQUIPMENT_ITEMS: EquipmentDefinition[] = [
 
 /** Recompensas de equipamento dos marcos das missões diárias (pontos -> raridade) */
 export const MILESTONE_EQUIPMENT: Record<number, EquipmentRarity> = {
-  40: 'gray',
-  60: 'green',
-  80: 'gray',
-  100: 'blue',
+  100: 'gray',
 };
+
+/** Equipamento aleatório ganho ao fim de cada partida (vitória ou derrota) */
+export const MATCH_END_EQUIPMENT_RARITY: EquipmentRarity = 'gray';

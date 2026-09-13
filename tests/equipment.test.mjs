@@ -127,9 +127,9 @@ test('sanitize drops unknown data and fixes equipped slots', () => {
   assert.equal(sanitizeInventory('lixo'), null);
 });
 
-test('starter kit has one common item per slot with the weapon equipped', () => {
+test('starter kit is only the common plasma cannon, equipped', () => {
   const kit = starterInventory();
-  assert.equal(kit.items.length, 6);
-  assert.ok(kit.items.every(item => item.rarity === 'gray'));
+  assert.deepEqual(kit.items, [cannon(1)]);
   assert.equal(kit.equipped.weapon, 1);
+  assert.equal(kit.nextUid, 2);
 });
