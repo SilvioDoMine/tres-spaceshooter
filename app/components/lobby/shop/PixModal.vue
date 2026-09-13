@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import type { GemPack } from '~/data/shop';
 import { useAudio } from '~/composables/useAudio';
-import { simulatePixPayment, usePix } from '~/composables/usePix';
-import { useShopStore } from '~/stores/useShopStore';
+import { simulatePixPayment, usePix, type PixProduct } from '~/composables/usePix';
 import { formatBRL, type PixCharge } from '~/utils/shop';
 
-// Pagamento PIX de um pacote de gemas: valor, QR Code, copia e cola, Atualizar e confirmação automática.
-const props = defineProps<{ pack: GemPack | null }>();
-const emit = defineEmits<{ close: [] }>();
+// Pagamento PIX de um produto (pacote de gemas, oferta...): valor, QR Code, copia e cola, Atualizar
+// e confirmação automática. Quem abre decide o que entregar em `product.onPaid`.
+const props = defineProps<{ product: PixProduct | null }>();
+const emit = defineEmits<{ close: []; paid: [] }>();
 
-const shop = useShopStore();
 const pix = usePix();
 const audio = useAudio();
 const isDev = import.meta.dev;
@@ -17,22 +15,20 @@ const isDev = import.meta.dev;
 const charge = ref<PixCharge | null>(null);
 const qr = ref('');
 const status = ref<'loading' | 'pending' | 'checking' | 'paid' | 'expired'>('loading');
-const credited = ref(0);
+const message = ref('');
 const copied = ref(false);
-
-const credit = computed(() => {
-  if (!props.pack) return { base: 0, bonus: 0 };
-  return { base: props.pack.gems, bonus: shop.bonusApplies(props.pack.id) ? props.pack.bonus : 0 };
-});
+/** Produto pago guardado: o pai pode trocar/limpar o `product` depois de entregar */
+const paidProduct = ref<PixProduct | null>(null);
 
 let poll: ReturnType<typeof setInterval> | undefined;
 
-async function load(pack: GemPack) {
+async function load(product: PixProduct) {
   status.value = 'loading';
-  credited.value = 0;
+  message.value = '';
   copied.value = false;
-  const next = await pix.startCharge(pack.id);
-  if (!next || props.pack?.id !== pack.id) return;
+  paidProduct.value = null;
+  const next = await pix.startCharge(product);
+  if (props.product?.id !== product.id) return;
   charge.value = next;
   qr.value = await pix.qrDataUrl(next);
   status.value = 'pending';
@@ -41,15 +37,18 @@ async function load(pack: GemPack) {
 }
 
 async function check(manual = true) {
-  if (!charge.value || status.value === 'paid' || status.value === 'checking') return;
+  const product = props.product;
+  if (!charge.value || !product || status.value === 'paid' || status.value === 'checking') return;
   if (manual) status.value = 'checking';
-  const result = await pix.refresh(charge.value);
+  const result = await pix.refresh(charge.value, product);
   if (result.status === 'paid') {
     clearInterval(poll);
-    credited.value = result.credited;
+    message.value = result.message;
+    paidProduct.value = product;
     status.value = 'paid';
     audio.playUiSound('fuse');
     confettiOnPageSides(600);
+    emit('paid');
   } else {
     status.value = result.status;
     if (result.status === 'expired') clearInterval(poll);
@@ -73,10 +72,10 @@ function simulate() {
 }
 
 watch(
-  () => props.pack,
-  pack => {
+  () => props.product?.id,
+  () => {
     clearInterval(poll);
-    if (pack) load(pack);
+    if (props.product) load(props.product);
     else charge.value = null;
   },
 );
@@ -85,24 +84,30 @@ onUnmounted(() => clearInterval(poll));
 </script>
 
 <template>
-  <LobbyShopDialog :open="!!pack" title="Pagamento via PIX" width="380px" @close="emit('close')">
-    <div v-if="pack" class="pix">
+  <LobbyShopDialog :open="!!product" title="Pagamento via PIX" width="380px" @close="emit('close')">
+    <div v-if="product" class="pix">
       <template v-if="status === 'paid'">
         <div class="pix__paid">
-          <SvgGemIcon :size="72" />
-          <strong>+{{ credited.toLocaleString('pt-BR') }} gemas</strong>
-          <p>Pagamento confirmado! As gemas já estão na sua conta.</p>
+          <SvgGemIcon v-if="(paidProduct ?? product).icon !== 'card'" :size="72" />
+          <span v-else class="pix__card-icon pix__card-icon--big" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2m0 4v8h16V8H4m2 6h4v2H6v-2z" /></svg>
+          </span>
+          <strong>{{ message }}</strong>
+          <p>Pagamento confirmado! Já está na sua conta.</p>
         </div>
       </template>
 
       <template v-else>
         <div class="pix__summary">
-          <SvgGemIcon :size="34" :sparkle="false" />
-          <span>
-            {{ credit.base.toLocaleString('pt-BR') }} gemas
-            <b v-if="credit.bonus">+ {{ credit.bonus.toLocaleString('pt-BR') }} bônus</b>
+          <SvgGemIcon v-if="product.icon !== 'card'" :size="34" :sparkle="false" />
+          <span v-else class="pix__card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2m0 4v8h16V8H4m2 6h4v2H6v-2z" /></svg>
           </span>
-          <strong>{{ formatBRL(pack.priceBRL) }}</strong>
+          <span>
+            {{ product.title }}
+            <b v-if="product.subtitle">{{ product.subtitle }}</b>
+          </span>
+          <strong>{{ formatBRL(product.priceBRL) }}</strong>
         </div>
 
         <div class="pix__qr">
@@ -119,7 +124,7 @@ onUnmounted(() => clearInterval(poll));
         </button>
 
         <p class="pix__info">
-          Assim que o pagamento for confirmado, as gemas caem automaticamente na sua conta.
+          Assim que o pagamento for confirmado, a compra é liberada automaticamente na sua conta.
           <template v-if="status === 'expired'"><br /><b>Esta cobrança expirou. Feche e gere outra.</b></template>
         </p>
       </template>
@@ -162,6 +167,29 @@ onUnmounted(() => clearInterval(poll));
 .pix__summary strong {
   font-size: 20px;
   color: #3a2410;
+}
+.pix__card-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: linear-gradient(#ff7a8a, #d8344a);
+  border: 2px solid #7a1424;
+}
+.pix__card-icon svg {
+  width: 22px;
+  height: 22px;
+  fill: #fff;
+}
+.pix__card-icon--big {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+}
+.pix__card-icon--big svg {
+  width: 48px;
+  height: 48px;
 }
 .pix__qr {
   display: grid;
@@ -216,7 +244,7 @@ onUnmounted(() => clearInterval(poll));
   text-align: center;
 }
 .pix__paid strong {
-  font-size: 28px;
+  font-size: 24px;
   color: #2a9a2a;
 }
 .pix__paid p {

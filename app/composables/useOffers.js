@@ -243,6 +243,30 @@ export function useOffers() {
         return true;
     };
 
+    /**
+     * Pagamento confirmado (PIX): ativa a oferta e entrega o bônus de compra (onPurchase).
+     * Retorna as recompensas entregues, ou null se a oferta não existe ou já estava comprada.
+     */
+    const completeOfferPurchase = (offerId) => {
+        const offerState = offerSettings.value.offers.find(o => o.id === offerId);
+        const offerPackage = offerPackages.find(pkg => pkg.id === offerId);
+        if (!offerState || !offerPackage || offerState.purchased) return null;
+
+        const rewards = { gold: 0, cash: 0 };
+        const { gold, cash } = offerPackage.onPurchase || {};
+        if (gold > 0) {
+            useCurrentRunStore().addPersistentGold(gold);
+            rewards.gold = gold;
+        }
+        if (cash > 0) {
+            useCash().addCash(cash);
+            rewards.cash = cash;
+        }
+
+        purchaseOffer(offerId);
+        return rewards;
+    };
+
     const saveOffersData = () => {
         localStorage.setItem('offersData', JSON.stringify(offerSettings.value));
     };
@@ -258,6 +282,7 @@ export function useOffers() {
 
         claimOfferReward,
         purchaseOffer,
+        completeOfferPurchase,
         shouldDisplayGeneralNotification,
     };
 }

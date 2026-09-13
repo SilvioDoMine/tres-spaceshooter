@@ -270,9 +270,11 @@ export function sanitizeShopState(raw: unknown, now: number): ShopState | null {
     ? [...new Set<string>(data.gemPacksPurchased.filter((id: unknown) => packIds.has(id as string)))]
     : [];
 
+  // Cobrança pendente: pacote de gemas conhecido ou oferta ("offer:<id>", validada pela tela de ofertas)
   const pix = data.pendingPix;
+  const knownProduct = (id: unknown) => typeof id === 'string' && (packIds.has(id) || /^offer:[\w-]+$/.test(id));
   const pendingPix: PixCharge | null =
-    pix && typeof pix.id === 'string' && packIds.has(pix.packId) && Number.isFinite(pix.expiresAt)
+    pix && typeof pix.id === 'string' && knownProduct(pix.packId) && Number.isFinite(pix.expiresAt)
       ? {
           id: pix.id,
           packId: pix.packId,

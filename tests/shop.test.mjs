@@ -163,6 +163,10 @@ test('saneamento descarta lixo e mantém dados válidos', () => {
     },
     now,
   );
+  const pix = { id: 'SIM1', packId: 'offer:supplyPack', amountBRL: 29.9, copyPaste: 'x', createdAt: now, expiresAt: now + 1000 };
+  assert.deepEqual(sanitizeShopState({ seed: 5, pendingPix: pix }, now).pendingPix, pix);
+  assert.equal(sanitizeShopState({ seed: 5, pendingPix: { ...pix, packId: 'offer:../x' } }, now).pendingPix, null);
+
   assert.deepEqual(broken.keys, { silver: 0, obsidian: 0 });
   assert.equal(broken.chests.silver.pity, 9);
   assert.equal(broken.chests.silver.freeClaimedAt, null);

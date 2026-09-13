@@ -1,15 +1,28 @@
 import QRCode from 'qrcode';
-import { GEM_PACKS, type GemPack } from '~/data/shop';
 import { useShopStore } from '~/stores/useShopStore';
 import type { PixCharge } from '~/utils/shop';
 
-// Pagamento PIX das gemas. A UI só conhece a interface PixProvider; hoje o provider é simulado
-// (o pagamento é "confirmado" pelo comando de debug simulatePixPayment()). Para ligar um gateway
-// real, basta implementar PixProvider chamando rotas do servidor e trocar `provider` abaixo.
+// Pagamento PIX de qualquer produto pago (pacotes de gemas, ofertas...). A UI só conhece a interface
+// PixProvider; hoje o provider é simulado (o pagamento é "confirmado" pelo comando de debug
+// simulatePixPayment()). Para ligar um gateway real, basta implementar PixProvider chamando rotas do
+// servidor e trocar `provider` abaixo.
 export type PixStatus = 'pending' | 'paid' | 'expired';
 
+/** O que está sendo pago: o modal mostra o resumo e chama `onPaid` quando o pagamento confirma */
+export interface PixProduct {
+  /** Único por produto: pacotes usam o id do pacote; ofertas usam "offer:<id>" */
+  id: string;
+  title: string;
+  /** Linha extra no resumo (ex.: "+ 80 bônus") */
+  subtitle?: string;
+  priceBRL: number;
+  icon?: 'gems' | 'card';
+  /** Entrega o produto e devolve o texto de sucesso (ex.: "+160 gemas") */
+  onPaid: () => string;
+}
+
 export interface PixProvider {
-  createCharge(pack: GemPack): Promise<PixCharge>;
+  createCharge(product: PixProduct): Promise<PixCharge>;
   getStatus(charge: PixCharge): Promise<PixStatus>;
 }
 
@@ -49,10 +62,17 @@ function fakeBrCode(txid: string, amount: number) {
 const simulatedPaid = new Set<string>();
 
 export const mockPixProvider: PixProvider = {
-  async createCharge(pack) {
+  async createCharge(product) {
     const id = `SIM${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
     const createdAt = Date.now();
-    return { id, packId: pack.id, amountBRL: pack.priceBRL, copyPaste: fakeBrCode(id, pack.priceBRL), createdAt, expiresAt: createdAt + CHARGE_TTL_MS };
+    return {
+      id,
+      packId: product.id,
+      amountBRL: product.priceBRL,
+      copyPaste: fakeBrCode(id, product.priceBRL),
+      createdAt,
+      expiresAt: createdAt + CHARGE_TTL_MS,
+    };
   },
   async getStatus(charge) {
     if (simulatedPaid.has(charge.id)) return 'paid';
@@ -65,25 +85,26 @@ const provider: PixProvider = mockPixProvider;
 export function usePix() {
   const shop = useShopStore();
 
-  /** Reaproveita a cobrança pendente do mesmo pacote (reabrir o modal não gera outra) */
-  async function startCharge(packId: string) {
-    const pack = GEM_PACKS.find(entry => entry.id === packId);
-    if (!pack) return null;
+  /** Reaproveita a cobrança pendente do mesmo produto (reabrir o modal não gera outra) */
+  async function startCharge(product: PixProduct) {
     const pending = shop.pendingPix;
-    if (pending && pending.packId === packId && pending.expiresAt > Date.now()) return pending;
-    const charge = await provider.createCharge(pack);
+    if (pending && pending.packId === product.id && pending.expiresAt > Date.now()) return pending;
+    const charge = await provider.createCharge(product);
     shop.setPendingPix(charge);
     return charge;
   }
 
-  /** Consulta o pagamento; se pago, credita as gemas e devolve o valor creditado */
-  async function refresh(charge: PixCharge): Promise<{ status: PixStatus; credited: number }> {
+  /** Consulta o pagamento; se pago, entrega o produto e devolve o texto de sucesso */
+  async function refresh(charge: PixCharge, product: PixProduct): Promise<{ status: PixStatus; message: string }> {
     const status = await provider.getStatus(charge);
-    if (status === 'paid' && shop.pendingPix?.id === charge.id) {
-      return { status, credited: shop.creditGemPack(charge.packId) };
+    const isPending = shop.pendingPix?.id === charge.id;
+    if (status === 'paid' && isPending) {
+      // Limpa antes de entregar: um segundo Atualizar não entrega de novo
+      shop.setPendingPix(null);
+      return { status, message: product.onPaid() };
     }
-    if (status === 'expired' && shop.pendingPix?.id === charge.id) shop.setPendingPix(null);
-    return { status, credited: 0 };
+    if (status === 'expired' && isPending) shop.setPendingPix(null);
+    return { status, message: '' };
   }
 
   const qrDataUrl = (charge: PixCharge) =>

@@ -3,7 +3,7 @@ import BaseModal from '~/components/ui/BaseModal.vue';
 import OfferCard from '~/components/lobby/OfferCard.vue';
 import { useOffers } from '~/composables/useOffers';
 
-const { getOffers, getNextResetTime, claimOfferReward, purchaseOffer } = useOffers();
+const { getOffers, getNextResetTime, claimOfferReward, completeOfferPurchase } = useOffers();
 
 // Define emits
 const emit = defineEmits(['openRewards']);
@@ -58,10 +58,32 @@ const handleClaim = (offerId) => {
     }
 };
 
+// Compra paga: abre o PIX (simulado) e só ativa a oferta quando o pagamento confirma
+const pixOfferId = ref(null);
+
+const pixProduct = computed(() => {
+    const offer = getOffers.value.find(o => o.id === pixOfferId.value);
+    if (!offer) return null;
+    return {
+        id: `offer:${offer.id}`,
+        title: offer.title,
+        subtitle: offer.onPurchase?.cash > 0 ? `+ ${offer.onPurchase.cash.toLocaleString('pt-BR')} gemas na hora` : offer.subtitle,
+        priceBRL: offer.price,
+        icon: 'card',
+        onPaid: () => {
+            const rewards = completeOfferPurchase(offer.id);
+            const parts = [];
+            if (rewards?.cash) parts.push(`+${rewards.cash.toLocaleString('pt-BR')} gemas`);
+            if (rewards?.gold) parts.push(`+${rewards.gold.toLocaleString('pt-BR')} ouro`);
+            return parts.length ? `${offer.title} ativado! ${parts.join(' • ')}` : `${offer.title} ativado!`;
+        },
+    };
+});
+
 const handlePurchase = (offerId) => {
-    console.log('Comprar oferta:', offerId);
-    // TODO: Implementar lógica de compra
-    purchaseOffer(offerId);
+    const offer = getOffers.value.find(o => o.id === offerId);
+    if (!offer || offer.state !== 'pre-purchase') return;
+    pixOfferId.value = offerId;
 };
 </script>
 
@@ -107,6 +129,8 @@ const handlePurchase = (offerId) => {
                     </BaseButton>
                 </div>
         </div>
+
+        <LobbyShopPixModal :product="pixProduct" @close="pixOfferId = null" />
     </BaseModal>
 </template>
 
