@@ -197,7 +197,7 @@ Pergaminhos e nível de item, abas Personagens e Runas, Fusão Avançada, drops 
 A aba **Loja** (primeira do rodapé) vende e sorteia equipamentos. Configuração em `app/data/shop.ts`, regras puras em `app/utils/shop.ts` e estado em `useShopStore` (`localStorage` `shopState`).
 
 - **Loja Diária**: 3 itens Comuns por 35 gemas, 1 compra cada (preço, moeda e estoque por posição em `DAILY_SHOP_SLOTS`). Renova às 04:00 (GMT-3); a seleção é determinística pela semente do jogador + dia.
-- **Baús**: Prata (66,67% Comum / 33,33% Incomum, 80 gemas) e Obsidiana (96% Raro / 4% Épico, 300 gemas). Garantido: a cada 10 aberturas sem a raridade alta, a próxima é forçada; o contador zera quando ela sai. Grátis: Prata 24h e Obsidiana 72h após resgatar. Chaves abrem até 10 por vez.
+- **Baús**: Prata (66,67% Comum / 33,33% Incomum, 80 gemas) e Obsidiana (96% Raro / 4% Épico, 300 gemas). Garantido: a cada 10 aberturas sem a raridade alta, a próxima é forçada; o contador zera quando ela sai. Grátis: Prata 24h e Obsidiana 72h após resgatar, liberados só depois da 1ª partida terminada (`CHEST_FREE_UNLOCK_MATCHES`, contado em `useStatisticsStore` / `localStorage` `playerStatistics`). Chaves abrem até 10 por vez.
 - **Gemas**: pacotes em R$ via PIX (provider simulado em `usePix.ts`); bônus só na 1ª compra de cada pacote, ou sempre com `GEM_PROMO_BONUS_ACTIVE`.
 - **Ouro**: 2.000 grátis (2 por dia), 20.000 por 200 gemas e 200.000 por 2.000 gemas.
 - Animação de abertura em `/chest-lab` (só em dev).

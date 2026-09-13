@@ -3,6 +3,7 @@ import { CHESTS, GEM_PACKS, GEM_PROMO_BONUS_ACTIVE, GOLD_PACKS, type ChestType }
 import { useCash } from '~/composables/useCash';
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { useEquipmentStore } from '~/stores/useEquipmentStore';
+import { useStatisticsStore } from '~/stores/useStatisticsStore';
 import type { OwnedEquipment } from '~/utils/equipment';
 import {
   batchSize,
@@ -12,6 +13,7 @@ import {
   gemBonusApplies,
   gemPackCredit,
   goldPackRemaining,
+  isFreeUnlocked,
   nextResetAt,
   offerRemaining,
   openChestBatch,
@@ -49,6 +51,7 @@ export const useShopStore = defineStore('shop', () => {
   const cash = useCash();
   const runStore = useCurrentRunStore();
   const equipmentStore = useEquipmentStore();
+  const statistics = useStatisticsStore();
 
   const initial = loadState(Date.now());
   const state = ref<ShopState>(initial.state);
@@ -110,7 +113,9 @@ export const useShopStore = defineStore('shop', () => {
   const keys = computed(() => state.value.keys);
 
   const freeReadyAt = (type: ChestType) => chestFreeReadyAt(CHESTS[type], state.value.chests[type]);
-  const isFreeReady = (type: ChestType) => now.value >= freeReadyAt(type);
+  /** Grátis ainda travado: a conta não terminou nenhuma partida */
+  const freeLocked = computed(() => !isFreeUnlocked(statistics.matchesPlayed));
+  const isFreeReady = (type: ChestType) => !freeLocked.value && now.value >= freeReadyAt(type);
   const pity = (type: ChestType) => state.value.chests[type].pity;
 
   function chestState(type: ChestType) {
@@ -259,6 +264,7 @@ export const useShopStore = defineStore('shop', () => {
     keys,
     pity,
     freeReadyAt,
+    freeLocked,
     isFreeReady,
     chestState,
     chestBatch,

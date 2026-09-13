@@ -112,6 +112,9 @@ export const CHESTS: Record<ChestType, ChestDefinition> = {
 
 export const CHEST_ORDER: ChestType[] = ['silver', 'obsidian'];
 
+/** Partidas terminadas (vitória ou derrota) necessárias para liberar os baús grátis */
+export const CHEST_FREE_UNLOCK_MATCHES = 1;
+
 // -- Gemas (dinheiro real) --------------------------------------------------------
 
 export interface GemPack {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { EQUIPMENT_RARITIES } from '~/data/equipment';
-import { CHESTS, type ChestType } from '~/data/shop';
+import { CHEST_FREE_UNLOCK_MATCHES, CHESTS, type ChestType } from '~/data/shop';
 import { useShopStore } from '~/stores/useShopStore';
 import { formatCountdown, pityRemaining } from '~/utils/shop';
 
@@ -58,7 +58,11 @@ const highlight = computed(() => freeReady.value || hasKeys.value);
       </p>
     </div>
 
-    <p v-if="!freeReady" class="ccard__timer">
+    <p v-if="shop.freeLocked" class="ccard__timer is-locked">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
+      Receba grátis após {{ CHEST_FREE_UNLOCK_MATCHES }} {{ CHEST_FREE_UNLOCK_MATCHES === 1 ? 'partida' : 'partidas' }}
+    </p>
+    <p v-else-if="!freeReady" class="ccard__timer">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
       Grátis em {{ freeIn }}
     </p>
@@ -190,6 +194,12 @@ const highlight = computed(() => freeReady.value || hasKeys.value);
 }
 .ccard__timer.is-ready {
   color: #ffe36b;
+}
+.ccard__timer.is-locked {
+  color: #d9def0;
+}
+.ccard__timer.is-locked svg {
+  stroke: #d9def0;
 }
 .ccard__action {
   padding: 10px 10px 12px;

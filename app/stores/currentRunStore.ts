@@ -3,6 +3,8 @@ import { defineStore } from 'pinia';
 import { ref, shallowRef } from 'vue';
 import { useEnemyManager } from '~/composables/useEnemyManager';
 import { useSkillStore } from '~/stores/SkillStore';
+import { useEnemyManagerStore } from '~/stores/enemyManagerStore';
+import { useStatisticsStore } from '~/stores/useStatisticsStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import { useCombatTextStore } from '~/stores/useCombatTextStore';
 import { useModal } from '~/composables/useModal';
@@ -343,11 +345,22 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     saveGold(Number(totalGold.value) + Number(currentGold.value));
     totalGold.value += currentGold.value;
 
-    const expGained = levelAccount.calculateExpReward(
-      levelConfig.value,
-      playableRoomCount(levelConfig.value, currentStageIndex.value),
-      completedChapter,
+    const roomsReached = playableRoomCount(levelConfig.value, currentStageIndex.value);
+
+    // Estatísticas da conta (a Loja libera os baús grátis depois da 1ª partida)
+    const killed = Object.values(useEnemyManagerStore().killedEnemies as Record<string, number>).reduce(
+      (sum, value) => sum + (Number(value) || 0),
+      0,
     );
+    useStatisticsStore().recordMatch({
+      victory: completedChapter,
+      durationSec: Number(levelTimer.value) || 0,
+      enemiesKilled: killed,
+      goldEarned: Number(currentGold.value) || 0,
+      roomsReached,
+    });
+
+    const expGained = levelAccount.calculateExpReward(levelConfig.value, roomsReached, completedChapter);
 
     console.log(`Player gained ${expGained} EXP from victory.`);
 

@@ -2,6 +2,7 @@
 // Sem Vue/Pinia para dar para testar fora do Nuxt (por isso o import relativo).
 import { EQUIPMENT_ITEMS, RARITY_ORDER, type EquipmentRarity } from '../data/equipment';
 import {
+  CHEST_FREE_UNLOCK_MATCHES,
   CHEST_ORDER,
   CHESTS,
   DAILY_SHOP_SLOTS,
@@ -148,6 +149,9 @@ export const freeReadyAt = (chest: ChestDefinition, progress: ChestProgress) =>
 
 export const isFreeReady = (chest: ChestDefinition, progress: ChestProgress, now: number) =>
   now >= freeReadyAt(chest, progress);
+
+/** Baús grátis só depois de jogar a(s) primeira(s) partida(s) */
+export const isFreeUnlocked = (matchesPlayed: number, required = CHEST_FREE_UNLOCK_MATCHES) => matchesPlayed >= required;
 
 export type ChestOpenMode = 'free' | 'keys' | 'gems';
 export type ChestButtonState = ChestOpenMode | 'insufficient';
