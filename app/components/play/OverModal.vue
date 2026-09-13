@@ -77,10 +77,12 @@ const expReward = computed(() => levelAccount.calculateExpReward(
 
       <!-- Status da fase -->
       <div class="flex flex-col items-center">
-        <h2 class="text-lg text-cyan-200 text-shadow-xl text-shadow-blue-900">Nível final da nave</h2>
-        <p class="text-7xl font-mono font-bold text-shadow-[4px_5px_0px_rgba(0,0,0,1)] text-shadow-blue-900">{{ currentRun.currentLevel }}</p>
+        <h2 class="text-lg text-cyan-200 text-shadow-xl text-shadow-blue-900">Sala alcançada</h2>
+        <p class="font-mono font-bold text-shadow-[4px_5px_0px_rgba(0,0,0,1)] text-shadow-blue-900">
+          <span class="text-7xl">{{ roomReached }}</span><span class="text-3xl text-white/70">/{{ totalRooms }}</span>
+        </p>
         <p class="title-text-blue text-xl">Capítulo {{ chapter }}</p>
-        <p class="text-xs text-white/80 mt-2">Sala {{ roomReached }}/{{ totalRooms }}</p>
+        <p class="text-[10px] text-white/50 mt-2">Nível da nave {{ currentRun.currentLevel }}</p>
       </div>
 
     </div>
