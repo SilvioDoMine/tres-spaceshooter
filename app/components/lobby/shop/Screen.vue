@@ -17,7 +17,7 @@ const tabs = computed(() => [
   { id: 'daily' as const, label: 'Loja Diária', badge: shop.hasDailyPending },
   { id: 'chests' as const, label: 'Baús', badge: shop.hasChestPending },
   { id: 'gems' as const, label: 'Gemas', badge: false },
-  { id: 'gold' as const, label: 'Ouro', badge: shop.hasGoldPending },
+  { id: 'gold' as const, label: 'Ouro', badge: false },
 ]);
 
 // Enquanto a rolagem é por toque na sub-aba, o observador não troca a aba ativa no meio do caminho

@@ -33,7 +33,7 @@ const lobbyView = ref<LobbyView>('chapters');
 const isChapterView = computed(() => lobbyView.value === 'chapters');
 
 // "!" nas abas quando há ação pendente:
-// Loja: baú grátis, chaves ou ouro grátis.
+// Loja: baú grátis liberado (depois da 1ª partida) ou chaves.
 // Equipamento: item guardado que melhora um slot (inclui slot vazio) ou algo para fundir no Mecânico.
 // Talentos: sorteio liberado (nível e ouro suficientes).
 const shopStore = useShopStore();

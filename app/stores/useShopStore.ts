@@ -225,9 +225,11 @@ export const useShopStore = defineStore('shop', () => {
   const hasChestPending = computed(() =>
     (Object.keys(CHESTS) as ChestType[]).some(type => isFreeReady(type) || state.value.keys[type] > 0),
   );
-  const hasGoldPending = computed(() => GOLD_PACKS.some(pack => !pack.price && goldRemaining(pack.id) > 0));
-  /** "!" da aba Loja: baú grátis/chaves ou ouro grátis */
-  const hasPending = computed(() => hasChestPending.value || hasGoldPending.value);
+  /**
+   * "!" da aba Loja: só baú grátis liberado (depois da 1ª partida) ou chaves.
+   * Ouro grátis não chama atenção: é bônus de early game e depois vai virar anúncio.
+   */
+  const hasPending = computed(() => hasChestPending.value);
 
   function resetShop() {
     commit(freshShopState(newSeed(), Date.now()));
@@ -279,7 +281,6 @@ export const useShopStore = defineStore('shop', () => {
     setPendingPix,
     hasDailyPending,
     hasChestPending,
-    hasGoldPending,
     hasPending,
     resetShop,
     forceDailyReset,
