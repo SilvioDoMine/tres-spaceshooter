@@ -8,6 +8,7 @@
 | Destruição | Onda expansiva, fragmentos, faíscas e fumaça residual; casco desaparece rapidamente dentro da explosão |
 | Dano no jogador | Pulso na nave e bordas avermelhadas, mantendo o centro da tela livre |
 | Saúde abaixo de 30% | Fumaça leve acompanhando o deslocamento |
+| Coração dropado | Coração 3D vermelho estufado, pequeno, batendo e balançando; halo aditivo pulsante embaixo e faíscas vermelhas/rosadas saindo em volta (congela na pausa) |
 | Passagem no cenário | Meteoro com tamanho, proporção, cor, velocidade, giro e trajetória variáveis; intervalo de 9–21 segundos após cada passagem, sem repetir o quadrante de entrada anterior |
 | Motores e portal | Mantidos os efeitos animados existentes |
 

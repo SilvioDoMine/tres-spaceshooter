@@ -1,5 +1,6 @@
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { useEnemyManagerStore } from '~/stores/enemyManagerStore';
+import { useHeartStore } from '~/stores/useHeartStore';
 import { useProjectileStore } from '~/stores/projectileStore';
 import { playableRoomCount } from '~/utils/progression';
 
@@ -10,6 +11,7 @@ import { playableRoomCount } from '~/utils/progression';
 //   killAll()        -> só limpa inimigos e tiros da sala (a próxima onda entra normalmente)
 //   levelUp()        -> sobe 1 nível da nave e abre a escolha de habilidades
 //   levelUp(3)       -> sobe 3 níveis; as escolhas abrem uma depois da outra
+//   dropHearts(3)    -> solta 3 corações em volta da nave
 export default defineNuxtPlugin(() => {
   if (!import.meta.dev) return;
 
@@ -80,7 +82,19 @@ export default defineNuxtPlugin(() => {
     return `Nível ${run.currentLevel} (${count} ${count === 1 ? 'escolha' : 'escolhas'} de habilidade)`;
   }
 
-  Object.assign(window, { skipRoom, goToRoom, finishChapter, killAll, levelUp });
+  // Solta corações em volta da nave (rng 0 garante o drop), para conferir o visual
+  function dropHearts(count = 3) {
+    const run = activeRun();
+    if (!run) return;
+    const player = run.getPlayerPosition();
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2;
+      useHeartStore().tryDrop({ x: player.x + Math.cos(angle) * 3, z: player.z + Math.sin(angle) * 3 }, () => 0);
+    }
+    return `${useHeartStore().hearts.length} corações no chão`;
+  }
 
-  console.info('[debug] skipRoom() • goToRoom(10) • finishChapter() • killAll() • levelUp(3)');
+  Object.assign(window, { skipRoom, goToRoom, finishChapter, killAll, levelUp, dropHearts });
+
+  console.info('[debug] skipRoom() • goToRoom(10) • finishChapter() • killAll() • levelUp(3) • dropHearts(3)');
 });
