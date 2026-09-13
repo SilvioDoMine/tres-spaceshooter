@@ -13,7 +13,7 @@ import {
   rollEquipment,
   sanitizeInventory,
   starterInventory,
-  upgradeableSlots as findUpgradeableSlots,
+  upgradeableUids as findUpgradeableUids,
   type EquipmentInventory,
   type OwnedEquipment,
   type PlayerStats,
@@ -77,7 +77,8 @@ export const useEquipmentStore = defineStore('equipment', () => {
 
   const fusableUids = computed(() => findFusableUids(inventory.value));
   const hasFusable = computed(() => fusableUids.value.size > 0);
-  const upgradeableSlots = computed(() => findUpgradeableSlots(inventory.value));
+  /** Itens guardados que melhorariam o slot deles (seta verde no inventário) */
+  const upgradeableUids = computed(() => findUpgradeableUids(inventory.value));
 
   /** Aplica uma mudança no inventário e devolve os atributos antes/depois (para a animação) */
   function commit(next: EquipmentInventory): StatChange {
@@ -143,7 +144,7 @@ export const useEquipmentStore = defineStore('equipment', () => {
     stats,
     fusableUids,
     hasFusable,
-    upgradeableSlots,
+    upgradeableUids,
     findItem,
     equippedItem,
     slotOf: (item: OwnedEquipment) => EQUIPMENT_SLOTS[definitionOf(item).slot],

@@ -24,7 +24,7 @@ const {
   sanitizeInventory,
   sortEquipment,
   starterInventory,
-  upgradeableSlots,
+  upgradeableUids,
 } = await import('../app/utils/equipment.ts');
 const { emptyTalentBonuses } = await import('../app/utils/talents.ts');
 
@@ -105,9 +105,13 @@ test('gear stats: main stat, unlocked abilities and talent gear bonus', () => {
   assert.equal(stats.maxHealth, 250 + 140);
 });
 
-test('upgrade arrow marks slots with a stronger stored item', () => {
-  const inv = inventory([cannon(1), cannon(2, 'green'), { uid: 3, defId: 'campo-egide', rarity: 'gray' }], { weapon: 1 });
-  assert.deepEqual([...upgradeableSlots(inv)].sort(), ['forcefield', 'weapon']);
+test('upgrade arrow marks stored items stronger than the equipped one', () => {
+  const inv = inventory(
+    [cannon(1), cannon(2, 'green'), cannon(4), { uid: 3, defId: 'campo-egide', rarity: 'gray' }],
+    { weapon: 1 },
+  );
+  // 2 é melhor que a arma equipada; 4 é igual (não); 3 vai para um slot vazio (sim); 1 está equipado (não)
+  assert.deepEqual([...upgradeableUids(inv)].sort(), [2, 3]);
 });
 
 test('sanitize drops unknown data and fixes equipped slots', () => {

@@ -188,20 +188,14 @@ export function mechanicStorage(inventory: EquipmentInventory, filter: Equipment
   return sortEquipment(visible, 'quality').sort((a, b) => Number(fusable.has(b.uid)) - Number(fusable.has(a.uid)));
 }
 
-/** Slots em que existe um item guardado mais forte que o equipado (ou slot vazio com item disponível) */
-export function upgradeableSlots(inventory: EquipmentInventory) {
-  const result = new Set<EquipmentSlot>();
-  for (const slot of SLOT_ORDER) {
-    const equippedUid = inventory.equipped[slot];
-    const equipped = inventory.items.find(item => item.uid === equippedUid);
+/** Itens guardados mais fortes que o equipado no seu slot (slot vazio: qualquer item dele é melhoria) */
+export function upgradeableUids(inventory: EquipmentInventory) {
+  const result = new Set<number>();
+  for (const item of inventory.items) {
+    if (isEquipped(inventory, item.uid)) continue;
+    const equipped = inventory.items.find(entry => entry.uid === inventory.equipped[definitionOf(item).slot]);
     const current = equipped ? itemMainStat(equipped.defId, equipped.rarity).value : 0;
-    const better = inventory.items.some(
-      item =>
-        item.uid !== equippedUid &&
-        definitionOf(item).slot === slot &&
-        itemMainStat(item.defId, item.rarity).value > current,
-    );
-    if (better) result.add(slot);
+    if (itemMainStat(item.defId, item.rarity).value > current) result.add(item.uid);
   }
   return result;
 }

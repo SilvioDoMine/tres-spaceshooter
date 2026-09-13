@@ -68,11 +68,7 @@ function unequipSelected() {
           :aria-label="EQUIPMENT_SLOTS[slot].label"
           @click="openSlot(slot)"
         >
-          <LobbyEquipmentItemCard
-            :item="store.equippedItem(slot)"
-            :slot="slot"
-            :upgrade="store.upgradeableSlots.has(slot)"
-          />
+          <LobbyEquipmentItemCard :item="store.equippedItem(slot)" :slot="slot" />
         </button>
       </div>
 
@@ -107,7 +103,7 @@ function unequipSelected() {
           :aria-label="`${store.slotOf(item).label} ${EQUIPMENT_RARITIES[item.rarity].label}`"
           @click="selectedUid = item.uid"
         >
-          <LobbyEquipmentItemCard :item="item" />
+          <LobbyEquipmentItemCard :item="item" :upgrade="store.upgradeableUids.has(item.uid)" />
         </button>
       </TransitionGroup>
       <p v-else class="gear__empty">Todos os seus equipamentos estão equipados.</p>
