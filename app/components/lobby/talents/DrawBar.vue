@@ -68,23 +68,31 @@ const formattedCost = computed(() => props.cost.toLocaleString('pt-BR'));
   border-radius: 18px;
   border: 4px solid #c97813;
   background: linear-gradient(#ffe59a, #ffd058 50%, #ffb321);
-  box-shadow: 0 7px 0 #9b5c0f, 0 12px 22px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 7px 0 #9b5c0f,
+    0 12px 22px rgba(0, 0, 0, 0.3);
   cursor: pointer;
   pointer-events: auto;
-  transition: translate 0.12s ease, box-shadow 0.12s ease;
+  transition:
+    translate 0.12s ease,
+    box-shadow 0.12s ease;
   margin-bottom: 12px;
 }
 
 .tdraw__button:active:not(:disabled) {
   translate: 0 5px;
-  box-shadow: 0 2px 0 #9b5c0f, 0 5px 12px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 2px 0 #9b5c0f,
+    0 5px 12px rgba(0, 0, 0, 0.3);
 }
 
 .tdraw__button.is-disabled {
   cursor: not-allowed;
   border-color: #6d7380;
   background: linear-gradient(#c9ced6, #a7adb8 50%, #8e95a1);
-  box-shadow: 0 7px 0 #555b66, 0 12px 22px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 7px 0 #555b66,
+    0 12px 22px rgba(0, 0, 0, 0.3);
 }
 
 .tdraw__gloss {
@@ -98,7 +106,9 @@ const formattedCost = computed(() => props.cost.toLocaleString('pt-BR'));
 
 .tdraw__label {
   position: relative;
-  font: 26px/1 'Lilita One', sans-serif;
+  font:
+    26px/1 'Lilita One',
+    sans-serif;
   letter-spacing: 1px;
   color: #6b3a08;
   text-shadow: 0 2px 0 rgba(255, 255, 255, 0.35);
@@ -113,7 +123,9 @@ const formattedCost = computed(() => props.cost.toLocaleString('pt-BR'));
   display: flex;
   align-items: center;
   gap: 4px;
-  font: 18px/1 'Lilita One', sans-serif;
+  font:
+    18px/1 'Lilita One',
+    sans-serif;
   color: #6b3a08;
 }
 
@@ -123,7 +135,9 @@ const formattedCost = computed(() => props.cost.toLocaleString('pt-BR'));
 
 .tdraw__missing {
   margin: 6px 0 0;
-  font: 14px 'Lilita One', sans-serif;
+  font:
+    14px 'Lilita One',
+    sans-serif;
   color: #ff8a95;
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
 }
@@ -134,7 +148,9 @@ const formattedCost = computed(() => props.cost.toLocaleString('pt-BR'));
   gap: 10px;
   min-height: 72px;
   margin: 0;
-  font: clamp(22px, 6vw, 30px) 'Lilita One', sans-serif;
+  font:
+    clamp(22px, 6vw, 30px) 'Lilita One',
+    sans-serif;
   color: #fff;
   text-shadow: 0 3px 0 rgba(0, 0, 0, 0.55);
 }

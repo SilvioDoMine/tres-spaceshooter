@@ -58,7 +58,15 @@ export function talentDrawPool(stars: TalentStars) {
   return set === null ? [] : TALENTS.filter(talent => talent.set === set && !isMaxed(talent, stars));
 }
 
-export function drawStatus({ stars, level, gold }: { stars: TalentStars; level: number; gold: number }): TalentDrawStatus {
+export function drawStatus({
+  stars,
+  level,
+  gold,
+}: {
+  stars: TalentStars;
+  level: number;
+  gold: number;
+}): TalentDrawStatus {
   if (talentDrawPool(stars).length === 0) return 'completed';
   const draws = countDraws(stars);
   if (draws >= drawsAllowedAtLevel(level)) return 'level';

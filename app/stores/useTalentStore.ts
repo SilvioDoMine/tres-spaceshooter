@@ -51,15 +51,20 @@ export const useTalentStore = defineStore('talents', () => {
   const stars = ref<TalentStars>(initial.stars);
 
   function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: STORAGE_VERSION, seed: seed.value, stars: stars.value }));
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ version: STORAGE_VERSION, seed: seed.value, stars: stars.value }),
+    );
   }
 
   // Grava a semente nova já no início, para ela não mudar a cada recarga
   if (initial.fresh) save();
 
   const ownedEntries = computed(() =>
-    TALENTS.filter(talent => (stars.value[talent.id] ?? 0) > 0)
-      .map(talent => ({ talent, stars: stars.value[talent.id]! })),
+    TALENTS.filter(talent => (stars.value[talent.id] ?? 0) > 0).map(talent => ({
+      talent,
+      stars: stars.value[talent.id]!,
+    })),
   );
   const lockedCount = computed(() => TALENTS.length - ownedEntries.value.length);
 
