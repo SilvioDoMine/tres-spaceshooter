@@ -270,18 +270,22 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     }
   }
 
-  function healPlayer(amount: number) {
+  function healPlayer(amount: number, showText = true) {
     if (amount <= 0) {
       return;
     }
 
     currentHealth.value = Math.min(currentHealth.value + amount, maxHealth.value);
 
+    if (!showText) {
+      return;
+    }
+
     // emit combat text
     combatTextStore.emitForTarget(
       PlayerBaseStats.id,
       'heal',
-      amount,
+      Math.round(amount),
     );
   }
 

@@ -1,5 +1,8 @@
 import { useSkillStore } from "~/stores/SkillStore";
-import { useCurrentRunStore } from "~/stores/currentRunStore";
+import { PlayerBaseStats, useCurrentRunStore } from "~/stores/currentRunStore";
+import { useCombatTextStore } from "~/stores/useCombatTextStore";
+
+const REGEN_TEXT_INTERVAL = 1; // segundos entre textos de regeneração
 
 /**
  * Atributos permanentes (Dano, Vida)
@@ -9,6 +12,8 @@ export const usePlayerStats = defineStore('playerStats', () => {
   const amountToHeal = ref(0);
   const regenRate = ref(0); // Porcentagem da vida por segundo
   const bonusDamageFlat = ref(50);
+  let pendingRegenText = 0;
+  let regenTextTimer = 0;
 
   function update (delta: number) {
     // Atualizações contínuas dos atributos do jogador, se necessário
@@ -31,8 +36,20 @@ export const usePlayerStats = defineStore('playerStats', () => {
     // Regeneração de vida ao longo do tempo
     const run = useCurrentRunStore();
     if (regenRate.value > 0 && run.isPlaying && run.isWaveInProgress) {
-      const regenAmount = (regenRate.value / 100) * run.maxHealth * delta;
-      run.healPlayer(Math.min(regenAmount, run.maxHealth - run.currentHealth));
+      const regenAmount = Math.min((regenRate.value / 100) * run.maxHealth * delta, run.maxHealth - run.currentHealth);
+      // Cura por frame sem texto; o texto sai agrupado, no máximo uma vez por intervalo
+      run.healPlayer(regenAmount, false);
+      if (regenAmount > 0) pendingRegenText += regenAmount;
+    }
+
+    regenTextTimer += delta;
+    if (regenTextTimer >= REGEN_TEXT_INTERVAL) {
+      regenTextTimer = 0;
+      if (pendingRegenText >= 1) {
+        const shown = Math.floor(pendingRegenText);
+        useCombatTextStore().emitForTarget(PlayerBaseStats.id, 'heal', shown);
+        pendingRegenText -= shown;
+      }
     }
   };
 
