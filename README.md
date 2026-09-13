@@ -94,14 +94,17 @@ A partir da última tag alcançável, lendo as mensagens dos commits novos:
 
 | Na mensagem do commit                          | Bump    |
 | ---------------------------------------------- | ------- |
-| `feat!:`, `fix!:`, `BREAKING CHANGE`, `[major]` | major   |
-| `feat:`, `feat(escopo):`, `[minor]`             | minor   |
+| `feat!:`, `Fix!`, `BREAKING CHANGE`, `[major]`  | major   |
+| título começando com `Feat`/`Feature` (ver abaixo), `[minor]` | minor |
 | qualquer outra coisa                            | patch   |
 | `[skip tag]` / `[no tag]` (na 1ª linha)         | nenhuma |
 
-Como os commits daqui não seguem conventional commits, o padrão é **patch**.
-Para subir minor ou major, escreva `feat:` ou inclua `[minor]` / `[major]` na
-mensagem.
+A comparação ignora maiúsculas/minúsculas, e o `feat`/`feature` aceita escopo e
+qualquer separador: `feat:`, `Feat: Página de talentos`, `Feature - Loja`,
+`feat(ui) botões`, `[Feat] Missões`. Palavras como "Featured" não contam.
+
+O padrão é **patch**. Para subir minor ou major, comece o título com `Feat` /
+`Feature` ou inclua `[minor]` / `[major]` na mensagem.
 
 Com `[skip tag]` nenhuma tag é criada e o deploy usa a descrição do git
 (ex. `v2.0.1-3-gabc1234`) como versão.

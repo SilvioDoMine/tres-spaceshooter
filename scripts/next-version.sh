@@ -7,10 +7,14 @@
 # Saída (stdout): a versão, ex. "v2.0.1"
 #
 # Regras de bump, da maior para a menor precedência:
-#   major  -> commit com "!" antes dos ":" (ex. "feat!:") ou "BREAKING CHANGE"
-#             no corpo, ou "[major]" em qualquer lugar da mensagem
-#   minor  -> commit "feat:" / "feat(escopo):" ou "[minor]" na mensagem
+#   major  -> commit com "!" antes dos ":" (ex. "feat!:", "Feat!"), ou
+#             "BREAKING CHANGE" no corpo, ou "[major]" em qualquer lugar da mensagem
+#   minor  -> título começando com feat/feature, com ou sem escopo e separador:
+#             "feat:", "Feat: ...", "Feature - ...", "feat(ui) ...", "[Feat] ...",
+#             ou "[minor]" na mensagem
 #   patch  -> qualquer outra coisa (padrão)
+#
+# A comparação ignora maiúsculas/minúsculas.
 #
 # Se ainda não existir nenhuma tag no repositório, devolve SEED_VERSION.
 
@@ -42,14 +46,20 @@ if [ -z "$(git rev-list "$range")" ]; then
 fi
 
 # Regexes em variáveis: dentro de [[ =~ ]] os parênteses precisam vir assim.
-re_breaking='^[a-zA-Z]+(\([^)]*\))?!:'
-re_feat='^feat(\([^)]*\))?:'
+# Tudo é comparado em minúsculas (via tr, para funcionar também no bash 3 do macOS).
+re_breaking='^[a-z]+(\([^)]*\))?![[:space:]]*:'
+# Tipos conhecidos podem marcar breaking só com "!", sem os dois-pontos ("Feat! ...")
+re_breaking_typed='^\[?(feat|feature|fix|bugfix|hotfix|refactor|perf)\]?(\([^)]*\))?!'
+# feat/feature seguido de separador (":", "-", espaço) ou fim; não pega "featured"
+re_feat='^\[?(feat|feature)\]?(\([^)]*\))?([[:space:]]*[:-]|[[:space:]]|$)'
 
 bump=patch
 while IFS= read -r -d '' msg; do
+  msg="$(printf '%s' "$msg" | tr '[:upper:]' '[:lower:]')"
   subject="${msg%%$'\n'*}"
   if [[ "$subject" =~ $re_breaking ]] \
-     || [[ "$msg" == *"BREAKING CHANGE"* ]] \
+     || [[ "$subject" =~ $re_breaking_typed ]] \
+     || [[ "$msg" == *"breaking change"* ]] \
      || [[ "$msg" == *"[major]"* ]]; then
     bump=major
     break
