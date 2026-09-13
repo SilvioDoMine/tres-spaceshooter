@@ -90,6 +90,33 @@ const shipAppearance = useShipAppearance();
                                 />
                             </div>
                         </div>
+
+                        <!-- Microinterações da interface -->
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-bold text-amber-900 pl-8 sm:pl-10">Sons da Interface</h3>
+                            <BaseToggleCheckbox v-model="useAudioPlayer.audioSettings.value.uiSoundsEnabled" />
+                        </div>
+
+                        <div
+                            class="flex justify-between items-center transition-opacity"
+                            :class="{ 'opacity-40 pointer-events-none': !useAudioPlayer.audioSettings.value.uiSoundsEnabled }"
+                        >
+                            <h3 class="font-bold text-amber-900 pl-8 sm:pl-10">Volume da Interface</h3>
+                            <div class="flex items-center justify-center">
+                                <BaseRangeInput
+                                    v-model="useAudioPlayer.audioSettings.value.volumeUi"
+                                    :min="0"
+                                    :max="100"
+                                    :showValue="false"
+                                    unit="%"
+                                />
+                            </div>
+                        </div>
+
+                        <div v-if="useAudioPlayer.supportsVibration" class="flex justify-between items-center">
+                            <h3 class="font-bold text-amber-900 pl-8 sm:pl-10">Vibração</h3>
+                            <BaseToggleCheckbox v-model="useAudioPlayer.audioSettings.value.hapticsEnabled" />
+                        </div>
                     </div>
 
 

@@ -8,7 +8,7 @@ import { ref, computed } from 'vue';
 
 // Stack global de modais abertos (IDs)
 // IMPORTANTE: Inicia vazio para garantir que nenhum modal apareça por padrão
-const modalStack = ref([]);
+export const modalStack = ref([]);
 
 // Debug: Log quando o stack mudar
 if (import.meta.client) {

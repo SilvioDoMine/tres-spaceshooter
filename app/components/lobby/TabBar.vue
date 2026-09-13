@@ -19,6 +19,7 @@ const tabs: { id: LobbyTab; label: string }[] = [
         v-for="tab in tabs"
         :key="tab.id"
         type="button"
+        data-ui-sound="tab"
         class="tab"
         :class="{ 'is-active': modelValue === tab.id }"
         :aria-label="tab.label"

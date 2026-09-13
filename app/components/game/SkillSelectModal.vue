@@ -104,6 +104,7 @@ watch(
             <div
                 v-for="(skill, index) in skillStore.skillOptions"
                 :key="skill.id"
+                data-ui-sound="confirm"
                 class="relative flex cursor-pointer gap-4 sm:flex-col sm:items-center sm:w-1/3 md:w-72 md:h-full md:justify-center"
             >
 

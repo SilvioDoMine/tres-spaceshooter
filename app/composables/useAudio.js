@@ -1,29 +1,34 @@
 import { createSpatialAudio } from '~/utils/spatialAudio';
+import { playUiSynth } from '~/utils/uiSynth';
+
+const defaultAudioSettings = () => ({
+    volumeGeneral: 100,
+    volumeBackground: 100,
+    volumeEffects: 100,
+    // Microinterações da interface (sons de toque/hover e vibração no mobile)
+    volumeUi: 70,
+    uiSoundsEnabled: true,
+    hapticsEnabled: true,
+});
+
 // Carrega configurações do localStorage ou cria padrão
 const loadAudioSettings = () => {
     const saved = localStorage.getItem('audioSettings');
 
     if (!saved) {
         // Não existe, cria padrão
-        const defaultSettings = {
-            volumeGeneral: 100,
-            volumeBackground: 100,
-            volumeEffects: 100,
-        };
+        const defaultSettings = defaultAudioSettings();
         localStorage.setItem('audioSettings', JSON.stringify(defaultSettings));
         return defaultSettings;
     }
 
     try {
-        return JSON.parse(saved);
+        // Mescla com o padrão para configurações salvas antes de chaves novas existirem
+        return { ...defaultAudioSettings(), ...JSON.parse(saved) };
     } catch (error) {
         console.error('Failed to parse audio settings from localStorage:', error);
         // Se der erro no parse, retorna padrão
-        return {
-            volumeGeneral: 100,
-            volumeBackground: 100,
-            volumeEffects: 100,
-        };
+        return defaultAudioSettings();
     }
 };
 
@@ -148,6 +153,31 @@ export function useAudio() {
         }
     }
 
+    // Som sintetizado de microinteração da UI (tap, hover, toggle, modal...)
+    function playUiSound(kind) {
+        const settings = audioSettings.value;
+        if (!settings.uiSoundsEnabled) return;
+
+        const volume = getGeneralVolume() * (settings.volumeUi / 100);
+        if (volume <= 0) return;
+
+        // Chamado dentro de um gesto do usuário: pode criar/destravar o contexto aqui
+        if (!audioContext) init();
+        if (!audioContext) return;
+        if (audioContext.state === 'suspended') audioContext.resume();
+
+        playUiSynth(audioContext, kind, volume);
+    }
+
+    // Vibração curta no mobile (Android; o Safari do iOS não suporta a Vibration API)
+    function vibrate(pattern) {
+        if (!audioSettings.value.hapticsEnabled) return;
+        if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') return;
+        navigator.vibrate(pattern);
+    }
+
+    const supportsVibration = typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
+
     // Inicia música de fundo com Web Audio API (permite filtros e efeitos)
     async function playBackgroundMusic(url, loop = true) {
         try {
@@ -258,11 +288,7 @@ export function useAudio() {
 
     // Reseta as configurações de áudio para padrão
     function resetAudioSettings() {
-        const defaultSettings = {
-            volumeGeneral: 100,
-            volumeBackground: 100,
-            volumeEffects: 100,
-        };
+        const defaultSettings = defaultAudioSettings();
 
         audioSettings.value = defaultSettings;
         localStorage.setItem('audioSettings', JSON.stringify(defaultSettings));
@@ -295,6 +321,11 @@ export function useAudio() {
         playSound,
         updateSpatialAudio,
         stopSpatialAudio,
+
+        // UI microinteractions
+        playUiSound,
+        vibrate,
+        supportsVibration,
 
         // Background music
         playBackgroundMusic,

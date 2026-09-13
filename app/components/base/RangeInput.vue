@@ -49,8 +49,22 @@ const percentage = computed(() => {
   return ((props.modelValue - props.min) / (props.max - props.min)) * 100
 })
 
+const audio = useAudio()
+const TICK_EVERY = 5 // % da faixa entre cada tique sonoro
+
+// Emite o valor e toca um tique quando atravessa uma faixa de TICK_EVERY%
+const emitValue = (value) => {
+  if (value === props.modelValue) return
+  const range = props.max - props.min
+  const bucket = (v) => Math.floor(((v - props.min) / range) * 100 / TICK_EVERY)
+  if (bucket(value) !== bucket(props.modelValue)) {
+    audio.playUiSound('tick')
+  }
+  emit('update:modelValue', value)
+}
+
 const handleInput = (event) => {
-  emit('update:modelValue', Number(event.target.value))
+  emitValue(Number(event.target.value))
 }
 
 const calculateValue = (clientX) => {
@@ -64,7 +78,7 @@ const calculateValue = (clientX) => {
   value = Math.round(value / props.step) * props.step
   value = Math.max(props.min, Math.min(props.max, value))
 
-  emit('update:modelValue', value)
+  emitValue(value)
 }
 
 const handleMouseDown = (event) => {

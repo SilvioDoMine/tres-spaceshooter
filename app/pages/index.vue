@@ -356,6 +356,7 @@ onUnmounted(() => {
       >
         <div class="w-full pointer-events-auto">
           <button
+            data-ui-sound="confirm"
             @click="handleButtonClick"
             :class="[
               'relative isolate overflow-hidden',

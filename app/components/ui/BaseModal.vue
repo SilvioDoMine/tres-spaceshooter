@@ -97,7 +97,7 @@ function handleContentClick(e) {
         <!-- Modal Content -->
         <div
           :class="[
-            'w-full relative rounded-md shadow-md flex flex-col',
+            'modal-pop w-full relative rounded-md shadow-md flex flex-col',
             'max-h-[calc(100vh-2rem)]',
             maxWidth, bgColor, shadowColor
           ]"
@@ -141,6 +141,20 @@ function handleContentClick(e) {
 </template>
 
 <style scoped>
+/* Entrada do modal com leve "pop" */
+.modal-pop {
+  animation: modal-pop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modal-pop {
+  from { transform: scale(0.9) translateY(8px); }
+  to { transform: scale(1) translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-pop { animation: none; }
+}
+
 /* Scrollbar customizada */
 .overflow-y-auto {
   scrollbar-width: thin;
