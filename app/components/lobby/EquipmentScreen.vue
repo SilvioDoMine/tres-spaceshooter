@@ -284,6 +284,16 @@ function unequipSelected() {
 .gear-mech-leave-to {
   translate: 100% 0;
 }
+/* Desktop (tela larga + mouse): itens menores e mais refinados */
+@media (min-width: 900px) and (hover: hover) and (pointer: fine) {
+  .gear__grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 10px 8px;
+  }
+  .gear__slot {
+    height: min(31%, 70px);
+  }
+}
 @media (max-height: 500px) and (orientation: landscape) {
   .gear {
     bottom: 56px;

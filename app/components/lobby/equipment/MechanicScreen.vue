@@ -575,6 +575,13 @@ onUnmounted(() => {
   max-width: 620px;
   margin: 0 auto;
 }
+/* Desktop (tela larga + mouse): itens menores e mais refinados */
+@media (min-width: 900px) and (hover: hover) and (pointer: fine) {
+  .mech__grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 10px 8px;
+  }
+}
 .mech__cell {
   padding: 0;
   border: 0;
