@@ -11,7 +11,7 @@ withDefaults(defineProps<{ title: string; theme?: 'blue' | 'purple' }>(), { them
       <h2 class="lobby-screen__title">{{ title }}</h2>
     </header>
 
-    <div class="lobby-screen__body allow-scroll">
+    <div class="lobby-screen__body allow-scroll" :class="{ 'has-footer': $slots.footer }">
       <slot>
         <div class="lobby-screen__empty">
           <span>✦</span>
@@ -20,8 +20,10 @@ withDefaults(defineProps<{ title: string; theme?: 'blue' | 'purple' }>(), { them
       </slot>
     </div>
 
-    <!-- Fixo embaixo, fora da rolagem -->
-    <slot name="footer" />
+    <!-- Flutua por cima do fim do conteúdo (o conteúdo continua visível por trás) -->
+    <div v-if="$slots.footer" class="lobby-screen__footer">
+      <slot name="footer" />
+    </div>
   </section>
 </template>
 
@@ -33,9 +35,12 @@ withDefaults(defineProps<{ title: string; theme?: 'blue' | 'purple' }>(), { them
 .lobby-screen__header-start{position:absolute;left:12px;top:50%;translate:0 -30%}
 .lobby-screen__title{margin:0;padding:6px 36px;border-radius:999px;border:3px solid rgba(255,255,255,.35);background:rgba(255,255,255,.16);box-shadow:0 4px 0 rgba(0,0,0,.2);font:26px 'Lilita One',sans-serif;text-shadow:0 3px 0 rgba(0,0,0,.35)}
 .lobby-screen__body{flex:1;min-height:0;overflow:auto;padding:16px}
+/* Espaço para a última fileira rolar até acima do rodapé flutuante */
+.lobby-screen__body.has-footer{padding-bottom:128px}
+.lobby-screen__footer{position:absolute;left:0;right:0;bottom:0;pointer-events:none}
 .lobby-screen__empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:rgba(255,255,255,.6);font-family:'Lilita One',sans-serif}
 .lobby-screen__empty span{font-size:40px;color:#ffe09a}
 .lobby-screen__empty p{margin:0;font-size:20px}
 @media(max-width:650px){.lobby-screen__title{font-size:22px;padding:4px 28px}}
-@media(max-height:500px) and (orientation:landscape){.lobby-screen{bottom:56px;padding-top:68px}.lobby-screen__header{padding-top:2px}.lobby-screen__title{font-size:18px;padding:2px 24px}.lobby-screen__body{padding:8px}}
+@media(max-height:500px) and (orientation:landscape){.lobby-screen{bottom:56px;padding-top:68px}.lobby-screen__header{padding-top:2px}.lobby-screen__title{font-size:18px;padding:2px 24px}.lobby-screen__body{padding:8px}.lobby-screen__body.has-footer{padding-bottom:84px}}
 </style>

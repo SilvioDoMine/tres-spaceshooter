@@ -46,7 +46,9 @@ const formattedCost = computed(() => props.cost.toLocaleString('pt-BR'));
 </template>
 
 <style scoped>
-.tdraw{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 16px 12px;background:linear-gradient(rgba(40,34,90,0),rgba(40,34,90,.95) 35%)}
+/* Fade escuro por cima da grade: as cartas continuam aparecendo por trás */
+.tdraw{display:flex;flex-direction:column;align-items:center;gap:4px;padding:48px 16px 12px;background:linear-gradient(rgba(14,10,40,0),rgba(14,10,40,.45) 45%,rgba(14,10,40,.7));pointer-events:none}
+.tdraw__button{pointer-events:auto}
 .tdraw__button{
   position:relative;overflow:hidden;width:min(320px,100%);height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
   border-radius:18px;border:4px solid #c97813;background:linear-gradient(#ffe59a,#ffd058 50%,#ffb321);
@@ -62,5 +64,5 @@ const formattedCost = computed(() => props.cost.toLocaleString('pt-BR'));
 .tdraw__missing{margin:6px 0 0;font:14px 'Lilita One',sans-serif;color:#ff8a95;text-shadow:0 2px 0 rgba(0,0,0,.5)}
 .tdraw__notice{display:flex;align-items:center;gap:10px;min-height:72px;margin:0;font:clamp(22px,6vw,30px) 'Lilita One',sans-serif;color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.55)}
 .tdraw__level{display:grid;place-items:center;width:46px;height:46px;flex-shrink:0;clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);background:linear-gradient(#7cc8ff,#2f7cd1);font-size:20px}
-@media(max-height:500px) and (orientation:landscape){.tdraw{padding:4px 16px 6px}.tdraw__button{height:52px;border-radius:14px}.tdraw__label{font-size:20px}.tdraw__cost{font-size:14px}.tdraw__notice{min-height:52px;font-size:20px}}
+@media(max-height:500px) and (orientation:landscape){.tdraw{padding:28px 16px 6px}.tdraw__button{height:52px;border-radius:14px}.tdraw__label{font-size:20px}.tdraw__cost{font-size:14px}.tdraw__notice{min-height:52px;font-size:20px}}
 </style>
