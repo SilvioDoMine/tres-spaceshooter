@@ -1,12 +1,13 @@
 <script setup lang="ts">
 // Barra de abas do rodapé do lobby (estilo Archero): a aba ativa fica amarela, mais larga e com nome.
-type LobbyTab = 'equipment' | 'chapters' | 'talents';
+type LobbyTab = 'shop' | 'equipment' | 'chapters' | 'talents';
 
 /** badges: abas com ação pendente (mostra o "!") */
 defineProps<{ modelValue: LobbyTab; badges?: Partial<Record<LobbyTab, boolean>> }>();
 defineEmits<{ 'update:modelValue': [tab: LobbyTab] }>();
 
 const tabs: { id: LobbyTab; label: string }[] = [
+  { id: 'shop', label: 'Loja' },
   { id: 'equipment', label: 'Equipamento' },
   { id: 'chapters', label: 'Capítulos' },
   { id: 'talents', label: 'Talentos' },
@@ -27,7 +28,8 @@ const tabs: { id: LobbyTab; label: string }[] = [
         :aria-current="modelValue === tab.id ? 'page' : undefined"
         @click="$emit('update:modelValue', tab.id)"
       >
-        <SvgEquipmentIcon v-if="tab.id === 'equipment'" class="tab__icon" />
+        <SvgShopIcon v-if="tab.id === 'shop'" class="tab__icon" />
+        <SvgEquipmentIcon v-else-if="tab.id === 'equipment'" class="tab__icon" />
         <SvgChaptersIcon v-else-if="tab.id === 'chapters'" class="tab__icon" />
         <SvgTalentIcon v-else class="tab__icon" />
         <span v-if="badges?.[tab.id]" class="tab__badge" aria-label="Ação pendente"><BaseNotification /></span>

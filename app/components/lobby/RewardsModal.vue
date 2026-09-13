@@ -110,7 +110,7 @@ const handleQuit = () => {
     >
       <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">
         <span class="drop-shadow-xs drop-shadow-black text-green-500">
-          <SvgCashIcon :size="25" />
+          <SvgGemIcon :size="25" />
         </span>
       </p>
     </BaseAbilityIcon>

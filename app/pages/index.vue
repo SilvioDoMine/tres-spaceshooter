@@ -27,20 +27,32 @@ const isLocked = computed(() => currentLevel.value > maxUnlockedLevel.value);
 
 // Aba ativa do lobby (barra do rodapé): capítulos (modo de jogo) ou uma tela cheia no lugar dele.
 // Fora de 'chapters' o HUD sai animado (laterais para os lados, botões de baixo para baixo).
-type LobbyView = 'equipment' | 'chapters' | 'talents';
-const lobbyTabOrder: LobbyView[] = ['equipment', 'chapters', 'talents'];
+type LobbyView = 'shop' | 'equipment' | 'chapters' | 'talents';
+const lobbyTabOrder: LobbyView[] = ['shop', 'equipment', 'chapters', 'talents'];
 const lobbyView = ref<LobbyView>('chapters');
 const isChapterView = computed(() => lobbyView.value === 'chapters');
 
 // "!" nas abas quando há ação pendente:
+// Loja: baú grátis, chaves ou ouro grátis.
 // Equipamento: item guardado que melhora um slot (inclui slot vazio) ou algo para fundir no Mecânico.
 // Talentos: sorteio liberado (nível e ouro suficientes).
+const shopStore = useShopStore();
+const chestOpening = useChestOpening();
 const equipmentStore = useEquipmentStore();
 const talentStore = useTalentStore();
 const tabBadges = computed(() => ({
+  shop: shopStore.hasPending,
   equipment: equipmentStore.upgradeableUids.size > 0 || equipmentStore.hasFusable,
   talents: talentStore.status === 'ok',
 }));
+
+// Tocar nos saldos do topo abre a Loja na seção da moeda (nonce: repete o scroll mesmo já estando lá)
+const shopFocus = ref<{ section: 'daily' | 'chests' | 'gems' | 'gold'; nonce: number } | null>(null);
+function openShop(section: 'gems' | 'gold') {
+  if (isAnimating.value) return;
+  shopFocus.value = { section, nonce: Date.now() };
+  lobbyView.value = 'shop';
+}
 
 // Botões ao lado do INICIAR: escondidos por enquanto (a TabBar já cobre Equipamento/Talentos),
 // mas continuam ocupando o espaço para receber outras funções depois.
@@ -154,8 +166,8 @@ const isAnyModalOpen = computed(() =>
 
 // Controles de teclado
 function handleKeyPress(event: KeyboardEvent) {
-  // Só permite navegação se nenhum modal estiver aberto
-  if (isAnyModalOpen.value) return;
+  // Só permite navegação se nenhum modal estiver aberto (nem a abertura de baú, que é global)
+  if (event.defaultPrevented || isAnyModalOpen.value || chestOpening.session.value) return;
 
   const key = event.key.toLowerCase();
 
@@ -229,16 +241,16 @@ onUnmounted(() => {
           <!-- Right side -->
           <div class="flex gap-2">
             <!-- Money Count -->
-            <div class="bg-white/10 group px-2 pr-3 py-0.5 flex items-center justify-between gap-2 rounded-full cursor-pointer">
+            <div class="bg-white/10 group px-2 pr-3 py-0.5 flex items-center justify-between gap-2 rounded-full cursor-pointer" role="button" aria-label="Gemas: abrir loja" @click="openShop('gems')">
               <!-- Icon -->
-              <SvgCashIcon :size="24" class="group-hover:rotate-720 duration-500 transition-transform" />
+              <SvgGemIcon :size="24" :sparkle="false" class="group-hover:scale-125 duration-300 transition-transform" />
 
               <!-- Text -->
               <span class="font-bold text-white">{{ formatCurrency(useCash().getTotalCash.value) }}</span>
             </div>
 
             <!-- Gold Count -->
-            <div class="bg-white/10 group px-2 pr-3 py-0.5 flex items-center justify-between gap-2 rounded-full cursor-pointer">
+            <div class="bg-white/10 group px-2 pr-3 py-0.5 flex items-center justify-between gap-2 rounded-full cursor-pointer" role="button" aria-label="Ouro: abrir loja" @click="openShop('gold')">
               <!-- Icon -->
               <SvgCoinIcon :size="24" class="text-yellow-400 group-hover:rotate-720 duration-500 transition-transform" />
 
@@ -439,6 +451,7 @@ onUnmounted(() => {
       <Transition :name="lobbySlide">
         <LobbyTalentsScreen v-if="lobbyView === 'talents'" />
         <LobbyEquipmentScreen v-else-if="lobbyView === 'equipment'" />
+        <LobbyShopScreen v-else-if="lobbyView === 'shop'" :focus="shopFocus" />
       </Transition>
 
       <LobbyTabBar :model-value="lobbyView" :badges="tabBadges" @update:model-value="openView" />

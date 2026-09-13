@@ -268,7 +268,7 @@ export function useMissions() {
         getMilestones.value.forEach(milestone => {
             if (getTotalPointsEarned.value >= milestone.points && !milestone.claimed) {
                 // Adiciona os prêmios ao jogador aqui (ouro, experiência, etc.)
-                useCurrentRunStore().totalGold += dailyMilestones[milestone.points].gold;
+                useCurrentRunStore().addPersistentGold(dailyMilestones[milestone.points].gold);
                 useLevelAccount().addExp(dailyMilestones[milestone.points].exp);
 
                 // Acumula as recompensas

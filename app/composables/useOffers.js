@@ -216,7 +216,7 @@ export function useOffers() {
             const { gold, cash } = offerPackage.dailyRewards || {};
 
             if (gold && gold > 0) {
-                useCurrentRunStore().totalGold += gold;
+                useCurrentRunStore().addPersistentGold(gold);
                 rewards.gold = gold;
             }
 

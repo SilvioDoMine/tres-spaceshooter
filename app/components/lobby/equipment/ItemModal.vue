@@ -2,16 +2,20 @@
 import { EQUIPMENT_RARITIES, EQUIPMENT_SLOTS } from '~/data/equipment';
 import { formatTalentValue } from '~/utils/talents';
 import { formatStat, getEquipment, itemAbilities, itemMainStat, type OwnedEquipment } from '~/utils/equipment';
+import type { ShopPrice } from '~/data/shop';
 
 // Detalhe do item: arte, nome, atributo principal, habilidades por raridade e Equipar/Desequipar.
+// Com `price` (Loja), o botão vira Comprar.
 const props = defineProps<{
   open: boolean;
   item: OwnedEquipment | null;
   equipped: boolean;
   /** Item equipado no mesmo slot (para comparar antes de trocar) */
   compareTo?: OwnedEquipment | null;
+  price?: ShopPrice | null;
+  canAfford?: boolean;
 }>();
-const emit = defineEmits<{ close: []; equip: []; unequip: [] }>();
+const emit = defineEmits<{ close: []; equip: []; unequip: []; buy: [] }>();
 
 const def = computed(() => (props.item ? getEquipment(props.item.defId) : null));
 const rarity = computed(() => (props.item ? EQUIPMENT_RARITIES[props.item.rarity] : null));
@@ -75,7 +79,19 @@ onUnmounted(() => window.removeEventListener('keydown', onKey, true));
           </ul>
 
           <button
-            v-if="equipped"
+            v-if="price"
+            type="button"
+            class="imodal__action is-buy"
+            :class="{ 'is-short': !canAfford }"
+            :disabled="!canAfford"
+            data-ui-sound="confirm"
+            @click="emit('buy')"
+          >
+            <span>Comprar</span>
+            <LobbyShopPriceTag :currency="price.currency" :amount="price.amount" :insufficient="!canAfford" />
+          </button>
+          <button
+            v-else-if="equipped"
             type="button"
             class="imodal__action is-unequip"
             data-ui-sound="toggleOff"
@@ -106,8 +122,11 @@ onUnmounted(() => window.removeEventListener('keydown', onKey, true));
   --tint: #9aa3b2;
   position: relative;
   width: min(380px, 100%);
-  max-height: 100%;
+  max-height: calc(100dvh - 48px);
   overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+  overscroll-behavior: contain;
   padding: 16px;
   border-radius: 20px;
   background: linear-gradient(#2c3a63, #1b2340);
@@ -251,6 +270,20 @@ onUnmounted(() => window.removeEventListener('keydown', onKey, true));
   background: linear-gradient(#8fd0ff, #3d8be0);
   box-shadow: 0 4px 0 #1e4f8c, inset 0 2px 0 #d9f0ff;
   -webkit-text-stroke-color: #1a3f75;
+}
+.imodal__action.is-buy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border-color: #1a7a0a;
+  background: linear-gradient(#8ef06a, #3cc41c);
+  box-shadow: 0 4px 0 #1a7a0a, inset 0 2px 0 #d4ffc2;
+  -webkit-text-stroke-color: #145c08;
+}
+.imodal__action.is-buy.is-short {
+  filter: grayscale(0.8) brightness(0.85);
+  cursor: not-allowed;
 }
 .imodal-enter-active,
 .imodal-leave-active {

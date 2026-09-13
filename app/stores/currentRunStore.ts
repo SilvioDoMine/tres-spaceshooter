@@ -407,6 +407,13 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     saveGold(currentGold.value);
   }
 
+  /** Soma no gold persistente e salva (loja, missões, ofertas) */
+  function addPersistentGold(amount: number) {
+    if (!(amount > 0)) return;
+    totalGold.value = (Number(totalGold.value) || 0) + Math.floor(amount);
+    saveGold(totalGold.value);
+  }
+
   function addExp(amount: number) {
     currentExp.value += amount;
 
@@ -462,6 +469,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
     totalGold, // Gold total persistente
     spendGold, // Gasta do gold persistente e salva
+    addPersistentGold, // Soma no gold persistente e salva
     currentGold, // Gold na partida atual
     currentExp, // Experiência na partida atual
     getExpForLevel, // Função para obter o nível atual do jogador (baseado em EXP)

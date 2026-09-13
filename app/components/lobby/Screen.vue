@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Tela cheia do lobby que troca com o modo de capítulos (Equipamento, Talentos...).
 // Fica entre a topbar (que continua por cima) e a barra de abas do rodapé.
-withDefaults(defineProps<{ title: string; theme?: 'blue' | 'purple' }>(), { theme: 'blue' });
+withDefaults(defineProps<{ title: string; theme?: 'blue' | 'purple' | 'shop' }>(), { theme: 'blue' });
 </script>
 
 <template>
@@ -57,6 +57,13 @@ withDefaults(defineProps<{ title: string; theme?: 'blue' | 'purple' }>(), { them
   --title-tint: #dcd0ff;
   --pill-edge: #3b2a86;
   background: linear-gradient(#5f47b8 0%, #4b3a95 45%, #322b66 100%);
+}
+/* Loja: toldo azul no topo e fundo azul-marinho (como a vitrine do Archero) */
+.lobby-screen--shop {
+  --band: linear-gradient(#3f8ae6, #2a64c4);
+  --title-tint: #d6ecff;
+  --pill-edge: #1a3f86;
+  background: linear-gradient(#27407e 0%, #1c2b5c 40%, #151d42 100%);
 }
 .lobby-screen__header {
   /* A faixa começa no topo, por trás da topbar (72px), para a cor ficar contínua com ela */

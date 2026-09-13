@@ -40,7 +40,7 @@ const handlePurchase = () => {
                 >
                     <p class="text-xs text-black/60 font-bold italic">Compre para obter agora</p>
                     <div class="flex items-center justify-center gap-1">
-                        <SvgCashIcon :size="25" />
+                        <SvgGemIcon :size="25" />
                         <p class="title-text text-md drop-shadow-[1px_1px_0px_rgba(0,0,0,1)]">{{ offer.onPurchase.cash }}</p>
                     </div>
                 </div>
@@ -108,7 +108,7 @@ const handlePurchase = () => {
                     :quantity="`${offer.dailyRewards.cash}`"
                 >
                     <p class="text-2xl">
-                        <SvgCashIcon :size="35" />
+                        <SvgGemIcon :size="35" />
                     </p>
                 </BaseAbilityIcon>
                 <BaseAbilityIcon
@@ -144,7 +144,7 @@ const handlePurchase = () => {
                     :quantity="`${offer.dailyRewards.cash}`"
                 >
                     <p class="text-2xl">
-                        <SvgCashIcon :size="35" />
+                        <SvgGemIcon :size="35" />
                     </p>
                 </BaseAbilityIcon>
                 <BaseAbilityIcon
