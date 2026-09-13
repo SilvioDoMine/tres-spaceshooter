@@ -2,7 +2,8 @@
 // Barra de abas do rodapé do lobby (estilo Archero): a aba ativa fica amarela, mais larga e com nome.
 type LobbyTab = 'equipment' | 'chapters' | 'talents';
 
-defineProps<{ modelValue: LobbyTab }>();
+/** badges: abas com ação pendente (mostra o "!") */
+defineProps<{ modelValue: LobbyTab; badges?: Partial<Record<LobbyTab, boolean>> }>();
 defineEmits<{ 'update:modelValue': [tab: LobbyTab] }>();
 
 const tabs: { id: LobbyTab; label: string }[] = [
@@ -29,6 +30,7 @@ const tabs: { id: LobbyTab; label: string }[] = [
         <SvgEquipmentIcon v-if="tab.id === 'equipment'" class="tab__icon" />
         <SvgChaptersIcon v-else-if="tab.id === 'chapters'" class="tab__icon" />
         <SvgTalentIcon v-else class="tab__icon" />
+        <span v-if="badges?.[tab.id]" class="tab__badge" aria-label="Ação pendente"><BaseNotification /></span>
         <span class="tab__label">{{ tab.label }}</span>
       </button>
     </div>
@@ -42,6 +44,9 @@ const tabs: { id: LobbyTab; label: string }[] = [
 .tab::before{content:'';position:absolute;inset:-12px 3px 0;border-radius:16px 16px 0 0;background:linear-gradient(#fff3a8,#ffd24a 45%,#f5b400);box-shadow:inset 0 3px #fffbe0;opacity:0;translate:0 14px;transition:opacity .3s ease,translate .3s ease}
 .tab__icon{position:relative;width:40px;height:40px;filter:drop-shadow(0 3px 0 rgba(0,0,0,.35));transition:translate .3s ease,scale .3s ease}
 .tab__label{position:absolute;bottom:5px;left:0;right:0;text-align:center;font:15px 'Lilita One',sans-serif;color:#6b3a08;white-space:nowrap;opacity:0;translate:0 8px;transition:opacity .3s ease,translate .3s ease}
+/* "!" no canto superior direito do ícone; acompanha o ícone quando a aba fica ativa */
+.tab__badge{position:absolute;top:8px;left:calc(50% + 8px);width:20px;height:20px;scale:1.25;pointer-events:none;transition:translate .3s ease}
+.tab.is-active .tab__badge{translate:6px -20px}
 .tab.is-active{flex-grow:1.7}
 .tab.is-active::before{opacity:1;translate:0 0}
 .tab.is-active .tab__icon{translate:0 -14px;scale:1.3}

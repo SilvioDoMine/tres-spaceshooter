@@ -32,6 +32,16 @@ const lobbyTabOrder: LobbyView[] = ['equipment', 'chapters', 'talents'];
 const lobbyView = ref<LobbyView>('chapters');
 const isChapterView = computed(() => lobbyView.value === 'chapters');
 
+// "!" nas abas quando há ação pendente:
+// Equipamento: item guardado que melhora um slot (inclui slot vazio) ou algo para fundir no Mecânico.
+// Talentos: sorteio liberado (nível e ouro suficientes).
+const equipmentStore = useEquipmentStore();
+const talentStore = useTalentStore();
+const tabBadges = computed(() => ({
+  equipment: equipmentStore.upgradeableUids.size > 0 || equipmentStore.hasFusable,
+  talents: talentStore.status === 'ok',
+}));
+
 // Botões ao lado do INICIAR: escondidos por enquanto (a TabBar já cobre Equipamento/Talentos),
 // mas continuam ocupando o espaço para receber outras funções depois.
 const showSideActions = false;
@@ -431,7 +441,7 @@ onUnmounted(() => {
         <LobbyEquipmentScreen v-else-if="lobbyView === 'equipment'" />
       </Transition>
 
-      <LobbyTabBar :model-value="lobbyView" @update:model-value="openView" />
+      <LobbyTabBar :model-value="lobbyView" :badges="tabBadges" @update:model-value="openView" />
 
       <!-- Modals -->
       <ClientOnly>
