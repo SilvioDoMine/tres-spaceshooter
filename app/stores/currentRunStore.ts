@@ -402,8 +402,10 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
     levelAccount.addExp(expGained);
 
-    // Toda partida terminada (vitória ou derrota) dá um equipamento aleatório
-    runEquipment.value = useEquipmentStore().grantRandom(MATCH_END_EQUIPMENT_RARITY);
+    // Só a vitória (capítulo concluído) dá um equipamento aleatório; derrota rende apenas ouro e EXP
+    runEquipment.value = completedChapter
+      ? useEquipmentStore().grantRandom(MATCH_END_EQUIPMENT_RARITY)
+      : null;
 
     enemyManager.missionsOnComplete();
     useMissions().handleEvent('play-time', parseFloat((levelTimer.value / 60).toFixed(1))); // em minutos com float de até 1 casa decimal
