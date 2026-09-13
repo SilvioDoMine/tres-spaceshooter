@@ -27,6 +27,22 @@ const UI_SOUNDS = {
     close: [{ type: 'sine', from: 620, to: 240, duration: 0.12, gain: 0.22 }],
     // Arrastar slider
     tick: [{ type: 'square', from: 1200, to: 1200, duration: 0.015, gain: 0.05 }],
+    // Atributo subiu (arpejo para cima) / desceu (glide para baixo)
+    statUp: [
+        { type: 'triangle', from: 523, to: 523, duration: 0.07, gain: 0.28 },
+        { type: 'triangle', from: 659, to: 659, duration: 0.07, gain: 0.28, delay: 0.06 },
+        { type: 'triangle', from: 1047, to: 1047, duration: 0.16, gain: 0.3, delay: 0.12 },
+    ],
+    statDown: [
+        { type: 'sawtooth', from: 330, to: 196, duration: 0.18, gain: 0.12 },
+        { type: 'sine', from: 247, to: 147, duration: 0.2, gain: 0.25, delay: 0.08 },
+    ],
+    // Fusão concluída no Mecânico
+    fuse: [
+        { type: 'sine', from: 200, to: 900, duration: 0.3, gain: 0.25 },
+        { type: 'triangle', from: 784, to: 784, duration: 0.1, gain: 0.3, delay: 0.3 },
+        { type: 'triangle', from: 1175, to: 1175, duration: 0.25, gain: 0.3, delay: 0.38 },
+    ],
 };
 
 export function playUiSynth(ctx, kind, volume = 1) {

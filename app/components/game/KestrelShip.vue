@@ -4,6 +4,8 @@ import { useLoop } from '@tresjs/core'
 import { Group, Mesh, MeshStandardMaterial } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
+const emit = defineEmits<{ loaded: [] }>()
+
 const model = shallowRef(new Group())
 const settings = useShipAppearance()
 
@@ -23,6 +25,7 @@ onMounted(async () => {
       })
     })
     model.value = scene
+    emit('loaded')
   } catch (error) { console.error('Falha ao carregar Kestrel-07', error) }
 })
 useLoop().onBeforeRender(() => {

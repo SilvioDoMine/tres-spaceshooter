@@ -1,3 +1,6 @@
+import { MILESTONE_EQUIPMENT } from '~/data/equipment';
+import { useEquipmentStore } from '~/stores/useEquipmentStore';
+
 const dailyMissions = [
     {
         id: 1,
@@ -258,6 +261,7 @@ export function useMissions() {
         const claimedRewards = {
             gold: 0,
             exp: 0,
+            equipment: [],
         };
 
         // Claim all eligible milestone rewards
@@ -271,6 +275,12 @@ export function useMissions() {
                 claimedRewards.gold += dailyMilestones[milestone.points].gold;
                 claimedRewards.exp += dailyMilestones[milestone.points].exp;
 
+                // Alguns marcos também dão um equipamento aleatório
+                const equipmentRarity = MILESTONE_EQUIPMENT[milestone.points];
+                if (equipmentRarity) {
+                    claimedRewards.equipment.push(useEquipmentStore().grantRandom(equipmentRarity));
+                }
+
                 missionSettings.value.milestonesClaimed.push(milestone.points);
             }
         });
@@ -280,7 +290,7 @@ export function useMissions() {
         console.log('Recompensas reivindicadas nas missões:', claimedRewards);
 
         // Retorna null se nenhuma recompensa foi recuperada, ou o objeto com as recompensas
-        return claimedRewards.gold > 0 || claimedRewards.exp > 0 ? claimedRewards : null;
+        return claimedRewards.gold > 0 || claimedRewards.exp > 0 || claimedRewards.equipment.length > 0 ? claimedRewards : null;
     }
 
     const handleEvent = (eventType, amount = 1, params = []) => {

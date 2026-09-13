@@ -110,6 +110,7 @@ const appVersion = useAppVersion();
 <template>
   <div class="game-root">
     <NuxtPage />
+    <ClientOnly><LobbyEquipmentGrantModal /></ClientOnly>
     <!-- pointer-events-none: esta div cobre a tela toda, sem isso ela
          engole todo clique e toque do jogo. -->
     <div class="pointer-events-none absolute top-0 right-0 bottom-2 left-0 flex items-end justify-center">
