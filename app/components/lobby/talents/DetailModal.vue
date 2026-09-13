@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { TALENT_RARITIES, formatTalentEffect, type TalentDefinition } from '~/data/talents';
+import { TALENT_RARITIES, type TalentDefinition } from '~/data/talents';
+import { formatTalentValue } from '~/utils/talents';
 
 // Carta aberta em destaque, com setas para passar entre os talentos obtidos.
 const props = defineProps<{
   open: boolean;
   entries: { talent: TalentDefinition; stars: number }[];
   index: number;
+  /** Carta que acabou de sair no sorteio pela primeira vez */
   newTalentId?: string | null;
+  /** Carta que ganhou +1 estrela no sorteio */
+  upgradedTalentId?: string | null;
 }>();
 const emit = defineEmits<{ close: []; 'update:index': [index: number] }>();
 
@@ -58,12 +62,13 @@ onUnmounted(() => window.removeEventListener('keydown', onKey, true));
             </div>
           </Transition>
 
+          <p v-if="entry.talent.id === upgradedTalentId" class="tmodal__upgrade">+1 ★</p>
           <p class="tmodal__rarity" :class="`is-${entry.talent.rarity}`">
             {{ TALENT_RARITIES[entry.talent.rarity].label }} · {{ entry.stars }}/{{ entry.talent.maxStars }} ★
           </p>
           <ul class="tmodal__effects">
             <li v-for="effect in entry.talent.effects" :key="effect.stat">
-              {{ formatTalentEffect(effect.stat, effect.perStar * entry.stars) }}
+              {{ formatTalentValue(effect.stat, effect.perStar * entry.stars) }}
             </li>
           </ul>
         </div>
@@ -82,6 +87,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey, true));
 .tmodal{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px;background:rgba(6,8,22,.78);cursor:pointer}
 .tmodal__content{display:flex;flex-direction:column;align-items:center;gap:14px;width:min(300px,64vw)}
 .tmodal__card{width:100%;padding-top:10%}
+.tmodal__upgrade{margin:0;padding:2px 14px;border-radius:999px;background:#3fbf4a;box-shadow:0 3px 0 #1e7a2a;font:18px 'Lilita One',sans-serif;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.35)}
 .tmodal__rarity{margin:6px 0 0;padding:3px 14px;border-radius:999px;font:15px 'Lilita One',sans-serif;color:#fff;background:#8d99a4}
 .tmodal__rarity.is-rare{background:#2f7cd1}.tmodal__rarity.is-epic{background:#9444d6}.tmodal__rarity.is-legendary{background:#d98a0b}
 .tmodal__effects{margin:0;padding:0;list-style:none;text-align:center}

@@ -1,45 +1,29 @@
 <script setup lang="ts">
-import { MOCK_OWNED_TALENTS, TALENTS, talentDrawCost, talentDrawLevel } from '~/data/talents';
+import { useTalentStore } from '~/stores/useTalentStore';
 
-// Por enquanto só visual: os talentos obtidos vivem em memória (começam no exemplo)
-// e o sorteio não desconta ouro nem salva nada.
-const currentRunStore = useCurrentRunStore();
-const levelAccount = useLevelAccount();
-
-const ownedStars = ref<Record<string, number>>({ ...MOCK_OWNED_TALENTS });
-
-const ownedEntries = computed(() =>
-  TALENTS.filter(talent => (ownedStars.value[talent.id] ?? 0) > 0)
-    .map(talent => ({ talent, stars: ownedStars.value[talent.id]! })),
-);
-const lockedCount = computed(() => TALENTS.length - ownedEntries.value.length);
-
-const drawCount = computed(() => Object.values(ownedStars.value).reduce((sum, stars) => sum + stars, 0));
-const drawPool = computed(() => TALENTS.filter(talent => (ownedStars.value[talent.id] ?? 0) < talent.maxStars));
-const drawCost = computed(() => talentDrawCost(drawCount.value));
-const drawLevel = computed(() => talentDrawLevel(drawCount.value));
-const gold = computed(() => Number(currentRunStore.totalGold) || 0);
-const level = computed(() => levelAccount.getLevelAccount());
+// Progresso, custo, limite por nível e sorteio vêm da store (salva no localStorage e cobra ouro).
+const talentStore = useTalentStore();
 
 const detailOpen = ref(false);
 const detailIndex = ref(0);
 const statsOpen = ref(false);
 const newTalentId = ref<string | null>(null);
+const upgradedTalentId = ref<string | null>(null);
 
 function openDetail(index: number) {
   newTalentId.value = null;
+  upgradedTalentId.value = null;
   detailIndex.value = index;
   detailOpen.value = true;
 }
 
 function draw() {
-  if (!drawPool.value.length || level.value < drawLevel.value || gold.value < drawCost.value) return;
+  const result = talentStore.draw();
+  if (!result) return;
 
-  const talent = drawPool.value[Math.floor(Math.random() * drawPool.value.length)]!;
-  ownedStars.value[talent.id] = (ownedStars.value[talent.id] ?? 0) + 1;
-
-  detailIndex.value = ownedEntries.value.findIndex(entry => entry.talent.id === talent.id);
-  newTalentId.value = talent.id;
+  detailIndex.value = talentStore.ownedEntries.findIndex(entry => entry.talent.id === result.talent.id);
+  newTalentId.value = result.isNew ? result.talent.id : null;
+  upgradedTalentId.value = result.isNew ? null : result.talent.id;
   detailOpen.value = true;
 }
 </script>
@@ -52,7 +36,7 @@ function draw() {
 
     <div class="talents__grid">
       <button
-        v-for="(entry, index) in ownedEntries"
+        v-for="(entry, index) in talentStore.ownedEntries"
         :key="entry.talent.id"
         type="button"
         class="talents__slot"
@@ -61,7 +45,7 @@ function draw() {
       >
         <LobbyTalentsCard :talent="entry.talent" :stars="entry.stars" />
       </button>
-      <div v-for="n in lockedCount" :key="`locked-${n}`" class="talents__slot is-locked">
+      <div v-for="n in talentStore.lockedCount" :key="`locked-${n}`" class="talents__slot is-locked">
         <LobbyTalentsCard />
       </div>
     </div>
@@ -70,19 +54,18 @@ function draw() {
     <LobbyTalentsDetailModal
       v-model:index="detailIndex"
       :open="detailOpen"
-      :entries="ownedEntries"
+      :entries="talentStore.ownedEntries"
       :new-talent-id="newTalentId"
+      :upgraded-talent-id="upgradedTalentId"
       @close="detailOpen = false"
     />
-    <LobbyTalentsStatsModal :open="statsOpen" :entries="ownedEntries" @close="statsOpen = false" />
+    <LobbyTalentsStatsModal :open="statsOpen" :bonuses="talentStore.bonuses" @close="statsOpen = false" />
 
     <template #footer>
       <LobbyTalentsDrawBar
-        :cost="drawCost"
-        :gold="gold"
-        :level="level"
-        :required-level="drawLevel"
-        :completed="drawPool.length === 0"
+        :status="talentStore.status"
+        :cost="talentStore.drawCost"
+        :required-level="talentStore.requiredLevel"
         @draw="draw"
       />
     </template>

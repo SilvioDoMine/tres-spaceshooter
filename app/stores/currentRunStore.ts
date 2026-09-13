@@ -379,6 +379,16 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     localStorage.setItem('playerGold', goldAmount.toString());
   }
 
+  /** Gasta do gold persistente (ex.: sorteio de talentos). Retorna false se não tiver o suficiente. */
+  function spendGold(amount: number): boolean {
+    const total = Number(totalGold.value) || 0;
+    if (amount < 0 || total < amount) return false;
+
+    totalGold.value = total - amount;
+    saveGold(totalGold.value);
+    return true;
+  }
+
   function addGold(amount: number) {
     currentGold.value += amount;
     saveGold(currentGold.value);
@@ -438,6 +448,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     shotCooldown, // Cooldown restante do tiro
 
     totalGold, // Gold total persistente
+    spendGold, // Gasta do gold persistente e salva
     currentGold, // Gold na partida atual
     currentExp, // Experiência na partida atual
     getExpForLevel, // Função para obter o nível atual do jogador (baseado em EXP)

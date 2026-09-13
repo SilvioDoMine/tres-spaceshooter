@@ -139,3 +139,12 @@ export const levelAccountConfiguration = {
         expRequired: 3720, // effective is 900
     }
 }
+
+// Níveis 11+ gerados a partir do 10 (a mecânica de talentos libera 2 sorteios por nível e precisa de ~60)
+export const MAX_ACCOUNT_LEVEL = 60;
+
+for (let level = 11; level <= MAX_ACCOUNT_LEVEL; level++) {
+    levelAccountConfiguration[level] = {
+        expRequired: levelAccountConfiguration[level - 1].expRequired + 100 * (level - 1),
+    };
+}

@@ -1,21 +1,16 @@
 <script setup lang="ts">
-import { TALENT_STATS, type TalentDefinition, type TalentStat } from '~/data/talents';
+import { TALENT_STATS, type TalentStat } from '~/data/talents';
+import { formatTalentAmount, type TalentBonuses } from '~/utils/talents';
 
 // "Detalhes": soma dos bônus de todos os talentos obtidos.
-const props = defineProps<{ open: boolean; entries: { talent: TalentDefinition; stars: number }[] }>();
+const props = defineProps<{ open: boolean; bonuses: TalentBonuses }>();
 const emit = defineEmits<{ close: [] }>();
 
-const totals = computed(() => {
-  const sum = new Map<TalentStat, number>();
-  for (const { talent, stars } of props.entries) {
-    for (const effect of talent.effects) {
-      sum.set(effect.stat, (sum.get(effect.stat) ?? 0) + effect.perStar * stars);
-    }
-  }
-  return (Object.keys(TALENT_STATS) as TalentStat[])
-    .filter(stat => sum.has(stat))
-    .map(stat => ({ stat, ...TALENT_STATS[stat], value: sum.get(stat)! }));
-});
+const rows = computed(() =>
+  (Object.keys(TALENT_STATS) as TalentStat[])
+    .filter(stat => props.bonuses[stat] > 0)
+    .map(stat => ({ stat, label: TALENT_STATS[stat].label, amount: formatTalentAmount(stat, props.bonuses[stat]) })),
+);
 
 function onKey(event: KeyboardEvent) {
   if (!props.open || event.key !== 'Escape') return;
@@ -35,10 +30,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKey, true));
           <h2 class="tstats__title">Detalhes</h2>
           <div class="tstats__divider" aria-hidden="true"><span></span><i></i><span></span></div>
 
-          <dl v-if="totals.length" class="tstats__list">
-            <div v-for="row in totals" :key="row.stat" class="tstats__row">
+          <dl v-if="rows.length" class="tstats__list">
+            <div v-for="row in rows" :key="row.stat" class="tstats__row">
               <dt>{{ row.label }}</dt>
-              <dd>+{{ row.value }}{{ row.suffix ?? '' }}</dd>
+              <dd>{{ row.amount }}</dd>
             </div>
           </dl>
           <p v-else class="tstats__empty">Você ainda não tem talentos.</p>
