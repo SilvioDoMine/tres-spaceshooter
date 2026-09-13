@@ -6,6 +6,8 @@ const REGEN_TEXT_INTERVAL = 1; // segundos entre textos de regeneração
 
 /**
  * Atributos permanentes (Dano, Vida)
+ * Talentos + equipamentos ainda não entram aqui: os valores finais prontos estão em
+ * useEquipmentStore().stats (e os bônus separados em gearBonuses / useTalentStore().bonuses).
 */
 export const usePlayerStats = defineStore('playerStats', () => {
   const skillStore = useSkillStore();

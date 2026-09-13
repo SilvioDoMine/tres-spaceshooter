@@ -26,6 +26,7 @@ const props = defineProps({
 const displayedGold = ref(0);
 const displayedExp = ref(0);
 const displayedCash = ref(0);
+const displayedEquipment = ref([]);
 
 // Função para abrir o modal com recompensas
 const openWithRewards = (rewards) => {
@@ -33,6 +34,7 @@ const openWithRewards = (rewards) => {
   displayedGold.value = rewards?.gold || 0;
   displayedExp.value = rewards?.exp || 0;
   displayedCash.value = rewards?.cash || 0;
+  displayedEquipment.value = rewards?.equipment || [];
   console.log('displayedGold setado para:', displayedGold.value);
   console.log('displayedExp setado para:', displayedExp.value);
   console.log('displayedCash setado para:', displayedCash.value);
@@ -124,6 +126,10 @@ const handleQuit = () => {
         <SvgExpIcon :size="35" />
       </p>
     </BaseAbilityIcon>
+
+    <div v-for="item in displayedEquipment" :key="`eq-${item.uid}`" class="w-16">
+      <LobbyEquipmentItemCard :item="item" />
+    </div>
   </div>
 
   <!-- Slot de actions para os botões grandes -->
