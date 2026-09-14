@@ -1,4 +1,4 @@
-import { attackProfile, attackDirections, chapterDamageMultiplier, ENEMY_VOLLEY_GATE, muzzlePosition } from '~/utils/combatPatterns';
+import { attackProfile, attackDirections, canAttackFrom, chapterDamageMultiplier, ENEMY_VOLLEY_GATE, muzzlePosition } from '~/utils/combatPatterns';
 import { playableRoomCount } from '~/utils/progression';
 
 export function useEnemyAttacks() {
@@ -20,8 +20,8 @@ export function useEnemyAttacks() {
       const dx=player.x-enemy.position.x,dz=player.z-enemy.position.z,d=Math.hypot(dx,dz);
       const visible=Math.abs(enemy.position.x-view.value.x)<view.value.width*.5-.6
         && Math.abs(enemy.position.z-view.value.z)<view.value.height*.5-.6;
-      // No unseen shots or point-blank salvos, and no firing during a charge.
-      if(!visible || d<3 || d>19 || enemy.kamikazeState==='charging') {
+      // No unseen shots (bosses: distance only) or point-blank salvos, and no firing during a charge.
+      if(!canAttackFrom(enemy,d,visible) || enemy.kamikazeState==='charging') {
         clock.charging=false;clock.remaining=Math.max(clock.remaining,.8);enemy.attackCharge=0;continue;
       }
       clock.remaining-=delta;

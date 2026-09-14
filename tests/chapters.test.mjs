@@ -210,6 +210,18 @@ function bossHarness(enemy, player = { x: 0, z: 0 }) {
   return { behaviors, active, hits, deaths };
 }
 
+test('bosses attack by distance even off a narrow screen; regular enemies still need to be on screen', () => {
+  const { canAttackFrom, ENEMY_ATTACK_RANGE } = patterns;
+  for (const type of CHAPTER_BOSSES) {
+    assert.equal(canAttackFrom({ type }, 6, false), true, `${type} fires with its center off screen`);
+    assert.equal(canAttackFrom({ type }, ENEMY_ATTACK_RANGE.max + 1, true), false, `${type} out of range`);
+    assert.equal(canAttackFrom({ type }, ENEMY_ATTACK_RANGE.min - .5, true), false, `${type} point blank`);
+  }
+  assert.equal(canAttackFrom({ type: 'ufo' }, 6, false), false);
+  assert.equal(canAttackFrom({ type: 'ufo' }, 6, true), true);
+  assert.equal(canAttackFrom({ type: 'miniHive' }, 6, false), false);
+});
+
 test('hive hunts slowly toward the player, then turns into a stationary turret while its fighters live', () => {
   const hive = { id: 'c', type: 'hiveBoss', position: { x: 0, z: -14 }, speed: 1, size: 3, health: 100, maxHealth: 100, onHitDamage: 50 };
   const { behaviors, active } = bossHarness(hive);

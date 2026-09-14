@@ -115,6 +115,19 @@ export function enemyCategory(type, enemy = {}) {
   return 'common';
 }
 
+// Faixa de distância em que um inimigo pode atirar no jogador
+export const ENEMY_ATTACK_RANGE = Object.freeze({ min: 3, max: 19 });
+
+/**
+ * Pode começar/continuar a carga do tiro? Inimigos comuns só atiram visíveis na tela.
+ * Bosses são grandes e ficam na borda em telas estreitas (celular em pé): usam só a distância,
+ * senão a carga é cancelada toda vez que o centro sai da tela e eles quase não atiram.
+ */
+export function canAttackFrom(enemy, distance, onScreen) {
+  if (distance < ENEMY_ATTACK_RANGE.min || distance > ENEMY_ATTACK_RANGE.max) return false;
+  return onScreen || enemyCategory(enemy.type, enemy) === 'boss';
+}
+
 export function finalBossPhase(enemy = {}) {
   const ratio = enemy.maxHealth ? enemy.health / enemy.maxHealth : 1;
   return ratio > .70 ? 1 : ratio > .40 ? 2 : 3;
