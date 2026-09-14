@@ -266,7 +266,7 @@ function runHarness(overrides = {}) {
     useCombatTextStore: () => ({ emitForTarget: (...args) => messages.push(args) }),
     useModal: () => ({ open() {}, close() {} }),
     useLevelAccount: () => ({}),
-    useAudio: () => ({ playSound() {}, startBackgroundMusicAbafado() {}, stopBackgroundMusicAbafado() {} }),
+    useAudio: () => ({ playSound() {}, playHeartSound() {},startBackgroundMusicAbafado() {}, stopBackgroundMusicAbafado() {} }),
     useSpatialDilation: () => ({ reset() {} }),
     emitImpact() {},
   });

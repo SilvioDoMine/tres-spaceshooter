@@ -4,6 +4,7 @@ import { COMBAT_BASE } from '~/utils/shipAttributes';
 import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import { useCombatTextStore } from '~/stores/useCombatTextStore';
+import { useAudio } from '~/composables/useAudio';
 
 type Heart = { id: number; x: number; z: number; startX: number; startZ: number; flight: number; heal: number; warned: boolean };
 
@@ -37,6 +38,7 @@ export const useHeartStore = defineStore('hearts', () => {
         heart.z = heart.startZ + (player.z - heart.startZ) * ease;
         if (heart.flight < 1) continue;
         run.healPlayer(heart.heal);
+        useAudio().playHeartSound('heal');
         bursts.push({ x: player.x, z: player.z });
         collected.add(heart.id);
         continue;
@@ -51,6 +53,7 @@ export const useHeartStore = defineStore('hearts', () => {
       }
       heart.heal = usePlayerStats().attributes.heartHeal;
       heart.flight = 0;
+      useAudio().playHeartSound('pull', FLIGHT_DURATION);
       incoming += heart.heal;
     }
     if (collected.size) hearts.value = hearts.value.filter(heart => !collected.has(heart.id));

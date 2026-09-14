@@ -1,5 +1,6 @@
 import { createSpatialAudio } from '~/utils/spatialAudio';
 import { playUiSynth } from '~/utils/uiSynth';
+import { playHeartSynth } from '~/utils/heartSynth';
 
 // Efeitos da partida: nome usado no playSound -> arquivo. Registrados já na tela de
 // loading, para tocarem desde o primeiro frame (ex.: levelup da seleção inicial de talentos).
@@ -79,6 +80,7 @@ const soundBuffers = new Map();
 const decodedByUrl = new Map();
 const musicObjectUrls = new Map();
 const isInitialized = ref(false);
+const lastHeartSound = {};
 
 export function useAudio() {
     let spatialAudio = null;
@@ -212,6 +214,16 @@ export function useAudio() {
         } catch (error) {
             console.error(`Failed to play sound ${name}:`, error);
         }
+    }
+
+    // Som sintetizado do coração de cura: 'pull' durante o voo, 'heal' ao entrar na nave
+    function playHeartSound(kind, duration) {
+        if (!audioContext || audioContext.state !== 'running') return;
+        // Vários corações no mesmo quadro tocam um som só
+        const now = audioContext.currentTime;
+        if (now - (lastHeartSound[kind] ?? -1) < 0.06) return;
+        lastHeartSound[kind] = now;
+        playHeartSynth(audioContext, kind, getGeneralVolume() * getEffectsVolume(), duration);
     }
 
     // Som sintetizado de microinteração da UI (tap, hover, toggle, modal...)
@@ -383,6 +395,7 @@ export function useAudio() {
         registerSoundData,
         registerMusicData,
         playSound,
+        playHeartSound,
         updateSpatialAudio,
         stopSpatialAudio,
 
