@@ -54,7 +54,15 @@ onBeforeUnmount(() => {
 <template>
   <div ref="root" class="cpreview" :class="{ 'is-glow': glow }">
     <span class="cpreview__shadow" aria-hidden="true"></span>
-    <TresCanvas :alpha="true" :clear-alpha="0" :dpr="[1, 1.5]" :preserve-drawing-buffer="true">
+    <!-- O TresCanvas põe `pointer-events: auto; touch-action: none` inline no <canvas>, o que prende o toque
+         e impede o scroll da loja. O baú é só decorativo, então o canvas deixa os eventos passarem. -->
+    <TresCanvas
+      :alpha="true"
+      :clear-alpha="0"
+      :dpr="[1, 1.5]"
+      :preserve-drawing-buffer="true"
+      :style="{ pointerEvents: 'none', touchAction: 'auto' }"
+    >
       <LobbyShopChestPreviewScene :type="type" :glow="glow" />
     </TresCanvas>
     <Transition name="cpreview-photo">
