@@ -62,7 +62,7 @@ function storeHarness(){
   PlayerBaseStats:{projectiles:{shotSpeed:19,damage:50,size:.2,range:11}},
   baseStats:{},SkillsList:{ricochet_shot:{levels:{1:{value:.5}}}},
   useEnemyManager:()=>({activeEnemies:{value:enemies},takeDamage:(id,n)=>hits.push({id,n})}),
-  useCurrentRunStore:()=>({getPlayerPosition:()=>player,takeDamage:n=>damage.push(n)}),
+  useCurrentRunStore:()=>({getPlayerPosition:()=>player,getPlayerRotation:()=>({y:0}),takeDamage:n=>damage.push(n)}),
   usePlayerStats:()=>({getProjectileSpeedMultiplier:1,getRangeMultiplier:1,getDamageMultiplier:1}),
   useSkillStore:()=>({getSkillLevel:()=>1}),
  });
@@ -112,4 +112,50 @@ test('enemy shots wait for telegraph, honor visibility and global projectile bud
  while(bullets.length<90)bullets.push({ownerType:'enemy'});
  for(let i=0;i<100;i++)context.attacks.update([e],.1);
  assert.equal(bullets.length,90);
+});
+
+// Physical muzzle geometry and projectile transforms must agree at every heading.
+test('physical hardpoints match front, diagonal and straight rear fire',()=>{
+  for(const multi of [0,1,2,3,4])for(const rear of [0,1,2])for(const diagonal of [0,1,2]){
+    const mounts=patterns.weaponMounts(multi,rear,diagonal);
+    assert.equal(mounts.filter(m=>m.role==='front').length,1+multi);
+    assert.equal(mounts.filter(m=>m.role==='rear').length,rear);
+    assert.equal(mounts.filter(m=>m.role==='diagonal').length,diagonal?2:0);
+    for(const m of mounts.filter(m=>m.role==='diagonal')){assert.equal(Math.abs(m.x),.70);assert.equal(m.z,.12);}
+    for(const m of mounts)for(const yaw of [0,.7,Math.PI,-1.2]){
+      const p={x:12,y:0,z:-8};const result=patterns.worldHardpoint(p,yaw,m);
+      assert.ok(Math.abs(Math.hypot(result.direction.x,result.direction.z)-1)<1e-10);
+      assert.ok(Math.abs(Math.hypot(result.origin.x-p.x,result.origin.z-p.z)-Math.hypot(m.x,m.z))<1e-10);
+      if(m.role==='rear'){
+        const forward={x:-Math.sin(yaw),z:-Math.cos(yaw)};
+        assert.ok(result.direction.x*forward.x+result.direction.z*forward.z<-.999);
+        assert.ok((result.origin.x-p.x)*forward.x+(result.origin.z-p.z)*forward.z<0);
+        const shot={position:{...result.origin},direction:result.direction};
+        patterns.advanceShot(shot,3);
+        assert.ok(Math.abs(Math.hypot(shot.position.x-result.origin.x,shot.position.z-result.origin.z)-3)<1e-10);
+      }
+    }
+  }
+});
+
+test('plasma beam follows its muzzle, stops at first enemy and preserves total burst damage across frame rates',()=>{
+ for(const dt of [.01,.033,.2]){
+  const {store,enemies,hits,player}=storeHarness();player.x=0;player.y=0;player.z=0;
+  enemies[0].position={x:0,z:-4};enemies[1].position={x:0,z:-6};
+  const mount=patterns.weaponMounts()[0];const {origin,direction}=patterns.worldHardpoint(player,0,mount);
+  const beam=store.spawnProjectile('player',origin,direction,'p','player',1,0,100,[],{beam:true,beamMount:mount,beamAge:0,beamTick:0,beamDuration:.65});
+  store.update(dt);assert.ok(beam.beamLength<4);
+  store.checkCollisions();
+  for(let t=dt;t<.9;t+=dt)store.update(dt);
+  assert.equal(hits.reduce((n,h)=>n+h.n,0),100);
+  assert.ok(hits.every(h=>h.id==='a'));assert.equal(store.projectiles.value.length,0);
+ }
+});
+
+test('quantum echo waits before moving or hitting, then activates once',()=>{
+ const {store,hits}=storeHarness();
+ store.spawnProjectile('player',{x:-1,y:0,z:0},{x:1,z:0},'p','player',1,0,50,[],{echo:true,spawnDelay:.10});
+ store.update(.05);store.checkCollisions();assert.equal(hits.length,0);
+ store.update(.06);assert.equal(hits.length,0);
+ store.update(.1);assert.equal(hits.length,1);
 });

@@ -75,7 +75,7 @@ export function aggregateGearBonuses(items: OwnedEquipment[]): TalentBonuses {
 export type PlayerStats = ReturnType<typeof computePlayerStats>;
 
 export interface EquipmentEffects {
-  plasmaEvery: number; plasmaMultiplier: number; plasmaRadius: number;
+  weaponStyle: 'plasma' | 'ion'; plasmaEvery: number; plasmaMultiplier: number; plasmaRadius: number;
   ionExtraHits: number; ionBounces: number;
   dodgeAttackSpeedPercent: number; dodgeAttackSpeedDuration: number;
   nebulaOrbCount: number; nebulaOrbDamageMultiplier: number;
@@ -90,7 +90,7 @@ export interface EquipmentEffects {
 }
 
 export const emptyEquipmentEffects = (): EquipmentEffects => ({
-  plasmaEvery: 0, plasmaMultiplier: 1, plasmaRadius: 2.6,
+  weaponStyle: 'plasma', plasmaEvery: 0, plasmaMultiplier: 1, plasmaRadius: 2.6,
   ionExtraHits: 0, ionBounces: 0,
   dodgeAttackSpeedPercent: 0, dodgeAttackSpeedDuration: 0,
   nebulaOrbCount: 0, nebulaOrbDamageMultiplier: 0,
@@ -107,6 +107,7 @@ export const emptyEquipmentEffects = (): EquipmentEffects => ({
 /** Converte os effectIds equipados em parâmetros gerais. A versão mítica substitui a épica. */
 export function aggregateGearEffects(items: OwnedEquipment[]): EquipmentEffects {
   const effects = emptyEquipmentEffects();
+  effects.weaponStyle = items.some(item => item.defId === 'lanca-ionica') ? 'ion' : 'plasma';
   const active = new Set<string>();
   for (const item of items) for (const { ability, unlocked } of itemAbilities(item.defId, item.rarity)) {
     if (unlocked && ability.effectId) active.add(ability.effectId);

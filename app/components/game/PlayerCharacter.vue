@@ -135,7 +135,7 @@ onBeforeRender(({ delta }) => {
     name="PlayerCharacter"
     :visible="true"
   >
-    <GameKestrelShip /></TresGroup>
+    <GameKestrelShip gameplay /></TresGroup>
   <TresMesh
     ref="hpMeshRef"
     name="PlayerHPIndicator"
@@ -175,8 +175,3 @@ onBeforeRender(({ delta }) => {
     name="PlayerCamera"
   />
 </template>
-
-
-
-
-

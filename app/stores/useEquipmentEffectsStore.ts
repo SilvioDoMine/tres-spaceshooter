@@ -14,6 +14,10 @@ export const useEquipmentEffectsStore = defineStore('equipmentEffects', () => {
   const orbPositions = shallowRef<Point[]>([]);
   const trail = shallowRef<TrailPoint[]>([]);
   const flare = shallowRef<(Point & { ttl: number; maxTtl: number }) | null>(null);
+  const feedback = shallowRef<any[]>([]);
+  const regenerating = ref(false);
+  let feedbackSerial=0;
+  function signal(kind:string, from:Point, to?:Point) { feedback.value=[...feedback.value.slice(-23),{id:++feedbackSerial,kind,from:{...from},to:to?{...to}:null,ttl:.55}]; }
   const attackSpeedBuffTime = ref(0);
   const shieldCooldown = ref(0);
   let shotCounter = 0, orbitTime = 0, timeSinceDamage = 99, trailSerial = 0;
@@ -23,6 +27,7 @@ export const useEquipmentEffectsStore = defineStore('equipmentEffects', () => {
   const trailHitTimers = new Map<string, number>();
 
   function initialize(next: EquipmentEffects) {
+    feedback.value=[];regenerating.value=false;
     effects.value = { ...emptyEquipmentEffects(), ...next };
     shotCounter = 0; orbitTime = 0; timeSinceDamage = 99; trailSerial = 0;
     attackSpeedBuffTime.value = 0; shieldCooldown.value = 0;
@@ -55,6 +60,7 @@ export const useEquipmentEffectsStore = defineStore('equipmentEffects', () => {
   function blockIncoming(source: 'attack' | 'collision' | 'environment') {
     if (source === 'environment' || effects.value.aegisCooldown <= 0 || shieldCooldown.value > 0) return false;
     shieldCooldown.value = effects.value.aegisCooldown;
+    signal('shield',useCurrentRunStore().getPlayerPosition());
     return true;
   }
 
@@ -80,6 +86,8 @@ export const useEquipmentEffectsStore = defineStore('equipmentEffects', () => {
       emitImpact(player.x, player.z, false, 'hit');
     }
     if (source === 'attack' && attackerId && effects.value.prismReflectPercent > 0) {
+      const target=useEnemyManager().activeEnemies.value.find(e=>e.id===attackerId);
+      if(target)signal('reflect',run.getPlayerPosition(),target.position);
       useEnemyManager().takeDamage(attackerId, (previousHealth - currentHealth) * effects.value.prismReflectPercent / 100, 'reflect');
     }
   }
@@ -103,6 +111,8 @@ export const useEquipmentEffectsStore = defineStore('equipmentEffects', () => {
 
   function update(delta: number) {
     const run = useCurrentRunStore(), stats = usePlayerStats(), manager = useEnemyManager();
+    feedback.value=feedback.value.map(f=>({...f,ttl:f.ttl-delta})).filter(f=>f.ttl>0);
+    for(const enemy of manager.activeEnemies.value){const impulse=enemy.solarImpulse;if(impulse){const step=Math.min(delta,impulse.remaining)/.4;enemy.position.x+=impulse.x*step;enemy.position.z+=impulse.z*step;impulse.remaining-=delta;if(impulse.remaining<=0)enemy.solarImpulse=null;}}
     attackSpeedBuffTime.value = Math.max(0, attackSpeedBuffTime.value - delta);
     shieldCooldown.value = Math.max(0, shieldCooldown.value - delta);
     timeSinceDamage += delta; orbitTime += delta;
@@ -134,7 +144,7 @@ export const useEquipmentEffectsStore = defineStore('equipmentEffects', () => {
       const move = run.getMoveVector();
       const moving = Math.hypot(move.x, move.z) > .05;
       if (moving && (!lastTrailPosition || Math.hypot(player.x - lastTrailPosition.x, player.z - lastTrailPosition.z) >= .55)) {
-        const point = { id: ++trailSerial, x: player.x, z: player.z, ttl: 3.5, maxTtl: 3.5, width: effects.value.cometTrailWidth };
+        const point = { id: ++trailSerial, x: player.x+Math.sin(run.getPlayerRotation().y)*.65, z: player.z+Math.cos(run.getPlayerRotation().y)*.65, ttl: 3.5, maxTtl: 3.5, width: effects.value.cometTrailWidth };
         trail.value = [...trail.value.slice(-63), point];
         lastTrailPosition = { x: player.x, z: player.z };
       } else if (!moving) lastTrailPosition = null;
@@ -142,7 +152,7 @@ export const useEquipmentEffectsStore = defineStore('equipmentEffects', () => {
     trail.value = trail.value.map(point => ({ ...point, ttl: point.ttl - delta })).filter(point => point.ttl > 0);
     if (trail.value.length) for (const enemy of manager.activeEnemies.value) {
       if (enemy.state !== 'active' || trailHitTimers.has(enemy.id)) continue;
-      if (trail.value.some(point => Math.hypot(point.x - enemy.position.x, point.z - enemy.position.z) <= point.width + enemy.size * .35)) {
+      if (trail.value.some(point => Math.hypot(point.x - enemy.position.x, point.z - enemy.position.z) <= point.width * Math.max(0,point.ttl/point.maxTtl) + enemy.size * .35)) {
         manager.takeDamage(enemy.id, stats.damage * effects.value.cometTrailDamageMultiplier, 'equipment');
         trailHitTimers.set(enemy.id, .5);
       }
@@ -158,7 +168,7 @@ export const useEquipmentEffectsStore = defineStore('equipmentEffects', () => {
   }
 
   return {
-    effects, orbPositions, trail, flare, attackSpeedBuffTime, shieldCooldown,
+    feedback, regenerating, effects, orbPositions, trail, flare, attackSpeedBuffTime, shieldCooldown,
     initialize, cleanup, update, prepareVolley, onDodge, effectiveShotCooldown,
     blockIncoming, onPlayerDamaged, criticalBonusFor, damageMultiplierFor, enemyTimeScale,
   };

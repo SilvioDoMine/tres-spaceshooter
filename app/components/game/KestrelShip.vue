@@ -4,6 +4,7 @@ import { useLoop } from '@tresjs/core'
 import { Group, Mesh, MeshStandardMaterial } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
+const props = defineProps<{ gameplay?: boolean }>()
 const emit = defineEmits<{ loaded: [] }>()
 
 const model = shallowRef(new Group())
@@ -41,6 +42,4 @@ function dispose(group: Group) {
 onUnmounted(() => { disposed = true; dispose(model.value) })
 </script>
 
-<template><TresGroup><primitive :object="model" /><GameEnginePlumes v-if="settings.thrusters" /></TresGroup></template>
-
-
+<template><TresGroup><primitive :object="model" /><GameShipEquipment :gameplay="props.gameplay" /><GameEnginePlumes v-if="settings.thrusters" /></TresGroup></template>

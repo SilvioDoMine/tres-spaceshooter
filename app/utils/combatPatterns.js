@@ -16,6 +16,36 @@ export function muzzlePosition(position, direction, side, forward = .9) {
     y: position.y || 0, z: position.z + direction.z * forward + direction.x * side };
 }
 
+// Shared physical hardpoints: rendering and combat consume the same coordinates.
+export function weaponMounts(multi = 0, rear = 0, diagonal = 0) {
+  const mounts = [];
+  const add = (role, angle, count) => {
+    const heading = rotateShot({ x: 0, z: -1 }, angle);
+    shotFormation(count).forEach((slot, index) => {
+      const point = muzzlePosition({ x: 0, y: 0, z: 0 }, heading,
+        role === 'rear' ? slot.side * .32 : slot.side * .48,
+        role === 'rear' ? .76 : .63 - Math.abs(slot.side)*.12);
+      mounts.push({ id: `${role}:${angle}:${index}`, role, index, count,
+        x: point.x, y: role === 'rear' ? .19 : role === 'front' && Math.abs(slot.side)<.05 ? -.145 : -.11, z: role === 'front' && Math.abs(slot.side)<.05 ? -1.04 : point.z, dx: heading.x, dz: heading.z });
+    });
+  };
+  add('front', 0, 1 + multi);
+  if (rear) add('rear', Math.PI, rear);
+  if(diagonal) for(const side of [-1,1]) {
+    const heading=rotateShot({x:0,z:-1},side*Math.PI/4);
+    mounts.push({id:'diagonal:'+side,role:'diagonal',index:0,count:1,
+      x:side*.70,y:.065,z:.12,dx:heading.x,dz:heading.z});
+  }
+  return mounts;
+}
+
+export function worldHardpoint(position, yaw, mount) {
+  const c = Math.cos(yaw), s = Math.sin(yaw);
+  return { origin: { x: position.x + c * mount.x + s * mount.z,
+    y: position.y + mount.y, z: position.z - s * mount.x + c * mount.z },
+    direction: { x: c * mount.dx + s * mount.dz, z: -s * mount.dx + c * mount.dz } };
+}
+
 // A return loop rejoins its launch lane behind the ship; never tracks a target.
 export function advanceShot(projectile, distance) {
   if (projectile.rearTurn && projectile.rearTurn.traveled < (Math.PI + 3) * projectile.rearTurn.radius) {

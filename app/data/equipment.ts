@@ -71,9 +71,9 @@ export const EQUIPMENT_ITEMS: EquipmentDefinition[] = [
     abilities: [
       { unlock: 'green', stat: 'critRatePercent', value: 3 },
       { unlock: 'blue', stat: 'attackSpeedPercent', value: 5 },
-      { unlock: 'purple', effectId: 'plasma-burst', text: 'A cada 5 disparos, o próximo causa 150% de dano em área.' },
+      { unlock: 'purple', effectId: 'plasma-burst', text: 'A cada 5 disparos, emite um feixe de plasma por 0,65s, causando 150% de dano total.' },
       { unlock: 'orange', stat: 'damagePercent', value: 10 },
-      { unlock: 'red', effectId: 'plasma-burst-plus', text: 'Rajada de plasma a cada 3 disparos, com 200% de dano.' },
+      { unlock: 'red', effectId: 'plasma-burst-plus', text: 'Feixe de plasma a cada 3 disparos, por 0,65s, com 200% de dano total.' },
     ],
   },
   {
