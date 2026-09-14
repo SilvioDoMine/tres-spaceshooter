@@ -55,10 +55,11 @@ test('all progression tiers keep attacks bounded and leave ring gaps',()=>{
 function storeHarness(){
  const enemies=[{id:'a',state:'active',position:{x:0,z:0},size:1},
  {id:'b',state:'active',position:{x:3,z:0},size:1}];
- const damage=[],hits=[];
+ const damage=[],hits=[],flashes=[],sounds=[];
  const player={x:100,z:100};
  const context=vm.createContext({...patterns,Math,console,
-  defineStore:(_id,setup)=>setup, shallowRef:value=>({value}),emitImpact:()=>{},useAudio:()=>({playSound:()=>{}}),
+  defineStore:(_id,setup)=>setup, shallowRef:value=>({value}),emitImpact:()=>{},useAudio:()=>({playSound:name=>sounds.push(name)}),
+  emitMuzzleFlash:id=>flashes.push(id),
   PlayerBaseStats:{projectiles:{shotSpeed:19,damage:50,size:.2,range:11}},
   baseStats:{},SkillsList:{ricochet_shot:{levels:{1:{value:.5}}}},
   useEnemyManager:()=>({activeEnemies:{value:enemies},takeDamage:(id,n)=>hits.push({id,n})}),
@@ -69,8 +70,21 @@ function storeHarness(){
  const source=readFileSync(new URL('../app/stores/projectileStore.js',import.meta.url),'utf8')
   .replace(/^import .*$/gm,'').replaceAll('export ','').replace(/^if\(import.meta.hot\).*$/gm,'');
  vm.runInContext(source+'\nglobalThis.store=useProjectileStore();',context);
- return {store:context.store,enemies,damage,hits,player};
+ return {store:context.store,enemies,damage,hits,player,flashes,sounds};
 }
+test('multishot repeat waits its interval, then flashes its muzzle and sounds once',()=>{
+ const {store,hits,flashes,sounds}=storeHarness();
+ store.spawnProjectile('player',{x:-1,y:0,z:0},{x:1,z:0},'p','player',1,0,50,[],
+  {silent:true,spawnDelay:patterns.MULTISHOT_INTERVAL,muzzleId:'front:0:0',releaseSound:true});
+ store.spawnProjectile('player',{x:-1,y:0,z:.1},{x:1,z:0},'p','player',1,0,50,[],
+  {silent:true,spawnDelay:patterns.MULTISHOT_INTERVAL,muzzleId:'rear:3.14:0',releaseSound:false});
+ store.update(patterns.MULTISHOT_INTERVAL/2);store.checkCollisions();
+ assert.equal(hits.length,0);assert.equal(flashes.length,0);assert.equal(sounds.length,0);
+ store.update(patterns.MULTISHOT_INTERVAL);
+ assert.deepEqual(flashes,['front:0:0','rear:3.14:0']);assert.equal(sounds.length,1);
+ store.update(.1);assert.ok(hits.length>0);
+ store.update(.1);assert.equal(flashes.length,2);assert.equal(sounds.length,1);
+});
 test('ricochet continues once, keeps trail and never hits previous target again',()=>{
  const {store,hits}=storeHarness();
  store.spawnProjectile('player',{x:-1,z:0},{x:1,z:0},'p','player',1,1,50);
@@ -116,19 +130,18 @@ test('enemy shots wait for telegraph, honor visibility and global projectile bud
 
 // Physical muzzle geometry and projectile transforms must agree at every heading.
 test('physical hardpoints match front, diagonal and straight rear fire',()=>{
-  for(const multi of [0,1,2,3,4])for(const rear of [0,1,2])for(const diagonal of [0,1,2]){
-    const mounts=patterns.weaponMounts(multi,rear,diagonal);
-    assert.equal(mounts.filter(m=>m.role==='front').length,1+multi);
-    const rearMounts=mounts.filter(m=>m.role==='rear');
-    assert.equal(rearMounts.length,rear?rear+multi:0);
-    assert.equal(rearMounts.filter(m=>!m.bonus).length,rear);
-    assert.equal(mounts.filter(m=>m.role==='diagonal').length,diagonal?2*(1+multi):0);
-    for(const side of diagonal?[-1,1]:[]){
-      const group=mounts.filter(m=>m.role==='diagonal'&&Math.sign(m.dx)===side);
-      assert.equal(group.length,1+multi);
-      assert.ok(Math.abs(group.reduce((n,m)=>n+m.x,0)/group.length-side*.70)<1e-10);
-      assert.ok(Math.abs(group.reduce((n,m)=>n+m.z,0)/group.length-.12)<1e-10);
-      assert.ok(group.every(m=>m.dx===group[0].dx&&m.dz===group[0].dz));
+  for(const front of [0,1,2])for(const rear of [0,1,2])for(const diagonal of [0,1,2]){
+    const mounts=patterns.weaponMounts(front,rear,diagonal);
+    assert.equal(mounts.filter(m=>m.role==='front').length,1+front);
+    assert.equal(mounts.filter(m=>m.role==='rear').length,rear);
+    const side=mounts.filter(m=>m.role==='diagonal');
+    assert.equal(side.length,diagonal===0?0:diagonal===1?2:4);
+    // Laterais nunca ficam lado a lado: cada canhão tem um ângulo próprio
+    assert.equal(new Set(side.map(m=>`${m.dx.toFixed(6)},${m.dz.toFixed(6)}`)).size,side.length);
+    for(const m of side){
+      const degrees=Math.round(Math.abs(Math.atan2(m.dx,-m.dz))*180/Math.PI);
+      assert.ok(degrees===45||(diagonal>=2&&degrees===90));
+      assert.equal(Math.abs(m.x),.70);
     }
     for(const m of mounts)for(const yaw of [0,.7,Math.PI,-1.2]){
       const p={x:12,y:0,z:-8};const result=patterns.worldHardpoint(p,yaw,m);

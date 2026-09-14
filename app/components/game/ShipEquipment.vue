@@ -33,7 +33,7 @@ function rebuild() {
   const ion = gear.equippedItem('weapon')?.defId === 'lanca-ionica';
   energy.color.set(ion?'#dab2ff':'#72e7ff'); energy.emissive.set(ion?'#984dff':'#16bafa');
   haloMaterial.color.set(ion?'#aa65ff':'#38baff');
-  const layout = weaponMounts(props.gameplay?skills.getSkillLevel('multishot')||0:0,
+  const layout = weaponMounts(props.gameplay?skills.getSkillLevel('front_shot')||0:0,
     props.gameplay?skills.getSkillLevel('back_shot')||0:0,
     props.gameplay?skills.getSkillLevel('diagonal_shot')||0:0);
   layout.forEach(mount => {
@@ -122,7 +122,7 @@ function rebuild() {
   }
 }
 watch(() => [props.gameplay, ...gear.equippedItems.map(i=>`${i.defId}:${i.rarity}`),
-  props.gameplay?skills.getSkillLevel('multishot'):0,props.gameplay?skills.getSkillLevel('back_shot'):0,
+  props.gameplay?skills.getSkillLevel('front_shot'):0,props.gameplay?skills.getSkillLevel('back_shot'):0,
   props.gameplay?skills.getSkillLevel('diagonal_shot'):0],rebuild,{immediate:true});
 const unsubscribe=subscribeMuzzleFlashes(({id,burst})=>{
   if(!props.gameplay)return;

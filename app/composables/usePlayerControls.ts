@@ -12,7 +12,7 @@
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { useProjectileStore } from '~/stores/projectileStore';
 import { onMounted, onUnmounted, watch } from 'vue';
-import { weaponMounts, worldHardpoint } from '~/utils/combatPatterns';
+import { weaponMounts, worldHardpoint, MULTISHOT_INTERVAL } from '~/utils/combatPatterns';
 import { emitMuzzleFlash } from '~/utils/weaponVisuals';
 import { useEquipmentEffectsStore } from '~/stores/useEquipmentEffectsStore';
 
@@ -215,29 +215,36 @@ export function usePlayerControls() {
             const hits = (piercing ? SkillsList.piercing_shot.levels[piercing].value : 1) + volley.extraHits;
             const bounces = (skills.getSkillLevel('ricochet_shot') || 0) + volley.extraBounces;
             const power = usePlayerStats().getDamageMultiplier;
+            const front = skills.getSkillLevel('front_shot') || 0;
             const rear = skills.getSkillLevel('back_shot') || 0;
             const diagonal = skills.getSkillLevel('diagonal_shot') || 0;
-            const mounts = weaponMounts(multi, rear, diagonal);
-            mounts.forEach((mount, shotIndex) => {
-              const { origin, direction: heading } = worldHardpoint(position, rotation.y, mount);
-              const center = mount.index === Math.floor(mount.count / 2);
-              const extra = mount.role === 'rear' ? mount.bonus : !center;
-              const efficiency = !multi || !extra ? 1 : SkillsList.multishot.levels[multi].value;
-              const factor = mount.role === 'rear' ? SkillsList.back_shot.levels[rear].value
-                : mount.role === 'diagonal' ? SkillsList.diagonal_shot.levels[diagonal].value : 1;
-              const special = mount.role === 'front' && center;
-              const burstMultiplier = special ? volley.damageMultiplier : 1;
-              projectileStore.spawnProjectile('player', origin, heading, 'player', 'player',
-                hits, bounces, damage * factor * efficiency * burstMultiplier, [], {
-                  power: power * burstMultiplier, silent: shotIndex > 0, ion: equipmentEffects.effects.weaponStyle === 'ion',
-                  burst: special && volley.burst, beam: special && volley.burst, beamMount: mount, beamAge: 0, beamTick: 0, beamDuration: .65, aoeRadius: 0,
-                });
-              emitMuzzleFlash(mount.id, special && volley.burst);
-              if (special && volley.echo) {
+            const mounts = weaponMounts(front, rear, diagonal);
+            // Multishot: a rajada inteira sai de novo, um tiro atrás do outro em cada arma
+            for (let round = 0; round <= multi; round++) {
+              const repeat = round > 0;
+              const repeatFactor = repeat ? SkillsList.multishot.levels[multi].value : 1;
+              mounts.forEach((mount, shotIndex) => {
+                const { origin, direction: heading } = worldHardpoint(position, rotation.y, mount);
+                const center = mount.index === Math.floor(mount.count / 2);
+                const efficiency = mount.role === 'front' && front && !center ? SkillsList.front_shot.levels[front].value : 1;
+                const factor = mount.role === 'rear' ? SkillsList.back_shot.levels[rear].value
+                  : mount.role === 'diagonal' ? SkillsList.diagonal_shot.levels[diagonal].value : 1;
+                // Disparo carregado e eco pertencem só à primeira rajada
+                const special = !repeat && mount.role === 'front' && center;
+                const burstMultiplier = special ? volley.damageMultiplier : 1;
                 projectileStore.spawnProjectile('player', origin, heading, 'player', 'player',
-                  hits, bounces, damage, [], { power, silent: true, echo: true, spawnDelay: .10, canCrit: volley.echoCanCrit });
-              }
-            });
+                  hits, bounces, damage * factor * efficiency * burstMultiplier * repeatFactor, [], {
+                    power: power * burstMultiplier, silent: repeat || shotIndex > 0, ion: equipmentEffects.effects.weaponStyle === 'ion',
+                    burst: special && volley.burst, beam: special && volley.burst, beamMount: mount, beamAge: 0, beamTick: 0, beamDuration: .65, aoeRadius: 0,
+                    spawnDelay: round * MULTISHOT_INTERVAL, muzzleId: repeat ? mount.id : null, releaseSound: repeat && shotIndex === 0,
+                  });
+                if (!repeat) emitMuzzleFlash(mount.id, special && volley.burst);
+                if (special && volley.echo) {
+                  projectileStore.spawnProjectile('player', origin, heading, 'player', 'player',
+                    hits, bounces, damage, [], { power, silent: true, echo: true, spawnDelay: .10, canCrit: volley.echoCanCrit });
+                }
+              });
+            }
             // Reseta o cooldown do tiro
             currentRun.shotCooldown = equipmentEffects.effectiveShotCooldown(currentRun.shotCooldownTotal);
           }

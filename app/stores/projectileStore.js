@@ -1,4 +1,5 @@
 import { emitImpact } from '~/utils/combatEffects';
+import { emitMuzzleFlash } from '~/utils/weaponVisuals';
 import { defineStore } from 'pinia';
 import { shallowRef } from 'vue';
 import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
@@ -117,7 +118,15 @@ export const useProjectileStore = defineStore('projectileStore', () => {
     const keep=[];
     for(const projectile of projectiles.value) {
       if(projectile._markedForRemoval)continue;
-      if(projectile.spawnDelay>0){projectile.spawnDelay-=deltaTime;keep.push(projectile);continue;}
+      if(projectile.spawnDelay>0){
+        projectile.spawnDelay-=deltaTime;
+        // Repetições do multishot: clarão e som só quando o tiro realmente sai
+        if(projectile.spawnDelay<=0&&projectile.muzzleId){
+          emitMuzzleFlash(projectile.muzzleId,false);
+          if(projectile.releaseSound)useAudio().playSound('shoot-player',.65,1);
+        }
+        keep.push(projectile);continue;
+      }
       if(projectile.beam) {
         const {origin,direction}=worldHardpoint(currentRunStore.getPlayerPosition(),currentRunStore.getPlayerRotation().y,projectile.beamMount);
         projectile.position=origin;projectile.direction=direction;

@@ -96,12 +96,12 @@ export const SkillsList ={
   diagonal_shot: {
     id: 'diagonal_shot',
     name: 'Tiros Diagonais',
-    description: 'Dispara um projétil de cada lado, a 45°. O segundo nível aumenta o dano, sem adicionar canhões.',
+    description: 'Adiciona tiros diagonais e laterais com 50% do dano.',
     icon: '➗',
     rarity: 'rare',
     levels: {
-      1: { value: 0.5, description: 'Dispara +2 projéteis diagonais.' },
-      2: { value: 0.65, description: 'Mantém 2 tiros diagonais e aumenta o dano de cada um para 65%.' },
+      1: { value: 0.5, description: 'Dispara +2 projéteis diagonais (45°).' },
+      2: { value: 0.5, description: 'Dispara também +2 projéteis laterais (90°).' },
     },
   },
   back_shot: {
@@ -142,19 +142,32 @@ export const SkillsList ={
       5: { value: 25 / 11, description: 'Alcance total: 25' },
     },
   },
+  front_shot: {
+    id: 'front_shot',
+    name: 'Tiro Frontal',
+    description: 'Dispara projéteis frontais lado a lado; os adicionais causam 40% do dano.',
+    icon: '⏫',
+    rarity: 'epic',
+    levels: {
+      1: { value: 0.4, description: 'Dispara 2 projéteis frontais.' },
+      2: { value: 0.4, description: 'Dispara 3 projéteis frontais.' },
+    },
+  },
   multishot: {
     id: 'multishot',
     name: 'Tiros Múltiplos',
-    description: 'Dispara projéteis paralelos em formação; os adicionais causam 40% do dano.',
+    description: 'Repete a rajada de todas as armas logo em seguida; as repetições causam 40% do dano.',
     icon: '🔫',
-    rarity: 'epic',
+    rarity: 'legendary',
     levels: {
-      1: { value: 0.4, description: 'Dispara 2 projéteis.' },
-      2: { value: 0.4, description: 'Dispara 3 projéteis.' },
+      1: { value: 0.4, description: 'Cada arma dispara 2 vezes.' },
+      2: { value: 0.4, description: 'Cada arma dispara 3 vezes.' },
     },
   },
   short_range_shot: {
     id: 'short_range_shot',
+    // Ainda não implementada: fica fora do sorteio até o efeito existir
+    disabled: true,
     name: 'Tiro de Curta Distância',
     description: 'Reduz seu alcance para corpo a corpo, mas aumenta muito o dano e a velocidade do projétil.',
     icon: '📌',
@@ -228,14 +241,14 @@ export const useSkillStore = defineStore('SkillStore', () => {
      * @returns {Array} - Array de skills selecionadas.
      */
     function skillSelectRandom(qty = 3, sameRarity = true, rarity = null) {
-        const allSkills = Object.values(SkillsList);
+        const allSkills = Object.values(SkillsList).filter(skill => !skill.disabled);
         let selectedSkills = [];
         let rarities = [
           'common',
           'uncommon',
           'rare',
           'epic',
-          // 'legendary'
+          'legendary'
         ];
 
         let rarityChances = {
