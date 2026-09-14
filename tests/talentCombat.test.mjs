@@ -141,10 +141,14 @@ test('collision hits hard, grants a collision-only grace of 1.5 s and knocks the
   assert.equal(run.currentHealth, 300, 'another 800 would kill this ship');
 });
 
-test('dodge affects attacks only; collision applies flat then percent and clamps at zero', () => {
+test('dodge affects attacks and collisions, never the environment; collision applies flat then percent and clamps at zero', () => {
   const stats = attrs({ dodgePercent: 100, collisionReductionFlat: 15, collisionReductionPercent: 10 });
   assert.deepEqual(incomingHit(100, 'attack', stats, () => 0), { damage: 0, dodged: true });
-  assert.deepEqual(incomingHit(100, 'collision', stats, () => 0), { damage: 76.5, dodged: false });
+  assert.deepEqual(incomingHit(100, 'collision', stats, () => 0), { damage: 0, dodged: true });
+  assert.deepEqual(incomingHit(100, 'collision', stats, () => .99), { damage: 0, dodged: true });
+  assert.equal(incomingHit(100, 'environment', stats, () => 0).dodged, false);
+  const noDodge = attrs({ collisionReductionFlat: 15, collisionReductionPercent: 10 });
+  assert.deepEqual(incomingHit(100, 'collision', noDodge, () => 0), { damage: 76.5, dodged: false });
   assert.equal(incomingHit(10, 'collision', stats).damage, 0);
   assert.equal(incomingHit(100, 'environment', stats).damage, 100);
 });
@@ -270,11 +274,12 @@ test('actual run heals on level-up, accumulates fractional gold, and distinguish
   assert.equal(run.currentHealth, 300);
   assert.equal(messages.at(-1)[1], 'dodge');
   run.takeDamage(100, 'collision');
-  assert.equal(run.currentHealth, 223.5);
-  run.takeDamage(10, 'environment');
-  assert.equal(run.currentHealth, 213.5);
+  assert.equal(run.currentHealth, 300, 'dodge also avoids collisions');
+  assert.equal(messages.at(-1)[1], 'dodge');
+  run.takeDamage(100, 'environment');
+  assert.equal(run.currentHealth, 200);
   run.addExp(100);
-  assert.equal(run.currentHealth, 243.5);
+  assert.equal(run.currentHealth, 230);
   for (let i = 0; i < 5; i++) run.addGold(1);
   assert.equal(run.currentGold, 6);
 });

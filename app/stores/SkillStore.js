@@ -194,7 +194,7 @@ export const SkillsList ={
   evasive_maneuver: {
     id: 'evasive_maneuver',
     name: 'Manobra Evasiva',
-    description: 'Aumenta a chance de desviar de projéteis inimigos.',
+    description: 'Aumenta a chance de desviar de projéteis e colisões inimigas.',
     icon: '💨',
     rarity: 'rare',
     levels: {

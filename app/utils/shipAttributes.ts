@@ -60,7 +60,8 @@ export function outgoingHit(damage: number, stats: CombatAttributes, rng = Math.
 }
 
 export function incomingHit(damage: number, source: DamageSource, stats: CombatAttributes, rng = Math.random) {
-  const dodged = source === 'attack' && damage > 0 && rng() < stats.dodgeChance;
+  // Esquiva vale para tiros e colisões; dano de ambiente (queimadura, gelo, dilatação) nunca é esquivado
+  const dodged = source !== 'environment' && damage > 0 && rng() < stats.dodgeChance;
   const reduced = source === 'collision'
     ? Math.max(0, damage - stats.collisionReductionFlat) * (1 - stats.collisionReductionFraction)
     : damage;
