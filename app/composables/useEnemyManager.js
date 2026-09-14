@@ -7,7 +7,7 @@ import { enemyCategory, enemyContactDamage, normalAsteroidFragmentStats, scaledE
 import { playableRoomCount } from '~/utils/progression';
 import { headshotKills, outgoingHit, siphonHeal } from '~/utils/shipAttributes';
 import { useHeartStore } from '~/stores/useHeartStore';
-import { useCoinStore } from '~/stores/useCoinStore';
+import { useLootStore } from '~/stores/useLootStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import { useEquipmentEffectsStore } from '~/stores/useEquipmentEffectsStore';
 import { applyElementalHit, elementChainTargets, elementStateOf, emitElementalFx, ELEMENT_RULES, thawElementState, tickElementState } from '~/utils/elementalStatus';
@@ -729,13 +729,14 @@ export function useEnemyManager() {
         const minGold = enemy.drops?.gold?.min || 0;
         const maxGold = enemy.drops?.gold?.max || 0;
         const goldDropped = Math.floor(Math.random() * (maxGold - minGold + 1)) + minGold;
-        useCoinStore().drop(enemy.position, goldDropped);
+        useLootStore().dropGold(enemy.position, goldDropped);
         useHeartStore().tryDrop(enemy.position);
 
         const expDropped = enemy.fixedXP
           ? (enemy.baseXP || 0)
           : scaledEnemyExperience(enemy.baseXP || 0, enemy.room);
-        useCurrentRun.addExp(Math.round(expDropped * usePlayerStats().experienceMultiplier));
+        // A EXP também cai no chão, em pedrinhas, e só entra quando elas chegam na nave
+        useLootStore().dropExp(enemy.position, Math.round(expDropped * usePlayerStats().experienceMultiplier));
 
         // Sifão: chance, por abate, de curar 5% da vida máxima
         const siphon = siphonHeal(usePlayerStats().siphonChance, useCurrentRun.maxHealth);

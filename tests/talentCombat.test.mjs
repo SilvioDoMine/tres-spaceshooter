@@ -266,7 +266,7 @@ function runHarness(overrides = {}) {
     useCombatTextStore: () => ({ emitForTarget: (...args) => messages.push(args) }),
     useModal: () => ({ open() {}, close() {} }),
     useLevelAccount: () => ({}),
-    useAudio: () => ({ playSound() {}, playHeartSound() {}, playCoinSound: kind => sounds.push(kind), startBackgroundMusicAbafado() {}, stopBackgroundMusicAbafado() {} }),
+    useAudio: () => ({ playSound() {}, playHeartSound() {}, playLootSound: kind => sounds.push(kind), startBackgroundMusicAbafado() {}, stopBackgroundMusicAbafado() {} }),
     useSpatialDilation: () => ({ reset() {} }),
     emitImpact() {},
   });
@@ -280,52 +280,102 @@ function runHarness(overrides = {}) {
   load('stores/SkillStore.js', ['useSkillStore', 'SkillsList']);
   load('stores/playerStats.ts', ['usePlayerStats']);
   load('stores/useHeartStore.ts', ['useHeartStore']);
-  load('stores/useCoinStore.ts', ['useCoinStore']);
+  load('stores/useLootStore.ts', ['useLootStore', 'splitExp', 'EXP_FLIES_ON_DROP']);
   load('stores/currentRunStore.ts', ['useCurrentRunStore', 'PlayerBaseStats']);
   const stage = { type: 'intro', width: 30, height: 30, door: {}, playerStartPosition: { x: 0, y: 0, z: 0 } };
   const config = { stages: [stage] };
   const run = context.useCurrentRunStore();
   run.gameStart(config);
   return { context, run, stats: context.usePlayerStats(), skills: context.useSkillStore(),
-    hearts: context.useHeartStore(), coins: context.useCoinStore(), config, messages, sounds, permanent };
+    hearts: context.useHeartStore(), loot: context.useLootStore(), config, messages, sounds, permanent };
 }
 
 test('coins stay on the floor even under the ship and only fly in once the room is cleared', () => {
-  const { run, coins, sounds } = runHarness();
+  const { run, loot, sounds } = runHarness();
   run.isStageCompleted = false;
-  coins.drop({ x: 0, z: 0 }, 7, () => 0);
-  coins.drop({ x: 5, z: 0 }, 3, () => 0);
-  coins.drop({ x: 1, z: 1 }, 0, () => 0);
-  assert.equal(coins.coins.length, 2, 'enemies without gold drop no coin');
-  for (let i = 0; i < 20; i++) coins.update(.1);
-  assert.equal(coins.coins.length, 2, 'touching a coin does not collect it');
+  loot.dropGold({ x: 0, z: 0 }, 7, () => 0);
+  loot.dropGold({ x: 5, z: 0 }, 3, () => 0);
+  loot.dropGold({ x: 1, z: 1 }, 0, () => 0);
+  assert.equal(loot.loot.length, 2, 'enemies without gold drop no coin');
+  for (let i = 0; i < 20; i++) loot.update(.1);
+  assert.equal(loot.loot.length, 2, 'touching a coin does not collect it');
   assert.equal(run.currentGold, 0);
   assert.equal(sounds.length, 0);
 
   run.gameState = 'paused';
   run.isStageCompleted = true;
-  coins.update(1);
-  assert.equal(coins.coins[0].delay, -1, 'paused game does not start the magnet');
+  loot.update(1);
+  assert.equal(loot.loot[0].delay, -1, 'paused game does not start the magnet');
 
   run.gameState = 'playing';
-  coins.update(.01);
-  assert.deepEqual(sounds, ['magnet']);
-  assert.ok(coins.coins.find(c => c.gold === 7).flight > 0, 'nearest coin flies first');
-  assert.equal(coins.coins.find(c => c.gold === 3).flight, -1, 'farther coin waits its turn');
-  for (let i = 0; i < 20; i++) coins.update(.1);
-  assert.equal(coins.coins.length, 0);
+  loot.update(.01);
+  assert.equal(sounds.join(), 'magnet');
+  assert.ok(loot.loot.find(c => c.value === 7).flight > 0, 'nearest coin flies first');
+  assert.equal(loot.loot.find(c => c.value === 3).flight, -1, 'farther coin waits its turn');
+  for (let i = 0; i < 20; i++) loot.update(.1);
+  assert.equal(loot.loot.length, 0);
   assert.equal(run.currentGold, 10, 'gold is credited when the coins reach the ship');
-  assert.equal(sounds.filter(s => s === 'collect').length, 2);
-  assert.equal(coins.consumeBursts().length, 2);
+  assert.equal(sounds.filter(s => s === 'coin').length, 2);
+  assert.equal(loot.consumeBursts().length, 2);
 });
 
-test('uncollected coin gold is kept when changing rooms', () => {
-  const { run, coins, config } = runHarness();
+test('EXP splits into gems that keep the total, turn special when large and stay capped per kill', () => {
+  const { context } = runHarness();
+  const sum = gems => gems.reduce((total, gem) => total + gem.value, 0);
+  assert.equal(context.splitExp(0).length, 0);
+  assert.equal(context.splitExp(22).map(gem => gem.tier).join(), '0,0,0');
+  assert.equal(sum(context.splitExp(22)), 22);
+  const boss = context.splitExp(950);
+  assert.equal(sum(boss), 950);
+  assert.equal(boss.filter(gem => gem.tier === 1).length, 9);
+  const huge = context.splitExp(100000);
+  assert.ok(huge.length <= 12);
+  assert.equal(sum(huge), 100000);
+});
+
+test('EXP gems wait on the floor, fly in after the room is cleared and grant in-run EXP on arrival', () => {
+  const { run, loot, sounds, context } = runHarness();
+  assert.equal(context.EXP_FLIES_ON_DROP, false, 'EXP only flies at the end of the room for now');
   run.isStageCompleted = false;
-  coins.drop({ x: 0, z: 0 }, 4, () => 0);
+  loot.dropExp({ x: 0, z: 0 }, 45, () => 0);
+  assert.equal(loot.loot.length, 5);
+  for (let i = 0; i < 20; i++) loot.update(.1);
+  assert.equal(run.currentExp, 0, 'killing does not grant EXP directly');
+  run.isStageCompleted = true;
+  for (let i = 0; i < 30; i++) loot.update(.1);
+  assert.equal(loot.loot.length, 0);
+  assert.equal(run.currentExp, 45);
+  assert.equal(sounds.filter(s => s === 'exp').length, 5);
+});
+
+test('leaving the room while loot is flying still grants it exactly once', () => {
+  const { run, loot, config } = runHarness();
+  run.isStageCompleted = false;
+  loot.dropGold({ x: 0, z: 0 }, 5, () => 0);
+  loot.dropExp({ x: 8, z: 0 }, 40, () => 0);
+  loot.update(.5);
+  run.isStageCompleted = true;
+  loot.update(.2);
+  assert.ok(loot.loot.some(item => item.flight > 0), 'some loot is mid-flight');
+  assert.ok(loot.loot.length > 0, 'nothing has arrived yet');
   run.loadStage(config.stages[0]);
-  assert.equal(coins.coins.length, 0);
+  assert.equal(loot.loot.length, 0);
+  assert.equal(run.currentGold, 5);
+  assert.equal(run.currentExp, 40);
+  for (let i = 0; i < 20; i++) loot.update(.1);
+  assert.equal(run.currentGold, 5, 'no double credit after the room change');
+  assert.equal(run.currentExp, 40);
+});
+
+test('uncollected loot is kept when changing rooms', () => {
+  const { run, loot, config } = runHarness();
+  run.isStageCompleted = false;
+  loot.dropGold({ x: 0, z: 0 }, 4, () => 0);
+  loot.dropExp({ x: 0, z: 0 }, 30, () => 0);
+  run.loadStage(config.stages[0]);
+  assert.equal(loot.loot.length, 0);
   assert.equal(run.currentGold, 4);
+  assert.equal(run.currentExp, 30);
 });
 
 test('run starts with permanent attributes, initial choice and extra reroll; upgrades and rooms retain them', () => {

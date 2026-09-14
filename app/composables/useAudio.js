@@ -1,7 +1,7 @@
 import { createSpatialAudio } from '~/utils/spatialAudio';
 import { playUiSynth } from '~/utils/uiSynth';
 import { playHeartSynth } from '~/utils/heartSynth';
-import { playCoinSynth } from '~/utils/coinSynth';
+import { playLootSynth } from '~/utils/lootSynth';
 
 // Efeitos da partida: nome usado no playSound -> arquivo. Registrados já na tela de
 // loading, para tocarem desde o primeiro frame (ex.: levelup da seleção inicial de talentos).
@@ -82,7 +82,7 @@ const decodedByUrl = new Map();
 const musicObjectUrls = new Map();
 const isInitialized = ref(false);
 const lastHeartSound = {};
-const coinSound = { last: {}, step: 0 };
+const lootSound = { last: {}, step: {} };
 
 export function useAudio() {
     let spatialAudio = null;
@@ -228,16 +228,19 @@ export function useAudio() {
         playHeartSynth(audioContext, kind, getGeneralVolume() * getEffectsVolume(), duration);
     }
 
-    // Som sintetizado das moedas: 'magnet' quando começam a voar, 'collect' ao entrar na nave
-    function playCoinSound(kind) {
+    // Som sintetizado do espólio: 'magnet' quando começa a voar; 'coin', 'exp' ou 'exp-big' ao entrar na nave
+    function playLootSound(kind) {
         if (!audioContext || audioContext.state !== 'running') return;
         const now = audioContext.currentTime;
-        const last = coinSound.last[kind] ?? -1;
+        const last = lootSound.last[kind] ?? -1;
         if (now - last < 0.035) return;
-        // Moedas em sequência sobem o tom; depois de uma pausa volta para a nota base
-        if (kind === 'collect') coinSound.step = now - last < 0.3 ? Math.min(coinSound.step + 1, 14) : 0;
-        coinSound.last[kind] = now;
-        playCoinSynth(audioContext, kind, getGeneralVolume() * getEffectsVolume(), coinSound.step);
+        // Peças do mesmo tipo em sequência sobem o tom; depois de uma pausa volta para a nota base
+        const group = kind.startsWith('exp') ? 'exp' : kind;
+        const lastInGroup = Math.max(lootSound.last.exp ?? -1, lootSound.last['exp-big'] ?? -1);
+        const previous = group === 'exp' ? lastInGroup : last;
+        lootSound.step[group] = now - previous < 0.3 ? Math.min((lootSound.step[group] ?? 0) + 1, 14) : 0;
+        lootSound.last[kind] = now;
+        playLootSynth(audioContext, kind, getGeneralVolume() * getEffectsVolume(), lootSound.step[group]);
     }
 
     // Som sintetizado de microinteração da UI (tap, hover, toggle, modal...)
@@ -410,7 +413,7 @@ export function useAudio() {
         registerMusicData,
         playSound,
         playHeartSound,
-        playCoinSound,
+        playLootSound,
         updateSpatialAudio,
         stopSpatialAudio,
 

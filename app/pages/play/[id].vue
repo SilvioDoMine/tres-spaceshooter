@@ -118,7 +118,7 @@ onUnmounted(() => {
         <GameProjectileManager />
         <GameElementalEffects />
         <GameHeartPickups />
-        <GameCoinPickups />
+        <GameLootPickups />
         <GameEquipmentEffects />
         
         <GameWorld />

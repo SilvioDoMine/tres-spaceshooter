@@ -1,7 +1,7 @@
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { useEnemyManagerStore } from '~/stores/enemyManagerStore';
 import { useHeartStore } from '~/stores/useHeartStore';
-import { useCoinStore } from '~/stores/useCoinStore';
+import { useLootStore } from '~/stores/useLootStore';
 import { useProjectileStore } from '~/stores/projectileStore';
 import { playableRoomCount } from '~/utils/progression';
 
@@ -14,6 +14,7 @@ import { playableRoomCount } from '~/utils/progression';
 //   levelUp(3)       -> sobe 3 níveis; as escolhas abrem uma depois da outra
 //   dropHearts(3)    -> solta 3 corações em volta da nave
 //   dropCoins(8)     -> solta 8 moedas em volta da nave (voam para ela quando a sala for limpa)
+//   dropExp(150)     -> solta 150 de EXP em pedrinhas na frente da nave (mesma regra das moedas)
 export default defineNuxtPlugin(() => {
   if (!import.meta.dev) return;
 
@@ -103,12 +104,21 @@ export default defineNuxtPlugin(() => {
     const player = run.getPlayerPosition();
     for (let i = 0; i < count; i++) {
       const angle = (i / count) * Math.PI * 2;
-      useCoinStore().drop({ x: player.x + Math.cos(angle) * 3, z: player.z + Math.sin(angle) * 3 }, 1);
+      useLootStore().dropGold({ x: player.x + Math.cos(angle) * 3, z: player.z + Math.sin(angle) * 3 }, 1);
     }
-    return `${useCoinStore().coins.length} moedas no chão`;
+    return `${useLootStore().loot.length} peças de espólio no chão`;
   }
 
-  Object.assign(window, { skipRoom, goToRoom, finishChapter, killAll, levelUp, dropHearts, dropCoins });
+  // Solta a EXP em pedrinhas na frente da nave (acima de 100 aparecem as grandes)
+  function dropExp(amount = 150) {
+    const run = activeRun();
+    if (!run) return;
+    const player = run.getPlayerPosition();
+    useLootStore().dropExp({ x: player.x, z: player.z + 3 }, amount);
+    return `${useLootStore().loot.length} peças de espólio no chão`;
+  }
 
-  console.info('[debug] skipRoom() • goToRoom(10) • finishChapter() • killAll() • levelUp(3) • dropHearts(3) • dropCoins(8)');
+  Object.assign(window, { skipRoom, goToRoom, finishChapter, killAll, levelUp, dropHearts, dropCoins, dropExp });
+
+  console.info('[debug] skipRoom() • goToRoom(10) • finishChapter() • killAll() • levelUp(3) • dropHearts(3) • dropCoins(8) • dropExp(150)');
 });

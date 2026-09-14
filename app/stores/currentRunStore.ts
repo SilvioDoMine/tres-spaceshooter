@@ -16,7 +16,7 @@ import { useEquipmentStore } from '~/stores/useEquipmentStore';
 import type { OwnedEquipment } from '~/utils/equipment';
 import { incomingHit, type DamageContext, type DamageSource } from '~/utils/shipAttributes';
 import { useHeartStore } from '~/stores/useHeartStore';
-import { useCoinStore } from '~/stores/useCoinStore';
+import { useLootStore } from '~/stores/useLootStore';
 import { useEquipmentEffectsStore } from '~/stores/useEquipmentEffectsStore';
 import { applyElementalHit, createElementState, emitElementalFx, resetElementState, thawElementState, tickElementState } from '~/utils/elementalStatus';
 import { COLLISION_IFRAME, COLLISION_KNOCKBACK, createIFrameGate } from '~/utils/combatPatterns';
@@ -182,7 +182,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     enemyManager.cleanup();
     skillStore.cleanup();
     useHeartStore().cleanup();
-    useCoinStore().cleanup();
+    useLootStore().cleanup();
     useEquipmentEffectsStore().cleanup();
   }
 
@@ -204,8 +204,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     roomCurrentWaveIndex.value = 0;
     currentMoveSpeed.value = playerStats.moveSpeed;
     useHeartStore().cleanup();
-    // Moedas que não chegaram a voar (ex.: debug pulando sala) não perdem o ouro
-    useCoinStore().collectAll();
+    // Espólio que não chegou a voar (ex.: debug pulando sala) não perde o ouro nem a EXP
+    useLootStore().collectAll();
 
     // Remoção de modal
     uiModalPause.close();
@@ -480,8 +480,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
   function gameVictoryRewards(completedChapter = false) {
     console.log('Calculating victory rewards...');
-    // Morreu com moedas no chão: o ouro delas ainda conta
-    useCoinStore().collectAll();
+    // Acabou com moedas no chão: o ouro delas ainda conta (a EXP é só da run e fica para trás)
+    useLootStore().collectAll(false);
 
     saveGold(Number(totalGold.value) + Number(currentGold.value));
     totalGold.value += currentGold.value;

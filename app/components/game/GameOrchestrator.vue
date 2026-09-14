@@ -9,7 +9,7 @@ import { useProjectileStore } from '~/stores/projectileStore';
 import { useSkillStore } from '~/stores/SkillStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import { useHeartStore } from '~/stores/useHeartStore';
-import { useCoinStore } from '~/stores/useCoinStore';
+import { useLootStore } from '~/stores/useLootStore';
 import { useEquipmentEffectsStore } from '~/stores/useEquipmentEffectsStore';
 
 /**
@@ -58,7 +58,7 @@ currentRunStore.updateElements(safeDelta);
 // playerCombat.update(safeDelta);
 playerStats.update(safeDelta);
 useHeartStore().update(safeDelta);
-useCoinStore().update(safeDelta);
+useLootStore().update(safeDelta);
 useEquipmentEffectsStore().update(safeDelta);
 
 // Gerenciamento de Partida
