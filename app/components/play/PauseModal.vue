@@ -120,13 +120,18 @@ onUnmounted(() => window.removeEventListener('keydown', handlePauseKey));
     </template>
 
     <!-- Section divider -->
-    <BaseSectionDivider :text="skillStore.currentSkills.length > 0 ? 'Habilidades Obtidas' : 'Nenhuma habilidade obitida'" />
+    <BaseSectionDivider
+      class="pause-divider"
+      :text="skillStore.currentSkills.length > 0 ? 'Habilidades Obtidas' : 'Nenhuma habilidade obitida'"
+    />
 
     <!-- Grid de habilidades -->
     <div class="abilities-grid">
       <BaseAbilityIcon
-        v-for="skill in skillStore.currentSkills"
+        v-for="(skill, index) in skillStore.currentSkills"
         :key="skill.id"
+        class="pause-ability"
+        :style="{ '--i': index }"
         :icon="skill.icon"
         :status="skill.status"
         :badge="`${skillStore.getSkillLevel(skill.id)}`"
@@ -150,6 +155,8 @@ onUnmounted(() => window.removeEventListener('keydown', handlePauseKey));
       <BaseButton
         variant="red"
         size="sm"
+        class="pause-action"
+        :style="{ '--i': 0 }"
         @click="uiModalConfig.open()"
       >
         Config
@@ -158,6 +165,8 @@ onUnmounted(() => window.removeEventListener('keydown', handlePauseKey));
       <BaseButton
         variant="yellow"
         size="sm"
+        class="pause-action"
+        :style="{ '--i': 1 }"
         @click="handleQuit"
       >
         Deixar Batalha
@@ -166,6 +175,8 @@ onUnmounted(() => window.removeEventListener('keydown', handlePauseKey));
       <BaseButton
         variant="green"
         size="sm"
+        class="pause-action"
+        :style="{ '--i': 2 }"
         @click="handleResume"
       >
         Continuar
@@ -192,6 +203,74 @@ onUnmounted(() => window.removeEventListener('keydown', handlePauseKey));
   grid-template-columns: repeat(5, 1fr);
   gap: 0.75rem;
   justify-items: center;
+}
+
+/* ==================== Entrada ====================
+   Sequência depois da faixa: divisor abre do centro, habilidades pulam uma a uma com um flash e os botões
+   sobem quicando. O PlayModal desmonta ao fechar, então a sequência toca a cada pausa.
+   Os botões já usam `transform` (e o hover do ícone usa `scale`), por isso cada um anima outra propriedade. */
+.pause-divider {
+  animation: pause-divider-in 0.4s cubic-bezier(0.3, 1.3, 0.6, 1) 0.25s both;
+}
+
+.pause-ability {
+  animation: pause-ability-in 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+  animation-delay: calc(0.35s + var(--i) * 60ms);
+}
+
+.pause-action {
+  animation: pause-action-in 0.45s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+  animation-delay: calc(0.45s + var(--i) * 80ms);
+}
+
+@keyframes pause-divider-in {
+  from {
+    opacity: 0;
+    transform: scaleX(0.3);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pause-ability-in {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.3) rotate(-12deg);
+    filter: brightness(1);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.12) rotate(4deg);
+    filter: brightness(1.8);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: brightness(1);
+  }
+}
+
+@keyframes pause-action-in {
+  from {
+    opacity: 0;
+    translate: 0 24px;
+    scale: 0.7;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pause-divider,
+  .pause-ability,
+  .pause-action {
+    animation: none;
+  }
 }
 
 /* Último item (6º) ocupa a primeira coluna da segunda linha */
