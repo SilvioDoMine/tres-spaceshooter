@@ -2,6 +2,10 @@
 
 > A TresJS Nuxt application
 
+## Guia de criação de naves
+
+Concept art, modelos 3D e equipamentos de naves de jogador devem seguir o [guia visual e modular](docs/SHIP_DESIGN_GUIDE.md). O repositório também contém instruções para agentes de IA em [`AGENTS.md`](AGENTS.md), garantindo que os seis slots e os encaixes físicos sejam considerados desde o início da modelagem.
+
 ## Features
 
 - [Nuxt 3](https://nuxt.com) with [TresJS](https://tresjs.org)
