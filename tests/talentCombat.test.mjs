@@ -74,6 +74,7 @@ test('run skill cards feed combat stats, attack speed and adrenaline in the real
   assert.ok(Math.abs(stats.combatStats.criticalDamage - 2.4) < 1e-12);
   assert.ok(Math.abs(stats.combatStats.dodgeChance - .2) < 1e-12);
   assert.equal(stats.getAttackSpeedMultiplier, 1.4);
+  assert.ok(Math.abs(stats.getProjectileSpeedMultiplier - Math.sqrt(1.4)) < 1e-12);
   assert.equal(stats.headshotChance, .07);
   assert.equal(stats.siphonChance, .05);
   assert.equal(stats.adrenalineDamageMultiplier(), 1);

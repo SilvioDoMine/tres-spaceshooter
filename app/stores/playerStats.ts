@@ -135,7 +135,9 @@ export const usePlayerStats = defineStore('playerStats', () => {
       }
     });
 
-    return projectileSpeedMultiplier;
+    // Cadência acelera o projétil pela raiz: os tiros não se amontoam quando a
+    // velocidade de ataque escala, mas o espaçamento ainda diminui aos poucos
+    return projectileSpeedMultiplier * Math.sqrt(getAttackSpeedMultiplier.value);
   });
 
   // Dados do nível atual de uma habilidade da partida (null se o jogador não tiver)
