@@ -1,5 +1,6 @@
 import { attackProfile, attackDirections, canAttackFrom, chapterDamageMultiplier, ENEMY_VOLLEY_GATE, muzzlePosition } from '~/utils/combatPatterns';
 import { playableRoomCount } from '~/utils/progression';
+import { ENEMY_ELEMENT_PAYLOADS } from '~/utils/elementalStatus';
 
 export function useEnemyAttacks() {
   const run=useCurrentRunStore(), shots=useProjectileStore();
@@ -13,7 +14,7 @@ export function useEnemyAttacks() {
     const player=run.getPlayerPosition();
     for(const enemy of enemies) {
       // Atordoados não atiram; a Harpia não atira na investida; caças e a mini-colmeia lançando também seguram o fogo
-      if(enemy.state!=='active' || enemy.type==='angel' || enemy.type==='kamikaze' || (enemy.stunTimer || 0) > 0 || enemy.dashState || enemy.holdFire) { enemy.attackCharge=0;continue; }
+      if(enemy.state!=='active' || enemy.type==='angel' || enemy.type==='kamikaze' || (enemy.stunTimer || 0) > 0 || enemy.elementState?.freeze || enemy.dashState || enemy.holdFire) { enemy.attackCharge=0;continue; }
       if(!enemy.attackClock)enemy.attackClock={remaining:1+Math.random()*1.6,volley:0,charging:false};
       const clock=enemy.attackClock, profile=attackProfile(enemy.type,room,clock.volley,enemy);
       if(profile.movementSpeed)enemy.speed=profile.movementSpeed;
@@ -46,7 +47,8 @@ export function useEnemyAttacks() {
           const ahead=td>.001&&(tx*direction.x+tz*direction.z)/td>.5;
           const heading=profile.converge&&ahead?{x:tx/td,z:tz/td}:direction;
           shots.spawnProjectile(profile.projectile,origin,heading,enemy.id,'enemy',1,0,damage,[],
-            {speed:profile.speed,range:profile.range,silent:fired++>0});
+            // Inimigos elementais (ficha com `element: 'fire' | 'ice' | 'lightning'`) atiram com o efeito
+            {speed:profile.speed,range:profile.range,silent:fired++>0,elements:enemy.element?ENEMY_ELEMENT_PAYLOADS[enemy.element]:undefined});
         }
         bullets+=fired;volleyGate=ENEMY_VOLLEY_GATE;
         // Grace period: a IA segura o movimento e o rumo na direção do disparo

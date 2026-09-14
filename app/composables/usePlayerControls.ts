@@ -10,7 +10,7 @@
  * @returns Um objeto reativo com o vetor de entrada e o estado de movimento.
  */
 import { useCurrentRunStore } from '~/stores/currentRunStore';
-import { useProjectileStore } from '~/stores/projectileStore';
+import { useProjectileStore, projectilesType } from '~/stores/projectileStore';
 import { onMounted, onUnmounted, watch } from 'vue';
 import { weaponMounts, worldHardpoint, MULTISHOT_INTERVAL } from '~/utils/combatPatterns';
 import { emitMuzzleFlash } from '~/utils/weaponVisuals';
@@ -128,8 +128,10 @@ export function usePlayerControls() {
     // Calcula o deslocamento no plano X/Z.
     const spatial = dilation.update(position, movement, delta);
     if(spatial.damage>0){currentRun.takeDamage(spatial.damage);if(currentRun.currentHealth<=0)return}
-    const dx = spatial.x * speed * delta;
-    const dz = spatial.z * speed * delta;
+    // Congelada, a nave não se move, não gira e não atira até descongelar
+    const frozen = Boolean(currentRun.getPlayerElements().freeze);
+    const dx = frozen ? 0 : spatial.x * speed * delta;
+    const dz = frozen ? 0 : spatial.z * speed * delta;
 
     // Verifica se pode mover, por exemplo está no limite do mapa
     // Resolve each horizontal axis independently so diagonal movement slides
@@ -171,7 +173,7 @@ export function usePlayerControls() {
     }
 
     // Se o jogador tiver parado, vamos atirar um projetil se estiver dentro do cd correto
-    if ((dx !== 0 || dz !== 0) === false) {
+    if (!frozen && (dx !== 0 || dz !== 0) === false) {
       // Aponta para o inimigo mais próximo e rotaciona o personagem nessa direção
       const nearestEnemy = projectileStore.nearestEnemyFromPlayer();
       // Os hardpoints disparam pela rotação lógica da nave: com o tiro pronto ela
@@ -219,6 +221,8 @@ export function usePlayerControls() {
             const rear = skills.getSkillLevel('back_shot') || 0;
             const diagonal = skills.getSkillLevel('diagonal_shot') || 0;
             const mounts = weaponMounts(front, rear, diagonal);
+            // Fogo, gelo e raio viajam em todos os projéteis; o raio salta dentro do alcance da arma
+            const elements = usePlayerStats().elementalPayload(projectilesType.player.range * usePlayerStats().getRangeMultiplier);
             // Multishot: a rajada inteira sai de novo, um tiro atrás do outro em cada arma
             for (let round = 0; round <= multi; round++) {
               const repeat = round > 0;
@@ -237,11 +241,12 @@ export function usePlayerControls() {
                     power: power * burstMultiplier, silent: repeat || shotIndex > 0, ion: equipmentEffects.effects.weaponStyle === 'ion',
                     burst: special && volley.burst, beam: special && volley.burst, beamMount: mount, beamAge: 0, beamTick: 0, beamDuration: .65, aoeRadius: 0,
                     spawnDelay: round * MULTISHOT_INTERVAL, muzzleId: repeat ? mount.id : null, releaseSound: repeat && shotIndex === 0,
+                    elements,
                   });
                 if (!repeat) emitMuzzleFlash(mount.id, special && volley.burst);
                 if (special && volley.echo) {
                   projectileStore.spawnProjectile('player', origin, heading, 'player', 'player',
-                    hits, bounces, damage, [], { power, silent: true, echo: true, spawnDelay: .10, canCrit: volley.echoCanCrit });
+                    hits, bounces, damage, [], { power, silent: true, echo: true, spawnDelay: .10, canCrit: volley.echoCanCrit, elements });
                 }
               });
             }

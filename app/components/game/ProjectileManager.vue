@@ -11,16 +11,108 @@ watch(()=>useCurrentRunStore().currentStage,()=>store.cleanup(),{flush:'sync'});
 const geometry=new PlaneGeometry(.8,1.9);geometry.rotateX(Math.PI/2);geometry.translate(0,0,-.45);
 const orbGeometry=new PlaneGeometry(.72,.72);orbGeometry.rotateX(Math.PI/2);
 // 7 = lança da Colmeia (bola esticada, dourada), 8 = tiro da Colmeia (bola âmbar), 9 = tiro da Harpia (bola magenta)
-const palette=['#38cfff','#82edff','#c7a3ff','#ffc777','#50caff','#ff719c','#ffbf66','#fff06a','#ffa53d','#ff5fb0','#ae7dff'];
+// 11..17 = projéteis elementais pela máscara (fogo 1, gelo 2, raio 4): tier = 10 + máscara.
+// Cada combinação tem visual próprio de fusão; todos os tiros da rajada mostram a mesma combinação.
+//   11 fogo · 12 gelo · 13 vapor (fogo+gelo) · 14 raio · 15 raio de fogo · 16 raio glacial · 17 tempestade prismática
+const palette=['#38cfff','#82edff','#c7a3ff','#ffc777','#50caff','#ff719c','#ffbf66','#fff06a','#ffa53d','#ff5fb0','#ae7dff',
+ '#ff6a1f','#9fe9ff','#ffffff','#b996ff','#ff5a1a','#6fe7ff','#e2b8ff'];
+const shapeCodes=[0,0,0,0,1,2,3,1,1,1,-1,5,6,8,7,9,10,11];
+const ELEMENT_BITS={fire:1,ice:2,lightning:4};
+function elementMask(elements){
+ let mask=0;for(const key in elements)if(elements[key])mask|=ELEMENT_BITS[key]||0;
+ return mask;
+}
 const materials=palette.map((color,index)=>new ShaderMaterial({
  transparent:true,depthWrite:false,side:2,blending:AdditiveBlending,
- uniforms:{time:{value:0},tint:{value:new Color(color)},orb:{value:index===10?-1:index>=7?1:Math.max(0,index-3)}},
+ uniforms:{time:{value:0},tint:{value:new Color(color)},orb:{value:shapeCodes[index]}},
  vertexShader:'varying vec2 v;void main(){v=uv;gl_Position=projectionMatrix*modelViewMatrix*instanceMatrix*vec4(position,1.);}',
  fragmentShader:`
  varying vec2 v;uniform float time;uniform vec3 tint;uniform float orb;
+ float jagged(float y){return sin(y*47.+time*61.)*.5+sin(y*23.-time*37.)*.35+sin(y*91.+time*13.)*.15;}
  void main(){
-  float alpha;float white;
-  if(orb<-.5){
+  float alpha=0.;float white=0.;vec3 col=vec3(0.);bool custom=false;
+  if(orb>10.5){
+   // Tempestade prismática (fogo+gelo+raio): relâmpago branco com fitas de fogo e gelo girando e brilho que muda de cor
+   float x=v.x-.5;float y=v.y;float env=smoothstep(.02,.5,y)*(1.-smoothstep(.8,.97,y));
+   float bx=abs(x-jagged(y)*.08*(1.-y*.6));
+   float core=exp(-bx*bx*2400.)*env;
+   float amp=.12*smoothstep(.05,.6,y);float phase=y*20.-time*24.;
+   float a1=x-sin(phase)*amp;float a2=x+sin(phase)*amp;
+   float s1=exp(-a1*a1*1300.)*env;float s2=exp(-a2*a2*1300.)*env;
+   vec3 prism=.55+.45*cos(6.2831*(y*1.4-time*1.6+vec3(0.,.33,.67)));
+   float aura=exp(-x*x*60.)*env*(.6+.4*sin(time*50.));
+   float head=exp(-pow(x*12.,2.)-pow((y-.75)*10.,2.));
+   alpha=clamp(core+s1*.8+s2*.8+aura*.45+head,0.,1.);
+   vec3 sum=vec3(1.)*core+vec3(1.,.45,.08)*s1*.8+vec3(.4,.9,1.)*s2*.8+prism*aura*.45;
+   col=mix(clamp(sum/max(alpha,.001),0.,1.),vec3(1.),clamp(head*.85,0.,1.));custom=true;
+  }else if(orb>9.5){
+   // Raio glacial (gelo+raio): relâmpago ciano cristalizado, com ponta de cristal e geada no rastro
+   float x=v.x-.5;float y=v.y;float env=smoothstep(.02,.5,y)*(1.-smoothstep(.72,.9,y));
+   float bx=abs(x-jagged(y)*.1*(1.-y*.6));
+   float core=exp(-bx*bx*2600.)*env;
+   float glow=exp(-bx*bx*90.)*env*(.7+.3*sin(time*65.));
+   vec2 q=vec2(abs(x)*3.4,abs(y-.76)*1.7);
+   float crystal=1.-smoothstep(.2,.24,q.x+q.y);
+   float grain=step(.84,fract(sin(dot(floor(vec2(v.x*20.,y*28.-time*11.)),vec2(12.9898,78.233)))*43758.5453))*exp(-bx*bx*50.)*env;
+   alpha=clamp(core+glow*.65+crystal+grain*.7,0.,1.);
+   col=mix(vec3(.15,.75,1.),vec3(.9,1.,1.),clamp(core+crystal*.75+grain,0.,1.));custom=true;
+  }else if(orb>8.5){
+   // Raio de fogo (fogo+raio): relâmpago incandescente dourado envolto em chama carmesim
+   float x=v.x-.5;float y=v.y;float env=smoothstep(.02,.5,y)*(1.-smoothstep(.8,.97,y));
+   float bx=abs(x-jagged(y)*.11*(1.-y*.6));
+   float core=exp(-bx*bx*2200.)*env;
+   float glow=exp(-bx*bx*70.)*env*(.7+.3*sin(time*55.));
+   float w=mix(.2,.04,smoothstep(.1,.74,y));float wob=sin(y*22.-time*26.)*.03*(1.-y);
+   float flame=exp(-pow((x+wob)/w,2.)*1.6)*smoothstep(.03,.4,y)*(1.-smoothstep(.72,.9,y))*(.8+.2*sin(time*40.+y*30.));
+   float head=exp(-pow(x*13.,2.)-pow((y-.75)*11.,2.));
+   alpha=clamp(core+glow*.7+flame*.5+head,0.,1.);
+   vec3 hot=mix(vec3(.8,.03,.08),vec3(1.,.5,.05),clamp(glow+core,0.,1.));
+   col=mix(hot,vec3(1.,.95,.7),clamp(core+head*.8,0.,1.));custom=true;
+  }else if(orb>7.5){
+   // Vapor (fogo+gelo): duas fitas, uma de fogo e uma de gelo, trançadas em espiral com névoa quente-fria
+   float x=v.x-.5;float y=v.y;float env=smoothstep(.02,.5,y)*(1.-smoothstep(.72,.9,y));
+   float amp=.1*smoothstep(.05,.6,y);float phase=y*20.-time*22.;
+   float a1=x-sin(phase)*amp;float a2=x+sin(phase)*amp;
+   float s1=exp(-a1*a1*1100.)*env;float s2=exp(-a2*a2*1100.)*env;
+   float steam=exp(-x*x*45.)*env*(.35+.25*sin(y*14.+time*9.));
+   float head=exp(-pow(x*13.,2.)-pow((y-.75)*11.,2.));
+   float split=smoothstep(-.02,.02,x);
+   alpha=clamp(s1+s2+steam*.5+head,0.,1.);
+   vec3 sum=vec3(1.,.42,.08)*s1+vec3(.45,.9,1.)*s2+vec3(.85,.82,.95)*steam*.5;
+   vec3 headColor=mix(vec3(1.,.75,.45),vec3(.75,.97,1.),split);
+   col=mix(clamp(sum/max(alpha,.001),0.,1.),headColor,clamp(head*.95,0.,1.));custom=true;
+  }else if(orb>6.5){
+   // Raio: fio elétrico em zigue-zague que tremula, com cabeça brilhante
+   float y=v.y;float env=smoothstep(.02,.5,y)*(1.-smoothstep(.8,.97,y));
+   float jag=(sin(y*47.+time*61.)*.5+sin(y*23.-time*37.)*.35+sin(y*91.+time*13.)*.15)*.11*(1.-y*.6);
+   float x=abs(v.x-.5-jag);
+   float core=exp(-x*x*2600.)*env;
+   float glow=exp(-x*x*110.)*env*(.65+.35*sin(time*70.));
+   float head=exp(-pow(abs(v.x-.5)*11.,2.)-pow((y-.76)*10.,2.));
+   alpha=clamp(core+glow*.6+head*.9,0.,1.);
+   col=mix(tint,vec3(1.),clamp(core+head*.8,0.,1.));custom=true;
+  }else if(orb>5.5){
+   // Gelo: cristal em losango com faceta e rastro de geada cintilando
+   vec2 q=vec2(abs(v.x-.5)*3.2,abs(v.y-.72)*1.5);
+   float crystal=1.-smoothstep(.2,.24,q.x+q.y);
+   float facet=step(v.x,.5)*.3;
+   float x=abs(v.x-.5);float env=smoothstep(.05,.62,v.y)*(1.-smoothstep(.62,.8,v.y));
+   float trail=exp(-x*x*300.)*env;
+   float grain=step(.86,fract(sin(dot(floor(vec2(v.x*18.,v.y*26.-time*9.)),vec2(12.9898,78.233)))*43758.5453))*exp(-x*x*60.)*env;
+   alpha=clamp(crystal+trail*.55+grain*.8,0.,1.);
+   col=mix(tint,vec3(1.),clamp(crystal*(.6+facet)+grain,0.,1.));custom=true;
+  }else if(orb>4.5){
+   // Fogo: cabeça incandescente e chama tremulando atrás
+   float x=v.x-.5;float y=v.y;
+   float wob=sin(y*22.-time*26.)*.035*(1.-y)+sin(y*9.-time*14.)*.02;
+   float width=mix(.2,.035,smoothstep(.1,.74,y));
+   float flame=exp(-pow((x+wob)/width,2.)*1.6)*smoothstep(.03,.4,y)*(1.-smoothstep(.72,.9,y));
+   float head=exp(-pow(x*13.,2.)-pow((y-.74)*11.,2.));
+   float flick=.8+.2*sin(time*40.+y*30.);
+   alpha=clamp(flame*flick*.9+head,0.,1.);
+   vec3 ember=mix(vec3(.9,.12,.02),vec3(1.,.55,.08),smoothstep(.15,.7,y));
+   col=mix(ember,vec3(1.,.93,.6),clamp(head*.9+flame*smoothstep(.55,.74,y)*.5,0.,1.));custom=true;
+  }else if(orb<-.5){
    float x=abs(v.x-.5);float tip=smoothstep(.04,.22,v.y)*(1.-smoothstep(.9,1.,v.y));
    float needle=exp(-x*x*3800.)*tip;
    float rails=exp(-pow((x-.052)*65.,2.))*tip*(.6+.4*sin(v.y*40.-time*32.));
@@ -58,11 +150,11 @@ const materials=palette.map((color,index)=>new ShaderMaterial({
    white=clamp(core+head*.7,0.,1.);
   }
   if(alpha<.008)discard;
-  gl_FragColor=vec4(mix(tint,vec3(1.),white),alpha);
+  gl_FragColor=vec4(custom?col:mix(tint,vec3(1.),white),alpha);
  }`
 }));
 const batches=materials.map((material,i)=>{
- const mesh=new InstancedMesh(i>=4&&i!==10?orbGeometry:geometry,material,480);
+ const mesh=new InstancedMesh(i>=4&&i<=9?orbGeometry:geometry,material,480);
  mesh.instanceMatrix.setUsage(DynamicDrawUsage);mesh.frustumCulled=false;mesh.count=0;root.add(mesh);return mesh;
 });
 // Shared ribbon pool for rear curves and ricochet paths: no per-shot mesh creation.
@@ -94,7 +186,9 @@ useLoop().onBeforeRender(({delta})=>{
     dummy.position.set(p.position.x+p.direction.x*(p.beamLength||0),p.position.y,p.position.z+p.direction.z*(p.beamLength||0));
     dummy.scale.set(.55*envelope,1,.3*envelope);dummy.updateMatrix();batches[3].setMatrixAt(counts[3]++,dummy.matrix);continue;
   }
-  const tier=p.ownerType==='enemy'?(p.type==='enemyLance'?7:p.type==='hiveShot'?8:p.type==='harpyShot'?9:p.type==='enemyMissile'?6:p.type==='enemyPlasma'?5:4):p.burst?3:p.ion?10:p.echo?2:p.power>=2.5?3:p.power>=1.75?2:p.power>1?1:0;
+  let tier=p.ownerType==='enemy'?(p.type==='enemyLance'?7:p.type==='hiveShot'?8:p.type==='harpyShot'?9:p.type==='enemyMissile'?6:p.type==='enemyPlasma'?5:4):p.burst?3:p.ion?10:p.echo?2:p.power>=2.5?3:p.power>=1.75?2:p.power>1?1:0;
+  // Elementos combinados viram um visual de fusão (mesmo em todos os canos da rajada)
+  if(p.elements&&!p.burst){if(p.elementMask===undefined)p.elementMask=elementMask(p.elements);if(p.elementMask)tier=10+p.elementMask;}
   // Bolas inimigas crescem junto com a hitbox (tamanho padrão .22 = escala 1)
   const ball=tier===4||tier>=7;
   const size=p.ownerType==='enemy'?(ball?Math.max(1,(p.size||.22)/.22):1):1+Math.min(.55,Math.max(0,p.power-1)*.35);

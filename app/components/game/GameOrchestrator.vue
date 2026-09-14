@@ -53,6 +53,7 @@ playerControls.update(safeDelta);
 enemyManager.update(safeDelta);
 enemyAI.update(safeDelta);
 projectileStore.update(safeDelta);
+currentRunStore.updateElements(safeDelta);
 // playerCombat.update(safeDelta);
 playerStats.update(safeDelta);
 useHeartStore().update();

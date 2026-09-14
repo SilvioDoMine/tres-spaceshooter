@@ -11,6 +11,7 @@ import EnemyDodecahedron from '~/components/game/enemies/EnemyDodecahedron.vue';
 import EnemySphere from '~/components/game/enemies/EnemySphere.vue';
 import EnemyTorus from '~/components/game/enemies/EnemyTorus.vue';
 import EnemyComposite from '~/components/game/enemies/EnemyComposite.vue';
+import { applyElementalTint } from '~/utils/elementalVisuals';
 
 const enemyManager = useEnemyManager();
 const activeEnemies = enemyManager.activeEnemies;
@@ -62,7 +63,9 @@ const setUIGroupRef = (enemyId) => (el) => {
 
 // ==================== GAME LOOP (60 FPS) ====================
 const { onBeforeRender } = useLoop();
-onBeforeRender(() => {
+let elementTime = 0;
+onBeforeRender(({ delta }) => {
+  elementTime += Math.min(delta, .1);
   const player = useCurrentRunStore().getPlayerPosition();
   activeEnemies.value.forEach(enemy => {
     const refs = enemyRefs.get(enemy.id);
@@ -109,8 +112,14 @@ onBeforeRender(() => {
 
     // Modular ships keep their hull upright and face their target.
     // Quem voa com rumo próprio (caças das colmeias) aponta para onde vai, não para o jogador.
-    const heading = enemy.visualHeading ?? Math.atan2(enemy.position.x - player.x, enemy.position.z - player.z);
+    // Congelado: o casco fica travado no rumo em que estava
+    const frozen = Boolean(enemy.elementState?.freeze);
+    const heading = frozen && refs.heading !== undefined
+      ? refs.heading
+      : enemy.visualHeading ?? Math.atan2(enemy.position.x - player.x, enemy.position.z - player.z);
+    refs.heading = heading;
     visualMesh.rotation.set(0, heading + deathRotation, deathRotation * .2);
+    applyElementalTint(refs, enemy.elementState, elementTime);
   });
 
   // Limpa refs de inimigos removidos

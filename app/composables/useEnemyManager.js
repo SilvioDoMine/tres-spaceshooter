@@ -9,6 +9,10 @@ import { headshotKills, outgoingHit, siphonHeal } from '~/utils/shipAttributes';
 import { useHeartStore } from '~/stores/useHeartStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import { useEquipmentEffectsStore } from '~/stores/useEquipmentEffectsStore';
+import { applyElementalHit, elementChainTargets, elementStateOf, emitElementalFx, ELEMENT_RULES, thawElementState, tickElementState } from '~/utils/elementalStatus';
+
+// Tipos de dano que vêm do jogador (dão recompensa ao matar)
+const PLAYER_DAMAGE_TYPES = ['shot', 'equipment', 'reflect', 'elemental'];
 
 export const baseStats = {
   miniasteroid: {
@@ -537,6 +541,17 @@ export function useEnemyManager() {
       }
     });
 
+    // Efeitos elementais: ticks de queimadura e gelo que expira (cópia: mortes podem gerar fragmentos)
+    for (const enemy of [...activeEnemies.value]) {
+      if (enemy.state !== 'active' || !enemy.elementState) continue;
+      const { burn, thaw } = tickElementState(enemy.elementState, delta);
+      if (thaw > 0) {
+        emitElementalFx({ kind: 'shatter', x: enemy.position.x, z: enemy.position.z, size: enemy.size || 1 });
+        takeDamage(enemy.id, thaw, 'elemental', { text: 'freeze' });
+      }
+      if (burn > 0 && enemy.state === 'active') takeDamage(enemy.id, burn, 'elemental', { text: 'burn' });
+    }
+
     // Remove inimigos que terminaram a animação de morte
     activeEnemies.value = activeEnemies.value.filter(enemy =>
       !(enemy.state === 'dying' && enemy.deathTimer <= 0)
@@ -651,8 +666,11 @@ export function useEnemyManager() {
     }
 
     const equipmentEffects = useEquipmentEffectsStore();
-    const playerDamage = ['shot', 'equipment', 'reflect'].includes(type);
-    if (playerDamage) damage *= equipmentEffects.damageMultiplierFor(enemy);
+    const playerDamage = PLAYER_DAMAGE_TYPES.includes(type);
+    // O dano elemental já nasceu do golpe com os multiplicadores aplicados
+    if (playerDamage && type !== 'elemental') damage *= equipmentEffects.damageMultiplierFor(enemy);
+    // Base dos efeitos elementais: dano do golpe antes do crítico
+    const elementalBase = damage;
     const playerStats = usePlayerStats();
     const hit = type === 'shot' && options.canCrit !== false
       ? outgoingHit(damage, playerStats.combatStats, Math.random, equipmentEffects.criticalBonusFor(enemyId))
@@ -662,14 +680,49 @@ export function useEnemyManager() {
       hit.damage = enemy.health;
       hit.critical = true;
     }
-    damage = hit.damage;
+    // Congelado: dano de qualquer outra fonte quebra o gelo e causa a segunda parcela de dano bruto
+    const shatter = enemy.elementState?.freeze && type !== 'systemkill' ? thawElementState(enemy.elementState) : 0;
+    if (shatter > 0) emitElementalFx({ kind: 'shatter', x: enemy.position.x, z: enemy.position.z, size: enemy.size || 1 });
+    if (options.shock) elementStateOf(enemy).shock = ELEMENT_RULES.lightning.shockTime;
+
+    dealDamage(enemy, hit.damage, hit.critical ? 'critical' : (options.text || 'damage'), playerDamage);
+    if (shatter > 0 && enemy.health > 0) dealDamage(enemy, shatter, 'freeze', playerDamage);
+    if (options.elements && enemy.health > 0) applyElements(enemy, options.elements, elementalBase);
+  }
+
+  /** Aplica fogo, gelo e raio de um golpe já contabilizado. */
+  function applyElements(enemy, payload, hitDamage) {
+    const boss = enemyCategory(enemy.type, enemy) === 'boss';
+    const result = applyElementalHit(elementStateOf(enemy), payload, hitDamage, { boss });
+    if (result.lightning > 0) {
+      const origin = { x: enemy.position.x, z: enemy.position.z };
+      // Só o dano extra do raio passa adiante, de alvo em alvo, dentro do alcance da arma
+      const hops = payload.lightning.chains > 0
+        ? elementChainTargets(origin, activeEnemies.value.filter(e => e.state === 'active'), payload.lightning.range || 0, payload.lightning.chains, [enemy.id])
+        : [];
+      dealDamage(enemy, result.lightning, 'shock', true);
+      emitElementalFx({ kind: 'chain', points: [origin, ...hops.map(target => ({ x: target.position.x, z: target.position.z }))] });
+      for (const target of hops) takeDamage(target.id, result.lightning, 'elemental', { text: 'shock', shock: true });
+    }
+    if (result.froze && enemy.health > 0) {
+      emitElementalFx({ kind: 'freeze', x: enemy.position.x, z: enemy.position.z, size: enemy.size || 1 });
+      dealDamage(enemy, result.freezeDamage, 'freeze', true);
+    }
+  }
+
+  /** Subtrai a vida, mostra o texto e resolve a morte (recompensas só para dano do jogador). */
+  function dealDamage(enemy, damage, textType, playerDamage) {
+    if (!(damage > 0) || enemy.state === 'dying') return;
+    const enemyId = enemy.id;
+    const direct = textType === 'damage' || textType === 'critical';
     enemy.health -= damage;
-    emitImpact(enemy.position.x, enemy.position.z, enemy.health <= 0);
+    // Ticks elementais não repetem a faísca de impacto, só a explosão final
+    if (direct || enemy.health <= 0) emitImpact(enemy.position.x, enemy.position.z, enemy.health <= 0);
 
     // combat text
     useCombatTextStore().emitForTarget(
       enemyId,
-      hit.critical ? 'critical' : 'damage',
+      textType,
       Math.round(damage)
     );
 
@@ -680,6 +733,7 @@ export function useEnemyManager() {
 
     if (enemy.health <= 0) {
       enemy.state = 'dying';
+      enemy.elementState = null;
       enemy.deathTimer = 0.8; // Duração da animação de morte (segundos)
       enemy.totalDeathTime = 0.8;
       enemy.deathProgress = 0;
@@ -706,7 +760,7 @@ export function useEnemyManager() {
         useCurrentRun.addExp(expDropped);
 
         // Sifão: chance, por abate, de curar 5% da vida máxima
-        const siphon = siphonHeal(playerStats.siphonChance, useCurrentRun.maxHealth);
+        const siphon = siphonHeal(usePlayerStats().siphonChance, useCurrentRun.maxHealth);
         if (siphon > 0) useCurrentRun.healPlayer(siphon);
 
         // Atualiza a contagem de inimigos mortos no run atual
@@ -719,7 +773,7 @@ export function useEnemyManager() {
         console.log(`Enemy Manager: Enemy of type "${enemy.type}" killed. Total killed this run: ${killedEnemies.value[enemy.type]}`);
       }
     } else {
-      if (playerDamage) {
+      if (playerDamage && direct) {
         // Reproduz som de hit suave
         useAudio().playSound(enemy.hitSound, 1, randomPitch);
       }

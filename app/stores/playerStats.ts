@@ -159,6 +159,17 @@ export const usePlayerStats = defineStore('playerStats', () => {
   const headshotChance = computed((): number => skillLevelData('headshot')?.value || 0);
   const siphonChance = computed((): number => skillLevelData('siphon')?.value || 0);
 
+  // Tiro de Fogo, Gelo e Raio: payload elemental levado por cada projétil (null sem nenhum)
+  function elementalPayload(range: number): any {
+    const fire = skillLevelData('fire_shot'), ice = skillLevelData('ice_shot'), lightning = skillLevelData('lightning_shot');
+    if (!fire && !ice && !lightning) return null;
+    return {
+      ...(fire ? { fire: { burn: fire.value, duration: fire.duration } } : {}),
+      ...(ice ? { ice: { damage: ice.value, shatter: ice.shatter, duration: ice.duration } } : {}),
+      ...(lightning ? { lightning: { bonus: lightning.value, chains: lightning.chains, range } } : {}),
+    };
+  }
+
   // Adrenalina: lida no disparo, conforme a vida atual
   function adrenalineDamageMultiplier(): number {
     const run = useCurrentRunStore();
@@ -242,6 +253,7 @@ export const usePlayerStats = defineStore('playerStats', () => {
     headshotChance,
     siphonChance,
     adrenalineDamageMultiplier,
+    elementalPayload,
   };
 });
 

@@ -7,7 +7,7 @@ const size=computed(()=>props.baseStats[props.enemy.type].size)
 const engine=shallowRef();let time=0
 useLoop().onBeforeRender(({delta})=>{
  time+=Math.min(delta,.1);
- if(engine.value)engine.value.scale.z=.9+Math.sin(time*18+seed)*.12;
+ if(engine.value&&!props.enemy.elementState?.freeze)engine.value.scale.z=.9+Math.sin(time*18+seed)*.12;
 })
 onUnmounted(()=>disposeModel(hull))
 </script>

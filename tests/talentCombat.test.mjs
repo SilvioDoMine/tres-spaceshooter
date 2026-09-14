@@ -19,6 +19,7 @@ const { TALENTS } = await import('../app/data/talents.ts');
 const { aggregateTalentBonuses, emptyTalentBonuses } = await import('../app/utils/talents.ts');
 const { computePlayerStats } = await import('../app/utils/equipment.ts');
 const { combatAttributes, incomingHit, outgoingHit, withRunSkills, adrenalineMultiplier, headshotKills, siphonHeal } = await import('../app/utils/shipAttributes.ts');
+const elemental = await import('../app/utils/elementalStatus.js');
 const base = { maxHealth: 250, moveSpeed: 7, projectiles: { damage: 50, shotCooldown: .85 } };
 const attrs = overrides => combatAttributes({ ...emptyTalentBonuses(), ...overrides });
 
@@ -82,6 +83,38 @@ test('run skill cards feed combat stats, attack speed and adrenaline in the real
   assert.ok(Math.abs(stats.adrenalineDamageMultiplier() - 1.3) < 1e-9);
 });
 
+test('elemental shot cards build the projectile payload in the real stores', () => {
+  const { context, stats, skills } = runHarness();
+  assert.equal(stats.elementalPayload(11), null);
+  const take = (id, level) => skills.currentSkills.push({ ...context.SkillsList[id], currentLevel: level });
+  take('fire_shot', 1); take('ice_shot', 2); take('lightning_shot', 1);
+  assert.deepEqual(JSON.parse(JSON.stringify(stats.elementalPayload(13.5))), {
+    fire: { burn: .15, duration: 3 },
+    ice: { damage: .5, shatter: .5, duration: 2 },
+    lightning: { bonus: .25, chains: 2, range: 13.5 },
+  });
+});
+
+test('player freezes from an elemental attack, thaws on other damage and burns over time', () => {
+  const { run, messages } = runHarness();
+  run.takeDamage(20, { source: 'attack', elements: { ice: { damage: .5, shatter: .5, duration: 1 } } });
+  assert.equal(run.currentHealth, 250 - 20 - 10);
+  assert.ok(run.getPlayerElements().freeze);
+  assert.equal(messages.at(-1)[1], 'freeze');
+  run.takeDamage(30, 'environment'); // outra fonte quebra o gelo: +10 de dano bruto
+  assert.equal(run.getPlayerElements().freeze, null);
+  assert.equal(run.currentHealth, 250 - 20 - 10 - 30 - 10);
+  const before = run.currentHealth;
+  run.takeDamage(40, { source: 'attack', elements: { fire: { burn: .25, duration: 2 } } });
+  for (let i = 0; i < 40; i++) run.updateElements(.05);
+  assert.ok(Math.abs(run.currentHealth - (before - 40 - 20)) < 1e-9);
+  assert.ok(messages.some(m => m[1] === 'burn'));
+  run.loadStage({ type: 'intro', width: 30, height: 30, door: {}, playerStartPosition: { x: 0, y: 0, z: 0 } });
+  run.takeDamage(10, { source: 'attack', elements: { ice: { damage: 0, shatter: 0, duration: 5 } } });
+  run.loadStage({ type: 'intro', width: 30, height: 30, door: {}, playerStartPosition: { x: 0, y: 0, z: 0 } });
+  assert.equal(run.getPlayerElements().freeze, null); // trocar de sala limpa os efeitos
+});
+
 test('dodge affects attacks only; collision applies flat then percent and clamps at zero', () => {
   const stats = attrs({ dodgePercent: 100, collisionReductionFlat: 15, collisionReductionPercent: 10 });
   assert.deepEqual(incomingHit(100, 'attack', stats, () => 0), { damage: 0, dodged: true });
@@ -129,7 +162,7 @@ function runHarness(overrides = {}) {
   };
   const context = vm.createContext({
     ref, shallowRef, computed, Math, console: { log() {}, warn() {} },
-    computePlayerStats, emptyTalentBonuses, incomingHit, withRunSkills, adrenalineMultiplier,
+    computePlayerStats, emptyTalentBonuses, incomingHit, withRunSkills, adrenalineMultiplier, ...elemental,
     COMBAT_BASE: { heartDropChance: .1 },
     defineStore: (_id, setup) => { let store; return () => store ??= reactive(setup()); },
     useEquipmentStore: () => ({ stats: permanent }),

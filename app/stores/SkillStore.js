@@ -224,6 +224,39 @@ export const SkillsList ={
       2: { value: 0.4, description: 'Dispara 3 projéteis frontais.' },
     },
   },
+  fire_shot: {
+    id: 'fire_shot',
+    name: 'Tiro de Fogo',
+    description: 'Os projéteis incendeiam o alvo, que sofre dano por segundo baseado no dano do tiro.',
+    icon: '🔥',
+    rarity: 'epic',
+    levels: {
+      1: { value: 0.15, duration: 3, description: 'Queima 15% do dano do tiro por segundo, por 3s.' },
+      2: { value: 0.24, duration: 3, description: 'Queima 24% do dano do tiro por segundo, por 3s.' },
+    },
+  },
+  ice_shot: {
+    id: 'ice_shot',
+    name: 'Tiro de Gelo',
+    description: 'Congela o alvo com dano bruto ao congelar e ao descongelar. Dano de outra fonte quebra o gelo. Chefes congelam por menos tempo.',
+    icon: '❄️',
+    rarity: 'epic',
+    levels: {
+      1: { value: 0.35, shatter: 0.35, duration: 1.5, description: 'Congela por 1,5s; 35% do dano do tiro ao congelar e ao quebrar.' },
+      2: { value: 0.5, shatter: 0.5, duration: 2, description: 'Congela por 2s; 50% do dano do tiro ao congelar e ao quebrar.' },
+    },
+  },
+  lightning_shot: {
+    id: 'lightning_shot',
+    name: 'Tiro de Raio',
+    description: 'Causa dano elétrico extra que salta para até 2 inimigos próximos, dentro do alcance da arma.',
+    icon: '⚡',
+    rarity: 'epic',
+    levels: {
+      1: { value: 0.25, chains: 2, description: '+25% do dano como raio, que salta para 2 inimigos.' },
+      2: { value: 0.4, chains: 2, description: '+40% do dano como raio, que salta para 2 inimigos.' },
+    },
+  },
   multishot: {
     id: 'multishot',
     name: 'Tiros Múltiplos',

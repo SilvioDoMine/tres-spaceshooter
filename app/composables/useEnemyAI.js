@@ -651,6 +651,11 @@ export function useEnemyAI() {
             if (! ['active', 'angel'].includes(enemy.state)) {
                 return;
             }
+            // Congelado: não se move, não gira e não carrega ataque até descongelar
+            if (enemy.elementState?.freeze) {
+                enemy.attackCharge = 0;
+                return;
+            }
             if ((enemy.stunTimer || 0) > 0) {
                 enemy.stunTimer = Math.max(0, enemy.stunTimer - deltaTime);
                 enemy.attackCharge = 0;

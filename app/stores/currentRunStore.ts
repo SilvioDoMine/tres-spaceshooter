@@ -17,6 +17,9 @@ import type { OwnedEquipment } from '~/utils/equipment';
 import { incomingHit, type DamageContext, type DamageSource } from '~/utils/shipAttributes';
 import { useHeartStore } from '~/stores/useHeartStore';
 import { useEquipmentEffectsStore } from '~/stores/useEquipmentEffectsStore';
+import { applyElementalHit, createElementState, emitElementalFx, resetElementState, thawElementState, tickElementState } from '~/utils/elementalStatus';
+
+type PlayerDamageContext = DamageContext & { elements?: any; text?: string };
 
 // Define o formato básico do vetor de posição 3D
 interface Vector3 {
@@ -74,6 +77,9 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
   // Vetor de movimento (direção) normalizado, de -1 a 1, calculado pelos controles
   const moveVector = shallowRef<Vector3>({ ...PlayerBaseStats.moveVector });
+
+  // Fogo, gelo e raio aplicados na nave do jogador (objeto simples, lido no game loop)
+  const playerElements = createElementState();
 
   // Velocidade atual (ref simples é ok, muda raramente)
   const currentMoveSpeed = ref(PlayerBaseStats.moveSpeed); // Exemplo: 5 unidades por segundo
@@ -150,6 +156,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     playerPosition.value = { x: 0, y: 0, z: 0 };
     playerRotation.value = { x: 0, y: 0, z: 0 };
     moveVector.value = { x: 0, y: 0, z: 0 };
+    resetElementState(playerElements);
     currentMoveSpeed.value = PlayerBaseStats.moveSpeed;
     shotCooldownTotal.value = PlayerBaseStats.projectiles.shotCooldown;
     shotCooldown.value = PlayerBaseStats.projectiles.shotCooldown;
@@ -183,6 +190,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     doorSize.value = stage.door.size || null;
     isDoorActive.value = false;
     playerPosition.value = { ...stage.playerStartPosition };
+    resetElementState(playerElements);
     isWaveInProgress.value = false;
     roomCurrentWaveIndex.value = 0;
     currentMoveSpeed.value = playerStats.moveSpeed;
@@ -260,9 +268,11 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     return !!currentStage.value && Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z);
   }
 
-  function takeDamage(amount: number, context: DamageSource | DamageContext = 'environment') {
+  function takeDamage(amount: number, context: DamageSource | PlayerDamageContext = 'environment') {
     if(amount<=0 || currentHealth.value<=0)return;
-    const { source, attackerId } = typeof context === 'string' ? { source: context, attackerId: undefined } : context;
+    const { source, attackerId, elements, text } = typeof context === 'string'
+      ? { source: context, attackerId: undefined, elements: undefined, text: undefined }
+      : context;
     const equipmentEffects = useEquipmentEffectsStore();
     const hit = incomingHit(amount, source, playerStats.combatStats);
     if (hit.dodged) {
@@ -276,11 +286,35 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     }
     amount = hit.damage;
     if (amount <= 0) return;
+    const position = getPlayerPosition();
+    // Congelado: dano de outra fonte quebra o gelo e causa a segunda parcela de dano bruto
+    const shatter = thawElementState(playerElements);
+    if (shatter > 0) emitElementalFx({ kind: 'shatter', x: position.x, z: position.z, size: 1.2 });
+    applyPlayerDamage(amount, source, attackerId, text || 'damage');
+    if (shatter > 0) applyPlayerDamage(shatter, 'environment', undefined, 'freeze');
+    if (elements && currentHealth.value > 0) {
+      const result = applyElementalHit(playerElements, elements, amount);
+      if (result.lightning > 0) {
+        emitElementalFx({ kind: 'chain', points: [{ x: position.x, z: position.z }] });
+        applyPlayerDamage(result.lightning, 'environment', undefined, 'shock');
+      }
+      if (result.froze && currentHealth.value > 0) {
+        emitElementalFx({ kind: 'freeze', x: position.x, z: position.z, size: 1.2 });
+        applyPlayerDamage(result.freezeDamage, 'environment', undefined, 'freeze');
+      }
+    }
+  }
+
+  /** Subtrai a vida do jogador, com texto, feedback e game over. */
+  function applyPlayerDamage(amount: number, source: DamageSource, attackerId: string | undefined, textType: string) {
+    if (amount <= 0 || currentHealth.value <= 0) return;
     const previousHealth=currentHealth.value;
     currentHealth.value = Math.max(0, currentHealth.value - amount);
-    equipmentEffects.onPlayerDamaged(previousHealth, currentHealth.value, source, attackerId);
+    useEquipmentEffectsStore().onPlayerDamaged(previousHealth, currentHealth.value, source, attackerId);
     const position=getPlayerPosition();
-    emitImpact(position.x,position.z,currentHealth.value===0,'player');
+    // Ticks elementais não repetem impacto e som a cada meio segundo
+    const direct = textType === 'damage';
+    if (direct || currentHealth.value === 0) emitImpact(position.x,position.z,currentHealth.value===0,'player');
 
     // actual damage amount
     let actualDamage = Math.min(amount, previousHealth);
@@ -288,7 +322,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     // emit combat text
     combatTextStore.emitForTarget(
       PlayerBaseStats.id,
-      'damage',
+      textType,
       Math.round(actualDamage),
     );
 
@@ -298,9 +332,25 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
       useAudio().stopBackgroundMusic();
       gameOver('You have been defeated.');
       // Lógica adicional de morte do jogador pode ser adicionada aqui
-    } else {
+    } else if (direct) {
       useAudio().playSound('hit-soft1');
     }
+  }
+
+  /** Queimadura e gelo que expira na nave do jogador. */
+  function updateElements(delta: number) {
+    if (currentHealth.value <= 0) return;
+    const { burn, thaw } = tickElementState(playerElements, delta);
+    if (thaw > 0) {
+      const position = getPlayerPosition();
+      emitElementalFx({ kind: 'shatter', x: position.x, z: position.z, size: 1.2 });
+      takeDamage(thaw, { source: 'environment', text: 'freeze' });
+    }
+    if (burn > 0) takeDamage(burn, { source: 'environment', text: 'burn' });
+  }
+
+  function getPlayerElements() {
+    return playerElements;
   }
 
   function healPlayer(amount: number, showText = true) {
@@ -514,6 +564,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     canPlayerMoveTo,
 
     takeDamage, // Função para o jogador receber dano
+    updateElements, // Ticks de fogo e gelo na nave do jogador
+    getPlayerElements, // Estado elemental da nave do jogador
     healPlayer, // Função para curar o jogador
     setMaxHealth, // Função para definir a saúde máxima do jogador
     currentHealth, // Saúde atual do jogador

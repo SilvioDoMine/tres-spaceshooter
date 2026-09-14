@@ -22,6 +22,10 @@ function getColor(text) {
     if (text.type === 'critical') return '#ffc657';
     if (text.type === 'dodge') return '#75efff';
     if (text.type === 'shield') return '#a7f5ff';
+    // Dano elemental: fogo em vermelho, gelo (dano bruto) em ciano, raio em violeta
+    if (text.type === 'burn') return '#ff3b2f';
+    if (text.type === 'freeze') return '#9fe8ff';
+    if (text.type === 'shock') return '#c9a2ff';
     if (text.entityId !== PlayerBaseStats.id) {
         return 'white';
     }
@@ -41,6 +45,9 @@ function getColor(text) {
 function getText(text) {
     switch (text.type) {
         case 'damage':
+        case 'burn':
+        case 'freeze':
+        case 'shock':
             return `-${text.value}`;
         case 'heal':
             return `+${text.value}`;

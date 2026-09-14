@@ -7,6 +7,7 @@ import type { TresInstance } from '@tresjs/core';
 import * as THREE from 'three';
 import { CameraUtils } from '~/utils/CameraUtils';
 import { DILATION_CONFIG } from '~/utils/spatialDilation';
+import { applyElementalTint, collectMaterials } from '~/utils/elementalVisuals';
 const dilation=useSpatialDilation().state;
 const reducedMotion=useState('spatial-reduced-motion',()=>false);
 const cameraShake=shallowRef({x:0,z:0});let stressTime=0;
@@ -45,6 +46,9 @@ const currentPosition = shallowRef({ x: initialPosition.x, y: initialPosition.y,
 // A mira lógica encaixa no alvo ao disparar; o modelo segue esse giro de forma suave
 const VISUAL_TURN_RATE = 28;
 let visualYaw: number | null = null;
+// Tint elemental da nave (materiais coletados só enquanto há efeito, o modelo carrega assíncrono)
+const elementTint = { materials: [] as any[], tinted: false };
+let elementTime = 0;
 
 // ==================== CONFIGURAÇÃO DA CÂMERA ====================
 const CAMERA_HEIGHT = 52;
@@ -105,6 +109,10 @@ onBeforeRender(({ delta }) => {
   while (yawDiff < -Math.PI) yawDiff += 2 * Math.PI;
   visualYaw += yawDiff * (1 - Math.exp(-Math.min(delta, .1) * VISUAL_TURN_RATE));
   playerMeshRef.value.rotation.set(rotation.x, visualYaw, rotation.z);
+  elementTime += Math.min(delta, .1);
+  const elements = currentRun.getPlayerElements();
+  if (elements.burn || elements.freeze || elements.shock > 0 || elementTint.tinted) elementTint.materials = collectMaterials(playerMeshRef.value as any);
+  applyElementalTint(elementTint, elements, elementTime);
   if(currentRun.isPlaying)stressTime+=Math.min(delta,.1);
   const stress=reducedMotion.value?0:dilation.value.shake;
   playerMeshRef.value.rotation.z+=Math.sin(stressTime*29)*stress*DILATION_CONFIG.shipShake;

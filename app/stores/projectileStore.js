@@ -62,7 +62,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
       // A volley cannot cause several damage events in one instant.
       if(segmentHit(start,projectile.position,currentRunStore.getPlayerPosition(),PLAYER_HITBOX_RADIUS+projectile.size)!==null) {
         projectile._markedForRemoval=true;
-        if(hitGrace<=0){hitGrace=PROJECTILE_IFRAME;currentRunStore.takeDamage(projectile.damage, {source:'attack',attackerId:projectile.ownerId});}
+        if(hitGrace<=0){hitGrace=PROJECTILE_IFRAME;currentRunStore.takeDamage(projectile.damage, {source:'attack',attackerId:projectile.ownerId,elements:projectile.elements});}
       }
       return;
     }
@@ -86,6 +86,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
       enemyManager.takeDamage(enemy.id,projectile.damage,'shot',{
         canCrit: projectile.canCrit !== false,
         aoe: false,
+        elements: projectile.elements,
       });
       if(projectile.aoeRadius>0 && !projectile.aoeTriggered) {
         projectile.aoeTriggered=true;
@@ -142,7 +143,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
           projectile.beamTick++;
           if(hit) {
             const contact={x:origin.x+direction.x*projectile.beamLength,z:origin.z+direction.z*projectile.beamLength};
-            if(!bastionShieldBlocks(hit.e,contact))enemyManager.takeDamage(hit.e.id,projectile.damage/5,'shot',{canCrit:true});
+            if(!bastionShieldBlocks(hit.e,contact))enemyManager.takeDamage(hit.e.id,projectile.damage/5,'shot',{canCrit:true,elements:projectile.elements});
             emitImpact(contact.x,contact.z,false,'hit');
           }
         }
