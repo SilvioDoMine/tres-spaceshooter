@@ -67,7 +67,7 @@ defineExpose({ open, close, isOpen });
   >
     <!-- Conteúdo customizado vai aqui -->
     <div class="flex flex-col gap-4">
-      <div class="bg-white/40 rounded-md flex flex-col flex-1 gap-4 p-4">
+      <BaseInset class="flex flex-col flex-1 gap-4 p-4">
         <h3 class="text-lg text-center font-semibold text-amber-900">Escolha seu nome de usuário</h3>
         <input
           type="text"
@@ -75,7 +75,7 @@ defineExpose({ open, close, isOpen });
           class="game-input"
           v-model="profileNameInput"
         />
-      </div>
+      </BaseInset>
 
       <!-- Ações -->
       <div class="flex gap-2 justify-center">
@@ -128,6 +128,8 @@ defineExpose({ open, close, isOpen });
   text-align: center;
 
   border-radius: 12px;
+  border: 2px solid #e2b77a;
+  box-shadow: inset 0 3px 4px rgba(107, 61, 18, 0.18);
 }
 
 .game-input::placeholder {
@@ -137,7 +139,8 @@ defineExpose({ open, close, isOpen });
 
 .game-input:focus {
   outline: none;
-  box-shadow: none;
+  border-color: #c9964f;
+  box-shadow: inset 0 3px 4px rgba(107, 61, 18, 0.18);
 }
 </style>
 <!--

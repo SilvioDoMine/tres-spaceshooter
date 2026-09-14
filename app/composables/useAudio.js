@@ -2,13 +2,15 @@ import { createSpatialAudio } from '~/utils/spatialAudio';
 import { playUiSynth } from '~/utils/uiSynth';
 import { playHeartSynth } from '~/utils/heartSynth';
 import { playLootSynth } from '~/utils/lootSynth';
+import { playResultSynth } from '~/utils/resultSynth';
+import { createLobbyMusic } from '~/utils/lobbyMusic';
+import { createChapterMusic } from '~/utils/chapterMusic';
 
 // Efeitos da partida: nome usado no playSound -> arquivo. Registrados já na tela de
 // loading, para tocarem desde o primeiro frame (ex.: levelup da seleção inicial de talentos).
 export const GAME_SOUNDS = {
     'levelup': '/sounds/levelup.wav',
     'shoot-player': '/sounds/shoot-player.wav',
-    'player-death': '/sounds/player-death.wav',
     'shoot2': '/sounds/shoot2.wav',
     'shoot7': '/sounds/shoot7.wav',
     'shoot1': '/sounds/shoot1.wav',
@@ -68,6 +70,7 @@ watch(audioSettings, (newSettings) => {
     if (backgroundMusicGain) {
         backgroundMusicGain.gain.value = (newSettings.volumeGeneral / 100) * (newSettings.volumeBackground / 100);
     }
+    lobbyMusic?.setVolume((newSettings.volumeGeneral / 100) * (newSettings.volumeBackground / 100));
 }, { deep: true });
 
 // Estado do áudio
@@ -83,6 +86,12 @@ const musicObjectUrls = new Map();
 const isInitialized = ref(false);
 const lastHeartSound = {};
 const lootSound = { last: {}, step: {} };
+// Música generativa do lobby; lobbyMusicWanted segura o pedido até o navegador liberar o áudio
+let lobbyMusic = null;
+let lobbyMusicWanted = false;
+// Trilha gerada da fase; toca pela mesma cadeia filtro -> volume da música de fundo
+let chapterMusic = null;
+const LOBBY_UNLOCK_EVENTS = ['pointerdown', 'keydown', 'touchstart'];
 
 export function useAudio() {
     let spatialAudio = null;
@@ -243,6 +252,40 @@ export function useAudio() {
         playLootSynth(audioContext, kind, getGeneralVolume() * getEffectsVolume(), lootSound.step[group]);
     }
 
+    // Sting sintetizado de fim de partida: 'victory' ou 'defeat'
+    function playResultSound(kind) {
+        if (!audioContext || audioContext.state !== 'running') return;
+        playResultSynth(audioContext, kind, getGeneralVolume() * getEffectsVolume());
+    }
+
+    function beginLobbyMusic() {
+        if (!lobbyMusicWanted || audioContext?.state !== 'running') return;
+        lobbyMusic ??= createLobbyMusic(audioContext);
+        lobbyMusic.start(getGeneralVolume() * getBackgroundVolume());
+    }
+
+    async function unlockLobbyMusic() {
+        LOBBY_UNLOCK_EVENTS.forEach(name => window.removeEventListener(name, unlockLobbyMusic));
+        await init();
+        beginLobbyMusic();
+    }
+
+    // Toca a música do lobby; sem gesto do usuário ainda, começa no primeiro toque/tecla
+    function startLobbyMusic() {
+        lobbyMusicWanted = true;
+        if (audioContext?.state === 'running') {
+            beginLobbyMusic();
+            return;
+        }
+        LOBBY_UNLOCK_EVENTS.forEach(name => window.addEventListener(name, unlockLobbyMusic, { passive: true }));
+    }
+
+    function stopLobbyMusic(fade = 1.2) {
+        lobbyMusicWanted = false;
+        LOBBY_UNLOCK_EVENTS.forEach(name => window.removeEventListener(name, unlockLobbyMusic));
+        lobbyMusic?.stop(fade);
+    }
+
     // Som sintetizado de microinteração da UI (tap, hover, toggle, modal...)
     function playUiSound(kind) {
         const settings = audioSettings.value;
@@ -278,6 +321,8 @@ export function useAudio() {
                 backgroundMusic.pause();
                 backgroundMusic.currentTime = 0;
             }
+            chapterMusic?.stop(0.3, { dispose: true });
+            chapterMusic = null;
 
             // Cria elemento Audio
             backgroundMusic = new Audio(musicObjectUrls.get(url) ?? url);
@@ -286,21 +331,9 @@ export function useAudio() {
 
             // Cria nodes do Web Audio API
             backgroundMusicSource = audioContext.createMediaElementSource(backgroundMusic);
-            backgroundMusicGain = audioContext.createGain();
-            backgroundMusicFilter = audioContext.createBiquadFilter();
-
-            // Configura o filtro lowpass (inicialmente desligado - frequência alta)
-            backgroundMusicFilter.type = 'lowpass';
-            backgroundMusicFilter.frequency.value = 22050; // Frequência alta = sem filtro
-            backgroundMusicFilter.Q.value = 1;
-
-            // Configura volume
-            backgroundMusicGain.gain.value = getGeneralVolume() * getBackgroundVolume();
 
             // Conecta: source -> filter -> gain -> destination
-            backgroundMusicSource.connect(backgroundMusicFilter);
-            backgroundMusicFilter.connect(backgroundMusicGain);
-            backgroundMusicGain.connect(audioContext.destination);
+            backgroundMusicSource.connect(createMusicChain());
 
             // Aguarda interação do usuário (browsers requerem isso)
             const playPromise = backgroundMusic.play();
@@ -318,12 +351,48 @@ export function useAudio() {
         }
     }
 
-    // Para música de fundo
-    function stopBackgroundMusic() {
+    // Filtro lowpass (inicialmente aberto) + volume por onde passa a música da fase, mp3 ou gerada:
+    // é o que permite abafar na pausa e na vitória. A cadeia anterior sai depois do fade dela.
+    function createMusicChain() {
+        const previous = [backgroundMusicFilter, backgroundMusicGain];
+        setTimeout(() => previous.forEach(node => node?.disconnect()), 1000);
+
+        backgroundMusicFilter = audioContext.createBiquadFilter();
+        backgroundMusicGain = audioContext.createGain();
+        backgroundMusicFilter.type = 'lowpass';
+        backgroundMusicFilter.frequency.value = 22050; // Frequência alta = sem filtro
+        backgroundMusicFilter.Q.value = 1;
+        backgroundMusicGain.gain.value = getGeneralVolume() * getBackgroundVolume();
+        backgroundMusicFilter.connect(backgroundMusicGain).connect(audioContext.destination);
+        return backgroundMusicFilter;
+    }
+
+    // Trilha gerada da fase: tema do capítulo, intensidade 'calm' | 'combat' | 'boss'
+    async function playChapterMusic(chapter, intensity = 'calm') {
+        if (!audioContext) await init();
+        if (!audioContext) return;
+
         if (backgroundMusic) {
             backgroundMusic.pause();
             backgroundMusic.currentTime = 0;
         }
+        chapterMusic?.stop(0.3, { dispose: true });
+        chapterMusic = createChapterMusic(audioContext, createMusicChain(), chapter, intensity);
+        chapterMusic.start(1, 1.5);
+    }
+
+    function setMusicIntensity(level) {
+        chapterMusic?.setIntensity(level);
+    }
+
+    // Para música de fundo
+    function stopBackgroundMusic(fade = 0.8) {
+        if (backgroundMusic) {
+            backgroundMusic.pause();
+            backgroundMusic.currentTime = 0;
+        }
+        chapterMusic?.stop(fade, { dispose: true });
+        chapterMusic = null;
     }
 
     function startBackgroundMusicAbafado(fadeDuration = 1) {
@@ -414,6 +483,7 @@ export function useAudio() {
         playSound,
         playHeartSound,
         playLootSound,
+        playResultSound,
         updateSpatialAudio,
         stopSpatialAudio,
 
@@ -427,5 +497,9 @@ export function useAudio() {
         stopBackgroundMusic,
         startBackgroundMusicAbafado,
         stopBackgroundMusicAbafado,
+        startLobbyMusic,
+        stopLobbyMusic,
+        playChapterMusic,
+        setMusicIntensity,
     };
 }

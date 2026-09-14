@@ -163,7 +163,9 @@ onBeforeRender(({ delta, elapsed }) => {
 </template>
 
 <style scoped>
-.chapter-lock{font-size:48px;background:#172b48d9;border:3px solid #89a0bd;border-radius:22px;padding:8px 15px;box-shadow:0 5px 0 #0d192b;filter:drop-shadow(0 4px 10px #0009)}
+/* Cadeado do capítulo bloqueado no mesmo acabamento dos cards (contorno escuro, sombra dura, brilho) */
+.chapter-lock{position:relative;font-size:48px;line-height:1;background:linear-gradient(#c9d0db,#8e97a6 85%);border:3px solid #3c4352;border-radius:20px;padding:10px 14px;box-shadow:0 5px 0 #3c4352,inset 0 3px 0 rgba(255,255,255,.5),inset 0 -5px 0 rgba(0,0,0,.12);filter:drop-shadow(0 6px 10px #0009)}
+.chapter-lock::before{content:'';position:absolute;top:5px;left:8px;width:14px;height:6px;border-radius:50%;background:rgba(255,255,255,.8);rotate:-30deg}
 .enemy-title{width:250px;max-width:75vw;text-align:center;padding:10px 16px;border:3px solid #3672b4;border-radius:15px;background:linear-gradient(#65b5fa,#2c79c7);box-shadow:0 5px 0 #194b85,inset 0 2px 0 #b7e1ff;color:white;font-family:'Lilita One',sans-serif;text-shadow:0 2px 0 #25528b}
 .enemy-title strong{display:block;font-size:23px;font-weight:400;letter-spacing:.5px}.enemy-title span{display:block;font:13px 'Fredoka One',sans-serif;margin:2px 0 8px}.enemy-title small{display:block;background:#183d6d;border-radius:8px;padding:6px;font:12px 'Lilita One',sans-serif;color:#ffdf85;text-shadow:none}.enemy-title small.ready{color:#d9f3ff;background:#235d99}
 @media(max-width:650px),(max-height:500px){.chapter-lock{font-size:32px;padding:5px 10px;border-radius:15px}}

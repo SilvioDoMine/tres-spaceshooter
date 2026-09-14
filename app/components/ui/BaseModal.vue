@@ -1,6 +1,9 @@
 <script setup lang="js">
 import { useModal } from '~/composables/useModal';
 
+// Modal do lobby no mesmo formato dos diálogos da Loja e das telas da partida: painel de madeira clara com
+// contorno escuro e sombra dura, faixa de título (BaseRibbonTitle) pendurada no topo, X redondo no canto
+// e o conteúdo numa área clara rolável.
 const props = defineProps({
   /** ID único do modal */
   modalId: {
@@ -12,30 +15,15 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  /** Cor da faixa do título */
+  variant: {
+    type: String,
+    default: 'blue',
+  },
   /** Largura máxima do modal */
   maxWidth: {
     type: String,
     default: 'max-w-md',
-  },
-  /** Cor de fundo do conteúdo */
-  bgColor: {
-    type: String,
-    default: 'bg-orange-300',
-  },
-  /** Cor da sombra */
-  shadowColor: {
-    type: String,
-    default: 'shadow-orange-400',
-  },
-  /** Cor do título */
-  titleBgColor: {
-    type: String,
-    default: 'bg-blue-500',
-  },
-  /** Cor da sombra do título */
-  titleShadowColor: {
-    type: String,
-    default: 'shadow-blue-600',
   },
   /** Desabilitar fechamento ao clicar no overlay */
   disableOverlayClose: {
@@ -80,167 +68,151 @@ function handleContentClick(e) {
 </script>
 
 <template>
-  <Transition
-    enter-active-class="transition-opacity duration-200"
-    enter-from-class="opacity-0"
-    enter-to-class="opacity-100"
-    leave-active-class="transition-opacity duration-200"
-    leave-from-class="opacity-100"
-    leave-to-class="opacity-0"
-  >
+  <Transition name="lmodal">
     <div
       v-if="isOpen"
-      class="bg-black/80 fixed inset-0 flex items-center justify-center p-4 pointer-events-auto"
+      class="lmodal pointer-events-auto"
       :style="{ zIndex: zIndex }"
       @click="handleOverlayClick"
     >
-        <!-- Modal Content -->
-        <div
-          :class="[
-            'modal-pop w-full relative rounded-md shadow-md flex flex-col',
-            'max-h-[calc(100vh-2rem)]',
-            maxWidth, bgColor, shadowColor
-          ]"
-          @click="handleContentClick"
-        >
-          <!-- Close Button -->
-          <button
-            v-if="showCloseButton"
-            @click="handleClose"
-            class="absolute top-2 cursor-pointer right-2 w-7 h-7 text-amber-900 rounded-full flex items-center justify-center hover:rotate-90 hover:scale-90 transition z-20"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
-              <path fill="currentColor" d="m12 13.4l2.9 2.9q.275.275.7.275t.7-.275t.275-.7t-.275-.7L13.4 12l2.9-2.9q.275-.275.275-.7t-.275-.7t-.7-.275t-.7.275L12 10.6L9.1 7.7q-.275-.275-.7-.275t-.7.275t-.275.7t.275.7l2.9 2.9l-2.9 2.9q-.275.275-.275.7t.275.7t.7.275t.7-.275zm0 8.6q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22m0-2q3.35 0 5.675-2.325T20 12t-2.325-5.675T12 4T6.325 6.325T4 12t2.325 5.675T12 20m0-8"/>
-            </svg>
-          </button>
+      <div
+        :class="['lmodal__panel', maxWidth, { 'has-title': title }]"
+        @click="handleContentClick"
+      >
+        <span class="lmodal__shine" aria-hidden="true"></span>
 
-          <!-- Title -->
-          <div
-            v-if="title"
-            class="modal-header"
-          >
-            <!-- Diamond Left -->
-            <div class="modal-diamond"></div>
-
-            <!-- Title Text -->
-            <h2 class="modal-title">
-              {{ title }}
-            </h2>
-
-            <!-- Diamond Right -->
-            <div class="modal-diamond"></div>
-          </div>
-
-          <!-- Content Slot with Scroll -->
-          <div :class="['p-4 overflow-y-auto', title ? 'mt-10' : '']">
-            <slot />
-          </div>
+        <div v-if="title" class="lmodal__title">
+          <BaseRibbonTitle :text="title" :variant="variant" />
         </div>
+
+        <BaseCloseButton
+          v-if="showCloseButton"
+          class="lmodal__close"
+          @click="handleClose"
+        />
+
+        <div class="lmodal__body allow-scroll">
+          <slot />
+        </div>
+      </div>
     </div>
   </Transition>
 </template>
 
 <style scoped>
-/* Entrada do modal com leve "pop" */
-.modal-pop {
-  animation: modal-pop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+.lmodal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 16px 24px;
+  background: rgba(6, 8, 22, 0.72);
 }
 
-@keyframes modal-pop {
-  from { transform: scale(0.9) translateY(8px); }
-  to { transform: scale(1) translateY(0); }
+.lmodal__panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: calc(100dvh - 80px);
+  padding: 14px 12px 14px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #f5cf99 0%, #e8b06c 55%, #d99a55 100%);
+  border: 3px solid #8a531f;
+  box-shadow:
+    0 6px 0 #6b3d12,
+    0 16px 30px rgba(0, 0, 0, 0.5),
+    inset 0 3px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -6px 0 rgba(0, 0, 0, 0.08);
+  animation: lmodal-pop 0.28s cubic-bezier(0.3, 1.5, 0.6, 1);
+}
+.lmodal__panel.has-title {
+  padding-top: 44px;
+}
+
+/* Brilho oval do canto (igual às cartas e aos botões) */
+.lmodal__shine {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  width: 22px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  rotate: -30deg;
+  pointer-events: none;
+}
+
+/* Faixa pendurada: metade para fora do painel */
+.lmodal__title {
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  left: 12px;
+  right: 12px;
+  translate: 0 -58%;
+  pointer-events: none;
+}
+
+.lmodal__close {
+  position: absolute;
+  z-index: 5;
+  top: -14px;
+  right: -12px;
+}
+
+.lmodal__body {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px;
+  border-radius: 14px;
+  background: #fdf3dc;
+  border: 2px solid #e2c08e;
+  box-shadow: inset 0 3px 0 rgba(138, 83, 31, 0.1);
+  color: #5a3a1c;
+  /* Rolagem só quando precisa, com barra fina no tom da madeira */
+  scrollbar-width: thin;
+  scrollbar-color: #c9964f transparent;
+  overscroll-behavior: contain;
+}
+.lmodal__body::-webkit-scrollbar {
+  width: 8px;
+}
+.lmodal__body::-webkit-scrollbar-track {
+  margin: 8px 0;
+  background: transparent;
+}
+.lmodal__body::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 2px solid #fdf3dc;
+  background: #c9964f;
+}
+.lmodal__body::-webkit-scrollbar-thumb:hover {
+  background: #a8742f;
+}
+
+.lmodal-enter-active,
+.lmodal-leave-active {
+  transition: opacity 0.2s ease;
+}
+.lmodal-enter-from,
+.lmodal-leave-to {
+  opacity: 0;
+}
+
+@keyframes lmodal-pop {
+  from {
+    scale: 0.85;
+  }
+  to {
+    scale: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .modal-pop { animation: none; }
-}
-
-/* Scrollbar customizada */
-.overflow-y-auto {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
-}
-
-.overflow-y-auto::-webkit-scrollbar {
-  width: 8px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.3);
-  border-radius: 4px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
-/* Header do Modal */
-.modal-header {
-  position: absolute;
-  top: 0.75rem;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  background: linear-gradient(
-    to bottom,
-    #6bb5ff 0%,
-    #4a9fff 50%,
-    #2988ff 100%
-  );
-  border: 2px solid #1a5a9a;
-  border-radius: 12px;
-}
-
-/* Título */
-.modal-title {
-  font-family: 'Lilita One', sans-serif;
-  font-size: 1.25rem;
-  font-weight: 400;
-  color: white;
-  white-space: nowrap;
-  padding: 0 1rem;
-  letter-spacing: 0.5px;
-  text-shadow:
-    -1px -1px 0 rgba(26, 90, 154, 0.5),
-    1px -1px 0 rgba(26, 90, 154, 0.5),
-    -1px 1px 0 rgba(26, 90, 154, 0.5),
-    1px 1px 0 rgba(26, 90, 154, 0.5),
-    0 2px 4px rgba(0, 0, 0, 0.25);
-}
-
-/* Diamantes decorativos */
-.modal-diamond {
-  width: 0.5rem;
-  height: 0.5rem;
-  background: linear-gradient(
-    135deg,
-    #e8f4ff 0%,
-    #b8d9ff 50%,
-    #8ab8e6 100%
-  );
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  border-radius: 3px;
-  transform: rotate(45deg);
-  box-shadow:
-    inset 0 1px 3px rgba(255, 255, 255, 0.6),
-    0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-@media (max-width: 640px) {
-  .modal-title {
-    font-size: 1.125rem;
-    padding: 0 0.75rem;
-  }
-
-  .modal-diamond {
-    width: 1rem;
-    height: 1rem;
+  .lmodal__panel {
+    animation: none;
   }
 }
 </style>

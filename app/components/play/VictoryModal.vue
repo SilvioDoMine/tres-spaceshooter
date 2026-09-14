@@ -36,11 +36,6 @@ function handleQuit() {
   useRouter().push('/');
 }
 
-function handleNextChapter() {
-  close();
-  useRouter().push(`/play/${nextChapter.value}`);
-}
-
 defineExpose({ open, close, isOpen });
 
 // Quando abrir o modal, solta o confete no momento em que o card chega ao tamanho final
@@ -149,10 +144,7 @@ const expReward = computed(() => levelAccount.calculateExpReward(
   <!-- Slot de actions para os botões grandes -->
   <template #actions>
     <div class="text-center victory-action">
-      <template v-if="nextChapter">
-        <p class="text-sm text-white/75 mb-3">Capítulo {{ chapter }} concluído. Capítulo {{ nextChapter }} liberado!</p>
-        <BaseButton variant="green" size="sm" class="mb-3" @click="handleNextChapter">Próximo capítulo</BaseButton>
-      </template>
+      <p v-if="nextChapter" class="text-sm text-white/75 mb-2">Capítulo {{ chapter }} concluído. Capítulo {{ nextChapter }} liberado!</p>
       <p v-else class="text-sm text-white/75 mb-2">Você concluiu todos os capítulos!</p>
       <p @click="handleQuit" class="title-text text-white animate-pulse cursor-pointer">Voltar ao lobby</p>
     </div>

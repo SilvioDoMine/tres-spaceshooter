@@ -13,7 +13,7 @@ defineProps({
    */
   checkersOpacity: {
     type: Number,
-    default: 0.05
+    default: 0.07
   },
   /**
    * Tamanho de cada quadrado do xadrez (em pixels)
@@ -47,6 +47,7 @@ defineProps({
 </script>
 
 <template>
+  <!-- Card colorido no estilo das cartas de habilidade: contorno escuro, sombra dura, brilho no topo -->
   <div
     class="checkers-card"
     :class="[
@@ -56,7 +57,7 @@ defineProps({
   >
     <!-- Checkers background pattern -->
     <div
-      class="absolute inset-0 bg-center pointer-events-none rounded-lg"
+      class="absolute inset-0 bg-center pointer-events-none"
       :style="{
         backgroundImage: `
           linear-gradient(135deg, rgba(${checkersColor}, ${checkersOpacity}) 25%, transparent 25%),
@@ -68,10 +69,12 @@ defineProps({
       }"
     />
 
+    <span class="checkers-card__shine" aria-hidden="true"></span>
+
     <!-- Header (opcional) -->
     <div
       v-if="header || $slots.header"
-      class="relative z-10 bg-black/20 px-3 py-2 rounded-t-lg"
+      class="checkers-card__header relative z-10 px-3 py-2"
     >
       <slot name="header">
         <p class="title-text text-white">{{ header }}</p>
@@ -86,46 +89,70 @@ defineProps({
 </template>
 
 <style scoped>
-/* Base do CheckersCard */
+/* Base do CheckersCard: a cor vem das variáveis de cada variante */
 .checkers-card {
+  --from: #5fb8ff;
+  --to: #2a74db;
+  --outline: #173f7d;
+
   position: relative;
   overflow: hidden;
-  border-radius: 0.5rem;
+  border-radius: 14px;
+  border: 3px solid var(--outline);
+  background: linear-gradient(180deg, var(--from), var(--to) 85%);
+  box-shadow:
+    0 4px 0 var(--outline),
+    inset 0 2px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -5px 0 rgba(0, 0, 0, 0.12);
 }
 
-/* Variante Azul */
-.checkers-card--blue {
-  background-color: rgb(29 78 216);
-  box-shadow: 0px 0.5px 0px 2px rgb(30 58 138);
+/* Brilho oval do canto */
+.checkers-card__shine {
+  position: absolute;
+  z-index: 11;
+  top: 5px;
+  left: 8px;
+  width: 16px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.75);
+  rotate: -30deg;
+  pointer-events: none;
 }
 
-/* Variante Amarela */
+/* Faixa do header com o contorno da variante embaixo */
+.checkers-card__header {
+  background: rgba(0, 0, 0, 0.18);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.18);
+}
+
 .checkers-card--yellow {
-  background-color: #ffca4a;
-  box-shadow: 0px 0.5px 0px 2px #a86b00;
+  --from: #ffdf73;
+  --to: #f3a91f;
+  --outline: #8a5300;
 }
 
-/* Variante Vermelha */
 .checkers-card--red {
-  background-color: #ff4a4a;
-  box-shadow: 0px 0.5px 0px 2px #b81a1a;
+  --from: #ff8a78;
+  --to: #dc3e33;
+  --outline: #6e1414;
 }
 
-/* Variante Verde */
 .checkers-card--green {
-  background-color: #5cd63c;
-  box-shadow: 0px 0.5px 0px 2px #1a7a0a;
+  --from: #7fe46a;
+  --to: #34a526;
+  --outline: #1f5f19;
 }
 
-/* Variante Laranja */
 .checkers-card--orange {
-  background-color: #ff9933;
-  box-shadow: 0px 0.5px 0px 2px #cc6600;
+  --from: #ffd257;
+  --to: #f08a14;
+  --outline: #7a4006;
 }
 
-/* Variante Cinza */
 .checkers-card--gray {
-  background-color: #8a8a8a;
-  box-shadow: 0px 0.5px 0px 2px #4a4a4a;
+  --from: #c9d0db;
+  --to: #8e97a6;
+  --outline: #3c4352;
 }
 </style>

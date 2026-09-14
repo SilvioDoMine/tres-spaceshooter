@@ -382,8 +382,6 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
     if (currentHealth.value <= 0) {
       console.log('Jogador morreu!');
-      useAudio().playSound('player-death');
-      useAudio().stopBackgroundMusic();
       gameOver('You have been defeated.');
       // Lógica adicional de morte do jogador pode ser adicionada aqui
     } else if (direct) {
@@ -477,6 +475,9 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     gameVictoryRewards();
     gameState.value = 'gameover';
     uiModalOver.open();
+    // Toda derrota (morte, debug...) passa por aqui: corta a música da fase e toca o sting
+    useAudio().stopBackgroundMusic();
+    useAudio().playResultSound('defeat');
   }
 
   function gameVictoryRewards(completedChapter = false) {
@@ -522,6 +523,9 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
     gameState.value = 'victory';
     uiModalVictory.open();
+    // Abafa a música da fase para a fanfarra aparecer
+    useAudio().startBackgroundMusicAbafado(0.4);
+    useAudio().playResultSound('victory');
     useMissions().handleEvent('stage-complete', 1);
   }
 

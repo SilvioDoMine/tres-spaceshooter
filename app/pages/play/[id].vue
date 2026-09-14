@@ -27,6 +27,22 @@ const chapterProgress = useChapterProgressStore();
 
 const audioInitialized = ref(false);
 
+// A trilha acompanha a sala: calma na intro e com a sala limpa, combate nas ondas e chefe no boss
+const musicIntensity = computed(() => {
+  const stage = currentRunStore.currentStage;
+  if (!stage || stage.type === 'intro' || currentRunStore.isStageCompleted) return 'calm';
+  return stage.type === 'boss' ? 'boss' : 'combat';
+});
+// Sala limpa só acalma a música depois de um tempo: indo direto para a próxima sala, a bateria
+// segue tocando em vez de sumir e voltar a cada porta
+const CALM_DELAY_MS = 10000;
+let calmTimer = 0;
+watch(musicIntensity, level => {
+  clearTimeout(calmTimer);
+  if (level === 'calm') calmTimer = setTimeout(() => audio.setMusicIntensity('calm'), CALM_DELAY_MS);
+  else audio.setMusicIntensity(level);
+});
+
 // Inicializa áudio na primeira interação do usuário
 const initAudioOnFirstInput = async () => {
   if (audioInitialized.value) return;
@@ -37,8 +53,9 @@ const initAudioOnFirstInput = async () => {
   // Inicia o sistema de áudio
   await audio.init();
 
-  // Toca música de fundo
-  audio.playBackgroundMusic('/sounds/background_main.mp3', true);
+  // Trilha gerada do capítulo, já na intensidade da sala atual
+  const chapterId = Number(route.params.id);
+  audio.playChapterMusic(levels[chapterId]?.chapter ?? chapterId, musicIntensity.value);
 
   // Remove os listeners após inicializar
   window.removeEventListener('click', initAudioOnFirstInput);
@@ -93,6 +110,7 @@ onUnmounted(() => {
   console.log('Play page unmounted');
 
   // Para a música ao desmontar
+  clearTimeout(calmTimer);
   audio.stopBackgroundMusic();
 
   // Remove listeners caso ainda existam

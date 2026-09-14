@@ -190,12 +190,17 @@ function handleKeyPress(event: KeyboardEvent) {
 }
 
 // Adicionar e remover event listener
+// Música ambiente gerada do lobby (some com fade ao entrar na partida)
+const audio = useAudio();
+
 onMounted(() => {
   window.addEventListener('keydown', handleKeyPress);
+  audio.startLobbyMusic();
 });
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyPress);
+  audio.stopLobbyMusic();
 });
 </script>
 
@@ -293,15 +298,16 @@ onUnmounted(() => {
         <!-- Left -->
         <div class="lobby-fx flex flex-col gap-2" :class="{ 'is-out-left': !isChapterView }">
           <!-- Settings -->
-          <div @click="settingsModal.open()" class="p-2 bg-white/20 rounded-lg inline-flex items-center justify-center cursor-pointer pointer-events-auto hover:bg-white/20 transition hud-button-shake active:translate-y-1 active:shadow-inner active:bg-white/30">
-            <svg class="text-white/80" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Material Symbols by Google - https://github.com/google/material-design-icons/blob/master/LICENSE --><path fill="currentColor" d="M10 20q-.825 0-1.412-.587T8 18t.588-1.412T10 16h10q.825 0 1.413.588T22 18t-.587 1.413T20 20zm0-6q-.825 0-1.412-.587T8 12t.588-1.412T10 10h10q.825 0 1.413.588T22 12t-.587 1.413T20 14zm0-6q-.825 0-1.412-.587T8 6t.588-1.412T10 4h10q.825 0 1.413.588T22 6t-.587 1.413T20 8zM4 8q-.825 0-1.412-.587T2 6t.588-1.412T4 4t1.413.588T6 6t-.587 1.413T4 8m0 6q-.825 0-1.412-.587T2 12t.588-1.412T4 10t1.413.588T6 12t-.587 1.413T4 14m0 6q-.825 0-1.412-.587T2 18t.588-1.412T4 16t1.413.588T6 18t-.587 1.413T4 20"/></svg>
-          </div>
+          <LobbyHudButton label="Config" variant="blue" class="pointer-events-auto hud-button-shake" @click="settingsModal.open()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Material Symbols by Google - https://github.com/google/material-design-icons/blob/master/LICENSE --><path fill="currentColor" d="M10 20q-.825 0-1.412-.587T8 18t.588-1.412T10 16h10q.825 0 1.413.588T22 18t-.587 1.413T20 20zm0-6q-.825 0-1.412-.587T8 12t.588-1.412T10 10h10q.825 0 1.413.588T22 12t-.587 1.413T20 14zm0-6q-.825 0-1.412-.587T8 6t.588-1.412T10 4h10q.825 0 1.413.588T22 6t-.587 1.413T20 8zM4 8q-.825 0-1.412-.587T2 6t.588-1.412T4 4t1.413.588T6 6t-.587 1.413T4 8m0 6q-.825 0-1.412-.587T2 12t.588-1.412T4 10t1.413.588T6 12t-.587 1.413T4 14m0 6q-.825 0-1.412-.587T2 18t.588-1.412T4 16t1.413.588T6 18t-.587 1.413T4 20"/></svg>
+          </LobbyHudButton>
 
-          <div @click="offersModal.open()" class="aspect-square relative bg-white/20 rounded-lg flex-col flex items-center justify-center cursor-pointer pointer-events-auto hover:bg-white/20 transition hud-button-shake active:translate-y-1 active:shadow-inner active:bg-white/30">
-            <svg class="mx-2 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 64 64"><!-- Icon from Emoji One (v1) by Emoji One - https://creativecommons.org/licenses/by-sa/4.0/ --><path fill="#d07929" d="M57.3 16L29.81 2.442c-.624-.307-1.282-.733-2.01-.514c-.449.137-.89.464-1.292.692l-6.334 3.611q-8.393 4.791-16.794 9.582c-.722.414-1.447.823-2.171 1.237a1.5 1.5 0 0 0-.57.333c-.796.527-.798 1.424-.384 2.078c.117.232.302.445.558.621l26.09 17.615q.914.616 1.826 1.235c.435.291 1.198.271 1.619-.039q12.619-9.402 25.24-18.809q.89-.659 1.771-1.317c.907-.673 1.1-2.191-.061-2.767"/><path fill="#f6921e" d="M30.935 37.29c-.201-.667-.888-1.03-1.43-1.401c-8.868-6.05-17.736-12.09-26.604-18.15a1.22 1.22 0 0 0-.851-.534c-.841-.351-1.59.218-1.861.987a1.65 1.65 0 0 0-.128 1.046c.901 4.859 1.808 9.722 2.711 14.582l1.611 8.66c.222 1.179.23 2.224 1.225 3l23.26 18.15c1.056.823 2.741.308 2.706-1.194l-.351-15.12c-.064-2.777-.131-5.552-.191-8.33c-.013-.538.057-1.186-.097-1.706"/><path fill="#9a5524" d="M.946 23.839c.32-.175.701-.23 1.104-.062c.335.055.644.225.851.535l26.604 18.15c.542.371 1.229.733 1.43 1.4c.154.523.084 1.167.098 1.705q.093 4.167.191 8.334l.208 9.05c.088-.199.148-.418.143-.68l-.351-15.12c-.064-2.777-.131-5.556-.191-8.334c-.014-.535.057-1.183-.098-1.705c-.201-.665-.888-1.03-1.43-1.4c-8.868-6.05-17.736-12.09-26.604-18.15a1.24 1.24 0 0 0-.851-.535c-.841-.349-1.59.221-1.861.989a1.64 1.64 0 0 0-.128 1.045Q.5 21.45.946 23.839"/><path fill="#d07929" d="M55.75 16.14L31.011 34.457c-.552.406-1.104.817-1.652 1.224c-.057.041-.1.08-.146.119c-.363.263-.609.69-.597 1.285c.199 8.469.394 16.943.591 25.413c.035 1.502 1.699 1.939 2.686 1.069q10.877-9.564 21.763-19.12c.815-.718.761-2.657.911-3.641c.462-2.995.918-5.989 1.377-8.984c.714-4.645 1.426-9.282 2.136-13.924c.194-1.258-1.114-2.654-2.33-1.753"/><path fill="#9a5524" d="M29.21 41.979c.046-.035.091-.074.146-.113c.546-.391 1.1-.788 1.652-1.175q12.369-8.82 24.741-17.631c.526-.378 1.069-.322 1.5-.055c.275-1.726.552-3.457.825-5.185c.197-1.209-1.111-2.553-2.325-1.689L31.008 33.762c-.552.393-1.106.786-1.652 1.177c-.055.039-.1.078-.146.115c-.361.253-.607.665-.595 1.236q.076 3.11.15 6.224c.106-.22.256-.403.445-.535"/><g fill="#be202e"><path d="M37.507 6.244L9.576 22.12l9 6.14l26.08-18.488z"/><path d="m19.427 6.663l28.19 15.265l-10.18 7.252l-24.706-18.693z"/></g><g fill="#cc2f42"><path d="m18.581 28.26l1.225 28.31l-8.108-6.33l-2.122-28.12m27.857 7.06V58.7l9.242-8.119l.938-28.653"/><path d="M26.06 6.03c-3.531 2.928-5.442 8.232-5.879 12.176c-.468 4.208-.554 8.615-3.191 12.188c-.378.513-.043.829.488.507c1.531-.938 2.848-2.062 4.067-3.339c.778 1.58.521 3.451.345 5.177c-.082.784 1.086-.185 1.258-.364c3.58-3.919 2.405-8.749 3.365-13.616C29.056 5.876 28.557 3.962 26.06 6.03"/><path d="M31.1 18.654c2.255 4.417 2.435 9.385 6.954 12.177c.207.125 1.6.739 1.308.008c-.635-1.613-1.399-3.342-1.079-5.072c1.518.899 3.092 1.621 4.826 2.103c.601.164.827-.226.323-.62c-3.507-2.72-4.795-6.933-6.391-10.854c-1.502-3.677-4.783-8.263-8.981-10.11c-2.967-1.309-2.92.667 3.04 12.367"/><path d="M14.12 3.485c3.798-.53 12.446 1.024 12.91 4.354c.462 3.328-7.434 7.179-11.229 7.709c-3.796.527-6.081-1.912-6.544-5.24c-.468-3.333 1.069-6.296 4.863-6.823M38.27.126c-3.8.532-11.695 4.383-11.23 7.713c.462 3.328 9.114 4.879 12.902 4.354c3.804-.53 5.333-3.496 4.869-6.826C44.35 2.03 42.067-.4 38.27.126"/></g><path fill="#ef556c" d="M33.935 6.175a4.71 4.71 0 0 1-4.02 5.312l-4.655.649a4.71 4.71 0 0 1-5.317-4.01a4.717 4.717 0 0 1 4.02-5.316l4.662-.649a4.72 4.72 0 0 1 5.315 4.02"/></svg>
-            <span class="bottom-0 text-xs text-white font-semibold">Grátis</span>
-            <BaseNotification v-if="useOffers().shouldDisplayGeneralNotification.value" />
-          </div>
+          <LobbyHudButton label="Grátis" variant="orange" class="pointer-events-auto hud-button-shake" @click="offersModal.open()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 64 64"><!-- Icon from Emoji One (v1) by Emoji One - https://creativecommons.org/licenses/by-sa/4.0/ --><path fill="#d07929" d="M57.3 16L29.81 2.442c-.624-.307-1.282-.733-2.01-.514c-.449.137-.89.464-1.292.692l-6.334 3.611q-8.393 4.791-16.794 9.582c-.722.414-1.447.823-2.171 1.237a1.5 1.5 0 0 0-.57.333c-.796.527-.798 1.424-.384 2.078c.117.232.302.445.558.621l26.09 17.615q.914.616 1.826 1.235c.435.291 1.198.271 1.619-.039q12.619-9.402 25.24-18.809q.89-.659 1.771-1.317c.907-.673 1.1-2.191-.061-2.767"/><path fill="#f6921e" d="M30.935 37.29c-.201-.667-.888-1.03-1.43-1.401c-8.868-6.05-17.736-12.09-26.604-18.15a1.22 1.22 0 0 0-.851-.534c-.841-.351-1.59.218-1.861.987a1.65 1.65 0 0 0-.128 1.046c.901 4.859 1.808 9.722 2.711 14.582l1.611 8.66c.222 1.179.23 2.224 1.225 3l23.26 18.15c1.056.823 2.741.308 2.706-1.194l-.351-15.12c-.064-2.777-.131-5.552-.191-8.33c-.013-.538.057-1.186-.097-1.706"/><path fill="#9a5524" d="M.946 23.839c.32-.175.701-.23 1.104-.062c.335.055.644.225.851.535l26.604 18.15c.542.371 1.229.733 1.43 1.4c.154.523.084 1.167.098 1.705q.093 4.167.191 8.334l.208 9.05c.088-.199.148-.418.143-.68l-.351-15.12c-.064-2.777-.131-5.556-.191-8.334c-.014-.535.057-1.183-.098-1.705c-.201-.665-.888-1.03-1.43-1.4c-8.868-6.05-17.736-12.09-26.604-18.15a1.24 1.24 0 0 0-.851-.535c-.841-.349-1.59.221-1.861.989a1.64 1.64 0 0 0-.128 1.045Q.5 21.45.946 23.839"/><path fill="#d07929" d="M55.75 16.14L31.011 34.457c-.552.406-1.104.817-1.652 1.224c-.057.041-.1.08-.146.119c-.363.263-.609.69-.597 1.285c.199 8.469.394 16.943.591 25.413c.035 1.502 1.699 1.939 2.686 1.069q10.877-9.564 21.763-19.12c.815-.718.761-2.657.911-3.641c.462-2.995.918-5.989 1.377-8.984c.714-4.645 1.426-9.282 2.136-13.924c.194-1.258-1.114-2.654-2.33-1.753"/><path fill="#9a5524" d="M29.21 41.979c.046-.035.091-.074.146-.113c.546-.391 1.1-.788 1.652-1.175q12.369-8.82 24.741-17.631c.526-.378 1.069-.322 1.5-.055c.275-1.726.552-3.457.825-5.185c.197-1.209-1.111-2.553-2.325-1.689L31.008 33.762c-.552.393-1.106.786-1.652 1.177c-.055.039-.1.078-.146.115c-.361.253-.607.665-.595 1.236q.076 3.11.15 6.224c.106-.22.256-.403.445-.535"/><g fill="#be202e"><path d="M37.507 6.244L9.576 22.12l9 6.14l26.08-18.488z"/><path d="m19.427 6.663l28.19 15.265l-10.18 7.252l-24.706-18.693z"/></g><g fill="#cc2f42"><path d="m18.581 28.26l1.225 28.31l-8.108-6.33l-2.122-28.12m27.857 7.06V58.7l9.242-8.119l.938-28.653"/><path d="M26.06 6.03c-3.531 2.928-5.442 8.232-5.879 12.176c-.468 4.208-.554 8.615-3.191 12.188c-.378.513-.043.829.488.507c1.531-.938 2.848-2.062 4.067-3.339c.778 1.58.521 3.451.345 5.177c-.082.784 1.086-.185 1.258-.364c3.58-3.919 2.405-8.749 3.365-13.616C29.056 5.876 28.557 3.962 26.06 6.03"/><path d="M31.1 18.654c2.255 4.417 2.435 9.385 6.954 12.177c.207.125 1.6.739 1.308.008c-.635-1.613-1.399-3.342-1.079-5.072c1.518.899 3.092 1.621 4.826 2.103c.601.164.827-.226.323-.62c-3.507-2.72-4.795-6.933-6.391-10.854c-1.502-3.677-4.783-8.263-8.981-10.11c-2.967-1.309-2.92.667 3.04 12.367"/><path d="M14.12 3.485c3.798-.53 12.446 1.024 12.91 4.354c.462 3.328-7.434 7.179-11.229 7.709c-3.796.527-6.081-1.912-6.544-5.24c-.468-3.333 1.069-6.296 4.863-6.823M38.27.126c-3.8.532-11.695 4.383-11.23 7.713c.462 3.328 9.114 4.879 12.902 4.354c3.804-.53 5.333-3.496 4.869-6.826C44.35 2.03 42.067-.4 38.27.126"/></g><path fill="#ef556c" d="M33.935 6.175a4.71 4.71 0 0 1-4.02 5.312l-4.655.649a4.71 4.71 0 0 1-5.317-4.01a4.717 4.717 0 0 1 4.02-5.316l4.662-.649a4.72 4.72 0 0 1 5.315 4.02"/></svg>
+            <template #badge>
+              <BaseNotification v-if="useOffers().shouldDisplayGeneralNotification.value" />
+            </template>
+          </LobbyHudButton>
         </div>
 
         <!-- Center -->
@@ -309,13 +315,12 @@ onUnmounted(() => {
 
         <!-- Right -->
         <div class="lobby-fx flex flex-col gap-2" :class="{ 'is-out-right': !isChapterView }">
-          <NuxtLink to="/hangar" aria-label="Abrir hangar" class="lobby-hangar aspect-square relative rounded-lg flex-col flex items-center justify-center cursor-pointer pointer-events-auto transition hud-button-shake active:translate-y-1 active:shadow-inner">
-            <svg class="mx-2 mt-0.5 text-cyan-100" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none">
-              <path d="M4 19V9.5L12 4l8 5.5V19M7 19v-6h10v6M9 10h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="m12 7 1.3 2.3L12 12 10.7 9.3 12 7Z" fill="#67e8f9"/>
+          <LobbyHudButton to="/hangar" label="Hangar" variant="purple" class="pointer-events-auto hud-button-shake">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <path d="M4 19V9.5L12 4l8 5.5V19M7 19v-6h10v6M9 10h6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="m12 7 1.3 2.3L12 12 10.7 9.3 12 7Z" fill="#ffe68a"/>
             </svg>
-            <span class="bottom-0 text-xs text-white font-semibold">Hangar</span>
-          </NuxtLink>
+          </LobbyHudButton>
 
            <!-- Ranking -->
           <!-- <div @click="rewardsModal.open()" class="aspect-square relative bg-white/20 rounded-lg flex-col flex items-center justify-center cursor-pointer pointer-events-auto hover:bg-white/20 transition hud-button-shake active:translate-y-1 active:shadow-inner active:bg-white/30">
@@ -324,12 +329,12 @@ onUnmounted(() => {
           </div> -->
 
            <!-- Missões -->
-          <div @click="missionsModal.open()" class="bg-white/20 rounded-lg flex-col flex items-center justify-center cursor-pointer pointer-events-auto relative hover:bg-white/20 transition hud-button-shake active:translate-y-1 active:shadow-inner active:bg-white/30">
-            <svg class="mx-2 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 128 128"><!-- Icon from Noto Emoji (v1) by Google Inc - https://github.com/googlefonts/noto-emoji/blob/main/svg/LICENSE --><path fill="#855c52" d="M97.38 85.78c10.86-13.89 27.03-38.64 27.03-38.64s3.33-4.27 2.79-6.85c-.68-3.23-4.6-5.01-6.91-6.91c-1.22-1.01-2.45-1.86-3.74-2.75c-2.84-1.96-5.66-3.91-8.47-5.84c-5.97-4.1-11.91-8.12-17.87-11.99c-5.88-3.83-11.91-7.2-17.9-10.65c-3.01-1.74-5.53-2.72-8.54-.58c-3.65 2.6-6.71 6.28-9.89 9.63c-3.49 3.67-21.26 22.66-25.07 26.52c-5.01 5.08-10.08 10.23-15.24 15.46c-2.27 2.3-4.59 4.58-6.84 6.96c-2.78 2.93-7.61 7.26-5.45 11.32c2.25 4.23 6.65 7.52 10.06 10.83c9.14 8.86 18.43 17.96 28 27.13c4 3.83 8.06 7.69 12.06 11.68c2.81 2.81 7.51 7.11 11.71 6.49c2.46-.37 6.36-4.73 6.36-4.73s17.05-23.18 27.91-37.08"/><path fill="#fff" d="M89.25 77.87c6.34-8.53 12.58-17.14 18.46-25.99c1.29-1.94 4.85-5.99 4.77-8.49c-.05-1.37-2.16-2.33-3.08-3.12c-1.69-1.46-3.87-2.64-5.74-3.93c-2.13-1.47-4.25-2.94-6.37-4.39c-5.27-3.62-10.63-7.15-15.94-10.72c-2.74-1.84-5.46-3.69-8.17-5.58c-1.65-1.15-4.19-3.78-6.28-3.92c-.47-.03-.38-.11-.89.19c-1.57.91-3.02 2.66-4.24 4c-1.76 1.93-3.47 3.9-5.27 5.8c-2.63 2.76-16.01 17.05-18.88 19.96c-3.76 3.81-7.71 7.44-11.5 11.23c-3.5 3.5-6.47 7.37-9.78 11.02c-1.39 1.52-.98 2.22.08 3.69c2.68 3.73 7.25 6.51 10.79 9.46c6.84 5.71 13.26 11.76 19.56 18.04c4.69 4.67 10.03 8.61 14.96 13c.75.66 1.41 1.45 2.54 1.1c.4-.12.75-.56 1.03-.82c4.63-4.31 8.36-9.85 12.15-14.87c3.94-5.21 7.89-10.42 11.8-15.66"/><path fill="#78a3ad" d="M112.7 15.6c-.24-.88-.65-1.75-1.21-2.58c-1.47-2.21-3.53-3.88-5.6-5.48c-3.03-2.34-7.09-4.31-10.95-4.46c-1.96-.07-3.41 1.11-4.7 2.43c-.58.59-1.08 1.15-1.96 1.12c-.83-.03-1.59-.51-2.39-.64c-2.43-.4-4.49 1.22-6.02 2.91c-1.67 1.83-3.31 3.79-4.75 5.77c-1.03 1.41-1.97 2.94-2.53 4.6c-.88 2.63-.56 5.08 1.6 6.89c2.25 1.89 4.23 4.14 6.5 5.99c3.11 2.53 6.67 4.4 10.03 6.56c4.78 3.07 8.66 4.26 13.28.12c.17-.15.33-.31.5-.47c1.93-1.86 3.64-4 4.9-6.37c.35-.67.53-1.4.78-2.1c.18-.5.53-.96.68-1.44c.4-1.24.05-3.01.04-4.3c-.02-1.47.94-2.49 1.47-3.79c.67-1.64.75-3.24.33-4.76"/><path fill="#2f2f2f" d="M114.62 14.96q-.405-1.455-1.32-2.82c-1.61-2.42-3.87-4.25-6.15-6c-3.32-2.57-7.77-4.72-11.98-4.88c-2.15-.08-3.74 1.21-5.16 2.66c-.62.64-1.18 1.26-2.15 1.23c-.9-.04-1.73-.56-2.62-.7c-2.66-.44-4.91 1.34-6.59 3.18c-1.82 2-3.62 4.15-5.2 6.32c-1.13 1.55-2.16 3.22-2.77 5.04c-.97 2.88-.62 5.56 1.75 7.54c2.46 2.07 4.63 4.53 7.12 6.56c3.41 2.77 7.31 4.82 10.99 7.18c5.24 3.36 9.49 4.67 14.54.13c.19-.17.38-.34.56-.52c2.11-2.03 3.99-4.38 5.37-6.98c.39-.73.58-1.53.85-2.3c.19-.54.57-1.05.75-1.58c.44-1.36.05-3.29.04-4.71c-.01-1.61 1.03-2.73 1.6-4.15c.75-1.78.83-3.53.37-5.2M97.33 6.24c2.21.45 4.28 1.53 6.17 2.74c2.06 1.32 6.63 4.66 3.6 7.4c-1.3 1.18-1.85-.32-2.79-1.04c-1.88-1.45-3.81-2.87-5.73-4.27c-.92-.67-5.01-2.27-4.72-3.68c.25-1.26 1.65-1.52 3.47-1.15m3.33 29.7c-2.66 1.72-5.16.63-7.75-.97c-2.47-1.52-5.09-2.8-7.43-4.51c-2.83-2.05-5.65-4.41-8.34-6.64c-2.81-2.33-.11-7.14 1.73-9.16c1.11-1.22 2.8-2.99 4.28-3.76c2.16-1.12 4.27.29 6.24 1.31c4.82 2.47 9.46 5.37 13.57 8.92c1.4 1.21 4.12 3.41 3.79 5.55c-.12.77-.62 1.83-.91 2.54c-1.01 2.45-2.74 5.01-4.92 6.56c-.1.06-.18.11-.26.16"/><path fill="#fff" d="M81.31 14.07s2.35-3.31 4.34-2.34c1.6.77 10.06 5.83 11.65 7.02s.07 1.11-1.72.63s-7.43-3.42-9.42-3.02s-6.9 3.43-8.1 3.43c-1.19 0 1.94-4 3.25-5.72"/></svg>
-            <span class="bottom-0 text-xs text-white font-semibold">Missões</span>
-
-            <BaseNotification v-if="missions.shouldDisplayGeneralNotification()" />
-          </div>
+          <LobbyHudButton label="Missões" variant="green" class="pointer-events-auto hud-button-shake" @click="missionsModal.open()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 128 128"><!-- Icon from Noto Emoji (v1) by Google Inc - https://github.com/googlefonts/noto-emoji/blob/main/svg/LICENSE --><path fill="#855c52" d="M97.38 85.78c10.86-13.89 27.03-38.64 27.03-38.64s3.33-4.27 2.79-6.85c-.68-3.23-4.6-5.01-6.91-6.91c-1.22-1.01-2.45-1.86-3.74-2.75c-2.84-1.96-5.66-3.91-8.47-5.84c-5.97-4.1-11.91-8.12-17.87-11.99c-5.88-3.83-11.91-7.2-17.9-10.65c-3.01-1.74-5.53-2.72-8.54-.58c-3.65 2.6-6.71 6.28-9.89 9.63c-3.49 3.67-21.26 22.66-25.07 26.52c-5.01 5.08-10.08 10.23-15.24 15.46c-2.27 2.3-4.59 4.58-6.84 6.96c-2.78 2.93-7.61 7.26-5.45 11.32c2.25 4.23 6.65 7.52 10.06 10.83c9.14 8.86 18.43 17.96 28 27.13c4 3.83 8.06 7.69 12.06 11.68c2.81 2.81 7.51 7.11 11.71 6.49c2.46-.37 6.36-4.73 6.36-4.73s17.05-23.18 27.91-37.08"/><path fill="#fff" d="M89.25 77.87c6.34-8.53 12.58-17.14 18.46-25.99c1.29-1.94 4.85-5.99 4.77-8.49c-.05-1.37-2.16-2.33-3.08-3.12c-1.69-1.46-3.87-2.64-5.74-3.93c-2.13-1.47-4.25-2.94-6.37-4.39c-5.27-3.62-10.63-7.15-15.94-10.72c-2.74-1.84-5.46-3.69-8.17-5.58c-1.65-1.15-4.19-3.78-6.28-3.92c-.47-.03-.38-.11-.89.19c-1.57.91-3.02 2.66-4.24 4c-1.76 1.93-3.47 3.9-5.27 5.8c-2.63 2.76-16.01 17.05-18.88 19.96c-3.76 3.81-7.71 7.44-11.5 11.23c-3.5 3.5-6.47 7.37-9.78 11.02c-1.39 1.52-.98 2.22.08 3.69c2.68 3.73 7.25 6.51 10.79 9.46c6.84 5.71 13.26 11.76 19.56 18.04c4.69 4.67 10.03 8.61 14.96 13c.75.66 1.41 1.45 2.54 1.1c.4-.12.75-.56 1.03-.82c4.63-4.31 8.36-9.85 12.15-14.87c3.94-5.21 7.89-10.42 11.8-15.66"/><path fill="#78a3ad" d="M112.7 15.6c-.24-.88-.65-1.75-1.21-2.58c-1.47-2.21-3.53-3.88-5.6-5.48c-3.03-2.34-7.09-4.31-10.95-4.46c-1.96-.07-3.41 1.11-4.7 2.43c-.58.59-1.08 1.15-1.96 1.12c-.83-.03-1.59-.51-2.39-.64c-2.43-.4-4.49 1.22-6.02 2.91c-1.67 1.83-3.31 3.79-4.75 5.77c-1.03 1.41-1.97 2.94-2.53 4.6c-.88 2.63-.56 5.08 1.6 6.89c2.25 1.89 4.23 4.14 6.5 5.99c3.11 2.53 6.67 4.4 10.03 6.56c4.78 3.07 8.66 4.26 13.28.12c.17-.15.33-.31.5-.47c1.93-1.86 3.64-4 4.9-6.37c.35-.67.53-1.4.78-2.1c.18-.5.53-.96.68-1.44c.4-1.24.05-3.01.04-4.3c-.02-1.47.94-2.49 1.47-3.79c.67-1.64.75-3.24.33-4.76"/><path fill="#2f2f2f" d="M114.62 14.96q-.405-1.455-1.32-2.82c-1.61-2.42-3.87-4.25-6.15-6c-3.32-2.57-7.77-4.72-11.98-4.88c-2.15-.08-3.74 1.21-5.16 2.66c-.62.64-1.18 1.26-2.15 1.23c-.9-.04-1.73-.56-2.62-.7c-2.66-.44-4.91 1.34-6.59 3.18c-1.82 2-3.62 4.15-5.2 6.32c-1.13 1.55-2.16 3.22-2.77 5.04c-.97 2.88-.62 5.56 1.75 7.54c2.46 2.07 4.63 4.53 7.12 6.56c3.41 2.77 7.31 4.82 10.99 7.18c5.24 3.36 9.49 4.67 14.54.13c.19-.17.38-.34.56-.52c2.11-2.03 3.99-4.38 5.37-6.98c.39-.73.58-1.53.85-2.3c.19-.54.57-1.05.75-1.58c.44-1.36.05-3.29.04-4.71c-.01-1.61 1.03-2.73 1.6-4.15c.75-1.78.83-3.53.37-5.2M97.33 6.24c2.21.45 4.28 1.53 6.17 2.74c2.06 1.32 6.63 4.66 3.6 7.4c-1.3 1.18-1.85-.32-2.79-1.04c-1.88-1.45-3.81-2.87-5.73-4.27c-.92-.67-5.01-2.27-4.72-3.68c.25-1.26 1.65-1.52 3.47-1.15m3.33 29.7c-2.66 1.72-5.16.63-7.75-.97c-2.47-1.52-5.09-2.8-7.43-4.51c-2.83-2.05-5.65-4.41-8.34-6.64c-2.81-2.33-.11-7.14 1.73-9.16c1.11-1.22 2.8-2.99 4.28-3.76c2.16-1.12 4.27.29 6.24 1.31c4.82 2.47 9.46 5.37 13.57 8.92c1.4 1.21 4.12 3.41 3.79 5.55c-.12.77-.62 1.83-.91 2.54c-1.01 2.45-2.74 5.01-4.92 6.56c-.1.06-.18.11-.26.16"/><path fill="#fff" d="M81.31 14.07s2.35-3.31 4.34-2.34c1.6.77 10.06 5.83 11.65 7.02s.07 1.11-1.72.63s-7.43-3.42-9.42-3.02s-6.9 3.43-8.1 3.43c-1.19 0 1.94-4 3.25-5.72"/></svg>
+            <template #badge>
+              <BaseNotification v-if="missions.shouldDisplayGeneralNotification()" />
+            </template>
+          </LobbyHudButton>
         </div>
       </div>
 
@@ -359,11 +364,10 @@ onUnmounted(() => {
 
       </div>
       
-      <div class="chapter-info lobby-fx title-text" :class="{ 'is-out-fade': !isChapterView }"><strong>{{ CHAPTER_INFO[currentLevel]?.boss }}</strong><span>{{ CHAPTER_INFO[currentLevel]?.subtitle }}</span><small>{{ isLocked ? '🔒 Capítulo ainda não disponível' : `Adversário do capítulo ${currentLevel}` }}</small></div>
       <!-- Level Title -->
-      <div class="chapter-heading lobby-fx absolute title-text top-32 left-0 w-full text-center pointer-events-none" :class="{ 'is-out-fade': !isChapterView }">
-        <h2 class="text-3xl font-bold text-white drop-shadow-md">Capítulo {{ currentLevel }}</h2>
-        <p class="text-white/70 text-sm">{{ levelDescriptions[currentLevel] || 'BOSS BATTLE' }}</p>
+      <div class="chapter-heading lobby-fx absolute top-32 left-0 w-full text-center pointer-events-none" :class="{ 'is-out-fade': !isChapterView }">
+        <h2 class="chapter-heading__title">Capítulo {{ currentLevel }}</h2>
+        <p class="chapter-heading__desc">{{ levelDescriptions[currentLevel] || 'BOSS BATTLE' }}</p>
       </div>
       <!-- Barra de ações: Equipamento | INICIAR | Talentos.
            Mobile: laterais coladas nas bordas da tela. Desktop/tablet: laterais ao lado do INICIAR. -->
@@ -380,43 +384,35 @@ onUnmounted(() => {
         :class="(isChangingLevel || isLocked || !isChapterView) ? 'translate-y-40 opacity-0' : 'translate-y-0 opacity-100'"
       >
         <div class="w-full pointer-events-auto">
+          <!-- Faixa do chefe: fica no mesmo bloco do INICIAR para entrar/sair junto com ele
+               (troca de capítulo, capítulo bloqueado e troca de aba) e ocupar pouca altura sobre a nave -->
+          <div class="chapter-info">
+            <span class="chapter-info__tag">Chefe</span>
+            <strong class="chapter-info__name">{{ CHAPTER_INFO[currentLevel]?.boss }}</strong>
+            <span class="chapter-info__sub">{{ CHAPTER_INFO[currentLevel]?.subtitle }}</span>
+          </div>
+
+          <!-- Botão amarelo no estilo da faixa de título: contorno escuro, sombra dura, brilho e reflexo passando -->
           <button
             data-ui-sound="confirm"
             @click="handleButtonClick"
-            :class="[
-              'relative isolate overflow-hidden',
-              'cursor-pointer',
-              'w-full h-23',
-              'rounded-2xl',
-              'border-[5px] border-[#c97813]',
-              'shadow-[0_10px_0_#9b5c0f,0_14px_26px_rgba(0,0,0,.25)]',
-              'bg-linear-to-b from-[#ffe59a] via-[#ffd058] to-[#ffb321]',
-              'transition-all duration-150',
-              'active:translate-y-2 active:shadow-[0_6px_0_#9b5c0f,0_8px_16px_rgba(0,0,0,.25)]',
-              { 'animate-click-bounce': isAnimating }
-            ]"
+            class="start-btn"
+            :class="{ 'animate-click-bounce': isAnimating }"
           >
-            <!-- gloss (faixa clara no topo) -->
-            <span
-              class="pointer-events-none absolute inset-x-2 top-2 h-[36%] rounded-xl
-                    bg-linear-to-b from-white/55 to-white/0"
-            ></span>
-
             <!-- stripes diagonais (textura) -->
             <span class="stripes-animated"></span>
 
-            <!-- shine animado (o “fundo mexendo”) -->
-            <span
-              class="pointer-events-none absolute -inset-y-10 -inset-x-24
-                    bg-[linear-gradient(120deg,transparent_0%,rgba(255,255,255,.0)_35%,rgba(255,255,255,.55)_50%,rgba(255,255,255,.0)_65%,transparent_100%)]
-                    blur-[1px] opacity-70
-                    animate-shine"
-            ></span>
+            <!-- gloss (faixa clara no topo) e brilho oval do canto -->
+            <span class="start-btn__gloss" aria-hidden="true"></span>
+            <span class="start-btn__shine" aria-hidden="true"></span>
+
+            <!-- reflexo que atravessa o botão de tempos em tempos -->
+            <span class="start-btn__sheen" aria-hidden="true"></span>
 
             <!-- conteúdo -->
-            <div class="relative h-full w-full grid place-items-center">
+            <div class="relative z-2 h-full w-full grid place-items-center">
               <div class="text-center leading-none">
-                <div class="font-extrabold tracking-wide text-[#6b3a08] text-3xl drop-shadow-[0_2px_0_rgba(255,255,255,.35)]">
+                <div class="start-btn__label">
                   INICIAR
                 </div>
 
@@ -478,9 +474,22 @@ onUnmounted(() => {
 .lobby-topbar-wrap--on-light .bg-white\/10{background-color:rgba(0,0,0,.25)}
 .lobby-topbar-wrap--on-light .bg-white\/20{background-color:rgba(0,0,0,.3)}
 .lobby-scene{position:absolute;inset:0}
-.chapter-info{position:absolute;bottom:26%;left:50%;transform:translateX(-50%);width:250px;text-align:center;padding:10px 16px;border:3px solid #3672b4;border-radius:15px;background:linear-gradient(#65b5fa,#2c79c7);box-shadow:0 5px #194b85,inset 0 2px #b7e1ff;color:white;text-shadow:0 2px #25528b}
-.chapter-info strong{display:block;font-size:23px;font-weight:400}.chapter-info span{display:block;font-size:13px;margin:2px 0 8px}.chapter-info small{display:block;background:#183d6d;border-radius:8px;padding:6px;font-size:12px;color:#ffdf85;text-shadow:none}
-.lobby-hangar{background:linear-gradient(180deg,rgba(39,178,231,.9),rgba(31,101,180,.9));border:1px solid rgba(165,236,255,.8);box-shadow:0 3px 0 #164c82,0 0 18px rgba(49,191,242,.28)}
+/* Faixa do chefe acima do INICIAR: pílula compacta no estilo das cartas (contorno, sombra dura, brilho) */
+.chapter-info{position:relative;display:flex;align-items:center;gap:8px;width:fit-content;max-width:100%;height:40px;margin:0 auto 12px;padding:0 14px 0 4px;border:3px solid #173f7d;border-radius:14px;background:linear-gradient(#5fb8ff,#2a74db 85%);box-shadow:0 4px 0 #173f7d,0 8px 14px rgba(0,0,0,.35),inset 0 2px 0 rgba(255,255,255,.45);color:#fff;white-space:nowrap}
+.chapter-info::before{content:'';position:absolute;top:3px;left:8px;width:12px;height:5px;border-radius:50%;background:rgba(255,255,255,.75);rotate:-30deg;pointer-events:none}
+.chapter-info__tag{flex-shrink:0;padding:5px 8px 6px;border-radius:9px;background:#173f7d;font:11px/1 'Lilita One',sans-serif;letter-spacing:.6px;color:#d4ecff;text-transform:uppercase}
+.chapter-info__name{flex-shrink:0;font:20px/1 'Lilita One',sans-serif;font-weight:400;letter-spacing:.5px;-webkit-text-stroke:5px #173f7d;paint-order:stroke fill;text-shadow:0 2px 0 #173f7d}
+.chapter-info__sub{min-width:0;overflow:hidden;text-overflow:ellipsis;font:12px 'Fredoka One',sans-serif;color:#d4ecff}
+/* Título do capítulo com contorno (igual aos títulos das cartas) */
+.chapter-heading__title{margin:0;font:34px/1.1 'Lilita One',sans-serif;letter-spacing:.5px;color:#fff;-webkit-text-stroke:7px #0d2a52;paint-order:stroke fill;text-shadow:0 4px 0 #0d2a52,0 8px 14px rgba(0,0,0,.45)}
+.chapter-heading__desc{display:inline-block;margin:6px 0 0;padding:3px 12px 4px;border-radius:999px;background:rgba(8,18,48,.55);border:2px solid rgba(255,255,255,.14);font:12px 'Fredoka One',sans-serif;color:#d4ecff}
+/* INICIAR */
+.start-btn{position:relative;isolation:isolate;overflow:hidden;display:block;width:100%;height:92px;cursor:pointer;border-radius:20px;border:4px solid #8a5300;background:linear-gradient(180deg,#ffe98f 0%,#ffd24d 45%,#f6b624 55%,#eba61a 100%);box-shadow:0 8px 0 #8a5300,0 14px 24px rgba(0,0,0,.35),inset 0 3px 0 rgba(255,255,255,.65),inset 0 -8px 0 rgba(0,0,0,.12);transition:translate .12s ease,box-shadow .12s ease;-webkit-tap-highlight-color:transparent}
+.start-btn:active{translate:0 6px;box-shadow:0 2px 0 #8a5300,0 6px 12px rgba(0,0,0,.3),inset 0 3px 0 rgba(255,255,255,.65),inset 0 -8px 0 rgba(0,0,0,.12)}
+.start-btn__gloss{position:absolute;z-index:1;top:5px;left:12px;right:12px;height:40%;border-radius:14px 14px 50% 50%/14px 14px 100% 100%;background:linear-gradient(rgba(255,255,255,.6),rgba(255,255,255,.05));pointer-events:none}
+.start-btn__shine{position:absolute;z-index:1;top:9px;left:16px;width:26px;height:11px;border-radius:50%;background:rgba(255,255,255,.85);rotate:-25deg;pointer-events:none}
+.start-btn__sheen{position:absolute;z-index:1;inset:-20% auto -20% 0;width:28%;background:linear-gradient(100deg,transparent 15%,rgba(255,255,255,.7) 50%,transparent 85%);translate:-160% 0;skew:-18deg 0;pointer-events:none;animation:start-sheen 3.2s ease-in-out infinite}
+.start-btn__label{font:36px/1 'Lilita One',sans-serif;letter-spacing:1.5px;color:#fff;-webkit-text-stroke:8px #8a5300;paint-order:stroke fill;text-shadow:0 5px 0 #8a5300}
 .chapter-start{flex:0 1 448px;min-width:0}
 /* Saída/entrada do HUD ao trocar entre capítulos e as outras telas */
 .lobby-fx{transition:translate .5s ease-in-out,opacity .5s ease-in-out,visibility .5s}
@@ -500,24 +509,24 @@ onUnmounted(() => {
 .lobby-side__icon{position:absolute;top:-20px;left:50%;translate:-50% 0;width:66px;height:66px;filter:drop-shadow(0 3px 0 rgba(0,0,0,.35));transition:scale .15s ease}
 .lobby-side__label{font-size:15px;line-height:1.2;letter-spacing:.3px;white-space:nowrap;padding:1px 8px;border-radius:8px;background:rgba(8,18,48,.45);text-shadow:0 2px 0 rgba(0,0,0,.45)}
 @media(hover:hover){.lobby-side:hover .lobby-side__icon{scale:1.08}}
-.lobby-hangar:hover{background:linear-gradient(180deg,rgba(72,201,246,.96),rgba(39,123,207,.96));box-shadow:0 3px 0 #164c82,0 0 24px rgba(75,211,255,.45)}
 @media(max-width:650px){
  .lobby-topbar{font-size:11px;gap:4px}.lobby-topbar>div:first-child{min-width:0;flex:1}.lobby-topbar>div:first-child>div{gap:3px}.lobby-topbar>div:first-child>div>div{min-width:0}.lobby-topbar p{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lobby-topbar>div:last-child{gap:3px;flex-shrink:0}.lobby-topbar>div:last-child>div{padding:2px 5px;gap:3px}.lobby-topbar svg{width:18px;height:18px}
- .chapter-info{bottom:170px;padding:7px 12px;width:min(240px,76vw)}.chapter-info strong{font-size:20px}.chapter-info span{font-size:11px;margin-bottom:5px}.chapter-info small{padding:4px;font-size:11px}
- .lobby-actions{bottom:94px;justify-content:space-between;gap:8px;padding:0}.chapter-start{flex:1 1 auto}.chapter-start button{height:56px}.chapter-start button .text-3xl{font-size:24px}.chapter-return{bottom:108px;padding:0 104px}.chapter-return p{font-size:11px}
+ .chapter-info{height:34px;gap:6px;margin-bottom:10px;padding-right:10px}.chapter-info__tag{padding:4px 6px 5px;font-size:10px}.chapter-info__name{font-size:17px;-webkit-text-stroke-width:4px}.chapter-info__sub{font-size:11px}
+ .chapter-heading__title{font-size:28px;-webkit-text-stroke-width:6px}
+ .lobby-actions{bottom:94px;justify-content:space-between;gap:8px;padding:0}.chapter-start{flex:1 1 auto}.chapter-start button{height:58px;border-radius:16px}.start-btn__label{font-size:26px;-webkit-text-stroke-width:6px;text-shadow:0 3px 0 #8a5300}.start-btn__shine{top:6px;width:20px;height:8px}.chapter-return{bottom:108px;padding:0 104px}.chapter-return p{font-size:11px}
  .lobby-side{width:92px;height:60px;padding-bottom:5px}.lobby-side--left{border-left:0;border-radius:0 14px 14px 0}.lobby-side--right{border-right:0;border-radius:14px 0 0 14px}.lobby-side__icon{top:-22px;width:50px;height:50px}.lobby-side__label{font-size:12px;padding:1px 5px}
  .chapter-arrows{padding:0 8px}.chapter-arrows>div{padding:10px}.chapter-arrows svg{width:24px;height:24px}
 }
 @media(max-height:500px) and (orientation:landscape){
  .lobby-scene{width:55%}.lobby-shortcuts{top:78px;width:55%}.lobby-shortcuts>div:first-child{flex-direction:row}.chapter-start,.chapter-return{translate:0 0}.chapter-heading{top:78px;left:auto;right:2%;width:42%}.chapter-heading h2{font-size:23px}
  .chapter-arrows{width:55%;top:58%;padding:0 8px}.chapter-arrows>div{padding:8px}
- .chapter-info{left:auto;right:3%;transform:none;bottom:138px;width:40%;padding:6px}.chapter-info strong{font-size:19px}.chapter-info span{font-size:11px;margin:0 0 4px}.chapter-info small{font-size:10px;padding:3px}
+ .chapter-info{height:30px;gap:6px;margin-bottom:8px;padding-right:8px}.chapter-info__tag{padding:3px 6px 4px;font-size:9px}.chapter-info__name{font-size:15px;-webkit-text-stroke-width:4px}.chapter-info__sub{font-size:10px}
  .lobby-actions{left:auto;right:1%;bottom:70px;width:44%;gap:6px;padding:0 6px;justify-content:center}.chapter-start button{height:55px}.lobby-side{width:68px;height:55px;padding-bottom:4px;border:3px solid;border-radius:12px}.lobby-side__icon{top:-16px;width:40px;height:40px}.lobby-side__label{font-size:9px;padding:1px 3px}.chapter-return{left:auto;right:2%;transform:none;bottom:82px;width:42%;padding:0}.chapter-return p{font-size:10px}
 }
 
-@keyframes shine {
-  0%   { transform: translateX(-40%) rotate(0deg); }
-  100% { transform: translateX(40%) rotate(0deg); }
+@keyframes start-sheen {
+  0%, 55% { translate: -160% 0; }
+  100%    { translate: 460% 0; }
 }
 
 @keyframes stripe-move {
@@ -537,15 +546,16 @@ onUnmounted(() => {
   75% { transform: rotate(5deg); }
 }
 
-.animate-shine {
-  animation: shine 2.2s linear infinite;
+@media (prefers-reduced-motion: reduce) {
+  .start-btn__sheen,
+  .stripes-animated { animation: none; }
 }
 
 .stripes-animated {
   pointer-events: none;
   position: absolute;
   inset: 0;
-  opacity: 0.18;
+  opacity: 0.14;
   background-image: repeating-linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.55) 0,

@@ -96,7 +96,7 @@ const handlePurchase = (offerId) => {
         <div class="flex flex-col gap-4 pointer-events-auto">
 
                 <!-- Offers Cards -->
-                <div class="bg-orange-200 title-text flex flex-col gap-2 items-center w-full rounded-md drop-shadow-2xl shadow-orange-400 p-2">
+                <BaseInset class="title-text flex flex-col gap-3 items-center w-full p-2 pb-3">
 
                     <!-- Timer to reset offers-->
                     <div class="flex items-center justify-center text-amber-800/70 gap-1 -mt-1 mb-1">
@@ -115,7 +115,7 @@ const handlePurchase = (offerId) => {
                         @purchase="handlePurchase"
                     />
 
-                </div>
+                </BaseInset>
 
                 <!-- Actions -->
                 <div v-if="false" class="flex flex-row gap-2 justify-center">

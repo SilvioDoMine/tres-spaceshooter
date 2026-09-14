@@ -138,11 +138,7 @@ const handleClaimMilestoneReward = () => {
         <div class="flex flex-col gap-4 pointer-events-auto">
 
                 <!-- Meta das missões -->
-                <div :class="[
-                    'bg-orange-100 w-full rounded-md p-2 title-text',
-                    `shadow-[0px_1px_0px_3px_rgba(255,214,168,1),0px_2px_2px_5px_rgba(0,0,0,0.1)]`,
-                    'flex flex-col gap-2 items-center',
-                ]">
+                <BaseInset class="w-full p-2 title-text flex flex-col gap-2 items-center">
 
                     <!-- Content card -->
                     <BaseCheckersCard
@@ -192,15 +188,16 @@ const handleClaimMilestoneReward = () => {
                         <p class="text-xs">Atualiza em: {{ countdownHours }}:{{ countdownMinutes }}:{{ countdownSeconds }}</p>
                     </div>
 
-                </div>
+                </BaseInset>
 
                 <!-- Missões em si -->
+                <BaseInset variant="sunken" class="w-full overflow-hidden">
                 <div ref="missionsContainerRef" :class="[
-                    'bg-black/20 w-full rounded-xl p-2',
+                    'w-full p-2 pb-3',
                     'max-h-[200px] overflow-y-auto',
                     'scrollbar-hide allow-scroll',
                 ]" style="scroll-behavior: auto;">
-                    <TransitionGroup name="mission-list" tag="div" class="flex flex-col gap-2">
+                    <TransitionGroup name="mission-list" tag="div" class="flex flex-col gap-3">
                         <MissionItem
                             v-for="mission in getCurrentMissions"
                             :key="mission.id"
@@ -216,6 +213,7 @@ const handleClaimMilestoneReward = () => {
                     </TransitionGroup>
 
                 </div>
+                </BaseInset>
         </div>
     </BaseModal>
 </template>

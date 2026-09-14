@@ -66,20 +66,21 @@ const handleClaim = () => {
 </script>
 
 <template>
-    <div class="flex relative flex-row bg-yellow-500 rounded-2xl shadow-sm shadow-black/40 items-center snap-start">
+    <!-- Card da missão: contorno de madeira e sombra dura, igual aos fundinhos do modal -->
+    <div class="mission-card flex relative flex-row rounded-2xl items-center snap-start">
         <!-- Reward -->
         <div class="z-10 rounded-br-2xl self-stretch flex items-center justify-center relative">
              <!-- Icon reward itself -->
-            <div ref="badgeSourceRef" class="text-white flex items-center justify-center px-1 sm:px-3 rounded-l-2xl rounded-br-2xl h-full font-bold bg-yellow-500 w-full z-2">
+            <div ref="badgeSourceRef" class="mission-card__reward text-white flex items-center justify-center px-1 sm:px-3 rounded-l-[13px] rounded-br-2xl h-full font-bold w-full z-2">
                 <ImageMissionBadge size="small" :description="`${reward}`" />
             </div>
 
             <!-- Absolute background notch -->
-            <div class="absolute inset-0 bottom-0 bg-orange-200 rounded-l-2xl"></div>
+            <div class="mission-card__paper absolute inset-0 bottom-0 rounded-l-[13px]"></div>
         </div>
 
         <!-- Progress -->
-        <div class="bg-orange-200 flex-1 rounded-tl-3xl rounded-r-2xl h-full py-2 px-3 flex flex-row justify-between items-center">
+        <div class="mission-card__paper flex-1 rounded-tl-3xl rounded-r-[13px] h-full py-2 px-3 flex flex-row justify-between items-center">
 
             <!-- Mission Title and Progress -->
             <div class="w-full pr-2">
@@ -131,10 +132,11 @@ const handleClaim = () => {
 
         </div>
 
-        <!-- If its claimed, black overlay on the mission-->
+        <!-- If its claimed, black overlay on the mission.
+             Cobre também a borda de 3px (-inset-[3px]) para o arredondado casar com o do card. -->
         <div
             v-if="status === 'claimed'"
-            class="absolute z-20 text-shadow-md text-shadow-black inset-0 bg-black/50 rounded-2xl flex items-center justify-center pointer-events-none"
+            class="absolute z-20 text-shadow-md text-shadow-black -inset-[3px] bg-black/50 rounded-2xl flex items-center justify-center pointer-events-none"
         >
             <p v-if="false" class="title-text font-bold text-white! text-lg">Concluído</p>
         </div>
@@ -143,6 +145,22 @@ const handleClaim = () => {
 </template>
 
 <style scoped>
+.mission-card {
+    background: linear-gradient(180deg, #ffd765, #f3a91f);
+    border: 3px solid #8a531f;
+    box-shadow:
+        0 3px 0 #6b3d12,
+        inset 0 2px 0 rgba(255, 255, 255, 0.5);
+}
+
+.mission-card__reward {
+    background: linear-gradient(180deg, #ffd765, #f3a91f);
+}
+
+.mission-card__paper {
+    background: linear-gradient(180deg, #fffaf0, #fbeccf);
+}
+
 /* Progress Bar Styles */
 .progress-bar-container {
     position: relative;
