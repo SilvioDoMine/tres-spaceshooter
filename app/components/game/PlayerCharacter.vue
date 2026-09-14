@@ -42,6 +42,9 @@ const playerMeshRef = shallowRef<TresInstance | null>(null);
 const hpMeshRef = shallowRef<TresInstance | null>(null);
 const rangeCircleRef = shallowRef<TresInstance | null>(null);
 const currentPosition = shallowRef({ x: initialPosition.x, y: initialPosition.y, z: initialPosition.z });
+// A mira lógica encaixa no alvo ao disparar; o modelo segue esse giro de forma suave
+const VISUAL_TURN_RATE = 28;
+let visualYaw: number | null = null;
 
 // ==================== CONFIGURAÇÃO DA CÂMERA ====================
 const CAMERA_HEIGHT = 52;
@@ -96,7 +99,12 @@ onBeforeRender(({ delta }) => {
 
   // Atualiza posição e rotação do jogador
   playerMeshRef.value.position.set(position.x, position.y, position.z);
-  playerMeshRef.value.rotation.set(rotation.x, rotation.y, rotation.z);
+  if (visualYaw === null || !currentRun.isPlaying) visualYaw = rotation.y;
+  let yawDiff = rotation.y - visualYaw;
+  while (yawDiff > Math.PI) yawDiff -= 2 * Math.PI;
+  while (yawDiff < -Math.PI) yawDiff += 2 * Math.PI;
+  visualYaw += yawDiff * (1 - Math.exp(-Math.min(delta, .1) * VISUAL_TURN_RATE));
+  playerMeshRef.value.rotation.set(rotation.x, visualYaw, rotation.z);
   if(currentRun.isPlaying)stressTime+=Math.min(delta,.1);
   const stress=reducedMotion.value?0:dilation.value.shake;
   playerMeshRef.value.rotation.z+=Math.sin(stressTime*29)*stress*DILATION_CONFIG.shipShake;
