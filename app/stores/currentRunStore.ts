@@ -203,7 +203,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     isWaveInProgress.value = false;
     roomCurrentWaveIndex.value = 0;
     currentMoveSpeed.value = playerStats.moveSpeed;
-    useHeartStore().cleanup();
+    // Saiu da sala com corações vindo: a cura ainda conta
+    useHeartStore().collectAll();
     // Espólio que não chegou a voar (ex.: debug pulando sala) não perde o ouro nem a EXP
     useLootStore().collectAll();
 

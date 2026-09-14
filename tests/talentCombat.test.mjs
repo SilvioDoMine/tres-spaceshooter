@@ -448,6 +448,31 @@ test('hearts fly into the ship with bonuses, remain when full or paused, and cle
   assert.equal(hearts.hearts.length, 0);
 });
 
+test('hearts fly to the ship once the room is cleared, nearest first, and still heal if the room is left mid-flight', () => {
+  const { run, hearts, config } = runHarness();
+  run.isStageCompleted = false;
+  hearts.tryDrop({ x: 10, z: 0 }, () => 0);
+  hearts.tryDrop({ x: 4, z: 0 }, () => 0);
+  hearts.update(1);
+  assert.ok(hearts.hearts.every(heart => heart.flight === -1), 'far hearts wait on the floor');
+
+  run.takeDamage(200, 'environment');
+  run.isStageCompleted = true;
+  hearts.update(.01);
+  assert.ok(hearts.hearts.find(heart => heart.startX === 4).flight >= 0, 'nearest heart flies first');
+  assert.equal(hearts.hearts.find(heart => heart.startX === 10).flight, -1, 'farther heart waits its turn');
+  for (let i = 0; i < 10; i++) hearts.update(.1);
+  assert.equal(hearts.hearts.length, 0);
+  assert.equal(run.currentHealth, 100, 'both hearts healed 25');
+
+  hearts.tryDrop({ x: 6, z: 0 }, () => 0);
+  hearts.update(.1);
+  assert.ok(hearts.hearts[0].flight > 0);
+  run.loadStage(config.stages[0]);
+  assert.equal(hearts.hearts.length, 0);
+  assert.equal(run.currentHealth, 125, 'heart mid-flight still heals after leaving');
+});
+
 test('full-health warning only repeats after leaving the heart completely', () => {
   const { run, hearts, messages } = runHarness();
   const warnings = () => messages.filter(m => m[1] === 'full').length;
