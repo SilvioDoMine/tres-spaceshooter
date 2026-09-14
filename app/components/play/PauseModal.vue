@@ -78,6 +78,31 @@ function getRarityFromSkill(skill) {
 
 // config
 const uiModalConfig = useModal('settings-modal');
+
+// ESC ou P: pausa durante a partida; com o modal de pausa no topo, continua.
+// Durante a escolha de habilidade o jogo também fica 'paused', mas sem este
+// modal aberto — aí o atalho não faz nada para não pular a escolha.
+const { isTopModal } = useModal(MODAL_ID);
+const currentRunStore = useCurrentRunStore();
+
+function handlePauseKey(event) {
+  if (event.repeat || (event.key !== 'Escape' && event.key.toLowerCase() !== 'p')) return;
+
+  if (currentRunStore.isPlaying) {
+    event.preventDefault();
+    currentRunStore.gamePause();
+  } else if (isTopModal.value) {
+    event.preventDefault();
+    handleResume();
+  } else if (isOpen.value && uiModalConfig.isTopModal.value) {
+    // Config aberta por cima da pausa: fecha só a Config
+    event.preventDefault();
+    uiModalConfig.close();
+  }
+}
+
+onMounted(() => window.addEventListener('keydown', handlePauseKey));
+onUnmounted(() => window.removeEventListener('keydown', handlePauseKey));
 </script>
 
 <template>
