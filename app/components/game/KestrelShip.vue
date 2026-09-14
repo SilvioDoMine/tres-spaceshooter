@@ -42,4 +42,4 @@ function dispose(group: Group) {
 onUnmounted(() => { disposed = true; dispose(model.value) })
 </script>
 
-<template><TresGroup><primitive :object="model" /><GameShipEquipment :gameplay="props.gameplay" /><GameEnginePlumes v-if="settings.thrusters" /></TresGroup></template>
+<template><TresGroup><primitive :object="model" /><GameShipEquipment :gameplay="props.gameplay" /><GameEnginePlumes v-if="settings.thrusters" :gameplay="props.gameplay" /></TresGroup></template>

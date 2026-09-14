@@ -136,6 +136,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     && canFastGame(useChapterProgressStore().progress, Number((levelConfig.value as any)?.chapter) || 1));
   // Velocidade efetiva do tempo da partida: pausado, fora da partida ou em capítulo inédito é sempre 1x
   const gameSpeed = computed(() => (isPlaying.value && fastGameAvailable.value ? preferredGameSpeed.value : 1));
+  // Hiper velocidade da sala limpa (mesma regra de applyClearedRoomBoost), usada pelos efeitos visuais da nave
+  const isHyperdrive = computed(() => isPlaying.value && isStageCompleted.value && (currentStage.value as any)?.type !== 'intro');
 
   function cycleGameSpeed() {
     preferredGameSpeed.value = nextGameSpeed(preferredGameSpeed.value);
@@ -693,6 +695,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     doorSize,
     isDoorActive,
     isStageCompleted,
+    isHyperdrive,
     levelTimer,
     nextStage,
     // ... (Outros retornos)
