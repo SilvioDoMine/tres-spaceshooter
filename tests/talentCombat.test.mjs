@@ -480,7 +480,7 @@ test('full-health warning only repeats after leaving the heart completely', () =
   const player = run.getPlayerPosition();
   hearts.update(.1);
   assert.equal(warnings(), 1);
-  player.x = 1.5; // saiu do raio de coleta, mas ainda encostado
+  player.x = 2.2; // saiu do raio de coleta, mas ainda perto
   hearts.update(.1);
   player.x = 0;
   hearts.update(.1);

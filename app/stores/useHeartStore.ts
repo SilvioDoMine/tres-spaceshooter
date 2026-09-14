@@ -9,9 +9,9 @@ import { useAudio } from '~/composables/useAudio';
 // delay >= 0: na fila para voar sozinho depois da sala limpa
 type Heart = { id: number; x: number; z: number; startX: number; startZ: number; flight: number; delay: number; heal: number; warned: boolean };
 
-const PICKUP_RADIUS = 1.1;
-// Só avisa de novo depois que a nave saiu por completo de cima do coração
-const WARNING_RESET_RADIUS = 1.9;
+const PICKUP_RADIUS = 1.8;
+// Só avisa de novo depois que a nave saiu por completo de perto do coração
+const WARNING_RESET_RADIUS = 2.6;
 const FLIGHT_DURATION = .32;
 // Sala limpa: um coração atrás do outro, os mais perto primeiro
 const HEART_STAGGER = .08;
