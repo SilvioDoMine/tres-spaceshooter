@@ -20,12 +20,12 @@ const router = useRouter();
 const isAnimating = ref(false);
 const isChangingLevel = ref(false);
 
-// Capítulos liberados vêm do progresso salvo; o lobby abre no último liberado
+// Capítulos liberados vêm do progresso salvo; o lobby abre no último jogado (ou no recém-liberado)
 const chapterProgress = useChapterProgressStore();
 const maxUnlockedLevel = computed(() => chapterProgress.maxUnlocked);
 const currentLevel = ref(1);
 const maxLevels = CHAPTER_COUNT;
-onMounted(() => { currentLevel.value = chapterProgress.maxUnlocked; });
+onMounted(() => { currentLevel.value = chapterProgress.lastPlayed; });
 
 const isLocked = computed(() => currentLevel.value > maxUnlockedLevel.value);
 

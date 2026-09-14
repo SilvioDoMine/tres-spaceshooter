@@ -1,6 +1,6 @@
 import { defineStore, skipHydrate } from 'pinia';
 import { CHAPTER_COUNT } from '~/games/levels';
-import { CHAPTER_PROGRESS_VERSION, completeChapter, emptyChapterProgress, sanitizeChapterProgress } from '~/utils/chapterProgress';
+import { CHAPTER_PROGRESS_VERSION, completeChapter, emptyChapterProgress, playChapter, sanitizeChapterProgress } from '~/utils/chapterProgress';
 
 const STORAGE_KEY = 'chapterProgress';
 
@@ -19,11 +19,12 @@ function loadProgress() {
 
 /**
  * Capítulos liberados e concluídos, salvos no navegador.
- * Vencer um capítulo libera o próximo; o lobby e /play/:id leem daqui.
+ * Vencer um capítulo libera o próximo; o lobby abre no último jogado (ou no recém-liberado).
  */
 export const useChapterProgressStore = defineStore('chapterProgress', () => {
   const progress = ref(loadProgress());
   const maxUnlocked = computed(() => progress.value.maxUnlocked);
+  const lastPlayed = computed(() => progress.value.lastPlayed);
 
   function save() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: CHAPTER_PROGRESS_VERSION, ...progress.value }));
@@ -31,6 +32,12 @@ export const useChapterProgressStore = defineStore('chapterProgress', () => {
 
   function isUnlocked(chapter: number) {
     return Number.isInteger(chapter) && chapter >= 1 && chapter <= progress.value.maxUnlocked;
+  }
+
+  function markPlayed(chapter: number) {
+    if (!isUnlocked(chapter)) return;
+    progress.value = playChapter(progress.value, chapter, CHAPTER_COUNT);
+    save();
   }
 
   function markCompleted(chapter: number) {
@@ -49,5 +56,5 @@ export const useChapterProgressStore = defineStore('chapterProgress', () => {
   }
 
   // O progresso vem do localStorage do cliente, nunca do payload do servidor
-  return { progress: skipHydrate(progress), maxUnlocked, isUnlocked, markCompleted, unlockAll };
+  return { progress: skipHydrate(progress), maxUnlocked, lastPlayed, isUnlocked, markPlayed, markCompleted, unlockAll };
 });

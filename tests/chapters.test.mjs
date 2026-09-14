@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import vm from 'node:vm';
 import * as patterns from '../app/utils/combatPatterns.js';
 import { CHAPTER_COUNT, CHAPTER_INFO, LEVELS } from '../app/games/levels/index.js';
-import { completeChapter, emptyChapterProgress, sanitizeChapterProgress } from '../app/utils/chapterProgress.js';
+import { completeChapter, emptyChapterProgress, playChapter, sanitizeChapterProgress } from '../app/utils/chapterProgress.js';
 import { playableRoomCount } from '../app/utils/progression.js';
 import {
   BASTION_SHIELD_HALF_ARC, CHAPTER_BOSSES, HIVE_HUNT_SHOT, HIVE_MUZZLES, HIVE_TURRET_SALVO, attackDirections, attackProfile,
@@ -78,16 +78,31 @@ test('mini-harpy flies the Harpy loop with a shorter burst, a smaller dash and w
 });
 
 test('chapter progress unlocks the next chapter and survives bad data', () => {
-  assert.deepEqual(emptyChapterProgress(), { maxUnlocked: 1, completed: [] });
+  assert.deepEqual(emptyChapterProgress(), { maxUnlocked: 1, completed: [], lastPlayed: 1 });
   let progress = completeChapter(emptyChapterProgress(), 1, 3);
-  assert.deepEqual(progress, { maxUnlocked: 2, completed: [1] });
+  assert.deepEqual(progress, { maxUnlocked: 2, completed: [1], lastPlayed: 2 });
   progress = completeChapter(progress, 1, 3);
-  assert.deepEqual(progress, { maxUnlocked: 2, completed: [1] });
+  assert.deepEqual(progress, { maxUnlocked: 2, completed: [1], lastPlayed: 1 });
   progress = completeChapter(completeChapter(progress, 2, 3), 3, 3);
-  assert.deepEqual(progress, { maxUnlocked: 3, completed: [1, 2, 3] });
-  assert.deepEqual(sanitizeChapterProgress({ maxUnlocked: 'x', completed: [9, -1, '2', 2] }, 3), { maxUnlocked: 3, completed: [2] });
-  assert.deepEqual(sanitizeChapterProgress(null, 3), { maxUnlocked: 1, completed: [] });
+  assert.deepEqual(progress, { maxUnlocked: 3, completed: [1, 2, 3], lastPlayed: 3 });
+  assert.deepEqual(sanitizeChapterProgress({ maxUnlocked: 'x', completed: [9, -1, '2', 2] }, 3), { maxUnlocked: 3, completed: [2], lastPlayed: 3 });
+  assert.deepEqual(sanitizeChapterProgress(null, 3), { maxUnlocked: 1, completed: [], lastPlayed: 1 });
   assert.equal(sanitizeChapterProgress({ maxUnlocked: 99 }, 3).maxUnlocked, 3);
+});
+
+test('lobby reopens on the last chapter played, or on a newly unlocked one', () => {
+  // Capítulos 2 e 3 liberados, joga o 2: perdendo ou vencendo (sem liberar nada novo), fica no 2
+  let progress = sanitizeChapterProgress({ maxUnlocked: 3, completed: [1, 2] }, 3);
+  progress = playChapter(progress, 2, 3);
+  assert.equal(progress.lastPlayed, 2);
+  assert.equal(completeChapter(progress, 2, 3).lastPlayed, 2);
+  // Vencer o capítulo mais alto libera um novo: vai para ele
+  progress = playChapter(sanitizeChapterProgress({ maxUnlocked: 2, completed: [1] }, 3), 2, 3);
+  assert.equal(completeChapter(progress, 2, 3).lastPlayed, 3);
+  // Voltar ao 1 e vencê-lo não mexe no liberado nem pula de capítulo
+  assert.equal(completeChapter(playChapter(progress, 1, 3), 1, 3).lastPlayed, 1);
+  // Nunca aponta para um capítulo bloqueado
+  assert.equal(sanitizeChapterProgress({ maxUnlocked: 2, lastPlayed: 3 }, 3).lastPlayed, 2);
 });
 
 test('chapter scaling leaves chapter 1 untouched and grows afterwards', () => {

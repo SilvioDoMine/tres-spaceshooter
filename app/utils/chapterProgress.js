@@ -1,8 +1,9 @@
-// Progresso dos capítulos: o maior liberado e os já concluídos. Funções puras (salvas pelo store).
+// Progresso dos capítulos: o maior liberado, os já concluídos e o último jogado (onde o lobby abre).
+// Funções puras (salvas pelo store).
 export const CHAPTER_PROGRESS_VERSION = 1;
 
 export function emptyChapterProgress() {
-  return { maxUnlocked: 1, completed: [] };
+  return { maxUnlocked: 1, completed: [], lastPlayed: 1 };
 }
 
 export function sanitizeChapterProgress(raw, chapterCount) {
@@ -13,13 +14,27 @@ export function sanitizeChapterProgress(raw, chapterCount) {
   const saved = Number(raw?.maxUnlocked);
   const fromCompleted = completed.length ? Math.max(...completed) + 1 : 1;
   const maxUnlocked = Math.max(1, Math.min(chapterCount, Math.max(Number.isInteger(saved) ? saved : 1, fromCompleted)));
-  return { maxUnlocked, completed };
+  // Saves antigos não têm lastPlayed: mantém o comportamento anterior (abre no último liberado)
+  const last = Number(raw?.lastPlayed);
+  const lastPlayed = Number.isInteger(last) && last >= 1 ? Math.min(last, maxUnlocked) : maxUnlocked;
+  return { maxUnlocked, completed, lastPlayed };
 }
 
-/** Concluir um capítulo libera o seguinte (sem passar do último). */
+/** Entrar num capítulo liberado passa a ser o último jogado. */
+export function playChapter(progress, chapter, chapterCount) {
+  return sanitizeChapterProgress({ ...progress, lastPlayed: Number(chapter) }, chapterCount);
+}
+
+/**
+ * Concluir um capítulo libera o seguinte (sem passar do último).
+ * Se liberou um capítulo novo, o lobby passa a abrir nele; senão continua no que foi jogado.
+ */
 export function completeChapter(progress, chapter, chapterCount) {
-  return sanitizeChapterProgress({
-    maxUnlocked: Math.max(progress?.maxUnlocked ?? 1, Number(chapter) + 1),
-    completed: [...(progress?.completed ?? []), chapter],
+  const before = sanitizeChapterProgress(progress, chapterCount);
+  const next = sanitizeChapterProgress({
+    maxUnlocked: Math.max(before.maxUnlocked, Number(chapter) + 1),
+    completed: [...before.completed, chapter],
+    lastPlayed: Number(chapter),
   }, chapterCount);
+  return next.maxUnlocked > before.maxUnlocked ? { ...next, lastPlayed: next.maxUnlocked } : next;
 }

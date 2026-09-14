@@ -69,6 +69,9 @@ onMounted(async () => {
     return;
   }
 
+  // O lobby volta a abrir neste capítulo
+  chapterProgress.markPlayed(currentId);
+
   // Efeitos já vêm decodificados da tela de loading; isto só cobre alguma falha do preload
   audio.loadGameSounds();
 
