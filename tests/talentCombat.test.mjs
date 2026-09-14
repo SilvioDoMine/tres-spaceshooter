@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { stripTypeScriptTypes } from 'node:module';
 import vm from 'node:vm';
 import { ref, shallowRef, computed, reactive } from 'vue';
+import * as gameSpeed from '../app/utils/gameSpeed.js';
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
@@ -268,6 +269,8 @@ function runHarness(overrides = {}) {
     useLevelAccount: () => ({}),
     useAudio: () => ({ playSound() {}, playHeartSound() {}, playLootSound: kind => sounds.push(kind), startBackgroundMusicAbafado() {}, stopBackgroundMusicAbafado() {} }),
     useSpatialDilation: () => ({ reset() {} }),
+    useChapterProgressStore: () => ({ progress: { completed: [] } }),
+    ...gameSpeed,
     emitImpact() {},
   });
   function load(file, names) {

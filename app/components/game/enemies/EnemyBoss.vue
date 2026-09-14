@@ -46,7 +46,7 @@ telegraph.visible = false
 const hot = new Color('#ff2a1a')
 let time = 0, open = 0, hatch = 0, lastRage = 0
 
-useLoop().onBeforeRender(({ delta }) => {
+useGameLoop().onBeforeRender(({ delta }) => {
   // Congelado: portas, torretas e escudos param junto com o casco
   const dt = Math.min(delta, .1) * props.speed * (props.enemy.elementState?.freeze ? 0 : 1)
   time += dt

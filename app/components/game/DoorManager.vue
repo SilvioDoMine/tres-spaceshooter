@@ -32,7 +32,7 @@ for(let i=0;i<180;i++){const a=i*2.399,r=1.35+Math.sin(i*17.13)*.4;positions.pus
 dots.setAttribute('position',new Float32BufferAttribute(positions,3))
 const dustMaterial=new PointsMaterial({color:'#9acfff',size:.025,transparent:true,opacity:.75,depthWrite:false,blending:AdditiveBlending})
 const dust=new Points(dots,dustMaterial);root.add(dust)
-useLoop().onBeforeRender(({delta})=>{
+useGameLoop().onBeforeRender(({delta})=>{
  const dt=Math.min(delta,.1);field.uniforms.time.value+=dt;dust.rotation.y-=dt*.22
  const door=currentRun.doorPosition;root.visible=!!(currentRun.isDoorActive&&door)
  if(!door)return

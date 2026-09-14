@@ -54,7 +54,7 @@ const wrap=(n:number,span:number)=>((n+span/2)%span+span)%span-span/2
 // compress its positions. Only player travel can recycle distant bodies.
 let recycleWidth=140,recycleHeight=140
 let previous={...run.getPlayerPosition()}
-useLoop().onBeforeRender(({delta})=>{
+useGameLoop().onBeforeRender(({delta})=>{
  const p=run.getPlayerPosition(),dt=Math.min(delta,.1)
  if(run.isPlaying)elasticTime+=dt
  const span=240

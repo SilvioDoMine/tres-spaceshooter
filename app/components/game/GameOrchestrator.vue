@@ -37,14 +37,17 @@ const playerStats = usePlayerStats();
  */
 const gameTick = ({ delta }: { delta: number }) => {
 // Evita cálculos excessivos se o delta for muito grande (e.g., aba inativa)
-const safeDelta = Math.min(delta, 0.1); 
+const safeDelta = Math.min(delta, 0.1);
 
 skillStore.update(safeDelta);
 
-if (! currentRunStore.isPlaying ) {
-    return;
-}
+// Fast Game: 2x/3x roda a simulação 2/3 vezes no frame com o mesmo passo, então colisões e projéteis
+// se comportam igual ao 1x. Se a partida pausar no meio (subiu de nível, morreu), os passos restantes param.
+const steps = currentRunStore.gameSpeed;
+for (let step = 0; step < steps && currentRunStore.isPlaying; step++) simulate(safeDelta);
+};
 
+const simulate = (safeDelta: number) => {
 // 2. Atualiza todos os Subsistemas
 // Processamento de Input e Movimento
 playerControls.update(safeDelta);

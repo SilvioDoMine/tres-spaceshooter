@@ -1,6 +1,5 @@
 <script setup lang="js">
 import { ref } from 'vue';
-import { useLoop } from '@tresjs/core';
 
 /**
  * EnemyComposite - Exemplo de inimigo composto (múltiplas partes)
@@ -31,7 +30,7 @@ const orbitRef = ref(null);
 let orbitAngle = 0;
 
 // Animação: satélites orbitando o corpo principal
-const { onBeforeRender } = useLoop();
+const { onBeforeRender } = useGameLoop();
 onBeforeRender(({ delta }) => {
   if (orbitRef.value && props.enemy.state === 'active') {
     orbitAngle += delta * 2; // Velocidade de órbita

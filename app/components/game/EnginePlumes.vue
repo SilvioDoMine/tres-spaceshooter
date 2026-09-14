@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Group, Mesh, MeshBasicMaterial, ConeGeometry, TorusGeometry, AdditiveBlending } from 'three'
-import { useLoop } from '@tresjs/core'
 const root = new Group()
 const jets: Mesh[] = []
 const rings: Mesh[] = []
@@ -18,7 +17,7 @@ const run = useCurrentRunStore()
 const appearance=useShipAppearance()
 const dilation=useSpatialDilation().state
 let time = 0
-useLoop().onBeforeRender(({delta}) => {
+useGameLoop().onBeforeRender(({delta}) => {
   if(run.gameState==='paused')return
   time += Math.min(delta,.1)
   glow.color.set(equipment.equippedItem('thrusters')?.defId==='propulsor-cometa'?'#ff9a37':equipment.equippedItem('thrusters')?.defId==='propulsor-vortice'?'#b578ff':appearance.value.exhaust || '#27c7ff'); core.color.copy(glow.color).lerp({r:1,g:1,b:1} as any,.65)

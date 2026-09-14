@@ -2,7 +2,6 @@
 import EnemyRaider from './enemies/EnemyRaider.vue';
 import EnemyBoss from './enemies/EnemyBoss.vue';
 import { shallowRef } from 'vue';
-import { useLoop } from '@tresjs/core';
 import { Box3 } from 'three';
 import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
 import EnemySquare from '~/components/game/enemies/EnemySquare.vue';
@@ -63,7 +62,7 @@ const setUIGroupRef = (enemyId) => (el) => {
 };
 
 // ==================== GAME LOOP (60 FPS) ====================
-const { onBeforeRender } = useLoop();
+const { onBeforeRender } = useGameLoop();
 let elementTime = 0;
 const hpBox = new Box3();
 onBeforeRender(({ delta }) => {

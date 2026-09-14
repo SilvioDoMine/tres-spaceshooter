@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {Group,InstancedMesh,PlaneGeometry,ShaderMaterial,AdditiveBlending,Object3D,Color} from 'three';
-import {useLoop} from '@tresjs/core';
 const store=useEquipmentEffectsStore(),run=useCurrentRunStore();
 const root=new Group(),dummy=new Object3D();
 const geo=new PlaneGeometry(2,2);geo.rotateX(-Math.PI/2);
@@ -14,7 +13,7 @@ const rings=new InstancedMesh(geo,material,48);rings.frustumCulled=false;rings.c
 const color=new Color();let time=0;
 // Cria o buffer de cor já na montagem: sem ele o three compila o shader sem declarar instanceColor
 rings.setColorAt(0,color);
-useLoop().onBeforeRender(({delta})=>{
+useGameLoop().onBeforeRender(({delta})=>{
  if(run.isPlaying)time+=Math.min(delta,.1);material.uniforms.time.value=time;
  let count=0;const player=run.getPlayerPosition();
  function place(x:number,z:number,r:number,tint:string,intensity=1){if(count>=48)return;dummy.position.set(x,.2,z);dummy.rotation.set(0,0,0);dummy.scale.set(r,1,r);dummy.updateMatrix();rings.setMatrixAt(count,dummy.matrix);rings.setColorAt(count++,color.set(tint).multiplyScalar(intensity));}

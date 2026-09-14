@@ -3,7 +3,6 @@ import {
   AdditiveBlending, CircleGeometry, Color, DynamicDrawUsage, Group, InstancedMesh, InstancedBufferAttribute,
   Mesh, MeshBasicMaterial, ShaderMaterial, Object3D, RingGeometry, SphereGeometry, TorusGeometry,
 } from 'three';
-import { useLoop } from '@tresjs/core';
 import { useEquipmentEffectsStore } from '~/stores/useEquipmentEffectsStore';
 
 const store = useEquipmentEffectsStore();
@@ -46,7 +45,7 @@ const flareGeometry = new RingGeometry(.75, 1, 48); flareGeometry.rotateX(-Math.
 const flareMaterial = new MeshBasicMaterial({ color: '#ffd25a', transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, side: 2 });
 const flareMesh = new Mesh(flareGeometry, flareMaterial); flareMesh.visible = false; root.add(flareMesh);
 
-useLoop().onBeforeRender(({delta}) => {
+useGameLoop().onBeforeRender(({delta}) => {
   if (useCurrentRunStore().isPlaying) time+=Math.min(delta,.05);
   trailMaterial.uniforms.time.value=time;
   orbCores.count=store.orbPositions.length;orbitRings.count=store.orbPositions.length*2;

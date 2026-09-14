@@ -3,7 +3,6 @@ import {
   AdditiveBlending, BufferAttribute, BufferGeometry, Color, DynamicDrawUsage, Group, InstancedBufferAttribute,
   InstancedMesh, MeshStandardMaterial, Object3D, OctahedronGeometry, PlaneGeometry, Points, ShaderMaterial, Vector3,
 } from 'three'
-import { useLoop } from '@tresjs/core'
 import { ELEMENT_RULES, subscribeElementalFx } from '~/utils/elementalStatus'
 import { useEnemyManager } from '~/composables/useEnemyManager'
 import { useProjectileStore } from '~/stores/projectileStore'
@@ -177,7 +176,7 @@ function seedOf(id: string) {
 }
 
 let time = 0
-useLoop().onBeforeRender(({ delta }) => {
+useGameLoop().onBeforeRender(({ delta }) => {
   const paused = Boolean(run.currentStage) && !run.isPlaying && run.currentHealth > 0
   const dt = paused ? 0 : Math.min(delta, .05)
   time += dt

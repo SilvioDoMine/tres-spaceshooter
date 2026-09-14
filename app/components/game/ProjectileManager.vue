@@ -1,6 +1,5 @@
 <script setup lang="js">
 import { Group, InstancedMesh, Object3D, PlaneGeometry, ShaderMaterial, MeshBasicMaterial, AdditiveBlending, Color, DynamicDrawUsage } from 'three';
-import { useLoop } from '@tresjs/core';
 import { useProjectileStore } from '~/stores/projectileStore';
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 
@@ -172,7 +171,7 @@ const beamMaterial=new ShaderMaterial({transparent:true,depthWrite:false,side:2,
  gl_FragColor=vec4(mix(vec3(.12,.55,1.),vec3(.85,1.,1.),core),a);}`});
 const beams=new InstancedMesh(beamGeometry,beamMaterial,32);beams.count=0;beams.frustumCulled=false;root.add(beams);
 let time=0;
-useLoop().onBeforeRender(({delta})=>{
+useGameLoop().onBeforeRender(({delta})=>{
  time+=Math.min(delta,.1);materials.forEach(m=>m.uniforms.time.value=time);
  beamMaterial.uniforms.time.value=time;let beamCount=0; const counts=Array(batches.length).fill(0);let trailCount=0;
  for(const p of store.projectiles){

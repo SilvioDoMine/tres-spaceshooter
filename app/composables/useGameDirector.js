@@ -72,7 +72,8 @@ export function useGameDirector() {
     // );
 
     currentRunStore.stageTimer += delta;
-    currentRunStore.levelTimer += delta;
+    // Tempo jogado é tempo real: no Fast Game este update roda 2x/3x por frame, então cada passo conta só a sua fração
+    currentRunStore.levelTimer += delta / currentRunStore.gameSpeed;
 
     if (currentRunStore.isWaveInProgress && enemyManager.activeEnemies.value.length === 0) {
       currentRunStore.isWaveInProgress = false;

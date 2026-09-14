@@ -1,6 +1,5 @@
 <script setup lang="js">
 import { computed, onBeforeUnmount, watch } from 'vue';
-import { useLoop } from '@tresjs/core';
 import { Color, Mesh, PlaneGeometry, ShaderMaterial, Vector2 } from 'three';
 
 const props = defineProps({
@@ -188,7 +187,7 @@ watch(healthPercentage, (value, previous) => {
   }
 });
 
-const { onBeforeRender } = useLoop();
+const { onBeforeRender } = useGameLoop();
 onBeforeRender(({ delta, elapsed }) => {
   const uniforms = material.uniforms;
   uniforms.uTime.value = elapsed;

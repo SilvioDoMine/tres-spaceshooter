@@ -43,7 +43,7 @@ const unsubscribe=subscribeImpacts(e=>{
 const run=useCurrentRunStore(),view=useState('flight-view',()=>({x:0,z:0,width:30,height:23}))
 let ambientTime=0,cometAge=0,trailTime=0,smokeTime=0,nextPass=5+Math.random()*7,previousSector=-1
 let pass:ReturnType<typeof createMeteorPass>|null=null
-useLoop().onBeforeRender(({delta})=>{
+useGameLoop().onBeforeRender(({delta})=>{
  if(run.currentStage && !run.isPlaying && run.currentHealth>0)return
  const dt=Math.min(delta,.05)
  material.uniforms.screen.value=window.innerHeight*Math.min(window.devicePixelRatio,1.5)*2

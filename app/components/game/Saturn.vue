@@ -9,7 +9,7 @@ const rings=new ShaderMaterial({side:DoubleSide,transparent:true,depthWrite:fals
 root.add(new Mesh(ringGeo,rings))
 const atmosphere=new ShaderMaterial({transparent:true,depthWrite:false,blending:AdditiveBlending,vertexShader:`varying vec3 n;varying vec3 v;void main(){vec4 p=modelViewMatrix*vec4(position,1.);n=normalize(normalMatrix*normal);v=normalize(-p.xyz);gl_Position=projectionMatrix*p;}`,fragmentShader:`varying vec3 n;varying vec3 v;void main(){float f=pow(1.-abs(dot(n,v)),3.);gl_FragColor=vec4(.2,.65,1.,f*.35);}`})
 const glow=new Mesh(sphere,atmosphere);glow.scale.setScalar(1.025);root.add(glow)
-useLoop().onBeforeRender(({delta})=>{surface.uniforms.time.value+=Math.min(delta,.1);rings.uniforms.time.value+=Math.min(delta,.1)})
+useGameLoop().onBeforeRender(({delta})=>{surface.uniforms.time.value+=Math.min(delta,.1);rings.uniforms.time.value+=Math.min(delta,.1)})
 onUnmounted(()=>{sphere.dispose();ringGeo.dispose();surface.dispose();rings.dispose();atmosphere.dispose()})
 </script>
 <template><primitive :object="root" /></template>

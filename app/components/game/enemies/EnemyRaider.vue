@@ -5,7 +5,7 @@ const seed=[...String(props.enemy.id)].reduce((n,c)=>(Math.imul(n,31)+c.charCode
 const hull=buildRaider(seed)
 const size=computed(()=>props.baseStats[props.enemy.type].size)
 const engine=shallowRef();let time=0
-useLoop().onBeforeRender(({delta})=>{
+useGameLoop().onBeforeRender(({delta})=>{
  time+=Math.min(delta,.1);
  if(engine.value&&!props.enemy.elementState?.freeze)engine.value.scale.z=.9+Math.sin(time*18+seed)*.12;
 })

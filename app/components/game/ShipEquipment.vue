@@ -2,7 +2,6 @@
 import { watch, onUnmounted } from 'vue';
 import { Group, Mesh, BoxGeometry, CylinderGeometry, TorusGeometry, SphereGeometry,
   MeshStandardMaterial, MeshBasicMaterial, AdditiveBlending, Vector3 } from 'three';
-import { useLoop } from '@tresjs/core';
 import { weaponMounts } from '~/utils/combatPatterns';
 import { subscribeMuzzleFlashes } from '~/utils/weaponVisuals';
 import { useEquipmentStore } from '~/stores/useEquipmentStore';
@@ -129,7 +128,7 @@ const unsubscribe=subscribeMuzzleFlashes(({id,burst})=>{
   const c=cannons.get(id); if(c){c.ttl=.14;c.burst=burst;}
 });
 let time=0;
-useLoop().onBeforeRender(({delta})=>{
+useGameLoop().onBeforeRender(({delta})=>{
   if(props.gameplay&&!run.isPlaying)return;
   const dt=Math.min(delta,.05); time+=dt;
   cannons.forEach(c=>{

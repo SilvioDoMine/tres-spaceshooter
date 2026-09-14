@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { AdditiveBlending, BufferAttribute, BufferGeometry, Color, DynamicDrawUsage, ExtrudeGeometry, InstancedMesh, MeshStandardMaterial, Object3D, Points, ShaderMaterial, Shape } from 'three';
-import { useLoop } from '@tresjs/core';
 import { useHeartStore } from '~/stores/useHeartStore';
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 
@@ -73,7 +72,7 @@ function spark(x: number, y: number, z: number, burst = false) {
 
 const dummy = new Object3D();
 let time = 0;
-useLoop().onBeforeRender(({ delta }) => {
+useGameLoop().onBeforeRender(({ delta }) => {
   // Pausado: tudo congela no lugar
   const dt = run.isPlaying ? Math.min(delta, .1) : 0;
   time += dt;

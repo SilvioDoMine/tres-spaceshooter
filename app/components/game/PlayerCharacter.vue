@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { shallowRef } from 'vue';
-import { useLoop } from '@tresjs/core';
 import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import type { TresInstance } from '@tresjs/core';
@@ -93,7 +92,7 @@ onUnmounted(() => { rangeCircleGeometry.dispose(); rangeMaterial.dispose(); });
  * Loop principal de atualização do jogador
  * ✅ Otimizado: Mutação direta sem overhead reativo
  */
-const { onBeforeRender } = useLoop();
+const { onBeforeRender } = useGameLoop();
 const flightView = useState("flight-view", () => ({ x: 0, z: 0, width: 30, height: 23 }));
 onBeforeRender(({ delta }) => {
   if (!playerMeshRef.value || !hpMeshRef.value || !rangeCircleRef.value) return;

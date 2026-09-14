@@ -8,7 +8,7 @@ import { sceneryVolumes } from '~/utils/sceneryVolumes'
 import GameDerelictCruiser from './DerelictCruiser.vue'
 const scenery = shallowRef()
 const run = useCurrentRunStore()
-useLoop().onBeforeRender(({delta})=>{
+useGameLoop().onBeforeRender(({delta})=>{
  if(!scenery.value)return
  station.rotation.z+=Math.min(delta,.1)*.008
  const p=run.getPlayerPosition()

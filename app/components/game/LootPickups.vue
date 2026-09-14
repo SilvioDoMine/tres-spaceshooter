@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { AdditiveBlending, BufferAttribute, BufferGeometry, Color, DynamicDrawUsage, InstancedMesh, LatheGeometry, MeshStandardMaterial, Object3D, OctahedronGeometry, Points, ShaderMaterial, Vector2, type Material } from 'three';
-import { useLoop } from '@tresjs/core';
+import { AdditiveBlending, BufferAttribute, BufferGeometry, Color, DynamicDrawUsage, ExtrudeGeometry, InstancedMesh, MeshStandardMaterial, Object3D, OctahedronGeometry, Points, ShaderMaterial, Shape, type Material } from 'three';
 import { useLootStore, type LootKind } from '~/stores/useLootStore';
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 
@@ -15,10 +14,21 @@ const FLASH_LIFE = .22;
 const store = useLootStore();
 const run = useCurrentRunStore();
 
-// Moeda: perfil de meia moeda (raio, altura) girado no eixo Y, miolo rebaixado e borda saltada
-const profile = [[0, .06], [.34, .06], [.4, .1], [.5, .1], [.53, .06], [.53, -.06], [.5, -.1], [.4, -.1], [.34, -.06], [0, -.06]];
-const coinGeometry = new LatheGeometry(profile.map(([x, y]) => new Vector2(x, y)), 28);
-coinGeometry.computeVertexNormals();
+// Moeda: tablete quadrado de cantos bem arredondados e borda chanfrada (mesmo desenho do SvgCoinIcon), deitado no plano XZ
+const COIN_HALF = .36, COIN_RADIUS = .14;
+const coinShape = new Shape();
+coinShape.moveTo(-COIN_HALF + COIN_RADIUS, -COIN_HALF);
+coinShape.lineTo(COIN_HALF - COIN_RADIUS, -COIN_HALF);
+coinShape.quadraticCurveTo(COIN_HALF, -COIN_HALF, COIN_HALF, -COIN_HALF + COIN_RADIUS);
+coinShape.lineTo(COIN_HALF, COIN_HALF - COIN_RADIUS);
+coinShape.quadraticCurveTo(COIN_HALF, COIN_HALF, COIN_HALF - COIN_RADIUS, COIN_HALF);
+coinShape.lineTo(-COIN_HALF + COIN_RADIUS, COIN_HALF);
+coinShape.quadraticCurveTo(-COIN_HALF, COIN_HALF, -COIN_HALF, COIN_HALF - COIN_RADIUS);
+coinShape.lineTo(-COIN_HALF, -COIN_HALF + COIN_RADIUS);
+coinShape.quadraticCurveTo(-COIN_HALF, -COIN_HALF, -COIN_HALF + COIN_RADIUS, -COIN_HALF);
+const coinGeometry = new ExtrudeGeometry(coinShape, { depth: .1, bevelEnabled: true, bevelThickness: .05, bevelSize: .07, bevelSegments: 3, curveSegments: 6 });
+coinGeometry.center();
+coinGeometry.rotateX(Math.PI / 2);
 const coinMaterial = new MeshStandardMaterial({ color: '#ffc53a', emissive: '#e08a00', emissiveIntensity: .45, roughness: .25, metalness: .55 });
 // Pedrinha de EXP: octaedro esticado em losango, facetado para os lados piscarem ao girar
 const gemGeometry = new OctahedronGeometry(.5);
@@ -86,7 +96,7 @@ function spark(x: number, y: number, z: number, colors: Color[], burst = false) 
 
 const dummy = new Object3D();
 let time = 0;
-useLoop().onBeforeRender(({ delta }) => {
+useGameLoop().onBeforeRender(({ delta }) => {
   // Pausado: tudo congela no lugar
   const dt = run.isPlaying ? Math.min(delta, .1) : 0;
   time += dt;

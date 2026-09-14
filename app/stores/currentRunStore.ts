@@ -1,3 +1,4 @@
+import { canFastGame, clearedRoomSpeedBoost, nextGameSpeed, sanitizeGameSpeed } from '~/utils/gameSpeed';
 import { emitImpact } from '~/utils/combatEffects'
 import { defineStore } from 'pinia';
 import { ref, shallowRef } from 'vue';
@@ -128,6 +129,21 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   const roomCurrentWaveIndex = ref(0);
   const isWaveInProgress = ref(false);
 
+  // -- FAST GAME (capítulos já concluídos podem rodar a 2x/3x; a escolha fica salva)
+  const GAME_SPEED_KEY = 'gameSpeed';
+  const preferredGameSpeed = ref(import.meta.server ? 1 : sanitizeGameSpeed(localStorage.getItem(GAME_SPEED_KEY)));
+  const fastGameAvailable = computed(() => Boolean(levelConfig.value)
+    && canFastGame(useChapterProgressStore().progress, Number((levelConfig.value as any)?.chapter) || 1));
+  // Velocidade efetiva do tempo da partida: pausado, fora da partida ou em capítulo inédito é sempre 1x
+  const gameSpeed = computed(() => (isPlaying.value && fastGameAvailable.value ? preferredGameSpeed.value : 1));
+
+  function cycleGameSpeed() {
+    preferredGameSpeed.value = nextGameSpeed(preferredGameSpeed.value);
+    localStorage.setItem(GAME_SPEED_KEY, String(preferredGameSpeed.value));
+    // Trocou a velocidade com a sala já limpa: o boost de movimento acompanha
+    applyClearedRoomBoost();
+  }
+
   function initializePermanentState() {
     totalGold.value = loadGold();
     console.log('Permanent state initialized. Total Gold:', totalGold.value);
@@ -218,11 +234,14 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     if (!isStageCompleted.value && currentStage.value?.type !== 'intro') skillStore.onRoomCleared();
     isStageCompleted.value = true;
     isDoorActive.value = true;
+    applyClearedRoomBoost();
+  }
 
-    // Mesmo se tiver completado, se for uma sala de introdução, mantém a velocidade normal
-    if (currentStage.value.type !== 'intro') {
-      currentMoveSpeed.value = playerStats.moveSpeed * 3;
-    }
+  /** Sala limpa acelera a nave até a porta (menos no Fast Game). Sala de introdução mantém a velocidade normal. */
+  function applyClearedRoomBoost() {
+    if (!isStageCompleted.value || (currentStage.value as any)?.type === 'intro') return;
+    const speed = fastGameAvailable.value ? preferredGameSpeed.value : 1;
+    currentMoveSpeed.value = playerStats.moveSpeed * clearedRoomSpeedBoost(speed);
   }
 
   function nextStage() {
@@ -662,6 +681,12 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     gameOver,
     gameVictory,
     gameLevelSelect,
+
+    // Fast Game
+    preferredGameSpeed, // Velocidade escolhida no botão (1, 2 ou 3)
+    fastGameAvailable, // Capítulo atual já foi concluído
+    gameSpeed, // Multiplicador efetivo do tempo da partida
+    cycleGameSpeed,
 
     // Portas
     doorPosition,

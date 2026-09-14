@@ -33,7 +33,6 @@
  * 5. Variação:
  *    - numMaterials: mais = mais variação (mas menos performance)
  */
-import { useLoop } from '@tresjs/core';
 import * as THREE from 'three';
 
 const props = withDefaults(defineProps<{
@@ -287,7 +286,7 @@ watch([() => props.mapWidth, () => props.mapHeight], () => {
 const materialFrames = ref<number[]>([]);
 const materialLastFrameTimes = ref<number[]>([]);
 
-const { onBeforeRender } = useLoop();
+const { onBeforeRender } = useGameLoop();
 onBeforeRender(({ elapsed, delta }) => {
   // Animar frames das texturas com velocidades aleatórias
   for (let i = 0; i < materials.value.length; i++) {

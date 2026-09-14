@@ -1,30 +1,99 @@
-<script setup lang="js">
-const props = defineProps({
-  /** Ícone de experiência (EXP) */
-  size: {
-    type: Number,
-    default: 40,
-  },
-});
+<script setup lang="ts">
+// Ouro (moeda comum): tablete de ouro quadrado de cantos bem arredondados, com espessura, chanfro, miolo rebaixado e brilho.
+withDefaults(defineProps<{ size?: number; sparkle?: boolean }>(), { size: 40, sparkle: false });
+
+// Ids únicos por instância: vários ícones na tela não podem dividir os mesmos gradientes
+const uid = useId();
+const id = (name: string) => `coin-${uid}-${name}`;
 </script>
 
 <template>
-    <svg xmlns="http://www.w3.org/2000/svg" :width="size" :height="size" viewBox="0 0 36 36">
-        <!-- Icon from Twitter Emoji by Twitter - https://creativecommons.org/licenses/by/4.0/ -->
-        <circle cx="18" cy="19" r="17" fill="#F4900C"/>
-        <circle cx="18" cy="17" r="17" fill="#FFCC4D"/>
-        <circle cx="18" cy="18" r="14" fill="#FFE8B6"/>
-        <circle cx="18" cy="17" r="14" fill="#FFAC33"/>
-        <path fill="#FFE8B6" d="M9.543 10.856c0-.545.535-.763.535-.763l7.878-3.7l7.953 3.7s.548.122.548.767v.641H9.543z"/>
-        <path fill="#F4900C" d="M25.929 12.836c0-.584-.505-1.057-1.127-1.057H11.129c-.623 0-1.057.473-1.057 1.057c0 .397.204.739.529.92v.666h2.114v-.529h2.114v.529h2.114v-.529h2.114v.529h2.114v-.529h2.114v.529H25.4v-.693c.317-.188.529-.517.529-.893M27.514 24a.793.793 0 0 1-.793.793H9.279a.793.793 0 1 1 0-1.586h17.443c.437 0 .792.355.792.793"/>
-        <path fill="#F4900C" d="M26.457 12.2a.53.53 0 0 1-.529.529H10.071a.53.53 0 0 1 0-1.058l15.857.003a.527.527 0 0 1 .529.526m-14.271.614h11.629V14H12.186z"/>
-        <path fill="#FFD983" d="M12.714 20.829c0 .584-.316 1.057-.705 1.057h-.705c-.389 0-.705-.473-.705-1.057v-8.014c0-.584.316-1.057.705-1.057h.705c.389 0 .705.473.705 1.057zm12.686 0c0 .584-.315 1.057-.705 1.057h-.705c-.389 0-.705-.473-.705-1.057v-8.014c0-.584.315-1.057.705-1.057h.705c.389 0 .705.473.705 1.057zm-8.457 0c0 .584-.316 1.057-.705 1.057h-.705c-.389 0-.705-.473-.705-1.057v-8.014c0-.584.316-1.057.705-1.057h.705c.389 0 .705.473.705 1.057zm4.228 0c0 .584-.316 1.057-.705 1.057h-.704c-.389 0-.705-.473-.705-1.057v-8.014c0-.584.316-1.057.705-1.057h.704c.389 0 .705.473.705 1.057z"/>
-        <path fill="#FFCC4D" d="M25.929 21.357c0 .584-.473 1.057-1.057 1.057H11.129a1.057 1.057 0 1 1 0-2.114h13.743c.583 0 1.057.473 1.057 1.057"/>
-        <path fill="#FFD983" d="M26.986 22.414c0 .584-.473 1.057-1.057 1.057H10.071a1.057 1.057 0 1 1 0-2.114h15.857c.584 0 1.058.473 1.058 1.057"/>
-        <path fill="#FFD983" d="M27.514 23.207a.793.793 0 0 1-.793.793H9.279a.793.793 0 1 1 0-1.586h17.443c.437 0 .792.355.792.793"/>
-        <path fill="#FFCC4D" d="M25.929 12.286c0-.584-.505-1.057-1.127-1.057H11.129c-.623 0-1.057.473-1.057 1.057c0 .397.204.739.529.92v.666h2.114v-.529h2.114v.529h2.114v-.529h2.114v.529h2.114v-.529h2.114v.529H25.4v-.693c.317-.188.529-.517.529-.893"/>
-        <path fill="#FFD983" d="M9.543 11.463c0-.545.535-.763.535-.763L17.956 7l7.953 3.7s.548.122.548.767v.291H9.543z"/>
-        <path fill="#FFAC33" d="M18 8.343s-5.455 2.571-5.999 2.803c-.545.231-.363.611.001.611h11.97c.562 0 .429-.429-.017-.661C23.509 10.865 18 8.343 18 8.343"/>
-        <path fill="#FFD983" d="M26.457 11.757a.53.53 0 0 1-.529.529H10.071a.53.53 0 0 1 0-1.058l15.857.003a.527.527 0 0 1 .529.526"/>
-    </svg>
+  <svg class="coin-icon" xmlns="http://www.w3.org/2000/svg" :width="size" :height="size" viewBox="0 0 64 64" aria-hidden="true">
+    <!-- Tablete girado 45°: nos gradientes, a diagonal (0,0)→(1,1) do quadrado vira a vertical da tela -->
+    <defs>
+      <linearGradient :id="id('top')" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#fff480" />
+        <stop offset="0.45" stop-color="#ffd519" />
+        <stop offset="1" stop-color="#ffb300" />
+      </linearGradient>
+      <linearGradient :id="id('side')" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0.5" stop-color="#f29100" />
+        <stop offset="1" stop-color="#b85a00" />
+      </linearGradient>
+      <linearGradient :id="id('bevel')" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#d98000" />
+        <stop offset="0.55" stop-color="#f5b000" />
+        <stop offset="1" stop-color="#fff39a" />
+      </linearGradient>
+      <linearGradient :id="id('face')" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#f2a900" />
+        <stop offset="1" stop-color="#ffd21a" />
+      </linearGradient>
+    </defs>
+
+    <!-- Sombra de apoio -->
+    <ellipse cx="32" cy="60" rx="18" ry="2.6" fill="#3a1a00" opacity="0.3" />
+
+    <!-- Contorno escuro da silhueta inteira (tampa + espessura) -->
+    <g fill="#6e3200" stroke="#6e3200" stroke-width="5" stroke-linejoin="round">
+      <rect x="-22" y="-22" width="44" height="44" rx="13" transform="translate(32 29) rotate(45)" />
+      <rect x="-22" y="-22" width="44" height="44" rx="13" transform="translate(32 34) rotate(45)" />
+      <rect x="6.3" y="29" width="51.4" height="5" />
+    </g>
+
+    <!-- Espessura: lateral mais escura aparecendo embaixo -->
+    <rect x="-22" y="-22" width="44" height="44" rx="13" transform="translate(32 34) rotate(45)" :fill="`url(#${id('side')})`" />
+    <rect x="6.3" y="29" width="51.4" height="5" fill="#f29100" />
+
+    <g transform="translate(32 29) rotate(45)">
+      <!-- Tampa -->
+      <rect x="-22" y="-22" width="44" height="44" rx="13" :fill="`url(#${id('top')})`" />
+
+      <!-- Rebaixo do miolo: chanfro escuro em cima e claro embaixo -->
+      <rect x="-14" y="-14" width="28" height="28" rx="8" :fill="`url(#${id('bevel')})`" />
+      <rect x="-10.5" y="-10.5" width="22" height="22" rx="6" :fill="`url(#${id('face')})`" />
+
+      <!-- Reflexos na ponta de cima -->
+      <path d="M-18.5 6 V-8 Q-18.5 -18.5 -8 -18.5 H6" stroke="#fff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8" />
+      <circle cx="11" cy="-18.5" r="1.5" fill="#fff" opacity="0.75" />
+    </g>
+
+    <!-- Estrelinha de brilho -->
+    <path
+      v-if="sparkle"
+      class="coin-icon__sparkle"
+      d="M52 3 L53.4 7.6 L58 9 L53.4 10.4 L52 15 L50.6 10.4 L46 9 L50.6 7.6 Z"
+      fill="#fff"
+    />
+  </svg>
 </template>
+
+<style scoped>
+.coin-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  overflow: visible;
+}
+.coin-icon__sparkle {
+  transform-origin: 52px 9px;
+  animation: coin-sparkle 2.4s ease-in-out infinite;
+}
+@keyframes coin-sparkle {
+  0%,
+  60%,
+  100% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  75% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .coin-icon__sparkle {
+    animation: none;
+    opacity: 0.8;
+  }
+}
+</style>
