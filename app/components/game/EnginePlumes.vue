@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Group, Mesh, MeshBasicMaterial, ConeGeometry, TorusGeometry, AdditiveBlending } from 'three'
-const props = defineProps<{ gameplay?: boolean }>()
+const props = defineProps<{ gameplay?: boolean; preview?: Record<string, string | number> }>()
 const root = new Group()
 const jets: Mesh[] = []
 const rings: Mesh[] = []
@@ -25,7 +25,7 @@ useGameLoop().onBeforeRender(({delta}) => {
   const dt=Math.min(delta,.1)
   time += dt
   hyper += ((props.gameplay && run.isHyperdrive ? 1 : 0)-hyper)*(1-Math.exp(-dt*6))
-  glow.color.set(thrusterColor()); core.color.copy(glow.color).lerp({r:1,g:1,b:1} as any,.65+hyper*.25)
+  glow.color.set(thrusterColor(props.preview)); core.color.copy(glow.color).lerp({r:1,g:1,b:1} as any,.65+hyper*.25)
   glow.opacity=.35+hyper*.3
   const m=run.getMoveVector(); const thrust=(m.x*m.x+m.z*m.z>0 ? 1.5 : .85)*(1+dilation.value.visual*.2)*(1+hyper*1.1)
   jets.forEach((jet,i) => { jet.scale.z=(appearance.value.power ?? 1)*thrust*(.85+.24*Math.sin(time*24+i*.8)); jet.scale.x=(i%2 ? 1.8 : 1)*(1+hyper*.4)*(.94+.1*Math.cos(time*19+i)) })

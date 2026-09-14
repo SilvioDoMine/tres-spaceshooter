@@ -2,7 +2,21 @@
 
 Este é o documento canônico para concept art, modelagem 3D e geração de naves por IA. Toda nave nova deve ser desenhada como uma plataforma modular compatível com os equipamentos existentes.
 
+## Prioridade sobre referências visuais
+
+Este guia prevalece sobre blueprints, imagens de concept art e modelos de referência. Use essas imagens para silhueta, proporções e acabamento; adapte qualquer detalhe que contradiga os slots, os três estados de arma ou as regras de compatibilidade. Uma arma ou acessório desenhado no blueprint não deve ficar permanentemente no casco se depender de um equipamento ou carta. Registre as adaptações realizadas. Uma instrução explícita do usuário pode revisar o próprio guia.
+
 ## Direção visual
+
+### Kestrel-07 — adaptação do blueprint
+
+O casco atual é construído em `app/utils/kestrelModel.js`: armadura branca facetada, painéis turquesa personalizáveis, canopy escuro, asas varridas e duas naceles com anéis de cobre. Os detalhes estáticos são agrupados por material.
+
+Referência visual aprovada: [blueprint Kestrel-07](kestrel-07-blueprint.png). O objetivo é reproduzir o desenho, incluindo silhueta, perfil inclinado da fuselagem e canopy, contorno das asas, carenagens e detalhes mecânicos. Não substituir esses volumes por blocos genéricos apenas semelhantes. As únicas adaptações deliberadas são as necessárias para compatibilidade com este guia e com os hardpoints do jogo.
+
+O canhão grande desenhado na referência não faz parte permanente do casco: o slot vazio usa o emissor integrado simples; Plasma e Lança Iônica substituem esse emissor. Sensores, reator, emissores de campo, módulos das asas e revestimentos dos propulsores ocupam encaixes próprios. As armas auxiliares e traseiras só aparecem conforme as cartas da partida. Os hardpoints conservam as coordenadas usadas pelo combate, para manter cada saída de projétil alinhada à boca da arma.
+
+Use `/ship-lab` para comparar as vistas e combinações sem alterar o inventário do jogador.
 
 O jogo usa ficção científica militar estilizada em um *space shooter* 3D visto principalmente de cima. A câmera alta tem pouca distorção de perspectiva; por isso, a silhueta e os volumes grandes importam mais que microdetalhes.
 
