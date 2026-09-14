@@ -20,9 +20,37 @@ const rarityOf = (skill) => RARITIES[skill.rarity] ?? RARITIES.common;
 
 const isOpen = computed(() => currentRunStore.isPaused && skillStore.isModalOpen);
 
-// Sem nenhuma troca disponível o botão nem é renderizado (senão o espaço vazio empurra as cartas no mobile).
-// Se ao menos uma carta ainda tem troca, as outras mantêm o espaço invisível para ficarem alinhadas.
-const hasRerolls = computed(() => skillStore.skillOptions.some((skill) => skill.reRolls > 0));
+// Sem trocas na run o botão nem é renderizado (senão o espaço vazio empurra as cartas no mobile).
+// Usa o total da run, e não as trocas restantes, para o botão não sumir no meio da escolha e mexer o layout.
+const hasRerolls = computed(() => currentRunStore.skillRerollCount > 0);
+
+// Cada abertura do modal é uma "rodada": os slots são chaveados por rodada + posição, então a animação de
+// entrada toca ao abrir, mas o slot continua montado quando a carta dele é trocada.
+const round = ref(0);
+const swappedSlots = ref([]);
+const rowEl = ref(null);
+
+// Troca a carta sem layout shift: trava a altura atual da linha e do slot antes de a carta nova entrar
+// (ela pode ter um texto mais curto), e a carta nova só gira no lugar.
+const reroll = (skill, index) => {
+    const row = rowEl.value;
+    if (row) {
+        row.style.minHeight = `${row.offsetHeight}px`;
+        const slot = row.children[index];
+        if (slot) slot.style.minHeight = `${slot.offsetHeight}px`;
+    }
+    if (!swappedSlots.value.includes(index)) swappedSlots.value.push(index);
+    skillStore.refreshSkill(skill);
+};
+
+// As alturas travadas valem só para o tamanho de tela em que foram medidas: ao redimensionar/girar
+// (ou cruzar o breakpoint mobile ↔ PC) elas são soltas para o layout novo se ajustar sozinho.
+const unlockHeights = () => {
+    const row = rowEl.value;
+    if (!row) return;
+    row.style.minHeight = '';
+    for (const slot of row.children) slot.style.minHeight = '';
+};
 
 // Descrição do próximo nível (cai no nível atual quando não existe o próximo)
 const effectOf = (skill) =>
@@ -83,10 +111,12 @@ const untilt = (event) => {
 // Adiciona/remove listeners quando o modal abre/fecha
 onMounted(() => {
     window.addEventListener('keydown', handleKeyPress);
+    window.addEventListener('resize', unlockHeights);
 });
 
 onUnmounted(() => {
     window.removeEventListener('keydown', handleKeyPress);
+    window.removeEventListener('resize', unlockHeights);
 });
 
 // When modal is closed and opens up, we should throw confetti
@@ -94,6 +124,10 @@ watch(
     () => skillStore.isModalOpen,
     (newVal, oldVal) => {
         if (newVal && !oldVal) {
+            round.value += 1;
+            swappedSlots.value = [];
+            unlockHeights();
+
             const duration = 200;
 
             confettiCustomParade(duration, {
@@ -133,17 +167,18 @@ watch(
     >
         <BaseRibbonTitle text="Escolha uma Habilidade" variant="blue" :open="isOpen" />
 
-        <div class="skills__row">
+        <div ref="rowEl" class="skills__row">
             <div
                 v-for="(skill, index) in skillStore.skillOptions"
-                :key="skill.id"
+                :key="`${round}-${index}`"
                 class="skills__slot"
                 :style="{ '--i': index }"
             >
                 <button
+                    :key="skill.id"
                     type="button"
                     class="scard"
-                    :class="`is-${rarityOf(skill).frame}`"
+                    :class="[`is-${rarityOf(skill).frame}`, { 'is-swapped': swappedSlots.includes(index) }]"
                     data-ui-sound="confirm"
                     :aria-label="`${skill.name}, ${rarityOf(skill).label}: ${effectOf(skill)}`"
                     @pointermove="tilt"
@@ -194,7 +229,7 @@ watch(
                     :title="`Trocas restantes: ${skill.reRolls}`"
                     :aria-label="`Trocar ${skill.name} (${skill.reRolls} restantes)`"
                     data-ui-sound="tap"
-                    @click="skillStore.refreshSkill(skill)"
+                    @click="reroll(skill, index)"
                 >
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -279,6 +314,10 @@ watch(
 }
 .scard:active {
     translate: 0 3px;
+}
+/* Carta nova depois da troca: gira no lugar, sem sumir nem esperar o delay da entrada */
+.scard.is-swapped {
+    animation: scard-swap 0.4s cubic-bezier(0.25, 1.4, 0.5, 1);
 }
 
 .scard__body {
@@ -705,6 +744,16 @@ watch(
         transform: none;
     }
 }
+@keyframes scard-swap {
+    0% {
+        opacity: 0.4;
+        transform: rotateY(90deg) scale(0.92);
+    }
+    100% {
+        opacity: 1;
+        transform: rotateX(var(--rx)) rotateY(var(--ry));
+    }
+}
 @keyframes scard-sheen {
     0%,
     55% {
@@ -731,6 +780,7 @@ watch(
 
 @media (prefers-reduced-motion: reduce) {
     .skills__slot,
+    .scard.is-swapped,
     .scard__sheen,
     .scard__icon,
     .scard__rays {
