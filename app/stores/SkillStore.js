@@ -51,18 +51,44 @@ export const SkillsList ={
       5: { value: 2.60, description: 'HP máximo: 650' },
     }
   },
-  health_regeneration: {
-    id: 'health_regeneration',
-    name: 'Regeneração de Vida',
-    description: 'Regenera uma porcentagem da sua vida máxima a cada segundo.',
-    icon: '🩹',
+  // Cura por tempo removida das cartas (o dano dos inimigos ficou alto demais para regenerar de graça)
+  // health_regeneration: {
+  //   id: 'health_regeneration',
+  //   name: 'Regeneração de Vida',
+  //   description: 'Regenera uma porcentagem da sua vida máxima a cada segundo.',
+  //   icon: '🩹',
+  //   rarity: 'uncommon',
+  //   levels: {
+  //     1: { value: 0.004, description: 'Regenera 0,40% da vida máxima por segundo' },
+  //     2: { value: 0.008, description: 'Regenera 0,80% da vida máxima por segundo' },
+  //     3: { value: 0.012, description: 'Regenera 1,20% da vida máxima por segundo' },
+  //     4: { value: 0.016, description: 'Regenera 1,60% da vida máxima por segundo' },
+  //     5: { value: 0.020, description: 'Regenera 2,00% da vida máxima por segundo' },
+  //   }
+  // },
+  exp_growth: {
+    id: 'exp_growth',
+    name: 'Aprendizado',
+    description: 'Aumenta a EXP ganha na partida. O bônus cresce a cada sala concluída depois de pegar a carta.',
+    icon: '📚',
     rarity: 'uncommon',
     levels: {
-      1: { value: 0.004, description: 'Regenera 0,40% da vida máxima por segundo' },
-      2: { value: 0.008, description: 'Regenera 0,80% da vida máxima por segundo' },
-      3: { value: 0.012, description: 'Regenera 1,20% da vida máxima por segundo' },
-      4: { value: 0.016, description: 'Regenera 1,60% da vida máxima por segundo' },
-      5: { value: 0.020, description: 'Regenera 2,00% da vida máxima por segundo' },
+      // value: bônus inicial; perRoom: quanto cresce por sala concluída; max: teto do bônus
+      1: { value: 0.10, perRoom: 0.02, max: 0.40, description: '+10% de EXP, +2% por sala concluída (até +40%)' },
+      2: { value: 0.15, perRoom: 0.03, max: 0.60, description: '+15% de EXP, +3% por sala concluída (até +60%)' },
+      3: { value: 0.20, perRoom: 0.04, max: 0.80, description: '+20% de EXP, +4% por sala concluída (até +80%)' },
+    }
+  },
+  emergency_repair: {
+    id: 'emergency_repair',
+    name: 'Reparo de Emergência',
+    description: 'Restaura na hora uma parte aleatória da sua vida máxima. Pode aparecer de novo; não aparece com a vida cheia.',
+    icon: '🔧',
+    rarity: 'uncommon',
+    // Uso imediato: não ocupa espaço nas habilidades obtidas e nunca esgota
+    repeatable: true,
+    levels: {
+      1: { min: 0.25, max: 0.75, description: 'Restaura de 25% a 75% da vida máxima' },
     }
   },
   general_speed: {
@@ -84,7 +110,7 @@ export const SkillsList ={
     name: 'Tiro Ricochete',
     description: 'Seus projéteis ricocheteiam nos inimigos, perdendo metade do dano a cada salto.',
     icon: '💥',
-    rarity: 'rare',
+    rarity: 'epic',
     levels: {
       1: { value: 0.5, description: 'Projéteis ricocheteiam 1 vez.' },
       2: { value: 0.5, description: 'Projéteis ricocheteiam 2 vezes.'},
