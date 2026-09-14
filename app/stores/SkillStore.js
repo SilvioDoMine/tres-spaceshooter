@@ -77,6 +77,8 @@ export const SkillsList ={
       1: { value: 0.10, perRoom: 0.02, max: 0.40, description: '+10% de EXP, +2% por sala concluída (até +40%)' },
       2: { value: 0.15, perRoom: 0.03, max: 0.60, description: '+15% de EXP, +3% por sala concluída (até +60%)' },
       3: { value: 0.20, perRoom: 0.04, max: 0.80, description: '+20% de EXP, +4% por sala concluída (até +80%)' },
+      4: { value: 0.25, perRoom: 0.05, max: 1.00, description: '+25% de EXP, +5% por sala concluída (até +100%)' },
+      5: { value: 0.30, perRoom: 0.06, max: 1.20, description: '+30% de EXP, +6% por sala concluída (até +120%)' },
     }
   },
   emergency_repair: {

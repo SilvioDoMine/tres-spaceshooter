@@ -21,7 +21,7 @@ test('player upgrade tables use final non-cumulative values', () => {
   // Cura por tempo saiu das cartas
   assert.equal(SkillsList.health_regeneration, undefined);
   assert.doesNotMatch(skillSource, /^\s*usePlayerStats\(\)\.(set|add)RegenRate/m);
-  assert.deepEqual(Object.values(SkillsList.exp_growth.levels).map(x => [x.value, x.perRoom, x.max]), [[.1,.02,.4],[.15,.03,.6],[.2,.04,.8]]);
+  assert.deepEqual(Object.values(SkillsList.exp_growth.levels).map(x => [x.value, x.perRoom, x.max]), [[.1,.02,.4],[.15,.03,.6],[.2,.04,.8],[.25,.05,1],[.3,.06,1.2]]);
   assert.equal(SkillsList.exp_growth.rarity, 'uncommon');
   assert.equal(SkillsList.emergency_repair.rarity, 'uncommon');
   assert.deepEqual({ ...SkillsList.emergency_repair.levels[1], description: undefined }, { min: .25, max: .75, description: undefined });
