@@ -321,6 +321,9 @@ export const useSkillStore = defineStore('SkillStore', () => {
     const upgradeQueueCount = ref(0);
     const isUpgrading = ref(false);
 
+    // Salas concluídas desde que o jogador pegou Aprendizado (o bônus de EXP cresce com elas)
+    const experienceRooms = ref(0);
+
     function update(safeDelta) {
       // Lógica de atualização das skills, se necessário
       if (isUpgrading.value) {
@@ -358,6 +361,21 @@ export const useSkillStore = defineStore('SkillStore', () => {
         isUpgrading.value = false; // Reseta o estado de atualização
         upgradeQueueCount.value = 0; // Reseta a fila de upgrades
         currentSkills.value = []; // Reseta as skills atuais
+        experienceRooms.value = 0;
+    }
+
+    function onRoomCleared() {
+        if (hasSkill('exp_growth')) experienceRooms.value += 1;
+    }
+
+    // Cartas repetíveis nunca esgotam (a de reparo só aparece com vida faltando); as demais somem no nível máximo
+    function isOfferable(skill) {
+        if (skill.repeatable) {
+            const run = useCurrentRunStore();
+            return skill.id !== 'emergency_repair' || run.currentHealth < run.maxHealth;
+        }
+        const currentSkill = currentSkills.value.find(s => s.id === skill.id);
+        return !currentSkill || currentSkill.currentLevel < Object.keys(skill.levels).length;
     }
 
     /**
@@ -416,29 +434,9 @@ export const useSkillStore = defineStore('SkillStore', () => {
             rarityPool = [selectedRarity];
         }
 
-        let availableSkills = allSkills.filter((skill) => {
-            // check current skill levels to avoid maxed out skills
-            const currentSkill = currentSkills.value.find(s => s.id === skill.id);
-
-            let isMaxedOut = false;
-
-            if (currentSkill) {
-                console.log('Current Skill Level for', skill.id, ':', currentSkill.currentLevel, 'Max Level:', Object.keys(skill.levels).length);
-                isMaxedOut = currentSkill.currentLevel >= Object.keys(skill.levels).length;
-            }
-
-            console.log(
-              'rarityPool:', rarityPool,
-              'skill.rarity:', skill.rarity,
-              'Rarity Includes', rarityPool.includes(skill.rarity),
-              'Already Selected', skillOptions.value.some(s => s.id === skill.id),
-              'Is Maxed Out', isMaxedOut
-            );
-
-            return rarityPool.includes(skill.rarity)
-                && !skillOptions.value.some(s => s.id === skill.id)
-                && !isMaxedOut;
-        });
+        let availableSkills = allSkills.filter(skill => rarityPool.includes(skill.rarity)
+            && !skillOptions.value.some(s => s.id === skill.id)
+            && isOfferable(skill));
 
         console.log('Skills disponíveis para seleção:', availableSkills);
 
@@ -454,14 +452,7 @@ export const useSkillStore = defineStore('SkillStore', () => {
             // A raridade sorteada pode não ter nenhuma opção elegível. Procura
             // diretamente nas demais raridades para não criar uma recursão infinita.
             rarityPool = ['poor', 'common', 'uncommon', 'rare', 'epic', 'legendary'];
-            availableSkills = allSkills.filter((skill) => {
-                const currentSkill = currentSkills.value.find(s => s.id === skill.id);
-                const isMaxedOut = currentSkill
-                    ? currentSkill.currentLevel >= Object.keys(skill.levels).length
-                    : false;
-
-                return !skillOptions.value.some(s => s.id === skill.id) && !isMaxedOut;
-            });
+            availableSkills = allSkills.filter(skill => !skillOptions.value.some(s => s.id === skill.id) && isOfferable(skill));
             newQty = Math.min(qty, availableSkills.length);
 
             if (newQty === 0) {
@@ -535,17 +526,20 @@ export const useSkillStore = defineStore('SkillStore', () => {
       // Pré adição do nível da skill
       const maxHealthBefore = useCurrentRunStore().maxHealth; // Necessário pra calcular a cura pós o upgrade
       
-      // Incrementa o nível da skill
-      skill.currentLevel += 1;
+      // Cartas repetíveis têm efeito imediato: não sobem de nível nem entram nas habilidades obtidas
+      if (!skill.repeatable) {
+        // Incrementa o nível da skill
+        skill.currentLevel += 1;
 
-      // Se já existe a skill, apenas atualiza o nível
-      const existingSkillIndex = currentSkills.value.findIndex(s => s.id === skill.id);
+        // Se já existe a skill, apenas atualiza o nível
+        const existingSkillIndex = currentSkills.value.findIndex(s => s.id === skill.id);
 
-      if (existingSkillIndex !== -1) {
-          currentSkills.value[existingSkillIndex].currentLevel += 1;
-      } else {
-          // Adiciona a nova skill ao array de skills atuais
-          currentSkills.value.push(skill);   
+        if (existingSkillIndex !== -1) {
+            currentSkills.value[existingSkillIndex].currentLevel += 1;
+        } else {
+            // Adiciona a nova skill ao array de skills atuais
+            currentSkills.value.push(skill);
+        }
       }
 
       // Fecha o modal de seleção de skills
@@ -558,10 +552,14 @@ export const useSkillStore = defineStore('SkillStore', () => {
           useCurrentRunStore().setMaxHealth(usePlayerStats().maxHealth);
           usePlayerStats().healthAfterSkillUpgrade(maxHealthBefore);
           break;
-        case 'health_regeneration':
-          const regenAmount = skill.levels[skill.currentLevel].value;
-          usePlayerStats().setRegenRate(regenAmount * 100);
-          console.log(`Regeneração definida em ${regenAmount * 100}% por segundo.`);
+        // Cura por tempo removida das cartas
+        // case 'health_regeneration':
+        //   const regenAmount = skill.levels[skill.currentLevel].value;
+        //   usePlayerStats().setRegenRate(regenAmount * 100);
+        //   console.log(`Regeneração definida em ${regenAmount * 100}% por segundo.`);
+        //   break;
+        case 'emergency_repair':
+          useCurrentRunStore().healPlayer(emergencyRepairHeal(useCurrentRunStore().maxHealth, skill.levels[1]));
           break;
         case 'general_speed':
           console.log('Aplicando aumento de velocidade geral da skill.');
@@ -621,6 +619,11 @@ export const useSkillStore = defineStore('SkillStore', () => {
         currentSkills,
         hasSkill,
         getSkillLevel,
+        isOfferable,
+
+        // Aprendizado
+        experienceRooms,
+        onRoomCleared,
     };
 });
 

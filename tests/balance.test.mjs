@@ -18,9 +18,13 @@ const runSource = readFileSync(new URL('../app/stores/currentRunStore.ts', impor
 test('player upgrade tables use final non-cumulative values', () => {
   assert.deepEqual(Object.values(SkillsList.health_percentage.levels).map(x => 250 * x.value), [300,350,425,525,650]);
   assert.deepEqual(Object.values(SkillsList.damage_percentage.levels).map(x => 50 * x.value), [60,70,80,95,112.5]);
-  assert.deepEqual(Object.values(SkillsList.health_regeneration.levels).map(x => x.value), [.004,.008,.012,.016,.02]);
-  assert.match(skillSource, /setRegenRate\(regenAmount \* 100\)/);
-  assert.doesNotMatch(skillSource, /addRegenRate\(regenAmount/);
+  // Cura por tempo saiu das cartas
+  assert.equal(SkillsList.health_regeneration, undefined);
+  assert.doesNotMatch(skillSource, /^\s*usePlayerStats\(\)\.(set|add)RegenRate/m);
+  assert.deepEqual(Object.values(SkillsList.exp_growth.levels).map(x => [x.value, x.perRoom, x.max]), [[.1,.02,.4],[.15,.03,.6],[.2,.04,.8]]);
+  assert.equal(SkillsList.exp_growth.rarity, 'uncommon');
+  assert.equal(SkillsList.emergency_repair.rarity, 'uncommon');
+  assert.deepEqual({ ...SkillsList.emergency_repair.levels[1], description: undefined }, { min: .25, max: .75, description: undefined });
 });
 
 test('shot upgrades match formation, damage, piercing, rear fire and range', () => {

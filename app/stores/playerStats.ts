@@ -3,7 +3,7 @@ import { PlayerBaseStats, useCurrentRunStore } from "~/stores/currentRunStore";
 import { useCombatTextStore } from "~/stores/useCombatTextStore";
 import { computePlayerStats, type PlayerStats } from '~/utils/equipment';
 import { emptyTalentBonuses } from '~/utils/talents';
-import { adrenalineMultiplier, withRunSkills } from '~/utils/shipAttributes';
+import { adrenalineMultiplier, experienceBonus, withRunSkills } from '~/utils/shipAttributes';
 
 const REGEN_TEXT_INTERVAL = 1; // segundos entre textos de regeneração
 
@@ -158,6 +158,8 @@ export const usePlayerStats = defineStore('playerStats', () => {
 
   const headshotChance = computed((): number => skillLevelData('headshot')?.value || 0);
   const siphonChance = computed((): number => skillLevelData('siphon')?.value || 0);
+  // Aprendizado: multiplica a EXP dos abates; cresce com as salas concluídas desde que a carta foi pega
+  const experienceMultiplier = computed((): number => 1 + experienceBonus(skillLevelData('exp_growth'), skillStore.experienceRooms));
 
   // Tiro de Fogo, Gelo e Raio: payload elemental levado por cada projétil (null sem nenhum)
   function elementalPayload(range: number): any {
@@ -252,6 +254,7 @@ export const usePlayerStats = defineStore('playerStats', () => {
     getAttackSpeedMultiplier,
     headshotChance,
     siphonChance,
+    experienceMultiplier,
     adrenalineDamageMultiplier,
     elementalPayload,
   };

@@ -50,6 +50,17 @@ export const HEADSHOT_CATEGORIES = ['common', 'mini', 'elite'];
 export function headshotKills(chance: number, category: string, rng = Math.random) {
   return chance > 0 && HEADSHOT_CATEGORIES.includes(category) && rng() < chance;
 }
+/** Aprendizado: bônus de EXP que cresce a cada sala concluída depois de pegar a carta, até o teto do nível. */
+export function experienceBonus(level: { value: number; perRoom: number; max: number } | null | undefined, roomsCleared: number) {
+  if (!level) return 0;
+  return Math.min(level.max, level.value + level.perRoom * Math.max(0, roomsCleared));
+}
+
+/** Reparo de Emergência: cura uma fração sorteada entre `min` e `max` da vida máxima. */
+export function emergencyRepairHeal(maxHealth: number, level: { min: number; max: number }, rng = Math.random) {
+  return Math.round(Math.max(0, maxHealth) * (level.min + (level.max - level.min) * rng()));
+}
+
 export type DamageSource = 'attack' | 'collision' | 'environment';
 export type DamageContext = { source: DamageSource; attackerId?: string };
 

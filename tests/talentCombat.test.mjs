@@ -18,7 +18,7 @@ registerHooks({
 const { TALENTS } = await import('../app/data/talents.ts');
 const { aggregateTalentBonuses, emptyTalentBonuses, pickTalent } = await import('../app/utils/talents.ts');
 const { computePlayerStats } = await import('../app/utils/equipment.ts');
-const { combatAttributes, incomingHit, outgoingHit, withRunSkills, adrenalineMultiplier, headshotKills, siphonHeal } = await import('../app/utils/shipAttributes.ts');
+const { combatAttributes, incomingHit, outgoingHit, withRunSkills, adrenalineMultiplier, headshotKills, siphonHeal, experienceBonus, emergencyRepairHeal } = await import('../app/utils/shipAttributes.ts');
 const elemental = await import('../app/utils/elementalStatus.js');
 const patterns = await import('../app/utils/combatPatterns.js');
 const base = { maxHealth: 250, moveSpeed: 7, projectiles: { damage: 50, shotCooldown: .85 } };
@@ -116,6 +116,54 @@ test('player freezes from an elemental attack, thaws on other damage and burns o
   assert.equal(run.getPlayerElements().freeze, null); // trocar de sala limpa os efeitos
 });
 
+test('experience bonus grows per room up to its cap; emergency repair rolls 25–75 percent of max health', () => {
+  const level = { value: .1, perRoom: .02, max: .4 };
+  assert.equal(experienceBonus(null, 10), 0);
+  assert.equal(experienceBonus(level, 0), .1);
+  assert.ok(Math.abs(experienceBonus(level, 5) - .2) < 1e-12);
+  assert.equal(experienceBonus(level, 99), .4);
+  const repair = { min: .25, max: .75 };
+  assert.equal(emergencyRepairHeal(1000, repair, () => 0), 250);
+  assert.equal(emergencyRepairHeal(1000, repair, () => .5), 500);
+  assert.equal(emergencyRepairHeal(1000, repair, () => .999999), 750);
+});
+
+test('Aprendizado counts each cleared room once after being taken and multiplies kill EXP in the real stores', () => {
+  const { context, run, stats, skills } = runHarness();
+  const room = { type: 'combat', width: 30, height: 24, door: {}, playerStartPosition: { x: 0, y: 0, z: 0 } };
+  run.loadStage(room); run.completeStage();
+  assert.equal(skills.experienceRooms, 0, 'rooms before the card do not count');
+  assert.equal(stats.experienceMultiplier, 1);
+  skills.selectSkill({ ...context.SkillsList.exp_growth, currentLevel: 0 });
+  assert.ok(Math.abs(stats.experienceMultiplier - 1.1) < 1e-12);
+  run.loadStage(room); run.completeStage(); run.completeStage();
+  run.loadStage(room); run.completeStage();
+  assert.equal(skills.experienceRooms, 2, 'each room counts once');
+  assert.ok(Math.abs(stats.experienceMultiplier - 1.14) < 1e-12);
+  skills.selectSkill({ ...skills.currentSkills[0], currentLevel: 1 });
+  assert.ok(Math.abs(stats.experienceMultiplier - 1.21) < 1e-12, 'upgrading keeps the rooms already cleared');
+  for (let i = 0; i < 30; i++) { run.loadStage(room); run.completeStage(); }
+  assert.ok(Math.abs(stats.experienceMultiplier - 1.6) < 1e-12, 'capped');
+  assert.doesNotMatch(readFileSync(new URL('../app/composables/useEnemyManager.js', import.meta.url), 'utf8'),
+    /addExp\(expDropped\)/, 'kills apply the multiplier');
+});
+
+test('Reparo de Emergência heals instantly, never takes a slot and is only offered while hurt', () => {
+  const { context, run, skills, messages } = runHarness();
+  const card = context.SkillsList.emergency_repair;
+  assert.equal(skills.isOfferable(card), false, 'not offered at full health');
+  run.takeDamage(200, 'environment');
+  assert.equal(skills.isOfferable(card), true);
+  for (let i = 0; i < 3; i++) skills.selectSkill({ ...card, currentLevel: 0 });
+  assert.equal(skills.currentSkills.length, 0);
+  assert.ok(run.currentHealth >= 50 + 62 && run.currentHealth <= 250);
+  assert.equal(messages.at(-1)[1], 'heal');
+  assert.equal(skills.isOfferable(card), run.currentHealth < run.maxHealth, 'still repeatable while hurt');
+  const maxed = { ...context.SkillsList.siphon };
+  skills.currentSkills.push({ ...maxed, currentLevel: 1 });
+  assert.equal(skills.isOfferable(maxed), false, 'regular cards still max out');
+});
+
 test('collision hits hard, grants a collision-only grace of 1.5 s and knocks the ship away from the enemy', () => {
   const { run } = runHarness();
   run.setMaxHealth(2000); run.healPlayer(2000, false);
@@ -209,7 +257,7 @@ function runHarness(overrides = {}) {
   };
   const context = vm.createContext({
     ref, shallowRef, computed, Math, console: { log() {}, warn() {} },
-    computePlayerStats, emptyTalentBonuses, incomingHit, withRunSkills, adrenalineMultiplier, ...elemental, ...patterns,
+    computePlayerStats, emptyTalentBonuses, incomingHit, withRunSkills, adrenalineMultiplier, experienceBonus, emergencyRepairHeal, ...elemental, ...patterns,
     COMBAT_BASE: { heartDropChance: .1 },
     defineStore: (_id, setup) => { let store; return () => store ??= reactive(setup()); },
     useEquipmentStore: () => ({ stats: permanent }),

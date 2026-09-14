@@ -734,7 +734,7 @@ export function useEnemyManager() {
         const expDropped = enemy.fixedXP
           ? (enemy.baseXP || 0)
           : scaledEnemyExperience(enemy.baseXP || 0, enemy.room);
-        useCurrentRun.addExp(expDropped);
+        useCurrentRun.addExp(Math.round(expDropped * usePlayerStats().experienceMultiplier));
 
         // Sifão: chance, por abate, de curar 5% da vida máxima
         const siphon = siphonHeal(usePlayerStats().siphonChance, useCurrentRun.maxHealth);

@@ -209,6 +209,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
   function completeStage() {
     console.log('Estágio completo!');
+    // Aprendizado conta cada sala concluída uma única vez
+    if (!isStageCompleted.value && currentStage.value?.type !== 'intro') skillStore.onRoomCleared();
     isStageCompleted.value = true;
     isDoorActive.value = true;
 
