@@ -12,6 +12,8 @@ const material=new ShaderMaterial({transparent:true,depthWrite:false,side:2,blen
  if(alpha<.006)discard;gl_FragColor=vec4(tint,alpha);}`});
 const rings=new InstancedMesh(geo,material,48);rings.frustumCulled=false;rings.count=0;root.add(rings);
 const color=new Color();let time=0;
+// Cria o buffer de cor já na montagem: sem ele o three compila o shader sem declarar instanceColor
+rings.setColorAt(0,color);
 useLoop().onBeforeRender(({delta})=>{
  if(run.isPlaying)time+=Math.min(delta,.1);material.uniforms.time.value=time;
  let count=0;const player=run.getPlayerPosition();
