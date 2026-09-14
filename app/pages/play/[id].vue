@@ -138,7 +138,7 @@ onUnmounted(() => {
         <GameHeartPickups />
         <GameLootPickups />
         <GameEquipmentEffects />
-        <GameHyperdriveTrail />
+        <GameHyperdriveBurst />
         
         <GameWorld />
         <!-- <OrbitControls /> -->
