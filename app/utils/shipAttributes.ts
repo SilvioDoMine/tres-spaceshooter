@@ -15,7 +15,7 @@ export function combatAttributes(b: TalentBonuses) {
     heartHeal: (COMBAT_BASE.heartHeal + b.heartHealFlat) * (1 + b.heartHealPercent / 100),
     battleGoldMultiplier: 1 + b.battleGoldPercent / 100,
     startingSkillChoices: Math.max(0, Math.floor(b.startingSkillChoices)),
-    skillRerolls: 1 + Math.max(0, Math.floor(b.skillRerolls)),
+    skillRerolls: Math.max(0, Math.floor(b.skillRerolls)),
   };
 }
 

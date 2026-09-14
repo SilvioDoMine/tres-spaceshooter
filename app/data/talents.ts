@@ -97,8 +97,11 @@ export const RARITY_WEIGHTS: Record<TalentRarity, number> = {
   legendary: 5,
 };
 
-/** O primeiro sorteio sempre dá esta carta (como no Archero 2) */
-export const FIRST_DRAW_TALENT_ID = 'gloria';
+/** O n-ésimo sorteio (contando a partir de 1) sempre dá esta carta, se ainda não foi obtida */
+export const GUARANTEED_TALENT_DRAWS: { draw: number; talentId: string }[] = [
+  { draw: 5, talentId: 'gloria' },
+  { draw: 10, talentId: 'taticas' },
+];
 
 /** Sorteios liberados por nível de conta */
 export const DRAWS_PER_LEVEL = 2;

@@ -16,7 +16,7 @@ registerHooks({
   },
 });
 const { TALENTS } = await import('../app/data/talents.ts');
-const { aggregateTalentBonuses, emptyTalentBonuses } = await import('../app/utils/talents.ts');
+const { aggregateTalentBonuses, emptyTalentBonuses, pickTalent } = await import('../app/utils/talents.ts');
 const { computePlayerStats } = await import('../app/utils/equipment.ts');
 const { combatAttributes, incomingHit, outgoingHit, withRunSkills, adrenalineMultiplier, headshotKills, siphonHeal } = await import('../app/utils/shipAttributes.ts');
 const elemental = await import('../app/utils/elementalStatus.js');
@@ -135,12 +135,29 @@ test('all maxed cards feed ship attributes with unchanged catalog amounts', () =
   assert.equal(stats.heartHeal, 120); // (25 base + 25 + 50) * 1.2
   assert.equal(stats.levelUpHealFraction, .1);
   assert.equal(stats.startingSkillChoices, 1);
-  assert.equal(stats.skillRerolls, 2);
+  assert.equal(stats.skillRerolls, 1);
   assert.equal(stats.battleGoldMultiplier, 1.2);
   assert.equal(stats.collisionReductionFlat, 45);
   assert.equal(stats.collisionReductionFraction, .1);
   assert.ok(Math.abs(stats.moveSpeed - 7.35) < 1e-10);
   assert.equal(stats.shotCooldown, .85 / 1.05);
+});
+
+test('no talents means no skill rerolls; Táticas grants the first one', () => {
+  assert.equal(attrs({}).skillRerolls, 0);
+  assert.equal(attrs({ skillRerolls: 1 }).skillRerolls, 1);
+});
+
+test('Glória is guaranteed on the 5th draw and Táticas on the 10th, even for saves already past them', () => {
+  const draws = n => ({ vigor: Math.min(n, 5), forca: Math.max(0, n - 5) });
+  const pick = stars => pickTalent(stars, () => .999).id; // sem garantia cai no último do pool
+  for (let n = 0; n < 4; n++) assert.notEqual(pick(draws(n)), 'gloria');
+  assert.equal(pick(draws(4)), 'gloria');
+  assert.equal(pick({ ...draws(8), gloria: 1 }), 'taticas');
+  assert.notEqual(pick({ ...draws(7), gloria: 1 }), 'taticas');
+  assert.equal(pick(draws(12)), 'gloria'); // save antigo sem nenhuma das duas: Glória primeiro, depois Táticas
+  assert.equal(pick({ ...draws(12), gloria: 1 }), 'taticas');
+  assert.notEqual(pick({ ...draws(12), gloria: 1, taticas: 1 }), 'taticas');
 });
 
 test('refinement scales flat equipment stats, leaving percent and talents untouched', () => {
@@ -203,15 +220,12 @@ test('run starts with permanent attributes, initial choice and extra reroll; upg
   assert.equal(run.currentHealth, 300);
   assert.equal(stats.damage, 60);
   assert.equal(run.shotCooldownTotal, .85 / 1.05);
-  assert.equal(run.skillRerollCount, 2);
+  assert.equal(run.skillRerollCount, 1);
   assert.equal(skills.upgradeQueueCount, 1);
   skills.update(.01);
   const option = skills.skillOptions[0];
-  assert.equal(option.reRolls, 2);
+  assert.equal(option.reRolls, 1);
   skills.refreshSkill(option);
-  const refreshed = skills.skillOptions[0];
-  assert.equal(refreshed.reRolls, 1);
-  skills.refreshSkill(refreshed);
   assert.equal(skills.skillOptions[0].reRolls, 0);
   skills.refreshSkill(skills.skillOptions[0]);
   assert.equal(skills.skillOptions[0].reRolls, 0);

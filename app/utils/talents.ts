@@ -2,7 +2,7 @@
 // Sem Vue/Pinia para dar para testar fora do Nuxt (por isso o import relativo).
 import {
   DRAWS_PER_LEVEL,
-  FIRST_DRAW_TALENT_ID,
+  GUARANTEED_TALENT_DRAWS,
   RARITY_WEIGHTS,
   TALENTS,
   TALENT_DRAW_COST,
@@ -103,13 +103,18 @@ export function mulberry32(seed: number) {
 /** Gerador do n-ésimo sorteio: recarregar a página não muda o resultado */
 export const drawRng = (seed: number, draws: number) => mulberry32(seed + draws);
 
-/** Escolhe a carta do próximo sorteio (a primeira é sempre a garantida; depois, peso por raridade) */
+/**
+ * Escolhe a carta do próximo sorteio: garantidas primeiro (a partir do sorteio marcado, se ainda
+ * não obtidas — cobre saves que já passaram dele); senão, peso por raridade.
+ */
 export function pickTalent(stars: TalentStars, rng: () => number): TalentDefinition | null {
   const pool = talentDrawPool(stars);
   if (pool.length === 0) return null;
 
-  if (countDraws(stars) === 0) {
-    const guaranteed = pool.find(talent => talent.id === FIRST_DRAW_TALENT_ID);
+  const nextDraw = countDraws(stars) + 1;
+  for (const { draw, talentId } of GUARANTEED_TALENT_DRAWS) {
+    if (nextDraw < draw) continue;
+    const guaranteed = pool.find(talent => talent.id === talentId);
     if (guaranteed) return guaranteed;
   }
 

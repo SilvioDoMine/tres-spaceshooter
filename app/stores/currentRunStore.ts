@@ -89,7 +89,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   const maxHealth = ref(PlayerBaseStats.maxHealth * playerStats.getHealthMultiplier);
   const currentHealth = ref(PlayerBaseStats.maxHealth * playerStats.getHealthMultiplier);
 
-  const skillRerollCount = ref(1);
+  const skillRerollCount = ref(0);
 
   // ... (Outros estados como currentHealth, enemiesRemaining, etc.)
   // -- ESTADO DO NÍVEL
@@ -166,7 +166,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     currentExp.value = 0;
     currentLevel.value = 1;
     expToNextLevel.value = getExpForLevel(currentLevel.value);
-    skillRerollCount.value = 1;
+    skillRerollCount.value = 0;
     gameState.value = 'init';
 
     // Close modals
