@@ -206,7 +206,7 @@ export function usePlayerControls() {
           const skills = useSkillStore();
           const volley = equipmentEffects.prepareVolley();
           const multi = skills.getSkillLevel('multishot') || 0;
-          const damage = usePlayerStats().damage;
+          const damage = usePlayerStats().damage * usePlayerStats().adrenalineDamageMultiplier();
           const dirX = nearestEnemy.position.x - position.x, dirZ = nearestEnemy.position.z - position.z;
           const magnitude = Math.hypot(dirX, dirZ);
           if (magnitude > 0) {
@@ -246,7 +246,7 @@ export function usePlayerControls() {
               });
             }
             // Reseta o cooldown do tiro
-            currentRun.shotCooldown = equipmentEffects.effectiveShotCooldown(currentRun.shotCooldownTotal);
+            currentRun.shotCooldown = equipmentEffects.effectiveShotCooldown(currentRun.shotCooldownTotal) / usePlayerStats().getAttackSpeedMultiplier;
           }
         }
       }

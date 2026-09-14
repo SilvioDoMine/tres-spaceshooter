@@ -20,6 +20,36 @@ export function combatAttributes(b: TalentBonuses) {
 }
 
 export type CombatAttributes = ReturnType<typeof combatAttributes>;
+
+/** Soma as habilidades da partida (Mira Precisa, Manobra Evasiva) sobre os atributos permanentes. */
+export function withRunSkills<T extends CombatAttributes>(stats: T, skills: { criticalChance?: number; criticalDamage?: number; dodgeChance?: number }): T {
+  return {
+    ...stats,
+    criticalChance: Math.max(0, Math.min(1, stats.criticalChance + (skills.criticalChance || 0))),
+    criticalDamage: stats.criticalDamage + (skills.criticalDamage || 0),
+    dodgeChance: Math.max(0, Math.min(1, stats.dodgeChance + (skills.dodgeChance || 0))),
+  };
+}
+
+/** Adrenalina: bônus cresce com a vida perdida e chega ao máximo com 20% de vida ou menos. */
+export const ADRENALINE_FULL_AT = 0.2;
+export function adrenalineMultiplier(maxBonus: number, health: number, maxHealth: number) {
+  if (maxBonus <= 0 || maxHealth <= 0) return 1;
+  const missing = 1 - Math.max(0, Math.min(1, health / maxHealth));
+  return 1 + maxBonus * Math.min(1, missing / (1 - ADRENALINE_FULL_AT));
+}
+
+/** Sifão: cada abate tem uma chance de curar uma fração fixa da vida máxima. */
+export const SIPHON_HEAL_FRACTION = 0.05;
+export function siphonHeal(chance: number, maxHealth: number, rng = Math.random) {
+  return chance > 0 && rng() < chance ? maxHealth * SIPHON_HEAL_FRACTION : 0;
+}
+
+/** Tiro Certeiro: só elimina inimigos comuns, minis e elites; chefes e fragmentos de chefe ficam de fora. */
+export const HEADSHOT_CATEGORIES = ['common', 'mini', 'elite'];
+export function headshotKills(chance: number, category: string, rng = Math.random) {
+  return chance > 0 && HEADSHOT_CATEGORIES.includes(category) && rng() < chance;
+}
 export type DamageSource = 'attack' | 'collision' | 'environment';
 export type DamageContext = { source: DamageSource; attackerId?: string };
 

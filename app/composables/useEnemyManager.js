@@ -5,7 +5,7 @@ import { storeToRefs } from 'pinia';
 import { emitImpact } from '~/utils/combatEffects';
 import { chapterDamageMultiplier, enemyCategory, normalAsteroidFragmentStats, roomProgress, scaledEnemyExperience, scaledEnemyHealth } from '~/utils/combatPatterns';
 import { playableRoomCount } from '~/utils/progression';
-import { outgoingHit } from '~/utils/shipAttributes';
+import { headshotKills, outgoingHit, siphonHeal } from '~/utils/shipAttributes';
 import { useHeartStore } from '~/stores/useHeartStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import { useEquipmentEffectsStore } from '~/stores/useEquipmentEffectsStore';
@@ -653,9 +653,15 @@ export function useEnemyManager() {
     const equipmentEffects = useEquipmentEffectsStore();
     const playerDamage = ['shot', 'equipment', 'reflect'].includes(type);
     if (playerDamage) damage *= equipmentEffects.damageMultiplierFor(enemy);
+    const playerStats = usePlayerStats();
     const hit = type === 'shot' && options.canCrit !== false
-      ? outgoingHit(damage, usePlayerStats().attributes, Math.random, equipmentEffects.criticalBonusFor(enemyId))
+      ? outgoingHit(damage, playerStats.combatStats, Math.random, equipmentEffects.criticalBonusFor(enemyId))
       : { damage, critical: false };
+    // Tiro Certeiro: elimina na hora inimigos que não são chefes (aparece como crítico)
+    if (type === 'shot' && hit.damage < enemy.health && headshotKills(playerStats.headshotChance, enemyCategory(enemy.type, enemy))) {
+      hit.damage = enemy.health;
+      hit.critical = true;
+    }
     damage = hit.damage;
     enemy.health -= damage;
     emitImpact(enemy.position.x, enemy.position.z, enemy.health <= 0);
@@ -698,6 +704,10 @@ export function useEnemyManager() {
           ? (enemy.baseXP || 0)
           : scaledEnemyExperience(enemy.baseXP || 0, enemy.room);
         useCurrentRun.addExp(expDropped);
+
+        // Sifão: chance, por abate, de curar 5% da vida máxima
+        const siphon = siphonHeal(playerStats.siphonChance, useCurrentRun.maxHealth);
+        if (siphon > 0) useCurrentRun.healPlayer(siphon);
 
         // Atualiza a contagem de inimigos mortos no run atual
         if (killedEnemies.value[enemy.type]) {

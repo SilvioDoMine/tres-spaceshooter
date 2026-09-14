@@ -3,6 +3,7 @@ import { PlayerBaseStats, useCurrentRunStore } from "~/stores/currentRunStore";
 import { useCombatTextStore } from "~/stores/useCombatTextStore";
 import { computePlayerStats, type PlayerStats } from '~/utils/equipment';
 import { emptyTalentBonuses } from '~/utils/talents';
+import { adrenalineMultiplier, withRunSkills } from '~/utils/shipAttributes';
 
 const REGEN_TEXT_INTERVAL = 1; // segundos entre textos de regeneração
 
@@ -137,6 +138,31 @@ export const usePlayerStats = defineStore('playerStats', () => {
     return projectileSpeedMultiplier;
   });
 
+  // Dados do nível atual de uma habilidade da partida (null se o jogador não tiver)
+  function skillLevelData(skillId: string): any {
+    const skill: any = skillStore.currentSkills.find((s: any) => s.id === skillId);
+    return skill ? skill.levels[skill.currentLevel] ?? null : null;
+  }
+
+  // Atributos de combate com Mira Precisa e Manobra Evasiva somados aos permanentes
+  const combatStats = computed(() => withRunSkills(attributes.value, {
+    criticalChance: skillLevelData('precise_aim')?.value || 0,
+    criticalDamage: skillLevelData('precise_aim')?.critDamage || 0,
+    dodgeChance: skillLevelData('evasive_maneuver')?.value || 0,
+  }));
+
+  // Cadência: divide o cooldown do tiro
+  const getAttackSpeedMultiplier = computed((): number => 1 + (skillLevelData('attack_speed')?.value || 0));
+
+  const headshotChance = computed((): number => skillLevelData('headshot')?.value || 0);
+  const siphonChance = computed((): number => skillLevelData('siphon')?.value || 0);
+
+  // Adrenalina: lida no disparo, conforme a vida atual
+  function adrenalineDamageMultiplier(): number {
+    const run = useCurrentRunStore();
+    return adrenalineMultiplier(skillLevelData('adrenaline')?.value || 0, run.currentHealth, run.maxHealth);
+  }
+
   function addRegenRate(amount: number) {
     regenRate.value += amount;
   }
@@ -208,6 +234,12 @@ export const usePlayerStats = defineStore('playerStats', () => {
     getProjectileSpeedMultiplier,
     getRangeMultiplier,
     getBonusDamageFlat,
+
+    combatStats,
+    getAttackSpeedMultiplier,
+    headshotChance,
+    siphonChance,
+    adrenalineDamageMultiplier,
   };
 });
 

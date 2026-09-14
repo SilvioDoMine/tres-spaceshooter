@@ -264,7 +264,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     if(amount<=0 || currentHealth.value<=0)return;
     const { source, attackerId } = typeof context === 'string' ? { source: context, attackerId: undefined } : context;
     const equipmentEffects = useEquipmentEffectsStore();
-    const hit = incomingHit(amount, source, playerStats.attributes);
+    const hit = incomingHit(amount, source, playerStats.combatStats);
     if (hit.dodged) {
       combatTextStore.emitForTarget(PlayerBaseStats.id, 'dodge', 'DESVIO');
       equipmentEffects.onDodge();

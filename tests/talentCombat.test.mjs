@@ -18,7 +18,7 @@ registerHooks({
 const { TALENTS } = await import('../app/data/talents.ts');
 const { aggregateTalentBonuses, emptyTalentBonuses } = await import('../app/utils/talents.ts');
 const { computePlayerStats } = await import('../app/utils/equipment.ts');
-const { combatAttributes, incomingHit, outgoingHit } = await import('../app/utils/shipAttributes.ts');
+const { combatAttributes, incomingHit, outgoingHit, withRunSkills, adrenalineMultiplier, headshotKills, siphonHeal } = await import('../app/utils/shipAttributes.ts');
 const base = { maxHealth: 250, moveSpeed: 7, projectiles: { damage: 50, shotCooldown: .85 } };
 const attrs = overrides => combatAttributes({ ...emptyTalentBonuses(), ...overrides });
 
@@ -30,6 +30,55 @@ test('critical rolls per contact, adding bonus to 2x without multiplying the pro
   assert.deepEqual(outgoingHit(50, stats, () => .25), { critical: false, damage: 50 });
   assert.equal(outgoingHit(25, stats, () => .9).damage, 25); // bounce keeps its own base
   assert.equal(outgoingHit(50, attrs({}), () => 0).critical, false);
+});
+
+test('run skills add crit and dodge on top of permanent attributes and clamp chances', () => {
+  const stats = attrs({ critRatePercent: 25, critDamagePercent: 30, dodgePercent: 95 });
+  const boosted = withRunSkills(stats, { criticalChance: .1, criticalDamage: .2, dodgeChance: .2 });
+  assert.ok(Math.abs(boosted.criticalChance - .35) < 1e-12);
+  assert.ok(Math.abs(boosted.criticalDamage - 2.5) < 1e-12);
+  assert.equal(boosted.dodgeChance, 1);
+  assert.equal(boosted.heartHeal, stats.heartHeal);
+  assert.deepEqual(withRunSkills(stats, {}), stats);
+});
+
+test('adrenaline scales with missing health and caps at 20 percent health', () => {
+  assert.equal(adrenalineMultiplier(.5, 250, 250), 1);
+  assert.ok(Math.abs(adrenalineMultiplier(.5, 150, 250) - 1.25) < 1e-12);
+  assert.equal(adrenalineMultiplier(.5, 50, 250), 1.5);
+  assert.equal(adrenalineMultiplier(.5, 0, 250), 1.5);
+  assert.equal(adrenalineMultiplier(0, 10, 250), 1);
+});
+
+test('headshot never kills bosses or boss fragments', () => {
+  for (const category of ['common', 'mini', 'elite']) {
+    assert.equal(headshotKills(.04, category, () => .039), true);
+    assert.equal(headshotKills(.04, category, () => .04), false);
+  }
+  for (const category of ['boss', 'fragment']) assert.equal(headshotKills(1, category, () => 0), false);
+  assert.equal(headshotKills(0, 'common', () => 0), false);
+});
+
+test('siphon rolls its chance per kill and heals a fixed 5 percent of max health', () => {
+  assert.equal(siphonHeal(.08, 400, () => .079), 20);
+  assert.equal(siphonHeal(.08, 400, () => .08), 0);
+  assert.equal(siphonHeal(0, 400, () => 0), 0);
+});
+
+test('run skill cards feed combat stats, attack speed and adrenaline in the real stores', () => {
+  const { context, run, stats, skills } = runHarness({ critRatePercent: 5 });
+  const take = (id, level) => skills.currentSkills.push({ ...context.SkillsList[id], currentLevel: level });
+  take('precise_aim', 2); take('evasive_maneuver', 3); take('attack_speed', 5); take('adrenaline', 1);
+  take('headshot', 2); take('siphon', 1);
+  assert.ok(Math.abs(stats.combatStats.criticalChance - .23) < 1e-12);
+  assert.ok(Math.abs(stats.combatStats.criticalDamage - 2.4) < 1e-12);
+  assert.ok(Math.abs(stats.combatStats.dodgeChance - .2) < 1e-12);
+  assert.equal(stats.getAttackSpeedMultiplier, 1.4);
+  assert.equal(stats.headshotChance, .07);
+  assert.equal(stats.siphonChance, .05);
+  assert.equal(stats.adrenalineDamageMultiplier(), 1);
+  run.takeDamage(run.maxHealth * .8, 'environment');
+  assert.ok(Math.abs(stats.adrenalineDamageMultiplier() - 1.3) < 1e-9);
 });
 
 test('dodge affects attacks only; collision applies flat then percent and clamps at zero', () => {
@@ -79,7 +128,7 @@ function runHarness(overrides = {}) {
   };
   const context = vm.createContext({
     ref, shallowRef, computed, Math, console: { log() {}, warn() {} },
-    computePlayerStats, emptyTalentBonuses, incomingHit,
+    computePlayerStats, emptyTalentBonuses, incomingHit, withRunSkills, adrenalineMultiplier,
     COMBAT_BASE: { heartDropChance: .1 },
     defineStore: (_id, setup) => { let store; return () => store ??= reactive(setup()); },
     useEquipmentStore: () => ({ stats: permanent }),
@@ -99,7 +148,7 @@ function runHarness(overrides = {}) {
     if (file.endsWith('.ts')) source = stripTypeScriptTypes(source);
     vm.runInContext(source + '\n' + names.map(n => 'globalThis.' + n + '=' + n + ';').join('\n'), context);
   }
-  load('stores/SkillStore.js', ['useSkillStore']);
+  load('stores/SkillStore.js', ['useSkillStore', 'SkillsList']);
   load('stores/playerStats.ts', ['usePlayerStats']);
   load('stores/useHeartStore.ts', ['useHeartStore']);
   load('stores/currentRunStore.ts', ['useCurrentRunStore', 'PlayerBaseStats']);
