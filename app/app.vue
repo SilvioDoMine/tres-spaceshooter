@@ -27,6 +27,11 @@ useHead({
 // Ativa bloqueio de gestos mobile
 useMobileGestureLock();
 
+// Baixa imagens, sons, modelos e fontes antes de montar qualquer página;
+// ao terminar, a rota atual (lobby, partida...) aparece normalmente.
+const { progress: assetsProgress, done: assetsReady, start: preloadAssets } = useAssetPreloader();
+preloadAssets();
+
 const currentRunStore = useCurrentRunStore();
 currentRunStore.initializePermanentState();
 
@@ -109,8 +114,13 @@ const appVersion = useAppVersion();
 
 <template>
   <div class="game-root">
-    <NuxtPage />
-    <ClientOnly><LobbyEquipmentGrantModal /><LobbyShopChestOpening /></ClientOnly>
+    <template v-if="assetsReady">
+      <NuxtPage />
+      <ClientOnly><LobbyEquipmentGrantModal /><LobbyShopChestOpening /></ClientOnly>
+    </template>
+    <Transition name="app-loading-fade">
+      <AppLoadingScreen v-if="!assetsReady" :progress="assetsProgress" />
+    </Transition>
     <!-- pointer-events-none: esta div cobre a tela toda, sem isso ela
          engole todo clique e toque do jogo. -->
     <div class="pointer-events-none absolute top-0 right-0 bottom-2 left-0 flex items-end justify-center">
@@ -131,6 +141,14 @@ body {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+}
+
+.app-loading-fade-leave-active {
+  transition: opacity 0.4s ease;
+}
+
+.app-loading-fade-leave-to {
+  opacity: 0;
 }
 
 /* Suporte para safe area no iOS */

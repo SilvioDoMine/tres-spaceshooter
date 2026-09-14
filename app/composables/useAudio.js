@@ -1,6 +1,30 @@
 import { createSpatialAudio } from '~/utils/spatialAudio';
 import { playUiSynth } from '~/utils/uiSynth';
 
+// Efeitos da partida: nome usado no playSound -> arquivo. Registrados já na tela de
+// loading, para tocarem desde o primeiro frame (ex.: levelup da seleção inicial de talentos).
+export const GAME_SOUNDS = {
+    'levelup': '/sounds/levelup.wav',
+    'shoot-player': '/sounds/shoot-player.wav',
+    'player-death': '/sounds/player-death.wav',
+    'shoot2': '/sounds/shoot2.wav',
+    'shoot7': '/sounds/shoot7.wav',
+    'shoot1': '/sounds/shoot1.wav',
+    'hit-soft1': '/sounds/hit-soft1.wav',
+    'hit-soft2': '/sounds/hit-soft2.wav',
+    'hit-soft3': '/sounds/hit-soft3.wav',
+    'hit-soft4': '/sounds/hit-soft3.wav',
+    'hit-soft5': '/sounds/hit-soft3.wav',
+    'enemy-death1': '/sounds/enemy-death1.wav',
+    'enemy-death2': '/sounds/enemy-death2.wav',
+    'enemy-death3': '/sounds/enemy-death3.wav',
+    'hit-hard1': '/sounds/hit-hard1.wav',
+    'hit-hard2': '/sounds/hit-hard2.wav',
+    'hit-hard3': '/sounds/hit-hard3.wav',
+    'hit-hard4': '/sounds/hit-hard4.wav',
+    'hit-hard5': '/sounds/hit-hard5.wav',
+};
+
 const defaultAudioSettings = () => ({
     volumeGeneral: 100,
     volumeBackground: 100,
@@ -51,6 +75,9 @@ let backgroundMusicSource = null;
 let backgroundMusicGain = null;
 let backgroundMusicFilter = null;
 const soundBuffers = new Map();
+// Buffers decodificados por URL (preenchidos pela tela de loading) e músicas já baixadas
+const decodedByUrl = new Map();
+const musicObjectUrls = new Map();
 const isInitialized = ref(false);
 
 export function useAudio() {
@@ -108,17 +135,51 @@ export function useAudio() {
 
     // Carrega um efeito sonoro
     async function loadSound(name, url) {
+        if (soundBuffers.has(name)) return;
         if (!audioContext) await init();
 
         try {
-            const response = await fetch(url);
-            const arrayBuffer = await response.arrayBuffer();
-            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-            soundBuffers.set(name, audioBuffer);
+            if (!decodedByUrl.has(url)) {
+                decodedByUrl.set(url, fetch(url).then(response => response.arrayBuffer()).then(data => audioContext.decodeAudioData(data)));
+            }
+            soundBuffers.set(name, await decodedByUrl.get(url));
             console.log(`Sound loaded: ${name}`);
         } catch (error) {
+            decodedByUrl.delete(url);
             console.error(`Failed to load sound ${name}:`, error);
         }
+    }
+
+    // Decodifica um efeito já baixado. O contexto pode nascer suspenso (sem gesto do
+    // usuário): decodificar funciona assim mesmo e o init() o retoma no primeiro toque.
+    async function registerSoundData(url, arrayBuffer) {
+        if (!audioContext) await init();
+        if (!audioContext || decodedByUrl.has(url)) return;
+
+        const pending = audioContext.decodeAudioData(arrayBuffer);
+        decodedByUrl.set(url, pending);
+        let buffer;
+        try {
+            buffer = await pending;
+        } catch (error) {
+            decodedByUrl.delete(url);
+            throw error;
+        }
+
+        for (const [name, soundUrl] of Object.entries(GAME_SOUNDS)) {
+            if (soundUrl === url && !soundBuffers.has(name)) soundBuffers.set(name, buffer);
+        }
+    }
+
+    // Garante todos os efeitos da partida (reaproveita o que o preload já decodificou)
+    function loadGameSounds() {
+        return Promise.all(Object.entries(GAME_SOUNDS).map(([name, url]) => loadSound(name, url)));
+    }
+
+    // Guarda a música em memória; playBackgroundMusic toca dela sem baixar de novo
+    function registerMusicData(url, arrayBuffer) {
+        if (musicObjectUrls.has(url)) return;
+        musicObjectUrls.set(url, URL.createObjectURL(new Blob([arrayBuffer], { type: 'audio/mpeg' })));
     }
 
     // Toca um efeito sonoro (permite múltiplos simultâneos)
@@ -190,7 +251,7 @@ export function useAudio() {
             }
 
             // Cria elemento Audio
-            backgroundMusic = new Audio(url);
+            backgroundMusic = new Audio(musicObjectUrls.get(url) ?? url);
             backgroundMusic.loop = loop;
             backgroundMusic.crossOrigin = 'anonymous';
 
@@ -318,6 +379,9 @@ export function useAudio() {
 
         // Sound effects
         loadSound,
+        loadGameSounds,
+        registerSoundData,
+        registerMusicData,
         playSound,
         updateSpatialAudio,
         stopSpatialAudio,
