@@ -5,6 +5,7 @@
  * - Pull to refresh
  * - Overscroll bounce
  * - Zoom com pinch (mas permite cliques normais)
+ * - Menu de contexto (botão direito / toque longo) em qualquer lugar
  *
  * PERMITE:
  * - Cliques e taps normais
@@ -58,12 +59,20 @@ export function useMobileGestureLock() {
     }
   };
 
+  /**
+   * Bloqueia o menu de contexto do navegador (botão direito e toque longo)
+   */
+  const preventContextMenu = (e: MouseEvent) => {
+    e.preventDefault();
+  };
+
   onMounted(() => {
     if (import.meta.server) return;
 
     // Previne pull to refresh e overscroll
     document.addEventListener('touchmove', preventPullToRefresh, { passive: false });
     document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('contextmenu', preventContextMenu);
   });
 
   onUnmounted(() => {
@@ -71,6 +80,7 @@ export function useMobileGestureLock() {
 
     document.removeEventListener('touchmove', preventPullToRefresh);
     document.removeEventListener('touchstart', handleTouchStart);
+    document.removeEventListener('contextmenu', preventContextMenu);
   });
 
   return {};
