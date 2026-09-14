@@ -56,7 +56,7 @@ projectileStore.update(safeDelta);
 currentRunStore.updateElements(safeDelta);
 // playerCombat.update(safeDelta);
 playerStats.update(safeDelta);
-useHeartStore().update();
+useHeartStore().update(safeDelta);
 useEquipmentEffectsStore().update(safeDelta);
 
 // Gerenciamento de Partida

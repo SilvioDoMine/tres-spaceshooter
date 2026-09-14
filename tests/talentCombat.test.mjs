@@ -332,20 +332,49 @@ test('actual run heals on level-up, accumulates fractional gold, and distinguish
   assert.equal(run.currentGold, 6);
 });
 
-test('hearts collect with bonuses, remain when full or paused, and clear on room changes', () => {
-  const { run, hearts, config } = runHarness({ heartHealFlat: 75, heartHealPercent: 20 });
+test('hearts fly into the ship with bonuses, remain when full or paused, and clear on room changes', () => {
+  const { run, hearts, config, messages } = runHarness({ heartHealFlat: 75, heartHealPercent: 20 });
   hearts.tryDrop({ x: 0, z: 0 }, () => 0);
-  hearts.update();
+  hearts.update(.1);
   assert.equal(hearts.hearts.length, 1);
+  assert.equal(hearts.hearts[0].flight, -1, 'full health does not pull the heart');
+  assert.deepEqual(messages.at(-1).slice(1), ['full', 'VIDA CHEIA']);
+  hearts.update(.1);
+  assert.equal(messages.filter(m => m[1] === 'full').length, 1, 'standing on the heart warns only once');
   run.takeDamage(150, 'environment');
   run.gameState = 'paused';
-  hearts.update();
+  hearts.update(1);
   assert.equal(run.currentHealth, 100);
   run.gameState = 'playing';
-  hearts.update();
+  hearts.update(.1);
+  assert.equal(hearts.hearts[0].flight, 0, 'damaged ship starts pulling the heart');
+  assert.equal(run.currentHealth, 100, 'heals only when the heart reaches the ship');
+  hearts.update(1);
   assert.equal(run.currentHealth, 220);
   assert.equal(hearts.hearts.length, 0);
+  assert.equal(hearts.consumeBursts().length, 1);
+  assert.equal(hearts.consumeBursts().length, 0);
   hearts.tryDrop({ x: 10, z: 10 }, () => 0);
   run.loadStage(config.stages[0]);
   assert.equal(hearts.hearts.length, 0);
+});
+
+test('full-health warning only repeats after leaving the heart completely', () => {
+  const { run, hearts, messages } = runHarness();
+  const warnings = () => messages.filter(m => m[1] === 'full').length;
+  hearts.tryDrop({ x: 0, z: 0 }, () => 0);
+  const player = run.getPlayerPosition();
+  hearts.update(.1);
+  assert.equal(warnings(), 1);
+  player.x = 1.5; // saiu do raio de coleta, mas ainda encostado
+  hearts.update(.1);
+  player.x = 0;
+  hearts.update(.1);
+  assert.equal(warnings(), 1);
+  player.x = 3;
+  hearts.update(.1);
+  player.x = 0;
+  hearts.update(.1);
+  assert.equal(warnings(), 2);
+  assert.equal(hearts.hearts.length, 1);
 });

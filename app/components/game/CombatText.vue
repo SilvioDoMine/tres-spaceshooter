@@ -22,6 +22,7 @@ function getColor(text) {
     if (text.type === 'critical') return '#ffc657';
     if (text.type === 'dodge') return '#75efff';
     if (text.type === 'shield') return '#a7f5ff';
+    if (text.type === 'full') return '#ff8fa3';
     // Dano elemental: fogo em vermelho, gelo (dano bruto) em ciano, raio em violeta
     if (text.type === 'burn') return '#ff3b2f';
     if (text.type === 'freeze') return '#9fe8ff';
