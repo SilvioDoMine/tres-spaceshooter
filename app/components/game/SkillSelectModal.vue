@@ -20,6 +20,10 @@ const rarityOf = (skill) => RARITIES[skill.rarity] ?? RARITIES.common;
 
 const isOpen = computed(() => currentRunStore.isPaused && skillStore.isModalOpen);
 
+// Sem nenhuma troca disponível o botão nem é renderizado (senão o espaço vazio empurra as cartas no mobile).
+// Se ao menos uma carta ainda tem troca, as outras mantêm o espaço invisível para ficarem alinhadas.
+const hasRerolls = computed(() => skillStore.skillOptions.some((skill) => skill.reRolls > 0));
+
 // Descrição do próximo nível (cai no nível atual quando não existe o próximo)
 const effectOf = (skill) =>
     skill.levels[skill.currentLevel + 1]?.description ?? skill.levels[skill.currentLevel]?.description ?? '';
@@ -182,6 +186,7 @@ watch(
 
                 <!-- Troca da carta (reroll) -->
                 <button
+                    v-if="hasRerolls"
                     type="button"
                     class="sreroll"
                     :class="{ 'is-hidden': skill.reRolls <= 0 }"
