@@ -74,22 +74,15 @@ const expReward = computed(() => levelAccount.calculateExpReward(
   <div class="over-vignette" aria-hidden="true"></div>
 
   <div class="over-card -mt-10 mb-5">
-    <BaseCardFancy variant="blue" :gold-border="true" class="max-w-[175px] mx-auto">
-      <!-- Content -->
-      <div class="flex flex-col items-center py-10 title-text">
-
-        <!-- Status da fase -->
-        <div class="flex flex-col items-center">
-          <h2 class="text-lg text-cyan-200 text-shadow-xl text-shadow-blue-900">Sala alcançada</h2>
-          <p class="whitespace-nowrap font-mono font-bold text-shadow-[4px_5px_0px_rgba(0,0,0,1)] text-shadow-blue-900">
-            <PlayCountUp class="text-7xl" :to="roomReached" :delay="750" /><span class="text-3xl text-white/70">/{{ totalRooms }}</span>
-          </p>
-          <p class="title-text-blue text-xl">Capítulo {{ chapter }}</p>
-          <p class="text-[10px] text-white/50 mt-2">Nível da nave {{ currentRun.currentLevel }}</p>
-        </div>
-
-      </div>
-    </BaseCardFancy>
+    <PlayResultCard
+      label="Sala alcançada"
+      variant="blue"
+      :value="roomReached"
+      :total="totalRooms"
+      :chapter="chapter"
+      :ship-level="currentRun.currentLevel"
+      :count-delay="750"
+    />
   </div>
 
 

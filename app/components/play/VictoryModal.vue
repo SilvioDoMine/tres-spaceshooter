@@ -90,25 +90,17 @@ const expReward = computed(() => levelAccount.calculateExpReward(
     <div class="victory-rays" aria-hidden="true"></div>
 
     <div class="victory-card__pop">
-      <BaseCardFancy variant="red" :gold-border="true" class="max-w-[175px] mx-auto">
-        <!-- Content -->
-        <div class="flex flex-col items-center py-10">
-
-          <!-- Status da fase -->
-          <div class="flex flex-col items-center text-white title-text">
-            <h2 class="text-lg text-rose-200 text-shadow-xl text-shadow-blue-900">Salas concluídas</h2>
-            <p class="whitespace-nowrap font-mono font-bold text-shadow-[4px_5px_0px_rgba(0,0,0,1)] text-shadow-blue-900">
-              <PlayCountUp class="text-7xl" :to="totalRooms" :delay="650" /><span class="text-3xl text-white/70">/{{ totalRooms }}</span>
-            </p>
-            <p class="title-text-red text-xl">Capítulo {{ chapter }}</p>
-            <p class="text-[10px] text-white/50 mt-2">Nível da nave {{ currentRun.currentLevel }}</p>
-          </div>
-
-        </div>
-      </BaseCardFancy>
-
-      <!-- Reflexo que atravessa o card de tempos em tempos -->
-      <div class="victory-shine" aria-hidden="true"></div>
+      <PlayResultCard
+        label="Salas concluídas"
+        variant="red"
+        :value="totalRooms"
+        :total="totalRooms"
+        :chapter="chapter"
+        :ship-level="currentRun.currentLevel"
+        :count-delay="650"
+        gold
+        sheen
+      />
 
       <!-- Brilhos piscando nos cantos -->
       <span v-for="n in 4" :key="n" class="victory-sparkle" :class="`is-${n}`" aria-hidden="true">✦</span>
@@ -245,29 +237,10 @@ const expReward = computed(() => levelAccount.calculateExpReward(
 
 .victory-card__pop {
   position: relative;
-  max-width: 175px;
+  width: 212px;
+  max-width: 100%;
   margin: 0 auto;
   animation: victory-card-in 0.65s cubic-bezier(0.3, 1.5, 0.5, 1) 0.1s both;
-}
-
-.victory-shine {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  border-radius: 0.75rem;
-  pointer-events: none;
-}
-
-.victory-shine::before {
-  content: '';
-  position: absolute;
-  top: -20%;
-  bottom: -20%;
-  left: 0;
-  width: 40%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
-  transform: translateX(-150%) skewX(-20deg);
-  animation: victory-shine 3.2s ease-in-out 0.8s infinite;
 }
 
 .victory-sparkle {
@@ -330,12 +303,6 @@ const expReward = computed(() => levelAccount.calculateExpReward(
   to { rotate: 360deg; }
 }
 
-@keyframes victory-shine {
-  0% { transform: translateX(-150%) skewX(-20deg); }
-  30%,
-  100% { transform: translateX(350%) skewX(-20deg); }
-}
-
 @keyframes victory-sparkle {
   0%,
   100% {
@@ -391,7 +358,6 @@ const expReward = computed(() => levelAccount.calculateExpReward(
 @media (prefers-reduced-motion: reduce) {
   .victory-rays,
   .victory-card__pop,
-  .victory-shine::before,
   .victory-sparkle,
   .victory-divider,
   .victory-reward,
