@@ -9,11 +9,11 @@ type Loot = { id: number; kind: LootKind; tier: number; value: number; x: number
 
 const MAX_LOOT = 160;
 // Pulinho da peça saindo do inimigo até o chão
-const HOP_DURATION = .45;
-const LOOT_FLIGHT_DURATION = .42;
-// Uma atrás da outra, as mais perto primeiro, sem passar de ~1s de fila
-const FLIGHT_STAGGER = .04;
-const MAX_STAGGER = .9;
+const HOP_DURATION = .38;
+const LOOT_FLIGHT_DURATION = .32;
+// Uma atrás da outra, as mais perto primeiro, sem passar de ~0.65s de fila
+const FLIGHT_STAGGER = .03;
+const MAX_STAGGER = .65;
 // Pedrinhas de EXP: quanto vale a comum e a grande (cor diferente); o excesso por abate engrossa as pedrinhas
 export const EXP_GEM_VALUES = [10, 100];
 const MAX_GEMS_PER_DROP = 12;
