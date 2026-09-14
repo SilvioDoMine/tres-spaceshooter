@@ -10,6 +10,7 @@ import { applyElementalTint, collectMaterials } from '~/utils/elementalVisuals';
 const dilation=useSpatialDilation().state;
 const reducedMotion=useState('spatial-reduced-motion',()=>false);
 const cameraShake=shallowRef({x:0,z:0});let stressTime=0;
+const hyperdrivePunch=useState('hyperdrive-punch',()=>0);
 
 // Interface para o Stage
 interface Stage {
@@ -119,6 +120,9 @@ onBeforeRender(({ delta }) => {
   const stress=reducedMotion.value?0:dilation.value.shake;
   playerMeshRef.value.rotation.z+=Math.sin(stressTime*29)*stress*DILATION_CONFIG.shipShake;
   cameraShake.value={x:Math.sin(stressTime*23)*stress*DILATION_CONFIG.cameraShake,z:Math.sin(stressTime*19)*stress*DILATION_CONFIG.cameraShake};
+  // Tranco curto do estrondo da hiper velocidade
+  const boom=reducedMotion.value?0:hyperdrivePunch.value**2*.22;
+  if(boom>0){cameraShake.value={x:cameraShake.value.x+Math.sin(stressTime*71)*boom,z:cameraShake.value.z+Math.cos(stressTime*57)*boom};}
 
   // Atualiza barra de HP
   hpMeshRef.value.position.set(position.x, position.y + 2, position.z);
