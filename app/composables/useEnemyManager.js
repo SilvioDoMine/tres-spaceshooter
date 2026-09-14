@@ -7,6 +7,7 @@ import { enemyCategory, enemyContactDamage, normalAsteroidFragmentStats, scaledE
 import { playableRoomCount } from '~/utils/progression';
 import { headshotKills, outgoingHit, siphonHeal } from '~/utils/shipAttributes';
 import { useHeartStore } from '~/stores/useHeartStore';
+import { useCoinStore } from '~/stores/useCoinStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import { useEquipmentEffectsStore } from '~/stores/useEquipmentEffectsStore';
 import { applyElementalHit, elementChainTargets, elementStateOf, emitElementalFx, ELEMENT_RULES, thawElementState, tickElementState } from '~/utils/elementalStatus';
@@ -724,11 +725,11 @@ export function useEnemyManager() {
         // Reproduz som de inimigo morto
         useAudio().playSound(enemy.deathSound, 1, randomPitch);
 
-        // Drop dos inimigos no chão
+        // Drop dos inimigos no chão: o ouro vai dentro da moeda e só entra quando ela chega na nave
         const minGold = enemy.drops?.gold?.min || 0;
         const maxGold = enemy.drops?.gold?.max || 0;
         const goldDropped = Math.floor(Math.random() * (maxGold - minGold + 1)) + minGold;
-        useCurrentRun.addGold(goldDropped);
+        useCoinStore().drop(enemy.position, goldDropped);
         useHeartStore().tryDrop(enemy.position);
 
         const expDropped = enemy.fixedXP

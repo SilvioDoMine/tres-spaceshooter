@@ -1,6 +1,7 @@
 import { createSpatialAudio } from '~/utils/spatialAudio';
 import { playUiSynth } from '~/utils/uiSynth';
 import { playHeartSynth } from '~/utils/heartSynth';
+import { playCoinSynth } from '~/utils/coinSynth';
 
 // Efeitos da partida: nome usado no playSound -> arquivo. Registrados já na tela de
 // loading, para tocarem desde o primeiro frame (ex.: levelup da seleção inicial de talentos).
@@ -81,6 +82,7 @@ const decodedByUrl = new Map();
 const musicObjectUrls = new Map();
 const isInitialized = ref(false);
 const lastHeartSound = {};
+const coinSound = { last: {}, step: 0 };
 
 export function useAudio() {
     let spatialAudio = null;
@@ -224,6 +226,18 @@ export function useAudio() {
         if (now - (lastHeartSound[kind] ?? -1) < 0.06) return;
         lastHeartSound[kind] = now;
         playHeartSynth(audioContext, kind, getGeneralVolume() * getEffectsVolume(), duration);
+    }
+
+    // Som sintetizado das moedas: 'magnet' quando começam a voar, 'collect' ao entrar na nave
+    function playCoinSound(kind) {
+        if (!audioContext || audioContext.state !== 'running') return;
+        const now = audioContext.currentTime;
+        const last = coinSound.last[kind] ?? -1;
+        if (now - last < 0.035) return;
+        // Moedas em sequência sobem o tom; depois de uma pausa volta para a nota base
+        if (kind === 'collect') coinSound.step = now - last < 0.3 ? Math.min(coinSound.step + 1, 14) : 0;
+        coinSound.last[kind] = now;
+        playCoinSynth(audioContext, kind, getGeneralVolume() * getEffectsVolume(), coinSound.step);
     }
 
     // Som sintetizado de microinteração da UI (tap, hover, toggle, modal...)
@@ -396,6 +410,7 @@ export function useAudio() {
         registerMusicData,
         playSound,
         playHeartSound,
+        playCoinSound,
         updateSpatialAudio,
         stopSpatialAudio,
 

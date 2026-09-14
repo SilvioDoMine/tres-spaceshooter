@@ -249,7 +249,7 @@ test('refinement scales flat equipment stats, leaving percent and talents untouc
 
 // Executa os stores reais com Vue; isola apenas áudio, persistência e cena 3D.
 function runHarness(overrides = {}) {
-  const messages = [];
+  const messages = [], sounds = [];
   const permanent = computePlayerStats(base, { ...emptyTalentBonuses(), ...overrides }, emptyTalentBonuses());
   const equipmentEffects = {
     initialize() {}, cleanup() {}, onDodge() {}, blockIncoming: () => false,
@@ -266,7 +266,7 @@ function runHarness(overrides = {}) {
     useCombatTextStore: () => ({ emitForTarget: (...args) => messages.push(args) }),
     useModal: () => ({ open() {}, close() {} }),
     useLevelAccount: () => ({}),
-    useAudio: () => ({ playSound() {}, playHeartSound() {},startBackgroundMusicAbafado() {}, stopBackgroundMusicAbafado() {} }),
+    useAudio: () => ({ playSound() {}, playHeartSound() {}, playCoinSound: kind => sounds.push(kind), startBackgroundMusicAbafado() {}, stopBackgroundMusicAbafado() {} }),
     useSpatialDilation: () => ({ reset() {} }),
     emitImpact() {},
   });
@@ -280,14 +280,53 @@ function runHarness(overrides = {}) {
   load('stores/SkillStore.js', ['useSkillStore', 'SkillsList']);
   load('stores/playerStats.ts', ['usePlayerStats']);
   load('stores/useHeartStore.ts', ['useHeartStore']);
+  load('stores/useCoinStore.ts', ['useCoinStore']);
   load('stores/currentRunStore.ts', ['useCurrentRunStore', 'PlayerBaseStats']);
   const stage = { type: 'intro', width: 30, height: 30, door: {}, playerStartPosition: { x: 0, y: 0, z: 0 } };
   const config = { stages: [stage] };
   const run = context.useCurrentRunStore();
   run.gameStart(config);
   return { context, run, stats: context.usePlayerStats(), skills: context.useSkillStore(),
-    hearts: context.useHeartStore(), config, messages, permanent };
+    hearts: context.useHeartStore(), coins: context.useCoinStore(), config, messages, sounds, permanent };
 }
+
+test('coins stay on the floor even under the ship and only fly in once the room is cleared', () => {
+  const { run, coins, sounds } = runHarness();
+  run.isStageCompleted = false;
+  coins.drop({ x: 0, z: 0 }, 7, () => 0);
+  coins.drop({ x: 5, z: 0 }, 3, () => 0);
+  coins.drop({ x: 1, z: 1 }, 0, () => 0);
+  assert.equal(coins.coins.length, 2, 'enemies without gold drop no coin');
+  for (let i = 0; i < 20; i++) coins.update(.1);
+  assert.equal(coins.coins.length, 2, 'touching a coin does not collect it');
+  assert.equal(run.currentGold, 0);
+  assert.equal(sounds.length, 0);
+
+  run.gameState = 'paused';
+  run.isStageCompleted = true;
+  coins.update(1);
+  assert.equal(coins.coins[0].delay, -1, 'paused game does not start the magnet');
+
+  run.gameState = 'playing';
+  coins.update(.01);
+  assert.deepEqual(sounds, ['magnet']);
+  assert.ok(coins.coins.find(c => c.gold === 7).flight > 0, 'nearest coin flies first');
+  assert.equal(coins.coins.find(c => c.gold === 3).flight, -1, 'farther coin waits its turn');
+  for (let i = 0; i < 20; i++) coins.update(.1);
+  assert.equal(coins.coins.length, 0);
+  assert.equal(run.currentGold, 10, 'gold is credited when the coins reach the ship');
+  assert.equal(sounds.filter(s => s === 'collect').length, 2);
+  assert.equal(coins.consumeBursts().length, 2);
+});
+
+test('uncollected coin gold is kept when changing rooms', () => {
+  const { run, coins, config } = runHarness();
+  run.isStageCompleted = false;
+  coins.drop({ x: 0, z: 0 }, 4, () => 0);
+  run.loadStage(config.stages[0]);
+  assert.equal(coins.coins.length, 0);
+  assert.equal(run.currentGold, 4);
+});
 
 test('run starts with permanent attributes, initial choice and extra reroll; upgrades and rooms retain them', () => {
   const { run, stats, skills, config } = runHarness({
