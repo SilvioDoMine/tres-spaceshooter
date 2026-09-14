@@ -115,7 +115,6 @@ onUnmounted(() => window.removeEventListener('keydown', handlePauseKey));
     <template #title>
       <BaseRibbonTitle
         text="Jogo Pausado"
-        :height="60"
         variant="yellow"
       />
     </template>

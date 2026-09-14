@@ -76,7 +76,6 @@ const expReward = computed(() => levelAccount.calculateExpReward(
   <template #title>
     <BaseRibbonTitle
       text="Desafio Concluído"
-      :height="60"
       variant="red"
     />
   </template>

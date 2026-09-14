@@ -127,11 +127,7 @@ watch(
         aria-modal="true"
         aria-label="Escolha uma habilidade"
     >
-        <header class="skills__title">
-            <i aria-hidden="true"></i>
-            <h2>Escolha uma Habilidade</h2>
-            <i aria-hidden="true"></i>
-        </header>
+        <BaseRibbonTitle text="Escolha uma Habilidade" variant="blue" :open="isOpen" />
 
         <div class="skills__row">
             <div
@@ -227,44 +223,6 @@ watch(
 .skills.is-open {
     opacity: 1;
     pointer-events: auto;
-}
-
-/* Faixa azul do título (mesma do diálogo da Loja) */
-.skills__title {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    width: min(420px, 92%);
-    flex-shrink: 0;
-    padding: 8px 14px;
-    border-radius: 12px;
-    background: linear-gradient(#4fb2ff, #2a7ee0);
-    border: 3px solid #134a91;
-    box-shadow: 0 4px 0 #134a91, inset 0 2px 0 rgba(255, 255, 255, 0.45);
-    scale: 0.6;
-    opacity: 0;
-    transition: scale 0.35s cubic-bezier(0.3, 1.6, 0.6, 1), opacity 0.2s ease;
-}
-.skills.is-open .skills__title {
-    scale: 1;
-    opacity: 1;
-}
-.skills__title h2 {
-    margin: 0;
-    font: 24px/1.1 'Lilita One', sans-serif;
-    text-align: center;
-    -webkit-text-stroke: 5px #134a91;
-    paint-order: stroke fill;
-}
-.skills__title i {
-    flex-shrink: 0;
-    width: 14px;
-    height: 14px;
-    rotate: 45deg;
-    border-radius: 3px;
-    background: linear-gradient(135deg, #fff, #b9d6f2);
-    border: 2px solid #134a91;
 }
 
 .skills__row {
@@ -732,9 +690,6 @@ watch(
 @media (min-width: 1024px) {
     .skills__slot {
         width: 280px;
-    }
-    .skills__title h2 {
-        font-size: 28px;
     }
 }
 

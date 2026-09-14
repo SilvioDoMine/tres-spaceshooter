@@ -79,7 +79,6 @@ const handleQuit = () => {
   <template #title>
     <BaseRibbonTitle
       text="Recompensas"
-      :height="60"
       variant="green"
     />
   </template>
