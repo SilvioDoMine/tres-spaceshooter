@@ -1,9 +1,10 @@
+// `icon`: chave de um SVG de ~/data/skillIcons (padrão) ou qualquer emoji, mostrado na mesma caixa
 export const SkillsList ={
   flat_gold: {
     id: 'flat_gold',
     name: 'Ouro Bônus',
     description: 'Concede uma quantidade fixa de ouro caso complete a fase.',
-    icon: '💰',
+    icon: 'coins',
     rarity: 'poor',
     levels: {
       1: { value: 100, description: '+100 de ouro' },
@@ -27,7 +28,7 @@ export const SkillsList ={
     id: 'damage_percentage',
     name: 'Dano Aumentado',
     description: 'Aumenta o dano base do seu projétil.',
-    icon: '⚔️',
+    icon: 'damage-up',
     rarity: 'uncommon',
     levels: {
       1: { value: 1.20, description: 'Dano total: 120% do dano base' },
@@ -41,7 +42,7 @@ export const SkillsList ={
     id: 'health_percentage',
     name: 'Vida Aumentada',
     description: 'Aumenta sua vida máxima permanentemente.',
-    icon: '❤️',
+    icon: 'health-up',
     rarity: 'uncommon',
     levels: {
       1: { value: 1.20, description: 'HP máximo: 300' },
@@ -70,7 +71,7 @@ export const SkillsList ={
     id: 'exp_growth',
     name: 'Aprendizado',
     description: 'Aumenta a EXP ganha na partida. O bônus cresce a cada sala concluída depois de pegar a carta.',
-    icon: '📚',
+    icon: 'datapad',
     rarity: 'uncommon',
     levels: {
       // value: bônus inicial; perRoom: quanto cresce por sala concluída; max: teto do bônus
@@ -85,7 +86,7 @@ export const SkillsList ={
     id: 'emergency_repair',
     name: 'Reparo de Emergência',
     description: 'Restaura na hora uma parte aleatória da sua vida máxima. Pode aparecer de novo; não aparece com a vida cheia.',
-    icon: '🔧',
+    icon: 'wrench',
     rarity: 'uncommon',
     // Uso imediato: não ocupa espaço nas habilidades obtidas e nunca esgota
     repeatable: true,
@@ -97,7 +98,7 @@ export const SkillsList ={
     id: 'general_speed',
     name: 'Velocidade Aumentada',
     description: 'Aumenta sua velocidade de movimento e disparo.',
-    icon: '👟',
+    icon: 'thrusters',
     rarity: 'uncommon',
     levels: {
       1: { value: 1.06, projectileValue: 1.08, description: 'Nave +6%; projéteis +8%' },
@@ -111,7 +112,7 @@ export const SkillsList ={
     id: 'ricochet_shot',
     name: 'Tiro Ricochete',
     description: 'Seus projéteis ricocheteiam nos inimigos, perdendo metade do dano a cada salto.',
-    icon: '💥',
+    icon: 'ricochet',
     rarity: 'epic',
     levels: {
       1: { value: 0.5, description: 'Projéteis ricocheteiam 1 vez.' },
@@ -125,7 +126,7 @@ export const SkillsList ={
     id: 'diagonal_shot',
     name: 'Tiros Diagonais',
     description: 'Adiciona tiros diagonais e laterais com 50% do dano.',
-    icon: '➗',
+    icon: 'spread-shot',
     rarity: 'rare',
     levels: {
       1: { value: 0.5, description: 'Dispara +2 projéteis diagonais (45°).' },
@@ -136,7 +137,7 @@ export const SkillsList ={
     id: 'back_shot',
     name: 'Tiro Traseiro',
     description: 'Canhões traseiros disparam diretamente para trás com 65% do dano.',
-    icon: '🔙',
+    icon: 'back-shot',
     rarity: 'rare',
     levels: {
       1: { value: 0.65, description: 'Dispara 1 projétil para trás com 65% do dano.' },
@@ -147,7 +148,7 @@ export const SkillsList ={
     id: 'piercing_shot',
     name: 'Tiro Perfurante',
     description: 'Seus projéteis perfuram inimigos, atingindo múltiplos alvos.',
-    icon: '🎯',
+    icon: 'pierce',
     rarity: 'rare',
     levels: {
       1: { value: 2, description: 'Atinge no máximo 2 inimigos no total.' },
@@ -160,7 +161,7 @@ export const SkillsList ={
     id: 'range_extension',
     name: 'Alcance Estendido',
     description: 'Aumenta o alcance dos seus projéteis.',
-    icon: '📏',
+    icon: 'radar',
     rarity: 'epic',
     levels: {
       1: { value: 13.5 / 11, description: 'Alcance total: 13,5' },
@@ -174,7 +175,7 @@ export const SkillsList ={
     id: 'precise_aim',
     name: 'Mira Precisa',
     description: 'Aumenta a chance e o dano dos acertos críticos.',
-    icon: '🎯',
+    icon: 'crosshair',
     rarity: 'rare',
     levels: {
       1: { value: 0.10, critDamage: 0.20, description: '+10% chance de crítico; +20% dano crítico' },
@@ -186,7 +187,7 @@ export const SkillsList ={
     id: 'attack_speed',
     name: 'Cadência',
     description: 'Aumenta a velocidade de ataque, disparando com mais frequência.',
-    icon: '⏱️',
+    icon: 'rotary-cannon',
     rarity: 'uncommon',
     levels: {
       1: { value: 0.08, description: 'Velocidade de ataque +8%' },
@@ -200,7 +201,7 @@ export const SkillsList ={
     id: 'adrenaline',
     name: 'Adrenalina',
     description: 'Quanto menos vida, mais dano. O bônus é máximo com 20% de vida ou menos.',
-    icon: '🩸',
+    icon: 'adrenaline',
     rarity: 'rare',
     levels: {
       1: { value: 0.30, description: 'Até +30% de dano' },
@@ -212,7 +213,7 @@ export const SkillsList ={
     id: 'headshot',
     name: 'Tiro Certeiro',
     description: 'Chance de eliminar na hora inimigos comuns e elites. Não afeta chefes.',
-    icon: '💀',
+    icon: 'alien-skull',
     rarity: 'legendary',
     levels: {
       1: { value: 0.04, description: '4% de chance por acerto' },
@@ -223,7 +224,7 @@ export const SkillsList ={
     id: 'evasive_maneuver',
     name: 'Manobra Evasiva',
     description: 'Aumenta a chance de desviar de projéteis e colisões inimigas.',
-    icon: '💨',
+    icon: 'evasion',
     rarity: 'rare',
     levels: {
       1: { value: 0.07, description: '+7% chance de desvio' },
@@ -235,7 +236,7 @@ export const SkillsList ={
     id: 'siphon',
     name: 'Sifão',
     description: 'Ao destruir um inimigo, tem chance de curar 5% da vida máxima.',
-    icon: '🧪',
+    icon: 'siphon',
     rarity: 'rare',
     levels: {
       1: { value: 0.05, description: '5% de chance por abate de curar 5% da vida' },
@@ -245,7 +246,7 @@ export const SkillsList ={
     id: 'front_shot',
     name: 'Tiro Frontal',
     description: 'Dispara projéteis frontais lado a lado; os adicionais causam 40% do dano.',
-    icon: '⏫',
+    icon: 'front-shot',
     rarity: 'epic',
     levels: {
       1: { value: 0.4, description: 'Dispara 2 projéteis frontais.' },
@@ -256,7 +257,7 @@ export const SkillsList ={
     id: 'fire_shot',
     name: 'Tiro de Fogo',
     description: 'Os projéteis incendeiam o alvo, que sofre dano por segundo baseado no dano do tiro.',
-    icon: '🔥',
+    icon: 'fire-shot',
     rarity: 'epic',
     levels: {
       1: { value: 0.15, duration: 3, description: 'Queima 15% do dano do tiro por segundo, por 3s.' },
@@ -267,7 +268,7 @@ export const SkillsList ={
     id: 'ice_shot',
     name: 'Tiro de Gelo',
     description: 'Congela o alvo com dano bruto ao congelar e ao descongelar. Dano de outra fonte quebra o gelo. Chefes congelam por menos tempo.',
-    icon: '❄️',
+    icon: 'ice-crystal',
     rarity: 'epic',
     levels: {
       1: { value: 0.35, shatter: 0.35, duration: 1.5, description: 'Congela por 1,5s; 35% do dano do tiro ao congelar e ao quebrar.' },
@@ -278,7 +279,7 @@ export const SkillsList ={
     id: 'lightning_shot',
     name: 'Tiro de Raio',
     description: 'Causa dano elétrico extra que salta para até 2 inimigos próximos, dentro do alcance da arma.',
-    icon: '⚡',
+    icon: 'lightning',
     rarity: 'epic',
     levels: {
       1: { value: 0.25, chains: 2, description: '+25% do dano como raio, que salta para 2 inimigos.' },
@@ -289,7 +290,7 @@ export const SkillsList ={
     id: 'multishot',
     name: 'Tiros Múltiplos',
     description: 'Repete a rajada de todas as armas logo em seguida; as repetições causam 40% do dano.',
-    icon: '🔫',
+    icon: 'burst',
     rarity: 'legendary',
     levels: {
       1: { value: 0.4, description: 'Cada arma dispara 2 vezes.' },
@@ -302,7 +303,7 @@ export const SkillsList ={
     disabled: true,
     name: 'Tiro de Curta Distância',
     description: 'Reduz seu alcance para corpo a corpo, mas aumenta muito o dano e a velocidade do projétil.',
-    icon: '📌',
+    icon: 'shotgun',
     rarity: 'legendary',
     levels: {
       1: { value: 1, description: 'ATK Range ↓↓, ATK Power ↑↑↑, ATK SPD ↑↑↑' },

@@ -132,21 +132,13 @@ onUnmounted(() => window.removeEventListener('keydown', handlePauseKey));
         :key="skill.id"
         class="pause-ability"
         :style="{ '--i': index }"
-        :icon="skill.icon"
         :status="skill.status"
         :badge="`${skillStore.getSkillLevel(skill.id)}`"
         :rarity="getRarityFromSkill(skill)"
         size="md"
         @click="handleAbilityClick(skill)"
       >
-        <!-- No before adiciona um glow branco transparente atrás do ícone para dar um efeito -->
-        <p 
-          class="text-4xl drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]"
-          >
-          <span class="drop-shadow-xs drop-shadow-black">
-            {{ skill.icon }}
-          </span>
-        </p>
+        <SkillIcon :icon="skill.icon" />
       </BaseAbilityIcon>
     </div>
 

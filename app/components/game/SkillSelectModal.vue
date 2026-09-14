@@ -161,7 +161,7 @@ watch(
                             <span class="scard__rays" aria-hidden="true"></span>
                             <span class="scard__icon">
                                 <BaseRarityFrame :rarity="rarityOf(skill).frame">
-                                    <span class="scard__emoji">{{ skill.icon }}</span>
+                                    <SkillIcon :icon="skill.icon" />
                                 </BaseRarityFrame>
                             </span>
                         </span>
@@ -467,10 +467,6 @@ watch(
     width: 100%;
     animation: scard-float 2.8s ease-in-out infinite;
     animation-delay: calc(var(--i) * -0.9s);
-}
-.scard__emoji {
-    font-size: 44cqw;
-    line-height: 1;
 }
 
 /* Raios girando atrás do ícone (épica e lendária) */

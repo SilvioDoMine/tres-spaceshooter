@@ -9,6 +9,7 @@ import { playableRoomCount } from '~/utils/progression';
 //   skipRoom()       -> limpa os inimigos e vai para a próxima sala (na última, conclui o capítulo)
 //   goToRoom(10)     -> pula direto para a sala 10 do capítulo atual (ex.: boss intermediário)
 //   finishChapter()  -> conclui o capítulo agora (vitória, recompensas e libera o próximo)
+//   loseRun()        -> perde a partida agora (derrota, recompensas parciais e tela de fim)
 //   killAll()        -> só limpa inimigos e tiros da sala (a próxima onda entra normalmente)
 //   levelUp()        -> sobe 1 nível da nave e abre a escolha de habilidades
 //   levelUp(3)       -> sobe 3 níveis; as escolhas abrem uma depois da outra
@@ -66,6 +67,14 @@ export default defineNuxtPlugin(() => {
     return run ? jumpAfter(run, run.levelConfig.stages.length - 1) : undefined;
   }
 
+  function loseRun() {
+    const run = activeRun();
+    if (!run) return;
+    clearCombat();
+    run.gameOver('Derrota forçada pelo debug');
+    return `Derrota na ${roomLabel(run)}`;
+  }
+
   function killAll() {
     if (!activeRun()) return;
     clearCombat();
@@ -118,7 +127,7 @@ export default defineNuxtPlugin(() => {
     return `${useLootStore().loot.length} peças de espólio no chão`;
   }
 
-  Object.assign(window, { skipRoom, goToRoom, finishChapter, killAll, levelUp, dropHearts, dropCoins, dropExp });
+  Object.assign(window, { skipRoom, goToRoom, finishChapter, loseRun, killAll, levelUp, dropHearts, dropCoins, dropExp });
 
-  console.info('[debug] skipRoom() • goToRoom(10) • finishChapter() • killAll() • levelUp(3) • dropHearts(3) • dropCoins(8) • dropExp(150)');
+  console.info('[debug] skipRoom() • goToRoom(10) • finishChapter() • loseRun() • killAll() • levelUp(3) • dropHearts(3) • dropCoins(8) • dropExp(150)');
 });

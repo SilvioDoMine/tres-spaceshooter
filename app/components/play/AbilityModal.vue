@@ -19,14 +19,14 @@ const abilities = [
   {
     id: 1,
     name: 'Habilidade já obtida',
-    icon: '⚡',
+    icon: 'lightning',
     description: 'Você já possui esta habilidade',
     obtained: true,
   },
   {
     id: 2,
     name: 'Tiro Triplo',
-    icon: '🎯',
+    icon: 'front-shot',
     description: 'Dispara três projéteis ao mesmo tempo',
     obtained: false,
   },
@@ -93,7 +93,7 @@ defineExpose({ open, close, isOpen });
       <!-- Ícone grande da habilidade -->
       <div class="ability-icon-container">
         <div class="ability-icon">
-          {{ currentAbility.icon }}
+          <SkillIcon :icon="currentAbility.icon" class="ability-icon__art" />
         </div>
       </div>
 
@@ -190,6 +190,10 @@ defineExpose({ open, close, isOpen });
   box-shadow:
     inset 0 2px 0 rgba(255, 255, 255, 0.5),
     0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.ability-icon__art {
+  width: 64%;
 }
 
 .status-badge {
