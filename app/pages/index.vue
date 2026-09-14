@@ -214,7 +214,8 @@ onUnmounted(() => {
     <div class="relative w-full h-full overflow-hidden">
 
       <!-- Topbar (fica por cima das telas cheias) -->
-      <div class="w-full h-17 absolute top-0 z-20 pointer-events-auto">
+      <!-- Em Capítulos o fundo é escuro (vidro branco); nas telas cheias o fundo é claro (vidro preto) -->
+      <div class="lobby-topbar-wrap w-full h-17 absolute top-0 z-20 pointer-events-auto" :class="{ 'lobby-topbar-wrap--on-light': !isChapterView }">
         <!-- Icon absolute 64x64 -->
         <div @click="openProfileModal" class="absolute cursor-pointer top-2 left-2 w-16 h-16 bg-linear-to-b from-gray-400 to-gray-600 rounded flex items-center justify-center">
           <img 
@@ -472,6 +473,10 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* Topbar sobre fundo claro: troca o vidro branco por preto translúcido para os valores não sumirem */
+.lobby-topbar-wrap :is(.bg-white\/10, .bg-white\/20){transition:background-color .3s ease}
+.lobby-topbar-wrap--on-light .bg-white\/10{background-color:rgba(0,0,0,.25)}
+.lobby-topbar-wrap--on-light .bg-white\/20{background-color:rgba(0,0,0,.3)}
 .lobby-scene{position:absolute;inset:0}
 .chapter-info{position:absolute;bottom:26%;left:50%;transform:translateX(-50%);width:250px;text-align:center;padding:10px 16px;border:3px solid #3672b4;border-radius:15px;background:linear-gradient(#65b5fa,#2c79c7);box-shadow:0 5px #194b85,inset 0 2px #b7e1ff;color:white;text-shadow:0 2px #25528b}
 .chapter-info strong{display:block;font-size:23px;font-weight:400}.chapter-info span{display:block;font-size:13px;margin:2px 0 8px}.chapter-info small{display:block;background:#183d6d;border-radius:8px;padding:6px;font-size:12px;color:#ffdf85;text-shadow:none}
