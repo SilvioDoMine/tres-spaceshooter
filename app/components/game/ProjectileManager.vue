@@ -2,8 +2,12 @@
 import { Group, InstancedMesh, Object3D, PlaneGeometry, ShaderMaterial, MeshBasicMaterial, AdditiveBlending, Color, DynamicDrawUsage } from 'three';
 import { useLoop } from '@tresjs/core';
 import { useProjectileStore } from '~/stores/projectileStore';
+import { useCurrentRunStore } from '~/stores/currentRunStore';
 
 const store=useProjectileStore(),root=new Group(),dummy=new Object3D();
+// Trocou de sala (ou recomeçou a partida): tiros da sala anterior somem na hora.
+// Fica aqui e não no loadStage porque projectileStore e currentRunStore se importam (dependência circular).
+watch(()=>useCurrentRunStore().currentStage,()=>store.cleanup(),{flush:'sync'});
 const geometry=new PlaneGeometry(.8,1.9);geometry.rotateX(Math.PI/2);geometry.translate(0,0,-.45);
 const orbGeometry=new PlaneGeometry(.72,.72);orbGeometry.rotateX(Math.PI/2);
 // 7 = lança da Colmeia (bola esticada, dourada), 8 = tiro da Colmeia (bola âmbar), 9 = tiro da Harpia (bola magenta)
