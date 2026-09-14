@@ -6,7 +6,7 @@ import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
 import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import { useSkillStore, SkillsList } from '~/stores/SkillStore';
-import { worldHardpoint, advanceShot, bastionShieldBlocks, PLAYER_HITBOX_RADIUS, PROJECTILE_IFRAME, segmentHit } from '~/utils/combatPatterns';
+import { worldHardpoint, advanceShot, bastionShieldBlocks, PLAYER_HITBOX_RADIUS, PROJECTILE_IFRAME, PROJECTILE_ORPHAN_LIFESPAN, segmentHit } from '~/utils/combatPatterns';
 
 const orb = { speed: 4, damage: 18, size: .22, range: 25, color: '#52caff' };
 export const projectilesType = {
@@ -117,8 +117,23 @@ export const useProjectileStore = defineStore('projectileStore', () => {
   function update(deltaTime) {
     hitGrace=Math.max(0,hitGrace-deltaTime);
     const keep=[];
+    // Set de ids vivos montado uma vez por frame (O(E)) em vez de buscar o dono a cada projétil (O(P*E)).
+    // Só é criado se houver projétil de inimigo ainda não órfão para checar.
+    let aliveEnemyIds=null;
     for(const projectile of projectiles.value) {
       if(projectile._markedForRemoval)continue;
+      if(projectile.ownerType==='enemy') {
+        if(projectile.orphanTimer!==undefined) {
+          projectile.orphanTimer-=deltaTime;
+          if(projectile.orphanTimer<=0)continue;
+        } else {
+          if(aliveEnemyIds===null) {
+            aliveEnemyIds=new Set();
+            for(const enemy of enemyManager.activeEnemies.value)if(enemy.state==='active')aliveEnemyIds.add(enemy.id);
+          }
+          if(!aliveEnemyIds.has(projectile.ownerId))projectile.orphanTimer=PROJECTILE_ORPHAN_LIFESPAN;
+        }
+      }
       if(projectile.spawnDelay>0){
         projectile.spawnDelay-=deltaTime;
         // Repetições do multishot: clarão e som só quando o tiro realmente sai

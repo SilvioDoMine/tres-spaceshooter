@@ -86,6 +86,8 @@ export function segmentHit(start, end, target, radius) {
 }
 
 export const PROJECTILE_IFRAME = .50;
+// Quando o dono (inimigo) morre ou desaparece, o projétil ainda em voo dura só mais esse tempo
+export const PROJECTILE_ORPHAN_LIFESPAN = 1;
 // Raio do jogador contra projéteis inimigos (a Kestrel tem ~1,7 de envergadura e ~1,4 de comprimento no jogo)
 export const PLAYER_HITBOX_RADIUS = .5;
 // Depois de uma colisão a nave pisca e fica imune só a colisões por esse tempo, e é empurrada para longe
