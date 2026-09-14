@@ -119,9 +119,17 @@ test('physical hardpoints match front, diagonal and straight rear fire',()=>{
   for(const multi of [0,1,2,3,4])for(const rear of [0,1,2])for(const diagonal of [0,1,2]){
     const mounts=patterns.weaponMounts(multi,rear,diagonal);
     assert.equal(mounts.filter(m=>m.role==='front').length,1+multi);
-    assert.equal(mounts.filter(m=>m.role==='rear').length,rear);
-    assert.equal(mounts.filter(m=>m.role==='diagonal').length,diagonal?2:0);
-    for(const m of mounts.filter(m=>m.role==='diagonal')){assert.equal(Math.abs(m.x),.70);assert.equal(m.z,.12);}
+    const rearMounts=mounts.filter(m=>m.role==='rear');
+    assert.equal(rearMounts.length,rear?rear+multi:0);
+    assert.equal(rearMounts.filter(m=>!m.bonus).length,rear);
+    assert.equal(mounts.filter(m=>m.role==='diagonal').length,diagonal?2*(1+multi):0);
+    for(const side of diagonal?[-1,1]:[]){
+      const group=mounts.filter(m=>m.role==='diagonal'&&Math.sign(m.dx)===side);
+      assert.equal(group.length,1+multi);
+      assert.ok(Math.abs(group.reduce((n,m)=>n+m.x,0)/group.length-side*.70)<1e-10);
+      assert.ok(Math.abs(group.reduce((n,m)=>n+m.z,0)/group.length-.12)<1e-10);
+      assert.ok(group.every(m=>m.dx===group[0].dx&&m.dz===group[0].dz));
+    }
     for(const m of mounts)for(const yaw of [0,.7,Math.PI,-1.2]){
       const p={x:12,y:0,z:-8};const result=patterns.worldHardpoint(p,yaw,m);
       assert.ok(Math.abs(Math.hypot(result.direction.x,result.direction.z)-1)<1e-10);

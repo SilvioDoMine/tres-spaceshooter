@@ -221,7 +221,8 @@ export function usePlayerControls() {
             mounts.forEach((mount, shotIndex) => {
               const { origin, direction: heading } = worldHardpoint(position, rotation.y, mount);
               const center = mount.index === Math.floor(mount.count / 2);
-              const efficiency = mount.role === 'rear' || !multi || center ? 1 : SkillsList.multishot.levels[multi].value;
+              const extra = mount.role === 'rear' ? mount.bonus : !center;
+              const efficiency = !multi || !extra ? 1 : SkillsList.multishot.levels[multi].value;
               const factor = mount.role === 'rear' ? SkillsList.back_shot.levels[rear].value
                 : mount.role === 'diagonal' ? SkillsList.diagonal_shot.levels[diagonal].value : 1;
               const special = mount.role === 'front' && center;

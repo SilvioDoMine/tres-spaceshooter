@@ -19,22 +19,31 @@ export function muzzlePosition(position, direction, side, forward = .9) {
 // Shared physical hardpoints: rendering and combat consume the same coordinates.
 export function weaponMounts(multi = 0, rear = 0, diagonal = 0) {
   const mounts = [];
-  const add = (role, angle, count) => {
+  const add = (role, angle, count, base = count) => {
     const heading = rotateShot({ x: 0, z: -1 }, angle);
+    const firstBase = Math.floor((count - base) / 2);
     shotFormation(count).forEach((slot, index) => {
       const point = muzzlePosition({ x: 0, y: 0, z: 0 }, heading,
         role === 'rear' ? slot.side * .32 : slot.side * .48,
         role === 'rear' ? .76 : .63 - Math.abs(slot.side)*.12);
-      mounts.push({ id: `${role}:${angle}:${index}`, role, index, count,
+      // bonus = canhão extra vindo do multishot (fora dos canhões próprios da skill)
+      const bonus = index < firstBase || index >= firstBase + base;
+      mounts.push({ id: `${role}:${angle}:${index}`, role, index, count, bonus,
         x: point.x, y: role === 'rear' ? .19 : role === 'front' && Math.abs(slot.side)<.05 ? -.145 : -.11, z: role === 'front' && Math.abs(slot.side)<.05 ? -1.04 : point.z, dx: heading.x, dz: heading.z });
     });
   };
   add('front', 0, 1 + multi);
-  if (rear) add('rear', Math.PI, rear);
+  // Traseiros: os canhões do nível de back_shot + os extras do multishot
+  if (rear) add('rear', Math.PI, rear + multi, rear);
+  // Diagonais herdam a formação do multishot (como antes dos hardpoints), em faixas
+  // paralelas centradas no canhão de cada lado
   if(diagonal) for(const side of [-1,1]) {
     const heading=rotateShot({x:0,z:-1},side*Math.PI/4);
-    mounts.push({id:'diagonal:'+side,role:'diagonal',index:0,count:1,
-      x:side*.70,y:.065,z:.12,dx:heading.x,dz:heading.z});
+    shotFormation(1+multi).forEach((slot,index)=>{
+      const offset=slot.side*.3;
+      mounts.push({id:`diagonal:${side}:${index}`,role:'diagonal',index,count:1+multi,
+        x:side*.70-heading.z*offset,y:.065,z:.12+heading.x*offset,dx:heading.x,dz:heading.z});
+    });
   }
   return mounts;
 }
