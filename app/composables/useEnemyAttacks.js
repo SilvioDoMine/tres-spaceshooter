@@ -1,4 +1,4 @@
-import { attackProfile, attackDirections, canAttackFrom, chapterDamageMultiplier, ENEMY_VOLLEY_GATE, muzzlePosition } from '~/utils/combatPatterns';
+import { attackProfile, attackDirections, canAttackFrom, enemyShotDamage, ENEMY_VOLLEY_GATE, muzzlePosition } from '~/utils/combatPatterns';
 import { playableRoomCount } from '~/utils/progression';
 import { ENEMY_ELEMENT_PAYLOADS } from '~/utils/elementalStatus';
 
@@ -10,7 +10,7 @@ export function useEnemyAttacks() {
     volleyGate=Math.max(0,volleyGate-delta);
     let bullets=shots.projectiles.filter(p=>p.ownerType==='enemy').length;
     const room=playableRoomCount(run.levelConfig,run.currentStageIndex);
-    const chapterDamage=chapterDamageMultiplier(run.levelConfig?.chapter);
+    const chapter=run.levelConfig?.chapter;
     const player=run.getPlayerPosition();
     for(const enemy of enemies) {
       // Atordoados não atiram; a Harpia não atira na investida; caças e a mini-colmeia lançando também seguram o fogo
@@ -35,7 +35,8 @@ export function useEnemyAttacks() {
         const directions=attackDirections(profile,clock.aim,clock.volley);
         // Canos fixos no casco (ex.: as duas saídas da Colmeia) disparam em paralelo
         const muzzles=profile.muzzles||[{side:0,forward:0}];
-        const damage=enemy.exactStats?profile.damage:Math.round(profile.damage*chapterDamage);
+        // Tiro comum escala com sala e capítulo; tiro de boss bate como colisão (ENEMY_THREAT)
+        const damage=enemyShotDamage(enemy.type,room,chapter,enemy);
         let fired=0;
         for(const direction of directions)for(const muzzle of muzzles) {
           const origin=muzzle.side||muzzle.forward

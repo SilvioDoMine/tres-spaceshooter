@@ -3,7 +3,7 @@ import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { useMissions } from '~/composables/useMissions';
 import { storeToRefs } from 'pinia';
 import { emitImpact } from '~/utils/combatEffects';
-import { chapterDamageMultiplier, enemyCategory, normalAsteroidFragmentStats, roomProgress, scaledEnemyExperience, scaledEnemyHealth } from '~/utils/combatPatterns';
+import { enemyCategory, enemyContactDamage, normalAsteroidFragmentStats, scaledEnemyExperience, scaledEnemyHealth } from '~/utils/combatPatterns';
 import { playableRoomCount } from '~/utils/progression';
 import { headshotKills, outgoingHit, siphonHeal } from '~/utils/shipAttributes';
 import { useHeartStore } from '~/stores/useHeartStore';
@@ -21,7 +21,6 @@ export const baseStats = {
     speed: 1.5,
     health: 90,
     baseXP: 20,
-    onHitDamage: 400,
     size: 0.75,
     deathSound: 'hit-hard3',
     hitSound: 'hit-soft2',
@@ -36,7 +35,6 @@ export const baseStats = {
     speed: 3,
     health: 500,
     baseXP: 90,
-    onHitDamage: 900,
     size: 1.25,
     deathSound: 'hit-hard3',
     hitSound: 'hit-soft2',
@@ -53,7 +51,6 @@ export const baseStats = {
     baseXP: 900,
     fixedXP: true,
     asteroidGeneration: 0,
-    onHitDamage: 9999,
     size: 2.25,
     deathSound: 'hit-hard3',
     hitSound: 'hit-soft2',
@@ -69,7 +66,6 @@ export const baseStats = {
     speed: 2,
     health: 130,
     baseXP: 40,
-    onHitDamage: 150,
     distanceKeep: 10,
     shotDamage: 50,
     cooldownTotalShot: 2,
@@ -88,7 +84,6 @@ export const baseStats = {
     speed: 2.2,
     health: 180,
     baseXP: 55,
-    onHitDamage: 500,
     distanceKeep: 20,
     shotDamage: 100,
     cooldownTotalShot: 1.75,
@@ -107,7 +102,6 @@ export const baseStats = {
     speed: 3.5,
     health: 120,
     baseXP: 60,
-    onHitDamage: 300,
     distanceKeep: 7,
     chargeRecoveryCooldown: 3, // Cooldown após charge (segundos)
     deathSound: 'hit-hard3',
@@ -124,7 +118,6 @@ export const baseStats = {
     speed: 1.1,
     health: 1400,
     baseXP: 300,
-    onHitDamage: 999,
     distanceKeep: 20,
     shotDamage: 200,
     cooldownTotalShot: 2,
@@ -144,7 +137,6 @@ export const baseStats = {
     health: 7800,
     baseXP: 0,
     fixedXP: true,
-    onHitDamage: 999,
     distanceKeep: 20,
     shotDamage: 300,
     cooldownTotalShot: 1,
@@ -169,7 +161,6 @@ export const baseStats = {
     health: 5200,
     baseXP: 0,
     fixedXP: true,
-    onHitDamage: 999,
     distanceKeep: 20,
     shotDamage: 200,
     cooldownTotalShot: 2,
@@ -241,7 +232,6 @@ export const baseStats = {
     health: 9500,
     baseXP: 0,
     fixedXP: true,
-    onHitDamage: 999,
     distanceKeep: 20,
     shotDamage: 300,
     cooldownTotalShot: 1,
@@ -263,7 +253,6 @@ export const baseStats = {
     health: 7000,
     baseXP: 0,
     fixedXP: true,
-    onHitDamage: 999,
     distanceKeep: 20,
     shotDamage: 250,
     cooldownTotalShot: 2,
@@ -285,7 +274,6 @@ export const baseStats = {
     health: 13000,
     baseXP: 0,
     fixedXP: true,
-    onHitDamage: 999,
     distanceKeep: 20,
     shotDamage: 350,
     cooldownTotalShot: 1,
@@ -303,7 +291,6 @@ export const baseStats = {
     size: 2,
     speed: 3,
     health: 1600,
-    onHitDamage: 9999,
     distanceKeep: 10,
     chargeRecoveryCooldown: 1, // Sem cooldown após charge
     deathSound: 'enemy-death3',
@@ -324,7 +311,6 @@ export const baseStats = {
     shape: 'sphere',
     speed: 0,
     health: 1,
-    onHitDamage: 0,
     size: 1.2,
     deathSound: 'hit-hard3',
     hitSound: 'hit-soft2',
@@ -341,7 +327,6 @@ export const baseStats = {
     speed: 2.0,
     health: 180,
     baseXP: 70,
-    onHitDamage: 180,
     size: 1.0,
     deathSound: 'hit-hard3',
     hitSound: 'hit-soft2',
@@ -358,7 +343,6 @@ export const baseStats = {
     speed: 1.8,
     health: 220,
     baseXP: 80,
-    onHitDamage: 220,
     size: 1.5,
     deathSound: 'enemy-death1',
     hitSound: 'hit-soft3',
@@ -584,18 +568,11 @@ export function useEnemyManager() {
     } = options;
 
     const room = playableRoomCount(useCurrentRun.levelConfig, useCurrentRun.currentStageIndex);
-    const progress = roomProgress(room);
-    const category = enemyCategory(enemyType);
     const exactBossHealth = enemyType === 'asteroidBoss' || enemyType === 'boss' || Boolean(enemyStats.exactStats);
     const chapter = useCurrentRun.levelConfig?.chapter || 1;
     const health = exactBossHealth ? enemyStats.health : scaledEnemyHealth(enemyStats.health, room, chapter);
-    // Os bosses dos capítulos já têm valores próprios; os demais escalam com o capítulo
-    const contactScale = enemyStats.exactStats ? 1 : chapterDamageMultiplier(chapter);
-    const contact = Math.round(contactScale * (enemyType === 'kamikaze'
-      ? 34 + 18 * progress
-      : category === 'boss'
-        ? 48 + 16 * progress
-        : 22 + 14 * progress));
+    // Encostar é quase hitkill: comum escala com sala e capítulo, boss (e o que ele lança) bate mais (ENEMY_THREAT)
+    const contact = enemyContactDamage(enemyType, room, chapter, { ...enemyStats, ...overrides });
     // Crio um novo inimigo
     const newEnemy = {
       id: `${enemyType}_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,

@@ -145,6 +145,13 @@ export function usePlayerControls() {
     position.y = 0;
     if (allowedZ) position.z += dz;
 
+    // Empurrão da colisão: não conta como movimento (não gira a nave nem segura o tiro)
+    const push = currentRun.updateCollision(delta);
+    if (currentRun.canPlayerMoveTo(position.x + push.x, position.y, position.z + push.z)) {
+      position.x += push.x;
+      position.z += push.z;
+    }
+
     // Rotação suave na direção do movimento
     if (dx !== 0 || dz !== 0) {
       // Calcula o ângulo desejado baseado na direção do movimento

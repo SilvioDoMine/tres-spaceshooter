@@ -88,7 +88,10 @@ export function segmentHit(start, end, target, radius) {
 export const PROJECTILE_IFRAME = .50;
 // Raio do jogador contra projéteis inimigos (a Kestrel tem ~1,7 de envergadura e ~1,4 de comprimento no jogo)
 export const PLAYER_HITBOX_RADIUS = .5;
-export const COLLISION_IFRAME = .35;
+// Depois de uma colisão a nave pisca e fica imune só a colisões por esse tempo, e é empurrada para longe
+export const COLLISION_IFRAME = 1.5;
+// Velocidade inicial do empurrão e o quanto ela decai por segundo (distância total ≈ speed / decay)
+export const COLLISION_KNOCKBACK = Object.freeze({ speed: 18, decay: 6 });
 export const ENEMY_VOLLEY_GATE = .25;
 export const WAVE_REST = 1.25;
 
@@ -111,8 +114,34 @@ function clampChapter(chapter = 1) {
 export function chapterHealthMultiplier(chapter = 1) {
   return Number((1 + .45 * (clampChapter(chapter) - 1)).toFixed(2));
 }
-export function chapterDamageMultiplier(chapter = 1) {
-  return Number((1 + .25 * (clampChapter(chapter) - 1)).toFixed(2));
+/**
+ * Dano que o jogador recebe, por capítulo. Faixas [início, fim] crescem com a sala (2 → 20).
+ * Referência: 250 de vida pelado no capítulo 1, ~1000 no fim dele e 1250–2000 no capítulo 2.
+ * - shot: tiro de inimigo comum. Pelado morre em 2; no fim do capítulo 1 em 3; no capítulo 2 em 3 a 5.
+ * - collision: encostar em inimigo comum é quase hitkill (só sobrevive com muito equipamento).
+ * - boss: tiro ou contato de boss. Check de mecânica: não é para tomar.
+ */
+export const ENEMY_THREAT = Object.freeze({
+  1: Object.freeze({ shot: [150, 400], collision: [800, 950], boss: 1500 }),
+  2: Object.freeze({ shot: [450, 550], collision: [1400, 1800], boss: 2200 }),
+  3: Object.freeze({ shot: [600, 750], collision: [2000, 2600], boss: 3000 }),
+});
+// Bosses, fragmentos do boss asteroide e o que eles lançam (enemy.bossThreat) batem como boss
+export function isBossThreat(type, enemy = {}) {
+  if (typeof enemy.bossThreat === 'boolean') return enemy.bossThreat;
+  const category = enemyCategory(type, enemy);
+  return category === 'boss' || category === 'fragment';
+}
+function threatAt(range, room) {
+  return Math.round(range[0] + (range[1] - range[0]) * roomProgress(room));
+}
+export function enemyShotDamage(type, room = 2, chapter = 1, enemy = {}) {
+  const threat = ENEMY_THREAT[clampChapter(chapter)];
+  return isBossThreat(type, enemy) ? threat.boss : threatAt(threat.shot, room);
+}
+export function enemyContactDamage(type, room = 2, chapter = 1, enemy = {}) {
+  const threat = ENEMY_THREAT[clampChapter(chapter)];
+  return isBossThreat(type, enemy) ? threat.boss : threatAt(threat.collision, room);
 }
 export function scaledEnemyHealth(baseHealth, room, chapter = 1) {
   return Number((baseHealth * hpMultiplier(room) * chapterHealthMultiplier(chapter)).toFixed(6));
@@ -181,11 +210,11 @@ export function attackProfile(type, room = 2, volley = 0, enemy = {}) {
   if (generation === 1) {
     const pattern = volley % 2 ? 'fan' : 'ring';
     return { category:'fragment', pattern, projectile:pattern === 'ring' ? 'enemyOrb' : 'enemyPlasma',
-      count:pattern === 'ring' ? 5 : 3, interval:2.70, charge:.7, speed:4.71, damage:20, range:25 };
+      count:pattern === 'ring' ? 5 : 3, interval:2.70, charge:.7, speed:4.71, range:25 };
   }
   if (generation >= 2) {
     return { category:'fragment', pattern:'aim', projectile:'enemyOrb', count:1,
-      interval:3.20, charge:.7, speed:4.31, damage:18, range:25 };
+      interval:3.20, charge:.7, speed:4.31, range:25 };
   }
   if (type === 'boss') {
     const phase = finalBossPhase(enemy);
@@ -194,7 +223,7 @@ export function attackProfile(type, room = 2, volley = 0, enemy = {}) {
       : {interval:1.45,movementSpeed:1.40,speed:6.90};
     const pattern = volley % 2 ? 'fan' : 'ring';
     return { category:'boss', phase, pattern, projectile:pattern === 'ring' ? 'enemyOrb' : 'enemyPlasma',
-      count:pattern === 'ring' ? 10 : 5, charge:.9, damage:32, range:25, ...values };
+      count:pattern === 'ring' ? 10 : 5, charge:.9, range:25, ...values };
   }
   const category = enemyCategory(type, enemy);
   const boss = category === 'boss';
@@ -207,14 +236,12 @@ export function attackProfile(type, room = 2, volley = 0, enemy = {}) {
     : type === 'ufo' || type === 'ufofast' || boss || type === 'compositeEnemy' ? 'enemyPlasma' : 'enemyOrb';
   const intervalBase={mini:3.60,common:3.05,elite:2.85,boss:2.55}[category];
   const intervalDrop={mini:.90,common:.85,elite:.80,boss:.70}[category];
-  const damageBase={mini:12,common:14,elite:16,boss:22}[category];
   const speedBase={mini:3.4,common:3.6,elite:4.0,boss:4.6}[category];
   const speedGrowth={mini:1.4,common:1.6,elite:1.6,boss:1.6}[category];
   return { category, pattern, projectile,
     count: pattern === 'ring' ? (boss ? 10 : 5) : pattern === 'fan' ? (boss ? 5 : 3) : 1,
     interval: intervalBase - intervalDrop * progress,
     speed: speedBase + speedGrowth * progress,
-    damage: Math.round(damageBase + 10 * progress),
     charge: boss ? .9 : .7, range: 25 };
 }
 
@@ -245,33 +272,33 @@ const bossShot = (pattern, projectile, count, values) => ({ category: 'boss', pa
 export const HIVE_MUZZLES = Object.freeze([Object.freeze({ side: -.32, forward: 1.14 }), Object.freeze({ side: .32, forward: 1.14 })]);
 // lockLead: acompanha o jogador durante a carga e só trava a mira esse tempo antes do disparo.
 // recoil: depois de disparar, a Colmeia fica parada apontando para onde atirou (grace period).
-export const HIVE_HUNT_SHOT = Object.freeze({ interval: 1.8, charge: .7, lockLead: .12, speed: 18, damage: 40, range: 34, recoil: .9 });
+export const HIVE_HUNT_SHOT = Object.freeze({ interval: 1.8, charge: .7, lockLead: .12, speed: 18, range: 34, recoil: .9 });
 // Torreta: recarga, 3 tiros seguidos (sem a trava global entre rajadas) e recarrega de novo
-export const HIVE_TURRET_SALVO = Object.freeze({ volleys: 3, windUp: 1, followUpCharge: .05, gap: .1, cooldown: .5, lockLead: .12, speed: 28, damage: 60, range: 36, recoil: .5 });
+export const HIVE_TURRET_SALVO = Object.freeze({ volleys: 3, windUp: 1, followUpCharge: .05, gap: .1, cooldown: .5, lockLead: .12, speed: 28, range: 36, recoil: .5 });
 
 // Canhões nas pontas das asas da Harpia (buildHarpy) e a rajada que ela dispara parada
 export const HARPY_WING_GUNS = Object.freeze([Object.freeze({ side: -1.12, forward: .41 }), Object.freeze({ side: 1.12, forward: .41 })]);
 // A Harpia é o boss final do capítulo: seu tiro é um pouco mais rápido que o mais rápido da Colmeia
 export const HARPY_SHOT_SPEED = HIVE_TURRET_SALVO.speed + 4;
-// Cada tiro que acerta pesa muito (150–200); o i-frame de projétil (0,5 s) limita a rajada a ~2 hits por segundo
-export const HARPY_GLIDE_SHOT = Object.freeze({ charge: .5, lockLead: .12, speed: HARPY_SHOT_SPEED, damage: 180, range: 30 });
-export const HARPY_BURST_SHOT = Object.freeze({ interval: .32, charge: .12, lockLead: .06, speed: HARPY_SHOT_SPEED, damage: 160, range: 30 });
+// O i-frame de projétil (0,5 s) limita a rajada a ~2 hits por segundo
+export const HARPY_GLIDE_SHOT = Object.freeze({ charge: .5, lockLead: .12, speed: HARPY_SHOT_SPEED, range: 30 });
+export const HARPY_BURST_SHOT = Object.freeze({ interval: .32, charge: .12, lockLead: .06, speed: HARPY_SHOT_SPEED, range: 30 });
 
-/** Mini-harpia: mesmos tiros da Harpia (planando e rajada pelas asas), mais lentos e fracos. */
-export const MINI_HARPY_SHOT = Object.freeze({ speed: 18, damage: 14, range: 26, glideInterval: 2.8, burstInterval: .38 });
+/** Mini-harpia: mesmos tiros da Harpia (planando e rajada pelas asas), mais lentos e com dano de inimigo comum. */
+export const MINI_HARPY_SHOT = Object.freeze({ speed: 18, range: 26, glideInterval: 2.8, burstInterval: .38 });
 export function miniHarpyProfile(enemy = {}) {
-  const { speed, damage, range, glideInterval, burstInterval } = MINI_HARPY_SHOT;
-  const shot = { category: 'elite', pattern: 'aim', projectile: 'harpyShot', count: 1, speed, damage, range };
+  const { speed, range, glideInterval, burstInterval } = MINI_HARPY_SHOT;
+  const shot = { category: 'elite', pattern: 'aim', projectile: 'harpyShot', count: 1, speed, range };
   return enemy.harpyMode === 'burst'
     ? { ...shot, burst: true, interval: burstInterval, charge: .12, lockLead: .06, muzzles: HARPY_WING_GUNS, converge: true }
     : { ...shot, interval: glideInterval, charge: .5, lockLead: .12 };
 }
 
-/** Mini-colmeia: mesma rajada dupla, mais fraca, escalando com a sala. */
+/** Mini-colmeia: mesma rajada dupla, mais lenta, com dano de inimigo comum, escalando com a sala. */
 export function miniHiveProfile(room = 2) {
   const progress = roomProgress(room);
   return { category: 'elite', pattern: 'aim', projectile: 'hiveShot', count: 1, muzzles: HIVE_MUZZLES, converge: true, lockLead: .12,
-    interval: 2.6 - .4 * progress, charge: .7, speed: 12 + 1.5 * progress, damage: Math.round(18 + 8 * progress), range: 30, recoil: .7 };
+    interval: 2.6 - .4 * progress, charge: .7, speed: 12 + 1.5 * progress, range: 30, recoil: .7 };
 }
 
 /** Rajadas de cada boss; dependem do estado que a IA escreve no inimigo (hangar, vida, fase). */
@@ -281,11 +308,11 @@ export function chapterBossProfile(type, volley = 0, enemy = {}) {
     const aimed = { muzzles: HIVE_MUZZLES, converge: true };
     if (enemy.hiveMode !== 'turret') return bossShot('aim', 'hiveShot', 1, { ...HIVE_HUNT_SHOT, ...aimed });
     // Torreta: `interval - charge` é a espera até a próxima carga começar
-    const { volleys, windUp, followUpCharge, gap, cooldown, speed, damage, range, recoil, lockLead } = HIVE_TURRET_SALVO;
+    const { volleys, windUp, followUpCharge, gap, cooldown, speed, range, recoil, lockLead } = HIVE_TURRET_SALVO;
     const step = volley % volleys;
     const charge = step === 0 ? windUp : followUpCharge;
     return bossShot('aim', 'enemyLance', 1, {
-      ...aimed, speed, damage, range, recoil, lockLead, charge, salvoStep: step,
+      ...aimed, speed, range, recoil, lockLead, charge, salvoStep: step,
       ignoreVolleyGate: step > 0,
       interval: step === volleys - 1 ? cooldown + charge : charge + gap,
     });
@@ -294,8 +321,8 @@ export function chapterBossProfile(type, volley = 0, enemy = {}) {
     const enraged = enemy.maxHealth ? enemy.health / enemy.maxHealth <= .5 : false;
     const timing = { interval: enraged ? .9 : 1.15, charge: .35, enraged };
     return volley % 4 === 3
-      ? bossShot('fan', 'enemyPlasma', 3, { ...timing, speed: 5.6, damage: 26 })
-      : bossShot('spiral', 'enemyOrb', enraged ? 6 : 4, { ...timing, speed: 4.4, damage: 18, twist: .38 });
+      ? bossShot('fan', 'enemyPlasma', 3, { ...timing, speed: 5.6 })
+      : bossShot('spiral', 'enemyOrb', enraged ? 6 : 4, { ...timing, speed: 4.4, twist: .38 });
   }
   const phase = finalBossPhase(enemy);
   if (type === 'harpyBoss') {
@@ -308,20 +335,20 @@ export function chapterBossProfile(type, volley = 0, enemy = {}) {
   }
   // Colosso: baterias em leque, bordada na fase 2 e espiral do reator na fase 3
   if (phase === 1) {
-    const timing = { phase, interval: 1.8, charge: .9, speed: 6, damage: 34 };
+    const timing = { phase, interval: 1.8, charge: .9, speed: 6 };
     return volley % 2
       ? bossShot('fan', 'enemyMissile', 3, { ...timing, spread: .12 })
       : bossShot('fan', 'enemyPlasma', 6, { ...timing, spread: .2 });
   }
   if (phase === 2) {
-    const timing = { phase, interval: 1.6, charge: .85, speed: 6.4, damage: 36 };
+    const timing = { phase, interval: 1.6, charge: .85, speed: 6.4 };
     return volley % 2
       ? bossShot('broadside', 'enemyPlasma', 12, { ...timing, spread: .18 })
       : bossShot('fan', 'enemyPlasma', 5, timing);
   }
   return volley % 2
-    ? bossShot('fan', 'enemyMissile', 3, { phase, interval: 1.1, charge: .6, speed: 7, damage: 38, spread: .3 })
-    : bossShot('spiral', 'enemyOrb', 6, { phase, interval: 1.1, charge: .6, speed: 5.4, damage: 28, twist: .45 });
+    ? bossShot('fan', 'enemyMissile', 3, { phase, interval: 1.1, charge: .6, speed: 7, spread: .3 })
+    : bossShot('spiral', 'enemyOrb', 6, { phase, interval: 1.1, charge: .6, speed: 5.4, twist: .45 });
 }
 
 // Quatro placas de ±0,42 rad no anel do Bastião. shieldRotation é a rotação do anel no mundo (eixo Y).

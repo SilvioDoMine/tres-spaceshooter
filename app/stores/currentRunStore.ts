@@ -18,6 +18,7 @@ import { incomingHit, type DamageContext, type DamageSource } from '~/utils/ship
 import { useHeartStore } from '~/stores/useHeartStore';
 import { useEquipmentEffectsStore } from '~/stores/useEquipmentEffectsStore';
 import { applyElementalHit, createElementState, emitElementalFx, resetElementState, thawElementState, tickElementState } from '~/utils/elementalStatus';
+import { COLLISION_IFRAME, COLLISION_KNOCKBACK, createIFrameGate } from '~/utils/combatPatterns';
 
 type PlayerDamageContext = DamageContext & { elements?: any; text?: string };
 
@@ -80,6 +81,10 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
   // Fogo, gelo e raio aplicados na nave do jogador (objeto simples, lido no game loop)
   const playerElements = createElementState();
+
+  // Colisão: i-frame só de colisão (a nave pisca) e empurrão para longe de quem encostou (lidos no game loop)
+  const collisionGate = createIFrameGate(COLLISION_IFRAME);
+  const knockback = { x: 0, z: 0 };
 
   // Velocidade atual (ref simples é ok, muda raramente)
   const currentMoveSpeed = ref(PlayerBaseStats.moveSpeed); // Exemplo: 5 unidades por segundo
@@ -157,6 +162,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     playerRotation.value = { x: 0, y: 0, z: 0 };
     moveVector.value = { x: 0, y: 0, z: 0 };
     resetElementState(playerElements);
+    resetCollision();
     currentMoveSpeed.value = PlayerBaseStats.moveSpeed;
     shotCooldownTotal.value = PlayerBaseStats.projectiles.shotCooldown;
     shotCooldown.value = PlayerBaseStats.projectiles.shotCooldown;
@@ -191,6 +197,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     isDoorActive.value = false;
     playerPosition.value = { ...stage.playerStartPosition };
     resetElementState(playerElements);
+    resetCollision();
     isWaveInProgress.value = false;
     roomCurrentWaveIndex.value = 0;
     currentMoveSpeed.value = playerStats.moveSpeed;
@@ -303,6 +310,46 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
         applyPlayerDamage(result.freezeDamage, 'environment', undefined, 'freeze');
       }
     }
+  }
+
+  /**
+   * Encostar em inimigo: dano de colisão, i-frame só de colisão e empurrão para longe de `from`.
+   * Retorna false se a nave ainda estava imune.
+   */
+  function takeCollision(amount: number, from?: { x: number; z: number }) {
+    if (currentHealth.value <= 0 || !collisionGate.consume()) return false;
+    takeDamage(amount, 'collision');
+    if (currentHealth.value <= 0) return true;
+    const position = getPlayerPosition();
+    const dx = position.x - (from?.x ?? position.x), dz = position.z - (from?.z ?? position.z);
+    const distance = Math.hypot(dx, dz);
+    // Encostou bem no centro: empurra para trás da nave
+    const yaw = getPlayerRotation().y;
+    const direction = distance > 1e-6 ? { x: dx / distance, z: dz / distance } : { x: Math.sin(yaw), z: Math.cos(yaw) };
+    knockback.x = direction.x * COLLISION_KNOCKBACK.speed;
+    knockback.z = direction.z * COLLISION_KNOCKBACK.speed;
+    return true;
+  }
+
+  /** Avança o i-frame de colisão e devolve o deslocamento do empurrão neste frame. */
+  function updateCollision(delta: number) {
+    collisionGate.update(delta);
+    const step = { x: knockback.x * delta, z: knockback.z * delta };
+    const decay = Math.exp(-COLLISION_KNOCKBACK.decay * delta);
+    knockback.x *= decay;
+    knockback.z *= decay;
+    return step;
+  }
+
+  /** Segundos restantes de imunidade a colisão (a nave pisca enquanto for > 0). */
+  function getCollisionGrace() {
+    return collisionGate.remaining;
+  }
+
+  function resetCollision() {
+    collisionGate.reset();
+    knockback.x = 0;
+    knockback.z = 0;
   }
 
   /** Subtrai a vida do jogador, com texto, feedback e game over. */
@@ -564,6 +611,9 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     canPlayerMoveTo,
 
     takeDamage, // Função para o jogador receber dano
+    takeCollision, // Colisão com inimigo: dano, i-frame de colisão e empurrão
+    updateCollision, // Avança o i-frame de colisão e devolve o empurrão do frame
+    getCollisionGrace, // Tempo restante de imunidade a colisão
     updateElements, // Ticks de fogo e gelo na nave do jogador
     getPlayerElements, // Estado elemental da nave do jogador
     healPlayer, // Função para curar o jogador

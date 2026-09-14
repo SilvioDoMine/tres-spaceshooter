@@ -109,6 +109,9 @@ onBeforeRender(({ delta }) => {
   while (yawDiff < -Math.PI) yawDiff += 2 * Math.PI;
   visualYaw += yawDiff * (1 - Math.exp(-Math.min(delta, .1) * VISUAL_TURN_RATE));
   playerMeshRef.value.rotation.set(rotation.x, visualYaw, rotation.z);
+  // Imune a colisão: a nave pisca enquanto dura o i-frame
+  const collisionGrace = currentRun.getCollisionGrace();
+  playerMeshRef.value.visible = !(collisionGrace > 0 && currentRun.currentHealth > 0 && Math.floor(collisionGrace * 10) % 2 === 1);
   elementTime += Math.min(delta, .1);
   const elements = currentRun.getPlayerElements();
   if (elements.burn || elements.freeze || elements.shock > 0 || elementTint.tinted) elementTint.materials = collectMaterials(playerMeshRef.value as any);
@@ -149,7 +152,6 @@ onBeforeRender(({ delta }) => {
   -->
   <TresGroup ref="playerMeshRef"
     name="PlayerCharacter"
-    :visible="true"
   >
     <GameKestrelShip gameplay /></TresGroup>
   <TresMesh

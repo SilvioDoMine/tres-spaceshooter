@@ -20,6 +20,7 @@ const { aggregateTalentBonuses, emptyTalentBonuses, pickTalent } = await import(
 const { computePlayerStats } = await import('../app/utils/equipment.ts');
 const { combatAttributes, incomingHit, outgoingHit, withRunSkills, adrenalineMultiplier, headshotKills, siphonHeal } = await import('../app/utils/shipAttributes.ts');
 const elemental = await import('../app/utils/elementalStatus.js');
+const patterns = await import('../app/utils/combatPatterns.js');
 const base = { maxHealth: 250, moveSpeed: 7, projectiles: { damage: 50, shotCooldown: .85 } };
 const attrs = overrides => combatAttributes({ ...emptyTalentBonuses(), ...overrides });
 
@@ -115,6 +116,31 @@ test('player freezes from an elemental attack, thaws on other damage and burns o
   assert.equal(run.getPlayerElements().freeze, null); // trocar de sala limpa os efeitos
 });
 
+test('collision hits hard, grants a collision-only grace of 1.5 s and knocks the ship away from the enemy', () => {
+  const { run } = runHarness();
+  run.setMaxHealth(2000); run.healPlayer(2000, false);
+  run.setPlayerPosition(0, 0, 0);
+  assert.equal(run.takeCollision(800, { x: -1, z: 0 }), true);
+  assert.equal(run.currentHealth, 1200);
+  assert.equal(run.getCollisionGrace(), patterns.COLLISION_IFRAME);
+  assert.equal(run.takeCollision(800, { x: 1, z: 0 }), false, 'immune to another collision');
+  assert.equal(run.currentHealth, 1200);
+  run.takeDamage(100, 'attack');
+  assert.equal(run.currentHealth, 1100, 'shots still land during the collision grace');
+  let pushed = 0;
+  for (let i = 0; i < 149; i++) {
+    const step = run.updateCollision(.01);
+    assert.ok(step.x >= 0 && step.z === 0, 'pushed straight away from the enemy');
+    pushed += step.x;
+  }
+  assert.ok(pushed > 2 && pushed < 3.5, `knockback distance ${pushed.toFixed(2)}`);
+  assert.equal(run.takeCollision(800, { x: 1, z: 0 }), false);
+  run.updateCollision(.02);
+  assert.equal(run.getCollisionGrace(), 0);
+  assert.equal(run.takeCollision(800, { x: 1, z: 0 }), true);
+  assert.equal(run.currentHealth, 300, 'another 800 would kill this ship');
+});
+
 test('dodge affects attacks only; collision applies flat then percent and clamps at zero', () => {
   const stats = attrs({ dodgePercent: 100, collisionReductionFlat: 15, collisionReductionPercent: 10 });
   assert.deepEqual(incomingHit(100, 'attack', stats, () => 0), { damage: 0, dodged: true });
@@ -179,7 +205,7 @@ function runHarness(overrides = {}) {
   };
   const context = vm.createContext({
     ref, shallowRef, computed, Math, console: { log() {}, warn() {} },
-    computePlayerStats, emptyTalentBonuses, incomingHit, withRunSkills, adrenalineMultiplier, ...elemental,
+    computePlayerStats, emptyTalentBonuses, incomingHit, withRunSkills, adrenalineMultiplier, ...elemental, ...patterns,
     COMBAT_BASE: { heartDropChance: .1 },
     defineStore: (_id, setup) => { let store; return () => store ??= reactive(setup()); },
     useEquipmentStore: () => ({ stats: permanent }),

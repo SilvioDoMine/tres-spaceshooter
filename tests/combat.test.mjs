@@ -38,13 +38,13 @@ test('enemy ammunition varies without increasing salvo damage or density',()=>{
  for(const room of [2,10,20]){
   const plasma=attackProfile('ufofast',room,1),missile=attackProfile('ufofast',room,2);
   assert.equal(missile.projectile,'enemyMissile');
-  for(const field of ['count','speed','damage','interval','charge','range'])assert.equal(missile[field],plasma[field]);
+  for(const field of ['count','speed','interval','charge','range'])assert.equal(missile[field],plasma[field]);
  }
 });
 test('all progression tiers keep attacks bounded and leave ring gaps',()=>{
  for(let room=2;room<=20;room++)for(const type of ['miniasteroid','asteroid','ufo','ufofast','boss','asteroidBoss']){
   const p=attackProfile(type,room,0,type==='boss'?{health:7800,maxHealth:7800}:{});
-  assert.ok(p.speed<=6.9 && p.damage<=32 && p.interval>=1.45 && p.count<=10);
+  assert.ok(p.speed<=6.9 && p.interval>=1.45 && p.count<=10);
   const directions=attackDirections(p,{x:1,z:0},0);
   assert.equal(directions.length,p.count);
   directions.forEach(d=>assert.ok(Math.abs(Math.hypot(d.x,d.z)-1)<1e-9));

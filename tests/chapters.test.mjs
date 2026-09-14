@@ -8,7 +8,7 @@ import { completeChapter, emptyChapterProgress, sanitizeChapterProgress } from '
 import { playableRoomCount } from '../app/utils/progression.js';
 import {
   BASTION_SHIELD_HALF_ARC, CHAPTER_BOSSES, HIVE_HUNT_SHOT, HIVE_MUZZLES, HIVE_TURRET_SALVO, attackDirections, attackProfile,
-  PLAYER_HITBOX_RADIUS, bastionShieldBlocks, chapterDamageMultiplier, chapterHealthMultiplier, enemyCategory, muzzlePosition,
+  PLAYER_HITBOX_RADIUS, bastionShieldBlocks, chapterHealthMultiplier, enemyCategory, muzzlePosition,
   normalAsteroidFragmentStats, scaledEnemyHealth,
 } from '../app/utils/combatPatterns.js';
 import { HARPY, HIVE, HIVE_DRONE, MINI_HARPY, MINI_HIVE, createBossBehaviors } from '../app/utils/bossBehaviors.js';
@@ -58,7 +58,7 @@ test('after the Harpy, chapter 3 fields every enemy met so far, including mini-h
 
 test('mini-harpy flies the Harpy loop with a shorter burst, a smaller dash and weaker shots', () => {
   const mini = { id: 'mh', type: 'miniHarpy', position: { x: 0, z: -8 }, speed: 1.2, size: 1.3, health: 100, maxHealth: 100, onHitDamage: 20 };
-  const { behaviors, hits } = bossHarness(mini);
+  const { behaviors, contacts } = bossHarness(mini);
   const modes = [];
   for (let t = 0, frame = 0; t < 25; t += .02, frame++) {
     behaviors.miniHarpy(mini, .02);
@@ -66,14 +66,14 @@ test('mini-harpy flies the Harpy loop with a shorter burst, a smaller dash and w
     if (mini.harpyMode === 'burst' && frame % 10 === 0) mini.attackClock.volley += 1;
   }
   assert.deepEqual(modes.slice(0, 11), ['glide', 'turn', 'settle', 'burst', 'rest', 'glide', 'turn', 'settle', 'charge', 'dash', 'recover']);
-  assert.ok(hits.includes(MINI_HARPY.dashDamage));
+  assert.ok(contacts.includes('dash'), 'the dash runs over the player');
   assert.ok(MINI_HARPY.dashLength < HARPY.dashLength && MINI_HARPY.dashHitRadius < HARPY.dashHitRadius);
   assert.ok(MINI_HARPY.burstShots[0] < HARPY.burstShots[0] && MINI_HARPY.glideSpeed < HARPY.glideSpeed);
 
   const glide = attackProfile('miniHarpy', 12, 0, { harpyMode: 'glide' });
   const burst = attackProfile('miniHarpy', 12, 0, { harpyMode: 'burst' });
   const bossGlide = attackProfile('harpyBoss', 20, 0, { harpyMode: 'glide' });
-  assert.ok([glide, burst].every(p => p.projectile === 'harpyShot' && p.speed < bossGlide.speed && p.damage < bossGlide.damage));
+  assert.ok([glide, burst].every(p => p.projectile === 'harpyShot' && p.speed < bossGlide.speed));
   assert.ok(burst.converge && burst.muzzles.length === 2 && burst.burst);
 });
 
@@ -92,8 +92,6 @@ test('chapter progress unlocks the next chapter and survives bad data', () => {
 
 test('chapter scaling leaves chapter 1 untouched and grows afterwards', () => {
   assert.deepEqual([1, 2, 3].map(chapterHealthMultiplier), [1, 1.45, 1.9]);
-  assert.deepEqual([1, 2, 3].map(chapterDamageMultiplier), [1, 1.25, 1.5]);
-  assert.equal(chapterDamageMultiplier(undefined), 1);
   assert.equal(scaledEnemyHealth(500, 16), 640);
   assert.equal(scaledEnemyHealth(500, 16, 2), 928);
   assert.deepEqual(normalAsteroidFragmentStats(2, 3), { count: 2, health: 119.7, baseXP: 5 });
@@ -111,7 +109,7 @@ test('chapter bosses are boss category with bounded, well-formed volleys', () =>
       assert.ok(p.count >= 1 && p.count <= 12, `${type} count`);
       assert.ok(p.charge < p.interval, `${type} telegraph fits the interval`);
       // Exceções propositais: a lança da Colmeia (rápida e letal) e a rajada seguida da Harpia
-      if (type !== 'hiveBoss' && type !== 'harpyBoss') assert.ok(p.interval >= .9 && p.damage <= 40 && p.speed <= 7, `${type} timing`);
+      if (type !== 'hiveBoss' && type !== 'harpyBoss') assert.ok(p.interval >= .9 && p.speed <= 7, `${type} timing`);
       const directions = attackDirections(p, { x: 0, z: 1 }, volley);
       assert.equal(directions.length, p.count);
       directions.forEach(d => assert.ok(Math.abs(Math.hypot(d.x, d.z) - 1) < 1e-9));
@@ -129,8 +127,6 @@ test('chapter bosses are boss category with bounded, well-formed volleys', () =>
     assert.ok(p.lockLead > 0 && p.lockLead < p.charge, 'tracks the player until just before firing');
   }
   assert.deepEqual(HARPY.burstShots, [12, 14, 18], 'burst is twice as long as before (6, 7, 9)');
-  for (const p of [glide, burst]) assert.ok(p.damage >= 150 && p.damage <= 200, `each harpy shot hits hard (${p.damage})`);
-  assert.ok(HARPY.dashDamage >= 300 && HARPY.dashDamage <= 400, 'the dash is nearly a one-hit kill');
   assert.ok(HARPY.burstTimeout >= HARPY.burstShots[2] * burst.interval, 'timeout never cuts the burst short');
 });
 
@@ -145,7 +141,7 @@ test('hive fires twin shots from its two front exits; hunt shots are fast and th
   }
   assert.ok([hunt, ...salvo].every(p => p.converge && p.lockLead > 0), 'converging shots that track until just before firing');
   assert.equal(hunt.projectile, 'hiveShot');
-  assert.ok(hunt.range >= 30 && hunt.damage >= 40 && hunt.speed >= 18, 'normal shot is as fast as the old turret shot');
+  assert.ok(hunt.range >= 30 && hunt.speed >= 18, 'normal shot is as fast as the old turret shot');
   assert.ok(salvo.every(p => p.projectile === 'enemyLance' && p.speed > hunt.speed + 5), 'turret shots are faster still');
   assert.deepEqual(salvo.map(p => p.salvoStep), [0, 1, 2, 0]);
   assert.deepEqual(salvo.map(p => p.ignoreVolleyGate), [false, true, true, false]);
@@ -161,7 +157,7 @@ test('hive fires twin shots from its two front exits; hunt shots are fast and th
 
   const mini = attackProfile('miniHive', 12, 0, {});
   assert.equal(mini.muzzles, HIVE_MUZZLES);
-  assert.ok(mini.damage < hunt.damage);
+  assert.ok(mini.speed < hunt.speed);
 });
 
 test('broadside fires sideways and spiral arms advance each volley', () => {
@@ -188,12 +184,13 @@ test('bastion shield plates block shots arriving through them and follow the rot
 });
 
 function bossHarness(enemy, player = { x: 0, z: 0 }) {
-  const active = { value: [enemy] }, hits = [], deaths = [];
+  const active = { value: [enemy] }, hits = [], contacts = [], deaths = [];
   let serial = 0;
   const behaviors = createBossBehaviors({
     activeEnemies: active,
     playerPosition: { value: player },
-    applyCollisionDamage: damage => hits.push(damage),
+    // hits: dano de quem encostou; contacts: em que etapa da Harpia foi (ex.: 'dash')
+    applyCollisionDamage: source => { hits.push(source.onHitDamage); contacts.push(source.harpy?.mode); },
     enemyManager: {
       spawnEnemy: (type, options) => {
         const spawned = { id: `add${++serial}`, type, state: options.state ?? 'spawning', size: .7, health: 60,
@@ -207,7 +204,7 @@ function bossHarness(enemy, player = { x: 0, z: 0 }) {
       },
     },
   });
-  return { behaviors, active, hits, deaths };
+  return { behaviors, active, hits, contacts, deaths };
 }
 
 test('bosses attack by distance even off a narrow screen; regular enemies still need to be on screen', () => {
@@ -246,7 +243,7 @@ test('hive hunts slowly toward the player, then turns into a stationary turret w
   assert.equal(drones().length, HIVE.launchCount);
   drones().forEach(d => {
     assert.equal(d.state, 'active', 'fighters leave the hangar already flying');
-    assert.equal(d.onHitDamage, HIVE.droneDamage);
+    assert.equal(d.bossThreat, true, 'Hive fighters hit like the boss');
     assert.ok(Math.abs(Math.hypot(d.launchDirection.x, d.launchDirection.z) - 1) < 1e-9);
   });
   assert.equal(hive.hiveMode, 'turret', 'stays a turret while fighters live');
@@ -358,7 +355,7 @@ test('mini-hive runs the same cycle with fewer fighters and holds fire while lau
   assert.equal(mini.holdFire, true);
   const fighters = active.value.filter(e => e.summonerId === 'm');
   assert.equal(fighters.length, MINI_HIVE.launchCount);
-  assert.ok(fighters.every(d => d.onHitDamage === MINI_HIVE.droneDamage));
+  assert.ok(fighters.every(d => d.bossThreat === false), 'mini-hive fighters hit like regular enemies');
 });
 
 test('fighters launch fast, accelerate, turn wider the faster they fly, and self-destruct', () => {
@@ -401,7 +398,7 @@ test('fighters launch fast, accelerate, turn wider the faster they fly, and self
 
 test('harpy loop: fast glide, U-turn and burst; the next U-turn charges a long, wide dash', () => {
   const harpy = { id: 'h', type: 'harpyBoss', position: { x: 0, z: -9 }, speed: 1.2, size: 3.2, health: 100, maxHealth: 100, onHitDamage: 50 };
-  const { behaviors, hits } = bossHarness(harpy);
+  const { behaviors, contacts } = bossHarness(harpy);
   const modes = [], glideDistances = [];
   // Mede a distância só depois de 1,5 s planando (já assentada na órbita)
   const inGlide = h => h.harpy.timer < HARPY.glideDuration[0] - 1.5;
@@ -433,7 +430,7 @@ test('harpy loop: fast glide, U-turn and burst; the next U-turn charges a long, 
   assert.ok(dashStart && dashEnd);
   assert.ok(Math.abs(Math.hypot(dashEnd.x - dashStart.x, dashEnd.z - dashStart.z) - HARPY.dashLength) < .5, 'nearly edge-to-edge');
   assert.ok(HARPY.dashLength >= 24 && HARPY.dashSpeed >= 25);
-  assert.ok(hits.includes(HARPY.dashDamage), 'the dash runs over the player');
+  assert.ok(contacts.includes('dash'), 'the dash runs over the player');
 });
 
 test('harpy stops still for the burst and the dash wind-up', () => {

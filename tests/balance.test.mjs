@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { LEVEL_1 } from '../app/games/levels/LevelOneConfig.js';
 import {
-  ASTEROID_BOSS_STAGES, COLLISION_IFRAME, PROJECTILE_IFRAME,
+  ASTEROID_BOSS_STAGES, CHAPTER_BOSSES, COLLISION_IFRAME, ENEMY_THREAT, PROJECTILE_IFRAME,
+  enemyContactDamage, enemyShotDamage,
   asteroidBossEffectiveHealth, attackProfile, createIFrameGate, finalBossPhase,
   hpMultiplier, normalAsteroidFragmentStats, roomProgress,
   scaledEnemyExperience, scaledEnemyHealth, shotFormation,
@@ -62,32 +63,66 @@ test('asteroid boss has seven bodies, 5000 effective HP and 1200 XP', () => {
 
 test('enemy attack progression and special asteroid generations are exact', () => {
   const expected={
-    miniasteroid:[[3.6,12,3.4],[2.7,22,4.8]],
-    ufo:[[3.05,14,3.6],[2.2,24,5.2]],
-    ufofast:[[2.85,16,4],[2.05,26,5.6]],
-    miniboss:[[2.55,22,4.6],[1.85,32,6.2]],
+    miniasteroid:[[3.6,3.4],[2.7,4.8]],
+    ufo:[[3.05,3.6],[2.2,5.2]],
+    ufofast:[[2.85,4],[2.05,5.6]],
+    miniboss:[[2.55,4.6],[1.85,6.2]],
   };
   for(const [type,ends] of Object.entries(expected)) {
     for(const [room,index] of [[2,0],[20,1]]) {
       const p=attackProfile(type,room,0);
       assert.ok(Math.abs(p.interval-ends[index][0])<1e-12);
-      assert.equal(p.damage,ends[index][1]); assert.ok(Math.abs(p.speed-ends[index][2])<1e-12);
+      assert.ok(Math.abs(p.speed-ends[index][1])<1e-12);
     }
   }
   const main=attackProfile('asteroidBoss',10,0,{asteroidGeneration:0});
-  assert.ok(Math.abs(main.interval-2.238888888888889)<1e-12); assert.equal(main.damage,26);
+  assert.ok(Math.abs(main.interval-2.238888888888889)<1e-12);
   const gen1=attackProfile('asteroidBoss',10,0,{asteroidGeneration:1});
   const gen2=attackProfile('asteroidBoss',10,0,{asteroidGeneration:2});
-  assert.deepEqual([gen1.count,gen1.interval,gen1.damage,gen1.speed],[5,2.7,20,4.71]);
-  assert.deepEqual([gen2.count,gen2.interval,gen2.damage,gen2.speed],[1,3.2,18,4.31]);
+  assert.deepEqual([gen1.count,gen1.interval,gen1.speed],[5,2.7,4.71]);
+  assert.deepEqual([gen2.count,gen2.interval,gen2.speed],[1,3.2,4.31]);
+});
+
+test('enemy threat: shots kill in a few hits, collisions nearly one-shot and bosses hit like collisions', () => {
+  const hitsToKill=(health,damage)=>Math.ceil(health/damage);
+  // Capítulo 1: pelado (250) morre em no máximo 2 tiros; no fim, com ~1000 de vida, em até 3
+  for(const type of ['miniasteroid','asteroid','ufo','ufofast','torusEnemy','compositeEnemy'])
+    assert.ok(hitsToKill(250,enemyShotDamage(type,2,1))<=2,type);
+  assert.ok(hitsToKill(1000,enemyShotDamage('ufo',20,1))<=3);
+  // Capítulo 2: 1250–2000 de vida morre em 3 a 5 tiros em qualquer sala
+  for(let room=2;room<=20;room++)for(const health of [1250,2000]) {
+    const n=hitsToKill(health,enemyShotDamage('ufofast',room,2));
+    assert.ok(n>=3&&n<=5,`room ${room}, ${health} HP: ${n} hits`);
+  }
+  // Colisão comum: 800 no início; só quem tem muito equipamento sobrevive
+  assert.equal(enemyContactDamage('miniasteroid',2,1),800);
+  assert.ok(enemyContactDamage('kamikaze',20,1)<1000,'a fully geared end-of-chapter ship survives one');
+  // Boss (e fragmentos do boss asteroide): tiro = contato
+  for(const type of ['asteroidBoss','miniboss','boss']) {
+    assert.equal(enemyShotDamage(type,19,1),1500); assert.equal(enemyContactDamage(type,19,1),1500);
+  }
+  assert.equal(enemyShotDamage('asteroidBoss',10,1,{asteroidGeneration:2}),1500);
+  for(const chapter of [2,3])for(const type of CHAPTER_BOSSES) {
+    assert.equal(enemyShotDamage(type,10,chapter),ENEMY_THREAT[chapter].boss);
+    assert.equal(enemyContactDamage(type,10,chapter),ENEMY_THREAT[chapter].boss);
+  }
+  // Caças da Colmeia batem como boss; os da mini-colmeia como inimigo comum
+  assert.equal(enemyContactDamage('hiveDrone',10,2,{bossThreat:true}),ENEMY_THREAT[2].boss);
+  assert.equal(enemyContactDamage('hiveDrone',12,2,{bossThreat:false}),enemyContactDamage('ufo',12,2));
+  for(const chapter of [1,2]) {
+    const now=ENEMY_THREAT[chapter],next=ENEMY_THREAT[chapter+1];
+    assert.ok(next.shot[0]>=now.shot[1]&&next.collision[0]>=now.collision[1]&&next.boss>now.boss);
+    assert.ok(now.boss>now.collision[1],'bosses always hit harder than a collision');
+  }
 });
 
 test('projectile and collision i-frames have independent durations', () => {
-  assert.equal(PROJECTILE_IFRAME,.5); assert.equal(COLLISION_IFRAME,.35);
+  assert.equal(PROJECTILE_IFRAME,.5); assert.equal(COLLISION_IFRAME,1.5);
   const projectile=createIFrameGate(PROJECTILE_IFRAME), collision=createIFrameGate(COLLISION_IFRAME);
   assert.equal(projectile.consume(),true); assert.equal(projectile.consume(),false);
   projectile.update(.49); assert.equal(projectile.consume(),false); projectile.update(.01); assert.equal(projectile.consume(),true);
-  assert.equal(collision.consume(),true); collision.update(.35); assert.equal(collision.consume(),true);
+  assert.equal(collision.consume(),true); collision.update(1.49); assert.equal(collision.consume(),false);
+  collision.update(.01); assert.equal(collision.consume(),true);
 });
 
 const expectedRooms={
@@ -149,7 +184,7 @@ test('final boss has 7800 HP and changes phase at 70 and 40 percent',()=>{
   assert.equal(finalBossPhase({health:5460,maxHealth:7800}),2);
   assert.equal(finalBossPhase({health:3121,maxHealth:7800}),2);
   assert.equal(finalBossPhase({health:3120,maxHealth:7800}),3);
-  assert.deepEqual([1,.7,.4].map(r=>{const p=attackProfile('boss',20,0,{health:7800*r,maxHealth:7800});return [p.phase,p.interval,p.movementSpeed,p.speed,p.damage]}),[
-    [1,1.85,1.1,6.2,32],[2,1.65,1.25,6.6,32],[3,1.45,1.4,6.9,32],
+  assert.deepEqual([1,.7,.4].map(r=>{const p=attackProfile('boss',20,0,{health:7800*r,maxHealth:7800});return [p.phase,p.interval,p.movementSpeed,p.speed]}),[
+    [1,1.85,1.1,6.2],[2,1.65,1.25,6.6],[3,1.45,1.4,6.9],
   ]);
 });

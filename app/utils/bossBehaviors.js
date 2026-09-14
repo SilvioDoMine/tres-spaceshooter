@@ -4,9 +4,9 @@ import { finalBossPhase } from './combatPatterns.js';
 // Os tiros ficam em useEnemyAttacks/attackProfile, que leem o estado escrito aqui.
 
 /** COLMEIA: caça (avança devagar atirando) → torreta (para, lança caças e dispara salvas). */
-export const HIVE = Object.freeze({ huntDuration: 8, stopDistance: 5, launchDelay: .6, launchCount: 4, launchInterval: .35, turretMinimum: 3, droneDamage: 70, holdFireInTurret: false });
-/** Mini-colmeia: o mesmo ciclo, com 2 caças e sem atirar enquanto lança. */
-export const MINI_HIVE = Object.freeze({ huntDuration: 7, stopDistance: 6, launchDelay: .5, launchCount: 2, launchInterval: .45, turretMinimum: 2, droneDamage: 35, holdFireInTurret: true });
+export const HIVE = Object.freeze({ huntDuration: 8, stopDistance: 5, launchDelay: .6, launchCount: 4, launchInterval: .35, turretMinimum: 3, bossDrones: true, holdFireInTurret: false });
+/** Mini-colmeia: o mesmo ciclo, com 2 caças (colisão de inimigo comum) e sem atirar enquanto lança. */
+export const MINI_HIVE = Object.freeze({ huntDuration: 7, stopDistance: 6, launchDelay: .5, launchCount: 2, launchInterval: .45, turretMinimum: 2, bossDrones: false, holdFireInTurret: true });
 /** Caça kamikaze: sai rápido do hangar, desacelera, persegue acelerando e curva menos quanto mais rápido. */
 export const HIVE_DRONE = Object.freeze({ launchSpeed: 11, launchTime: .35, cruiseSpeed: 3.2, maxSpeed: 10.5, acceleration: 3.2, turnFactor: 7, maxTurnRate: 3.5, lifetime: 6 });
 /**
@@ -20,8 +20,8 @@ export const HARPY = Object.freeze({
   // Grace periods: parada e sem atirar entre uma etapa e outra (os pós-ataque são longos para punir a Harpia)
   graceAfterTurn: .8, graceAfterBurst: 2.2, recover: 2.8,
   burstShots: Object.freeze([12, 14, 18]), burstTimeout: 10,
-  // Pegar a investida é quase um hitkill
-  dashCharge: 1.3, dashLockAt: .65, dashLength: 26, dashSpeed: 30, dashHitRadius: 2.2, dashDamage: 350,
+  // Pegar a investida bate como colisão de boss
+  dashCharge: 1.3, dashLockAt: .65, dashLength: 26, dashSpeed: 30, dashHitRadius: 2.2,
 });
 /** Mini-harpia: o mesmo ciclo, mais lenta, com rajada curta e investida menor. */
 export const MINI_HARPY = Object.freeze({
@@ -29,7 +29,7 @@ export const MINI_HARPY = Object.freeze({
   turnSpeed: 8, turnTime: .6, brake: 24,
   graceAfterTurn: .7, graceAfterBurst: 1, recover: 1.2,
   burstShots: Object.freeze([4, 4, 4]), burstTimeout: 4,
-  dashCharge: 1.1, dashLockAt: .65, dashLength: 14, dashSpeed: 20, dashHitRadius: 1.1, dashDamage: 40,
+  dashCharge: 1.1, dashLockAt: .65, dashLength: 14, dashSpeed: 20, dashHitRadius: 1.1,
 });
 export const BASTION_SPIN = Object.freeze({ calm: .7, enraged: 1.1 });
 export const COLOSSUS_ESCORTS = Object.freeze({ every: 11, count: 2, max: 3, reactorExposed: 1.35 });
@@ -75,9 +75,9 @@ export function createBossBehaviors({ enemyManager, activeEnemies, playerPositio
     return toPlayer(enemy).d;
   }
 
-  // Encostar no boss machuca, mas o boss não se destrói (a trava de i-frames evita dano contínuo)
+  // Encostar no boss machuca, mas o boss não se destrói (o i-frame de colisão e o empurrão evitam dano contínuo)
   function contact(enemy, distance) {
-    if (distance <= enemy.size * .6) applyCollisionDamage(enemy.onHitDamage);
+    if (distance <= enemy.size * .6) applyCollisionDamage(enemy);
   }
 
   function liveSummons(enemy) {
@@ -110,7 +110,7 @@ export function createBossBehaviors({ enemyManager, activeEnemies, playerPositio
       position: { x: enemy.position.x + out.x * HANGAR_RADIUS * enemy.size, y: 0, z: enemy.position.z + out.z * HANGAR_RADIUS * enemy.size },
       delay: 0,
       state: 'active',
-      overrides: { summonerId: enemy.id, onHitDamage: config.droneDamage, launchDirection: { x: dirX / norm, z: dirZ / norm } },
+      overrides: { summonerId: enemy.id, bossThreat: config.bossDrones, launchDirection: { x: dirX / norm, z: dirZ / norm } },
     });
   }
 
@@ -236,7 +236,7 @@ export function createBossBehaviors({ enemyManager, activeEnemies, playerPositio
       enemy.position.z += harpy.dashDir.z * step;
       harpy.traveled += step;
       // Hitbox larga durante toda a investida
-      if (toPlayer(enemy).d <= config.dashHitRadius) applyCollisionDamage(config.dashDamage);
+      if (toPlayer(enemy).d <= config.dashHitRadius) applyCollisionDamage(enemy);
       if (harpy.traveled >= config.dashLength - 1e-6) setMode('recover', config.recover);
     } else {
       harpy.timer -= dt;
@@ -297,7 +297,7 @@ export function createBossBehaviors({ enemyManager, activeEnemies, playerPositio
       enemy.visualHeading = headingOf(flight.dir);
 
       if (toPlayer(enemy).d <= enemy.size * .5 + .45) {
-        applyCollisionDamage(enemy.onHitDamage);
+        applyCollisionDamage(enemy);
         enemyManager.takeDamage(enemy.id, enemy.health, 'collision');
       } else if (flight.age >= HIVE_DRONE.lifetime) {
         enemyManager.takeDamage(enemy.id, enemy.health, 'systemkill');
