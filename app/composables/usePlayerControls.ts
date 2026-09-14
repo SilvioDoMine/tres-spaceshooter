@@ -16,6 +16,10 @@ import { weaponMounts, worldHardpoint } from '~/utils/combatPatterns';
 import { emitMuzzleFlash } from '~/utils/weaponVisuals';
 import { useEquipmentEffectsStore } from '~/stores/useEquipmentEffectsStore';
 
+// Abaixo desse erro (~3°) a nave encaixa no ângulo exato do alvo e pode disparar;
+// o salto é imperceptível e garante que o tiro central passe pelo centro do inimigo
+const AIM_SNAP_ANGLE = 0.05;
+
 export function usePlayerControls() {
   const currentRun = useCurrentRunStore();
   const projectileStore = useProjectileStore();
@@ -174,6 +178,9 @@ export function usePlayerControls() {
     if ((dx !== 0 || dz !== 0) === false) {
       // Aponta para o inimigo mais próximo e rotaciona o personagem nessa direção
       const nearestEnemy = projectileStore.nearestEnemyFromPlayer();
+      // Os hardpoints disparam pela rotação do modelo: só libera o tiro quando ela
+      // estiver exatamente no centro do alvo
+      let aimLocked = false;
 
       if (nearestEnemy && nearestEnemy.position) {
         const dirX = nearestEnemy.position.x - position.x;
@@ -193,11 +200,20 @@ export function usePlayerControls() {
         while (diff < -Math.PI) diff += 2 * Math.PI;
 
         // Aplica a interpolação suave
-        rotation.y += diff * rotationSpeed * delta;
+        const step = diff * Math.min(1, rotationSpeed * delta);
+        const remaining = diff - step;
+        rotation.y += step;
+
+        // A interpolação só se aproxima do alvo assintoticamente (e fica atrás de
+        // alvos em movimento); quando falta pouco, encaixa no ângulo exato
+        if (Math.abs(remaining) < AIM_SNAP_ANGLE) {
+          rotation.y += remaining;
+          aimLocked = true;
+        }
       }
 
-      // Verifica se o cooldown do tiro terminou
-      if (currentRun.shotCooldown <= 0) {
+      // Só atira com o cooldown pronto e a nave centralizada no alvo
+      if (currentRun.shotCooldown <= 0 && aimLocked) {
         if (nearestEnemy && nearestEnemy.position) {
           const skills = useSkillStore();
           const volley = equipmentEffects.prepareVolley();
