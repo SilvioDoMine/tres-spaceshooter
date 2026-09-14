@@ -8,6 +8,7 @@ Antes de criar, gerar, remodelar, importar ou alterar uma nave de jogador, um eq
 
 1. Leia integralmente [`docs/SHIP_DESIGN_GUIDE.md`](docs/SHIP_DESIGN_GUIDE.md).
 2. Trate esse documento como a especificação visual canônica do projeto.
+   O guia prevalece sobre blueprints, imagens e modelos de referência; adapte a referência aos slots e regras do guia e registre as diferenças.
 3. Preserve os seis slots modulares: arma, asas, cockpit, gerador, campo de força e propulsores.
 4. Modele bases, molduras, fixadores e conduítes como parte do casco. Equipamentos não podem parecer objetos colados nem atravessar outras peças.
 5. Preserve hardpoints para tiro frontal, dois canhões diagonais pequenos e arma traseira.
