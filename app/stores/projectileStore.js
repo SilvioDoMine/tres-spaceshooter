@@ -5,7 +5,7 @@ import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
 import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import { useSkillStore, SkillsList } from '~/stores/SkillStore';
-import { advanceShot, bastionShieldBlocks, PLAYER_HITBOX_RADIUS, PROJECTILE_IFRAME, segmentHit } from '~/utils/combatPatterns';
+import { worldHardpoint, advanceShot, bastionShieldBlocks, PLAYER_HITBOX_RADIUS, PROJECTILE_IFRAME, segmentHit } from '~/utils/combatPatterns';
 
 const orb = { speed: 4, damage: 18, size: .22, range: 25, color: '#52caff' };
 export const projectilesType = {
@@ -117,6 +117,29 @@ export const useProjectileStore = defineStore('projectileStore', () => {
     const keep=[];
     for(const projectile of projectiles.value) {
       if(projectile._markedForRemoval)continue;
+      if(projectile.spawnDelay>0){projectile.spawnDelay-=deltaTime;keep.push(projectile);continue;}
+      if(projectile.beam) {
+        const {origin,direction}=worldHardpoint(currentRunStore.getPlayerPosition(),currentRunStore.getPlayerRotation().y,projectile.beamMount);
+        projectile.position=origin;projectile.direction=direction;
+        projectile.beamAge+=deltaTime;
+        const maxLength=projectile.range*playerStats.getRangeMultiplier;
+        const end={x:origin.x+direction.x*maxLength,z:origin.z+direction.z*maxLength};
+        const contacts=enemyManager.activeEnemies.value.filter(e=>e.state==='active')
+          .map(e=>({e,t:segmentHit(origin,end,e.position,Math.max(.38,e.size*.48)+.16)}))
+          .filter(c=>c.t!==null).sort((a,b)=>a.t-b.t);
+        const hit=contacts[0];projectile.beamLength=hit?maxLength*hit.t:maxLength;
+        // Five pulses divide the existing burst budget, independent of frame rate.
+        while(projectile.beamTick<5 && projectile.beamAge>=projectile.beamTick*.13) {
+          projectile.beamTick++;
+          if(hit) {
+            const contact={x:origin.x+direction.x*projectile.beamLength,z:origin.z+direction.z*projectile.beamLength};
+            if(!bastionShieldBlocks(hit.e,contact))enemyManager.takeDamage(hit.e.id,projectile.damage/5,'shot',{canCrit:true});
+            emitImpact(contact.x,contact.z,false,'hit');
+          }
+        }
+        if(projectile.beamAge<projectile.beamDuration)keep.push(projectile);
+        continue;
+      }
       const distance=projectile.speed*deltaTime*(projectile.ownerType==='player'?playerStats.getProjectileSpeedMultiplier:1);
       // Curves use short segments; faster straight shots use swept collisions.
       const steps=projectile.rearTurn?Math.max(1,Math.ceil(distance/.22)):1;
@@ -126,7 +149,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
         collide(projectile,start);
         if(projectile._markedForRemoval)break;
       }
-      if(projectile.ricochet || projectile.rearTurn) {
+      if(projectile.ion || projectile.echo || projectile.ricochet || projectile.rearTurn) {
         projectile.trail.push({...projectile.position});
         while(projectile.trail.length>14)projectile.trail.shift();
       }
@@ -136,7 +159,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
     }
     projectiles.value=keep;
   }
-  function checkCollisions(){for(const p of projectiles.value)if(!p._markedForRemoval)collide(p,p.position);}
+  function checkCollisions(){for(const p of projectiles.value)if(!p._markedForRemoval&&!p.beam&&!(p.spawnDelay>0))collide(p,p.position);}
   function cleanup(){projectiles.value=[];hitGrace=0;}
   return {update,cleanup,spawnProjectile,checkCollisions,projectiles,nearestEnemyFromPlayer,nearestEnemyFromPosition};
 });

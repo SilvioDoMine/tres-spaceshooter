@@ -13,13 +13,15 @@ for (const side of [-1,1]) {
   const halo = new Mesh(geo,glow); halo.position.copy(jet.position); halo.scale.set(1.8,1.8,1.1); root.add(halo); jets.push(halo)
   for (let i=0;i<4;i++) { const ring = new Mesh(ringGeo,glow); ring.position.copy(jet.position); ring.userData.phase=i/4; root.add(ring); rings.push(ring) }
 }
+const equipment=useEquipmentStore()
 const run = useCurrentRunStore()
 const appearance=useShipAppearance()
 const dilation=useSpatialDilation().state
 let time = 0
 useLoop().onBeforeRender(({delta}) => {
+  if(run.gameState==='paused')return
   time += Math.min(delta,.1)
-  glow.color.set(appearance.value.exhaust || "#27c7ff"); core.color.copy(glow.color).lerp({r:1,g:1,b:1} as any,.65)
+  glow.color.set(equipment.equippedItem('thrusters')?.defId==='propulsor-cometa'?'#ff9a37':equipment.equippedItem('thrusters')?.defId==='propulsor-vortice'?'#b578ff':appearance.value.exhaust || '#27c7ff'); core.color.copy(glow.color).lerp({r:1,g:1,b:1} as any,.65)
   const m=run.getMoveVector(); const thrust=(m.x*m.x+m.z*m.z>0 ? 1.5 : .85)*(1+dilation.value.visual*.2)
   jets.forEach((jet,i) => { jet.scale.z=(appearance.value.power ?? 1)*thrust*(.85+.24*Math.sin(time*24+i*.8)); jet.scale.x=(i%2 ? 1.8 : 1)*(.94+.1*Math.cos(time*19+i)) })
   rings.forEach(ring => { const phase=(time*2.8+ring.userData.phase)%1; ring.position.z=.62+phase*.65*thrust; ring.scale.setScalar((1-phase)*1.5+.2) })
@@ -27,5 +29,3 @@ useLoop().onBeforeRender(({delta}) => {
 onUnmounted(()=> { geo.dispose(); ringGeo.dispose(); core.dispose(); glow.dispose() })
 </script>
 <template><primitive :object="root" /></template>
-
-

@@ -96,18 +96,18 @@ export const SkillsList ={
   diagonal_shot: {
     id: 'diagonal_shot',
     name: 'Tiros Diagonais',
-    description: 'Adiciona tiros diagonais adicionais com 50% da eficiência.',
+    description: 'Dispara um projétil de cada lado, a 45°. O segundo nível aumenta o dano, sem adicionar canhões.',
     icon: '➗',
     rarity: 'rare',
     levels: {
       1: { value: 0.5, description: 'Dispara +2 projéteis diagonais.' },
-      2: { value: 0.5, description: 'Dispara +2 projéteis diagonais.' },
+      2: { value: 0.65, description: 'Mantém 2 tiros diagonais e aumenta o dano de cada um para 65%.' },
     },
   },
   back_shot: {
     id: 'back_shot',
     name: 'Tiro Traseiro',
-    description: 'Projéteis saem da frente, curvam pelas laterais e seguem para trás com 65% do dano.',
+    description: 'Canhões traseiros disparam diretamente para trás com 65% do dano.',
     icon: '🔙',
     rarity: 'rare',
     levels: {
