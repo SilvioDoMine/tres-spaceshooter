@@ -71,7 +71,7 @@ function playHeal(ctx, out) {
 export function playHeartSynth(ctx, kind, volume = 1, duration = 0.32) {
     if (!ctx || volume <= 0) return;
     const out = ctx.createGain();
-    out.gain.value = volume * 0.6;
+    out.gain.value = volume * 1.0;
     out.connect(ctx.destination);
     if (kind === 'pull') playPull(ctx, out, duration);
     else if (kind === 'heal') playHeal(ctx, out);

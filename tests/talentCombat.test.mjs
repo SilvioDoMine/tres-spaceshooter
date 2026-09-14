@@ -478,9 +478,13 @@ test('full-health warning only repeats after leaving the heart completely', () =
   const warnings = () => messages.filter(m => m[1] === 'full').length;
   hearts.tryDrop({ x: 0, z: 0 }, () => 0);
   const player = run.getPlayerPosition();
+  player.x = 2; // dentro do alcance de coleta, mas longe de passar por cima
+  hearts.update(.1);
+  assert.equal(warnings(), 0, 'full health only warns when passing over the heart');
+  player.x = 0;
   hearts.update(.1);
   assert.equal(warnings(), 1);
-  player.x = 2.2; // saiu do raio de coleta, mas ainda perto
+  player.x = 1.5; // saiu de cima do coração, mas ainda encostado
   hearts.update(.1);
   player.x = 0;
   hearts.update(.1);

@@ -9,9 +9,10 @@ import { useAudio } from '~/composables/useAudio';
 // delay >= 0: na fila para voar sozinho depois da sala limpa
 type Heart = { id: number; x: number; z: number; startX: number; startZ: number; flight: number; delay: number; heal: number; warned: boolean };
 
-const PICKUP_RADIUS = 1.8;
-// Só avisa de novo depois que a nave saiu por completo de perto do coração
-const WARNING_RESET_RADIUS = 2.6;
+const PICKUP_RADIUS = 2.4;
+// Vida cheia só avisa se a nave passar por cima do coração, e de novo só depois de sair por completo
+const WARNING_RADIUS = 1.1;
+const WARNING_RESET_RADIUS = 1.9;
 const FLIGHT_DURATION = .32;
 // Sala limpa: um coração atrás do outro, os mais perto primeiro
 const HEART_STAGGER = .08;
@@ -69,6 +70,7 @@ export const useHeartStore = defineStore('hearts', () => {
       if (distance > WARNING_RESET_RADIUS) heart.warned = false;
       if (distance > PICKUP_RADIUS) continue;
       if (run.currentHealth + incoming >= run.maxHealth) {
+        if (distance > WARNING_RADIUS) continue;
         if (!heart.warned) useCombatTextStore().emitForTarget(PlayerBaseStats.id, 'full', 'VIDA CHEIA');
         heart.warned = true;
         continue;
