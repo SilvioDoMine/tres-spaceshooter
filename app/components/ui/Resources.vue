@@ -10,7 +10,7 @@ const currentRunStore = useCurrentRunStore();
     <div class="flex justify-between w-full translate-all duration-300">
       <!-- Notch Esquerdo -->
       <div
-        class="bg-white/10 px-4 py-2 flex items-center justify-between gap-2 rounded-r-full cursor-pointer active:scale-90 active:-translate-x-1.25 transition-transform"
+        class="bg-black/45 backdrop-blur-sm px-4 py-2 flex items-center justify-between gap-2 rounded-r-full cursor-pointer active:scale-90 active:-translate-x-1.25 transition-transform"
         @click="currentRunStore.gamePause()"
       >
         <!-- Text -->
@@ -23,12 +23,12 @@ const currentRunStore = useCurrentRunStore();
       </div>
 
       <!-- Notch Direito -->
-      <div class="bg-white/10 px-4 py-1 flex items-center justify-between gap-2 rounded-l-full cursor-pointer">
+      <div class="bg-black/45 backdrop-blur-sm px-4 py-1 flex items-center justify-between gap-2 rounded-l-full cursor-pointer">
         <!-- Icon -->
         <SvgCoinIcon :size="25" />
 
         <!-- Text -->
-        <span class="font-bold">{{ currentRunStore.currentGold }}</span>
+        <span class="title-text text-lg">{{ currentRunStore.currentGold }}</span>
       </div>
     </div>
   </div>
