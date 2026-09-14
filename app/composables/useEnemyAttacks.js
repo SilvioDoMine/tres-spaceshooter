@@ -38,6 +38,8 @@ export function useEnemyAttacks() {
         // Tiro comum escala com sala e capítulo; tiro de boss bate como colisão (ENEMY_THREAT)
         const damage=enemyShotDamage(enemy.type,room,chapter,enemy);
         let fired=0;
+        // Descrição da rajada para o som (leque, anel, bordada e canos duplos soam diferentes de um tiro só)
+        const volleySize=directions.length*muzzles.length, volleyBoss=profile.category==='boss';
         for(const direction of directions)for(const muzzle of muzzles) {
           const origin=muzzle.side||muzzle.forward
             ?muzzlePosition(enemy.position,direction,muzzle.side*enemy.size,muzzle.forward*enemy.size)
@@ -49,7 +51,8 @@ export function useEnemyAttacks() {
           const heading=profile.converge&&ahead?{x:tx/td,z:tz/td}:direction;
           shots.spawnProjectile(profile.projectile,origin,heading,enemy.id,'enemy',1,0,damage,[],
             // Inimigos elementais (ficha com `element: 'fire' | 'ice' | 'lightning'`) atiram com o efeito
-            {speed:profile.speed,range:profile.range,silent:fired++>0,elements:enemy.element?ENEMY_ELEMENT_PAYLOADS[enemy.element]:undefined});
+            {speed:profile.speed,range:profile.range,silent:fired++>0,elements:enemy.element?ENEMY_ELEMENT_PAYLOADS[enemy.element]:undefined,
+              volleySize,volleyPattern:muzzles.length>1&&profile.pattern==='aim'?'twin':profile.pattern,volleyBoss});
         }
         bullets+=fired;volleyGate=ENEMY_VOLLEY_GATE;
         // Grace period: a IA segura o movimento e o rumo na direção do disparo

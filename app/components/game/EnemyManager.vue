@@ -3,6 +3,7 @@ import EnemyRaider from './enemies/EnemyRaider.vue';
 import EnemyBoss from './enemies/EnemyBoss.vue';
 import { shallowRef } from 'vue';
 import { useLoop } from '@tresjs/core';
+import { Box3 } from 'three';
 import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
 import EnemySquare from '~/components/game/enemies/EnemySquare.vue';
 import EnemyCone from '~/components/game/enemies/EnemyCone.vue';
@@ -64,6 +65,7 @@ const setUIGroupRef = (enemyId) => (el) => {
 // ==================== GAME LOOP (60 FPS) ====================
 const { onBeforeRender } = useLoop();
 let elementTime = 0;
+const hpBox = new Box3();
 onBeforeRender(({ delta }) => {
   elementTime += Math.min(delta, .1);
   const player = useCurrentRunStore().getPlayerPosition();
@@ -119,6 +121,18 @@ onBeforeRender(({ delta }) => {
       : enemy.visualHeading ?? Math.atan2(enemy.position.x - player.x, enemy.position.z - player.z);
     refs.heading = heading;
     visualMesh.rotation.set(0, heading + deathRotation, deathRotation * .2);
+
+    // Barra de vida acima e à frente do casco: mede o modelo uma vez, já em escala cheia.
+    // O alcance usa o maior lado para valer em qualquer rumo.
+    if (enemy.state === 'active' && !refs.hpBar) {
+      refs.hpBar = uiGroup.getObjectByName('enemy-hp-bar');
+      if (refs.hpBar) {
+        hpBox.setFromObject(visualMesh);
+        const { x, y, z } = visualMesh.position;
+        const reach = Math.max(x - hpBox.min.x, hpBox.max.x - x, z - hpBox.min.z, hpBox.max.z - z);
+        refs.hpBar.position.set(0, Math.max(0, hpBox.max.y - y) + 0.1, -(reach + 0.25));
+      }
+    }
     applyElementalTint(refs, enemy.elementState, elementTime);
   });
 
@@ -156,17 +170,18 @@ onUnmounted(() => {
         :ref="setUIGroupRef(enemy.id)"
         :name="`enemy-ui-${enemy.id}`"
       >
-        <!-- HealthBar (só mostra quando ativo) -->
-        <GameHealthBar
-          v-if="enemy.state === 'active'"
-          :current-health="enemy.health"
-          :max-health="enemy.maxHealth"
-          :width="baseStats[enemy.type].size * 0.9"
-          :height="0.2"
-          :position="[0, 0, -baseStats[enemy.type].size * 0.7]"
-          color="red"
-          :hiddenFull="true"
-        />
+        <!-- HealthBar (só mostra quando ativo). A posição do grupo vem da medição do modelo no loop. -->
+        <TresGroup name="enemy-hp-bar">
+          <GameHealthBar
+            v-if="enemy.state === 'active'"
+            :current-health="enemy.health"
+            :max-health="enemy.maxHealth"
+            :width="baseStats[enemy.type].size * 0.9"
+            :height="0.2"
+            color="red"
+            :hiddenFull="true"
+          />
+        </TresGroup>
 
         <!-- Combat Text -->
         <GameCombatText

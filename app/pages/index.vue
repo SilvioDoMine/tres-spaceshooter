@@ -389,7 +389,6 @@ onUnmounted(() => {
           <div class="chapter-info">
             <span class="chapter-info__tag">Chefe</span>
             <strong class="chapter-info__name">{{ CHAPTER_INFO[currentLevel]?.boss }}</strong>
-            <span class="chapter-info__sub">{{ CHAPTER_INFO[currentLevel]?.subtitle }}</span>
           </div>
 
           <!-- Botão amarelo no estilo da faixa de título: contorno escuro, sombra dura, brilho e reflexo passando -->
@@ -474,12 +473,12 @@ onUnmounted(() => {
 .lobby-topbar-wrap--on-light .bg-white\/10{background-color:rgba(0,0,0,.25)}
 .lobby-topbar-wrap--on-light .bg-white\/20{background-color:rgba(0,0,0,.3)}
 .lobby-scene{position:absolute;inset:0}
-/* Faixa do chefe acima do INICIAR: pílula compacta no estilo das cartas (contorno, sombra dura, brilho) */
-.chapter-info{position:relative;display:flex;align-items:center;gap:8px;width:fit-content;max-width:100%;height:40px;margin:0 auto 12px;padding:0 14px 0 4px;border:3px solid #173f7d;border-radius:14px;background:linear-gradient(#5fb8ff,#2a74db 85%);box-shadow:0 4px 0 #173f7d,0 8px 14px rgba(0,0,0,.35),inset 0 2px 0 rgba(255,255,255,.45);color:#fff;white-space:nowrap}
-.chapter-info::before{content:'';position:absolute;top:3px;left:8px;width:12px;height:5px;border-radius:50%;background:rgba(255,255,255,.75);rotate:-30deg;pointer-events:none}
-.chapter-info__tag{flex-shrink:0;padding:5px 8px 6px;border-radius:9px;background:#173f7d;font:11px/1 'Lilita One',sans-serif;letter-spacing:.6px;color:#d4ecff;text-transform:uppercase}
-.chapter-info__name{flex-shrink:0;font:20px/1 'Lilita One',sans-serif;font-weight:400;letter-spacing:.5px;-webkit-text-stroke:5px #173f7d;paint-order:stroke fill;text-shadow:0 2px 0 #173f7d}
-.chapter-info__sub{min-width:0;overflow:hidden;text-overflow:ellipsis;font:12px 'Fredoka One',sans-serif;color:#d4ecff}
+/* Faixa do chefe acima do INICIAR: faixa informativa de HUD (sem volume/sombra dura para não parecer botão),
+   fundo translúcido que some nas pontas e linhas finas em cima e embaixo */
+.chapter-info{display:flex;align-items:center;justify-content:center;gap:10px;width:fit-content;max-width:100%;margin:0 auto 12px;padding:5px 36px 6px;border-block:1px solid;border-image:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent) 1;background:linear-gradient(90deg,transparent,rgba(8,18,48,.6) 22%,rgba(8,18,48,.6) 78%,transparent);color:#fff;white-space:nowrap;pointer-events:none;user-select:none}
+.chapter-info__tag{flex-shrink:0;display:flex;align-items:center;gap:10px;font:11px/1 'Lilita One',sans-serif;letter-spacing:2px;color:#ff9b8a;text-transform:uppercase}
+.chapter-info__tag::after{content:'';width:4px;height:4px;rotate:45deg;background:rgba(255,255,255,.45)}
+.chapter-info__name{min-width:0;overflow:hidden;text-overflow:ellipsis;font:18px/1.1 'Lilita One',sans-serif;font-weight:400;letter-spacing:.5px;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.45)}
 /* Título do capítulo com contorno (igual aos títulos das cartas) */
 .chapter-heading__title{margin:0;font:34px/1.1 'Lilita One',sans-serif;letter-spacing:.5px;color:#fff;-webkit-text-stroke:7px #0d2a52;paint-order:stroke fill;text-shadow:0 4px 0 #0d2a52,0 8px 14px rgba(0,0,0,.45)}
 .chapter-heading__desc{display:inline-block;margin:6px 0 0;padding:3px 12px 4px;border-radius:999px;background:rgba(8,18,48,.55);border:2px solid rgba(255,255,255,.14);font:12px 'Fredoka One',sans-serif;color:#d4ecff}
@@ -511,7 +510,7 @@ onUnmounted(() => {
 @media(hover:hover){.lobby-side:hover .lobby-side__icon{scale:1.08}}
 @media(max-width:650px){
  .lobby-topbar{font-size:11px;gap:4px}.lobby-topbar>div:first-child{min-width:0;flex:1}.lobby-topbar>div:first-child>div{gap:3px}.lobby-topbar>div:first-child>div>div{min-width:0}.lobby-topbar p{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lobby-topbar>div:last-child{gap:3px;flex-shrink:0}.lobby-topbar>div:last-child>div{padding:2px 5px;gap:3px}.lobby-topbar svg{width:18px;height:18px}
- .chapter-info{height:34px;gap:6px;margin-bottom:10px;padding-right:10px}.chapter-info__tag{padding:4px 6px 5px;font-size:10px}.chapter-info__name{font-size:17px;-webkit-text-stroke-width:4px}.chapter-info__sub{font-size:11px}
+ .chapter-info{gap:8px;margin-bottom:10px;padding:4px 28px 5px}.chapter-info__tag{gap:8px;font-size:10px}.chapter-info__name{font-size:16px}
  .chapter-heading__title{font-size:28px;-webkit-text-stroke-width:6px}
  .lobby-actions{bottom:94px;justify-content:space-between;gap:8px;padding:0}.chapter-start{flex:1 1 auto}.chapter-start button{height:58px;border-radius:16px}.start-btn__label{font-size:26px;-webkit-text-stroke-width:6px;text-shadow:0 3px 0 #8a5300}.start-btn__shine{top:6px;width:20px;height:8px}.chapter-return{bottom:108px;padding:0 104px}.chapter-return p{font-size:11px}
  .lobby-side{width:92px;height:60px;padding-bottom:5px}.lobby-side--left{border-left:0;border-radius:0 14px 14px 0}.lobby-side--right{border-right:0;border-radius:14px 0 0 14px}.lobby-side__icon{top:-22px;width:50px;height:50px}.lobby-side__label{font-size:12px;padding:1px 5px}
@@ -520,7 +519,7 @@ onUnmounted(() => {
 @media(max-height:500px) and (orientation:landscape){
  .lobby-scene{width:55%}.lobby-shortcuts{top:78px;width:55%}.lobby-shortcuts>div:first-child{flex-direction:row}.chapter-start,.chapter-return{translate:0 0}.chapter-heading{top:78px;left:auto;right:2%;width:42%}.chapter-heading h2{font-size:23px}
  .chapter-arrows{width:55%;top:58%;padding:0 8px}.chapter-arrows>div{padding:8px}
- .chapter-info{height:30px;gap:6px;margin-bottom:8px;padding-right:8px}.chapter-info__tag{padding:3px 6px 4px;font-size:9px}.chapter-info__name{font-size:15px;-webkit-text-stroke-width:4px}.chapter-info__sub{font-size:10px}
+ .chapter-info{gap:6px;margin-bottom:8px;padding:3px 22px 4px}.chapter-info__tag{gap:6px;font-size:9px}.chapter-info__name{font-size:14px}
  .lobby-actions{left:auto;right:1%;bottom:70px;width:44%;gap:6px;padding:0 6px;justify-content:center}.chapter-start button{height:55px}.lobby-side{width:68px;height:55px;padding-bottom:4px;border:3px solid;border-radius:12px}.lobby-side__icon{top:-16px;width:40px;height:40px}.lobby-side__label{font-size:9px;padding:1px 3px}.chapter-return{left:auto;right:2%;transform:none;bottom:82px;width:42%;padding:0}.chapter-return p{font-size:10px}
 }
 

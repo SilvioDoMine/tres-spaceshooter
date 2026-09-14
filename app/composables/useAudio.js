@@ -3,6 +3,7 @@ import { playUiSynth } from '~/utils/uiSynth';
 import { playHeartSynth } from '~/utils/heartSynth';
 import { playLootSynth } from '~/utils/lootSynth';
 import { playResultSynth } from '~/utils/resultSynth';
+import { playCombatSynth } from '~/utils/combatSynth';
 import { createLobbyMusic } from '~/utils/lobbyMusic';
 import { createChapterMusic } from '~/utils/chapterMusic';
 
@@ -86,6 +87,10 @@ const musicObjectUrls = new Map();
 const isInitialized = ref(false);
 const lastHeartSound = {};
 const lootSound = { last: {}, step: {} };
+// Último disparo de cada som de combate (por tipo + variante), para muitos inimigos não virarem ruído,
+// e o contador de variação (round-robin) de cada um, para disparos seguidos não soarem iguais
+const combatSound = { last: {}, rr: {} };
+const COMBAT_MIN_GAP = { 'enemy-shot': 0.05, 'enemy-hit': 0.04, 'enemy-death': 0.06 };
 // Música generativa do lobby; lobbyMusicWanted segura o pedido até o navegador liberar o áudio
 let lobbyMusic = null;
 let lobbyMusicWanted = false;
@@ -250,6 +255,32 @@ export function useAudio() {
         lootSound.step[group] = now - previous < 0.3 ? Math.min((lootSound.step[group] ?? 0) + 1, 14) : 0;
         lootSound.last[kind] = now;
         playLootSynth(audioContext, kind, getGeneralVolume() * getEffectsVolume(), lootSound.step[group]);
+    }
+
+    // Som sintetizado de combate dos inimigos: 'enemy-shot' (variant = família da arma) ou 'enemy-hit'.
+    // source/listener ({x, z}) posicionam no estéreo e atenuam pela distância até a nave.
+    // count/pattern/boss descrevem a rajada (leque, anel, bordada...) e mudam o som dela.
+    function playCombatSound(kind, {
+        variant = '', source = null, listener = null, size = 1, critical = false,
+        count = 1, pattern = 'aim', boss = false,
+    } = {}) {
+        if (!audioContext || audioContext.state !== 'running') return;
+        const now = audioContext.currentTime;
+        const volleyKind = count > 1 ? pattern : 'single';
+        const key = `${kind}:${variant}:${volleyKind}${critical ? ':crit' : ''}`;
+        if (now - (combatSound.last[key] ?? -1) < (COMBAT_MIN_GAP[kind] ?? 0.04)) return;
+        combatSound.last[key] = now;
+        const rr = combatSound.rr[key] = ((combatSound.rr[key] ?? -1) + 1) % 4;
+
+        let pan = 0, gain = 1;
+        if (source && listener) {
+            const dx = source.x - listener.x, dz = source.z - listener.z;
+            pan = Math.max(-0.7, Math.min(0.7, dx / 14));
+            gain = Math.max(0.35, Math.min(1, 1.15 - Math.hypot(dx, dz) / 32));
+        }
+        playCombatSynth(audioContext, kind, getGeneralVolume() * getEffectsVolume(), {
+            variant, pan, gain, size, critical, count, pattern, boss, rr,
+        });
     }
 
     // Sting sintetizado de fim de partida: 'victory' ou 'defeat'
@@ -484,6 +515,7 @@ export function useAudio() {
         playHeartSound,
         playLootSound,
         playResultSound,
+        playCombatSound,
         updateSpatialAudio,
         stopSpatialAudio,
 

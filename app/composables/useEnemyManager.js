@@ -707,8 +707,6 @@ export function useEnemyManager() {
     const onDeathBehaviorFunc = onDeathBehavior[enemy.type];
 
     // Se a saúde do inimigo chegar a zero ou menos, inicia animação de morte
-    const randomPitch = 0.9 + Math.random() * 0.2; // Entre 0.9 e 1.1
-
     if (enemy.health <= 0) {
       enemy.state = 'dying';
       enemy.elementState = null;
@@ -722,8 +720,13 @@ export function useEnemyManager() {
       }
 
       if (playerDamage) {
-        // Reproduz som de inimigo morto
-        useAudio().playSound(enemy.deathSound, 1, randomPitch);
+        // Som sintetizado de destruição (maior em inimigo grande e bem maior nos chefes)
+        useAudio().playCombatSound('enemy-death', {
+          source: enemy.position,
+          listener: useCurrentRun.getPlayerPosition(),
+          size: enemy.size || 1,
+          boss: enemyCategory(enemy.type, enemy) === 'boss',
+        });
 
         // Drop dos inimigos no chão: o ouro vai dentro da moeda e só entra quando ela chega na nave
         const minGold = enemy.drops?.gold?.min || 0;
@@ -753,8 +756,13 @@ export function useEnemyManager() {
       }
     } else {
       if (playerDamage && direct) {
-        // Reproduz som de hit suave
-        useAudio().playSound(enemy.hitSound, 1, randomPitch);
+        // Estalo sintetizado do acerto (mais grave em inimigo grande, com brilho no crítico)
+        useAudio().playCombatSound('enemy-hit', {
+          source: enemy.position,
+          listener: useCurrentRun.getPlayerPosition(),
+          size: enemy.size || 1,
+          critical: textType === 'critical',
+        });
       }
     }
   }

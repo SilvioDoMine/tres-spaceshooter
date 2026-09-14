@@ -170,6 +170,7 @@ onBeforeRender(({ delta }) => {
       :height="0.21"
       :position="[0, -5, -1.2]"
       :showHp="true"
+      :segment-hp="50"
     />
 
     <!-- Combat text -->

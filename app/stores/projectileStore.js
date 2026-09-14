@@ -2,7 +2,7 @@ import { emitImpact } from '~/utils/combatEffects';
 import { emitMuzzleFlash } from '~/utils/weaponVisuals';
 import { defineStore } from 'pinia';
 import { shallowRef } from 'vue';
-import { useEnemyManager, baseStats } from '~/composables/useEnemyManager';
+import { useEnemyManager } from '~/composables/useEnemyManager';
 import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import { useSkillStore, SkillsList } from '~/stores/SkillStore';
@@ -21,6 +21,10 @@ export const projectilesType = {
   // Harpia: rápido e com hitbox grande
   harpyShot: {...orb, size: .42, color: '#ff5fb0'},
 };
+// Família de som (combatSynth) de cada tiro de inimigo; o que não está aqui usa o "orb"
+const ENEMY_SHOT_VOICE = {
+  enemyPlasma: 'plasma', enemyMissile: 'missile', enemyLance: 'lance', hiveShot: 'heavy', harpyShot: 'heavy',
+};
 export const useProjectileStore = defineStore('projectileStore', () => {
   const enemyManager = useEnemyManager(), currentRunStore = useCurrentRunStore();
   const playerStats = usePlayerStats(), skillStore = useSkillStore();
@@ -32,7 +36,11 @@ export const useProjectileStore = defineStore('projectileStore', () => {
     if (!config || !norm || projectiles.value.length >= 480) return null;
     if (!options.silent) {
       if (ownerType === 'player') useAudio().playSound('shoot-player', .65, 1);
-      else if (baseStats[type]?.shotSound) useAudio().playSound(baseStats[type].shotSound,.35);
+      else useAudio().playCombatSound('enemy-shot', {
+        variant: ENEMY_SHOT_VOICE[type] ?? 'orb', source: position, listener: currentRunStore.getPlayerPosition(),
+        // A rajada inteira toca um som só (os outros projéteis dela saem com silent)
+        count: options.volleySize ?? 1, pattern: options.volleyPattern, boss: options.volleyBoss,
+      });
       emitImpact(position.x,position.z,false,'shot',ownerType !== 'player');
     }
     const projectile = {
