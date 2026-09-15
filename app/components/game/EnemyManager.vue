@@ -89,16 +89,17 @@ onBeforeRender(({ delta }) => {
       scale = enemy.spawnProgress;
       opacity = enemy.spawnProgress;
       transparent = true;
-    } else if (enemy.state === 'dying') {
-      const progress = enemy.deathProgress;
-      scale = 1;
-      opacity = Math.max(0, 1 - progress * 5);
-      transparent = true;
-      deathRotation = 0;
     }
 
     // Atualiza escala
     visualMesh.scale.setScalar(scale);
+
+    // Morte: o casco sai de cena inteiro, no mesmo quadro da explosão. Sem encolher nem desbotar —
+    // a bola de fogo já nasce cobrindo o modelo, então o que o jogador vê é o fogo tomando o lugar dele.
+    const gone = enemy.state === 'dying';
+    if (visualMesh.visible === gone) visualMesh.visible = !gone;
+    if (uiGroup.visible === gone) uiGroup.visible = !gone;
+    if (gone) return;
 
     // Cascos detalhados possuem muitas peças. Os materiais são coletados uma vez
     // e só recebem escrita quando o estado visual realmente muda.
@@ -120,6 +121,19 @@ onBeforeRender(({ delta }) => {
       : enemy.visualHeading ?? Math.atan2(enemy.position.x - player.x, enemy.position.z - player.z);
     refs.heading = heading;
     visualMesh.rotation.set(0, heading + deathRotation, deathRotation * .2);
+
+    // Tamanho real do casco, medido no modelo em escala cheia (o `size` do baseStats é número de
+    // balanceamento: um inimigo comum pode usar modelo de chefe e ter size pequeno). A explosão da
+    // morte lê isto para nunca sair menor que o inimigo.
+    if (enemy.state === 'active' && !refs.measuredHull) {
+      hpBox.setFromObject(visualMesh);
+      const { x, z } = visualMesh.position;
+      const reach = Math.max(x - hpBox.min.x, hpBox.max.x - x, z - hpBox.min.z, hpBox.max.z - z);
+      if (Number.isFinite(reach) && reach > 0) {
+        enemy.hull = reach;
+        refs.measuredHull = true;
+      }
+    }
 
     // Barra de vida acima e à frente do casco: mede o modelo uma vez, já em escala cheia.
     // O alcance usa o maior lado para valer em qualquer rumo.

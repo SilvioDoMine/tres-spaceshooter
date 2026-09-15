@@ -16,4 +16,4 @@ onMounted(() => emit('loaded'))
 onUnmounted(() => hull.dispose())
 </script>
 
-<template><TresGroup><primitive :object="hull.root" /><GameShipEquipment :gameplay="props.gameplay" :preview="props.preview" /><GameEnginePlumes v-if="settings.thrusters" :gameplay="props.gameplay" :preview="props.preview" /></TresGroup></template>
+<template><TresGroup><primitive :object="hull.root" /><GameShipWings :materials="hull.materials" :gameplay="props.gameplay" :preview="props.preview" /><GameShipEquipment :gameplay="props.gameplay" :preview="props.preview" /><GameEnginePlumes v-if="settings.thrusters" :gameplay="props.gameplay" :preview="props.preview" /></TresGroup></template>

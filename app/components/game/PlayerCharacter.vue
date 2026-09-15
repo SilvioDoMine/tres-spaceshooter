@@ -7,6 +7,8 @@ import * as THREE from 'three';
 import { CameraUtils } from '~/utils/CameraUtils';
 import { DILATION_CONFIG } from '~/utils/spatialDilation';
 import { applyElementalTint, collectMaterials } from '~/utils/elementalVisuals';
+// Suavização da pilotagem. Para desfazer, veja o cabeçalho de ~/utils/shipHandling.
+import { currentHeading, bankForTurn, resetBank } from '~/utils/shipHandling';
 const dilation=useSpatialDilation().state;
 const reducedMotion=useState('spatial-reduced-motion',()=>false);
 const cameraShake=shallowRef({x:0,z:0});let stressTime=0;
@@ -107,8 +109,13 @@ onBeforeRender(({ delta }) => {
   let yawDiff = rotation.y - visualYaw;
   while (yawDiff > Math.PI) yawDiff -= 2 * Math.PI;
   while (yawDiff < -Math.PI) yawDiff += 2 * Math.PI;
-  visualYaw += yawDiff * (1 - Math.exp(-Math.min(delta, .1) * VISUAL_TURN_RATE));
-  playerMeshRef.value.rotation.set(rotation.x, visualYaw, rotation.z);
+  const yawStep = yawDiff * (1 - Math.exp(-Math.min(delta, .1) * VISUAL_TURN_RATE));
+  visualYaw += yawStep;
+  // Inclinação para dentro da curva: o casco reto é o que dá a sensação de andar de lado,
+  // ainda mais no corrido do portal. Só rolagem do modelo, nada de física.
+  if (!currentRun.isPlaying) resetBank();
+  const bank = bankForTurn(yawStep / Math.max(delta, .001), Math.min(delta, .1));
+  playerMeshRef.value.rotation.set(rotation.x, visualYaw, rotation.z + bank);
   // Imune a colisão: a nave pisca enquanto dura o i-frame
   const collisionGrace = currentRun.getCollisionGrace();
   playerMeshRef.value.visible = !(collisionGrace > 0 && currentRun.currentHealth > 0 && Math.floor(collisionGrace * 10) % 2 === 1);
@@ -134,7 +141,9 @@ onBeforeRender(({ delta }) => {
   currentPosition.value = { x: position.x, y: position.y, z: position.z };
 
   // A bounded look-ahead gives motion at the invisible edge without drifting indefinitely.
-  const move = currentRun.getMoveVector();
+  // Rumo real (curvo), não o comando cru das teclas: senão a antecipação da câmera dá o tranco de
+  // 45 graus enquanto a nave ainda está fazendo a curva. Ver ~/utils/shipHandling para desfazer.
+  const move = currentHeading(currentRun.getMoveVector());
   // Freeze the camera exactly where pause began, including unfinished easing.
   // Viewport dimensions below still update if the paused window is resized.
   const blend = currentRun.isPlaying ? 1 - Math.exp(-Math.min(delta, .1) * 3) : 0;

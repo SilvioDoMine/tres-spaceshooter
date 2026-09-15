@@ -15,6 +15,8 @@ import { onMounted, onUnmounted, watch } from 'vue';
 import { weaponMounts, worldHardpoint, MULTISHOT_INTERVAL } from '~/utils/combatPatterns';
 import { emitMuzzleFlash } from '~/utils/weaponVisuals';
 import { useEquipmentEffectsStore } from '~/stores/useEquipmentEffectsStore';
+// Suavização da pilotagem. Para desfazer, veja o cabeçalho de ~/utils/shipHandling.
+import { SHIP_HANDLING, steerHeading, resetHeading, turnScale } from '~/utils/shipHandling';
 
 export function usePlayerControls() {
   const currentRun = useCurrentRunStore();
@@ -98,6 +100,7 @@ export function usePlayerControls() {
     if (playing) return;
     for (const key of Object.keys(keysPressed) as (keyof typeof keysPressed)[]) keysPressed[key] = false;
     currentRun.setMoveVector(0, 0, 0);
+    resetHeading();
   }, { flush: 'sync' });
 
   // O composable é responsável por configurar e limpar os listeners
@@ -125,8 +128,15 @@ export function usePlayerControls() {
     const movement = currentRun.getMoveVector();
     const speed = currentRun.currentMoveSpeed;
 
+    // Rumo suavizado: a direção da velocidade faz uma curva até o rumo das teclas, mantendo o
+    // mesmo módulo. Com SHIP_HANDLING.enabled = false isto devolve `movement` intacto.
+    // No corrido do portal a velocidade triplica; a curva acompanha para a nave não varrer meia
+    // sala de lado antes de apontar para onde vai.
+    const speedRatio = speed / (usePlayerStats().moveSpeed || speed || 1);
+    const steer = steerHeading(movement, delta, speedRatio);
+
     // Calcula o deslocamento no plano X/Z.
-    const spatial = dilation.update(position, movement, delta);
+    const spatial = dilation.update(position, steer, delta);
     if(spatial.damage>0){currentRun.takeDamage(spatial.damage);if(currentRun.currentHealth<=0)return}
     // Congelada, a nave não se move, não gira e não atira até descongelar
     const frozen = Boolean(currentRun.getPlayerElements().freeze);
@@ -155,7 +165,8 @@ export function usePlayerControls() {
     // Rotação suave na direção do movimento
     if (dx !== 0 || dz !== 0) {
       // Calcula o ângulo desejado baseado na direção do movimento
-      const targetRotation = Math.atan2(-movement.x, -movement.z);
+      // (o rumo suavizado já descreve a curva, então o casco acompanha a velocidade real)
+      const targetRotation = Math.atan2(-steer.x, -steer.z);
 
       // Interpolação suave da rotação atual para a rotação desejada
       const rotationSpeed = 8; // Quanto maior, mais rápido gira (ajuste ao gosto)
@@ -167,8 +178,11 @@ export function usePlayerControls() {
       while (diff > Math.PI) diff -= 2 * Math.PI;
       while (diff < -Math.PI) diff += 2 * Math.PI;
 
-      // Aplica a interpolação suave
-      rotation.y += diff * rotationSpeed * delta;
+      // Aplica a interpolação suave. Ligado, o passo é exponencial e não depende da taxa de
+      // quadros (em queda de fps a fórmula linear antiga passava do alvo e tremia).
+      rotation.y += SHIP_HANDLING.enabled
+        ? diff * (1 - Math.exp(-SHIP_HANDLING.rotationRate * turnScale(speedRatio) * delta))
+        : diff * rotationSpeed * delta;
     }
 
     // Atualiza o cooldown do tiro

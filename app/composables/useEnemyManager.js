@@ -695,7 +695,7 @@ export function useEnemyManager() {
     const direct = textType === 'damage' || textType === 'critical';
     enemy.health -= damage;
     // Ticks elementais não repetem a faísca de impacto, só a explosão final
-    if (direct || enemy.health <= 0) emitImpact(enemy.position.x, enemy.position.z, enemy.health <= 0);
+    if (direct || enemy.health <= 0) emitImpact(enemy.position.x, enemy.position.z, enemy.health <= 0, 'hit', false, enemy.size || 1, enemy.hull || 0);
 
     // combat text
     useCombatTextStore().emitForTarget(

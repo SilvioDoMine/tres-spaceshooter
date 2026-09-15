@@ -30,6 +30,8 @@ function chain(){emitElementalFx({kind:'chain',points:[{x:-5,z:1},{x:-1,z:-2},{x
    <button @click="emitElementalFx({kind:'shatter',x:0,z:0,size:1})">Quebrar gelo</button>
    <button @click="emitImpact(0,0,false)">Impacto</button>
    <button @click="emitImpact(0,0,true)">Explosão</button>
+   <button @click="emitImpact(0,0,true,'hit',false,3)">Explosão grande</button>
+   <button @click="emitImpact(0,0,true,'hit',false,4.5)">Explosão de chefe</button>
    <button @click="emitImpact(0,0,false,'player')">Dano</button>
    <NuxtLink to="/play/1">Jogar</NuxtLink>
   </div>

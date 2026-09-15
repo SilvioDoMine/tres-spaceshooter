@@ -94,7 +94,7 @@ function rebuild() {
     const scale=auxiliary?.43:1;
     const end=new Vector3(mount.x-mount.dx*.28*scale,mount.y+.035,mount.z-mount.dz*.28*scale);
     const center=mount.role==='front'&&Math.abs(mount.x)<.05;
-    const anchor=new Vector3(end.x,auxiliary?.037:mount.role==='rear'?.11:-.025,
+    const anchor=new Vector3(end.x,auxiliary?mount.socketY:mount.role==='rear'?.11:-.025,
       center?-.69:end.z);
     const neck=mesh(root,fairing,armor,0,0,0,auxiliary?.05:.09,anchor.distanceTo(end),auxiliary?.06:.12);
     neck.position.copy(anchor).add(end).multiplyScalar(.5);
@@ -106,22 +106,9 @@ function rebuild() {
     mesh(flash,sphere,haloMaterial,0,0,-.08,.14,.1,.24);
     cannons.set(mount.id,{barrel,flash,ttl:0,burst:false});
   });
-  const wings=item('wings');
-  for(const side of [-1,1]) {
-    const p=new Group();root.add(p);
-    const shape=[[.435,-.048],[.63,.098],[.655,.172],[.451,.21]].map(([x,z])=>[side*x,z]);
-    panel(p,shape,.046,wings?.064:.048,wings?dark:paint);
-    if(wings){
-      panel(p,[[.459,-.013],[.602,.10],[.625,.161],[.475,.188]].map(([x,z])=>[side*x,z]),.064,.073,armor);
-      for(let i=0;i<3;i++)mesh(p,box,wings==='asas-nebula'?secondary:energy,side*(.49+i*.044),.079,.137,.010,.004,.052);
-      if(wings==='asas-falcao'){
-        const fin=panel(p,[[.076,.11],[.17,.20],[.17,.26],[.075,.23]],-.009,.009,armor);
-        fin.rotation.z=Math.PI/2;fin.position.x=side*.61;
-      }else{
-        const socket=mesh(p,torus,secondary,side*.49,.08,.21,.032,.032,.032);socket.rotation.x=Math.PI/2;
-      }
-    }
-  }
+  // A asa saiu daqui: virou módulo próprio em `ShipWings.vue`, montado na
+  // âncora do contrato. Antes este bloco só sobrepunha um painel sobre a asa do
+  // casco, e por isso Falcão e Nébula liam como a mesma asa com enfeite trocado.
   // Canopy glazing stays within x ±.088; sensors rest on the external shoulders.
   // Sensor pods sit outside the glazing on the existing frame shoulders.
   const cockpit=item('cockpit');

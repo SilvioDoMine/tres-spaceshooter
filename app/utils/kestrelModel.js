@@ -64,6 +64,12 @@ export function buildKestrelHull() {
     copper:new MeshStandardMaterial({name:'K07 copper fasteners',color:'#b78750',metalness:.72,roughness:.35}),
     glass:new MeshStandardMaterial({name:'K07 armored canopy',color:'#173f52',metalness:.25,roughness:.24}),
     light:new MeshStandardMaterial({name:'K07 running lights',color:'#7eeeff',emissive:'#29b9cf',emissiveIntensity:1.6,roughness:.3}),
+    // Energia violeta da plataforma: o casco não usa, mas as famílias iônica,
+    // quântica, nébula e vórtice acoplam por aqui.
+    secondary:new MeshStandardMaterial({name:'K07 violet energy',color:'#bc86ff',emissive:'#7638eb',emissiveIntensity:1.6,metalness:.4,roughness:.3}),
+    // Âmbar das famílias solar, cometa e falcão, e dos conduítes de dados do
+    // encaixe universal.
+    amber:new MeshStandardMaterial({name:'K07 amber energy',color:'#ffb347',emissive:'#ff8a1e',emissiveIntensity:1.5,metalness:.45,roughness:.3}),
   };
   const buckets=new Map();
   function add(kind,geometry,position=[0,0,0],rotation=[0,0,0],scale=[1,1,1]){
@@ -108,27 +114,19 @@ export function buildKestrelHull() {
     // Shoulder bridge joins fuselage and engine; removable sensor mount rests on it.
     plate('armor',mirror([[.105,-.38],[.215,-.32],[.255,-.16],[.215,.14],[.13,.10]],side),-.037,.092,.008);
     plate('paint',mirror([[.14,-.58],[.22,-.36],[.22,-.20],[.15,-.34]],side),-.054,-.022,.006);
-    // Swept wing: inset turquoise panel and border, with no top-facing gaps.
-    const wing=[[.25,-.26],[.837,.12],[.823,.29],[.37,.43],[.25,.30]];
-    plate('structure',mirror(wing,side),-.040,.015,.010);
-    plate('armor',mirror([[.28,-.225],[.812,.131],[.797,.267],[.387,.397],[.28,.28]],side),.009,.041,.007);
-    plate('paint',mirror([[.39,-.111],[.758,.142],[.743,.239],[.416,.343]],side),.040,.045,.0015);
-    plate('trim',mirror([[.435,.350],[.776,.246],[.782,.260],[.431,.377]],side),.040,.047,.002);
-    plate('armor',mirror([[.545,.31],[.639,.29],[.665,.354],[.564,.385]],side),.019,.038,.005);
-    // Underwing service hatch and wingtip equipment rail.
-    plate('armor',mirror([[.29,-.19],[.783,.136],[.777,.204],[.41,.264]],side),-.047,-.040,.002);
-    plate('paint',mirror([[.44,-.04],[.715,.15],[.685,.182],[.456,.22]],side),-.050,-.047,.001);
+    // A asa saiu do casco: virou módulo trocável em `wingModels.js`. Aqui fica
+    // só a raiz — a superfície de encaixe que qualquer asa calça por cima.
+    plate('structure',mirror([[.20,-.22],[.30,-.18],[.305,.30],[.20,.27]],side),-.042,.020,.008);
+    plate('armor',mirror([[.215,-.19],[.285,-.16],[.29,.275],[.215,.25]],side),.019,.044,.005);
+    plate('trim',mirror([[.225,-.14],[.272,-.12],[.276,.25],[.225,.23]],side),.043,.048,.002);
+    for(const z of [-.09,.07,.22])add('copper',new CylinderGeometry(.0045,.0045,.005,6),[side*.25,.049,z]);
     loft('armor',[[-.28,.061,-.078,-.067],[.05,.082,-.081,-.067],[.39,.066,-.075,-.060]],side*.306);
     for(let i=0;i<6;i++)box('structure',[side*.306,-.083,-.035+i*.026],[.079,.004,.010]);
     for(const z of [-.22,.265]){
       box('trim',[side*.306,-.080,z],[.076,.004,.058]);
       box('armor',[side*.306,-.084,z],[.061,.004,.044]);
     }
-    box('structure',[side*.785,.049,.168],[.040,.033,.12]);
-    for(const z of [.126,.206])box('copper',[side*.785,.067,z],[.029,.009,.013]);
-    // Tall swept stabilizer as a closed beveled plate, rotated into the YZ plane.
-    add('structure',hullPlate([[.05,-.07],[.26,.22],[.275,.38],[.046,.28]],-.016,.016,.004),[side*.415,0,0],[0,0,Math.PI/2]);
-    add('paint',hullPlate([[.064,-.041],[.251,.228],[.263,.359],[.060,.274]],-.018,.018,.003),[side*.415,0,0],[0,0,Math.PI/2]);
+    // Ponta de asa e estabilizador vertical agora pertencem ao módulo de asa.
     // Intake and radiator banks on the engine tops, away from each equipment socket.
     loft('structure',[[-.22,.050,.12,.132],[-.01,.052,.156,.172],[.04,.042,.161,.180]],side*.306);
     for(let i=0;i<9;i++){
@@ -164,11 +162,6 @@ export function buildKestrelHull() {
     // Panel breaks, flush fasteners, access handles and wing conduits.
     seam('trim',[[side*.046,.011,-.795],[side*.082,.044,-.65],[side*.10,.064,-.52]],.002);
     seam('structure',[[side*.16,.074,-.20],[side*.19,.080,-.07],[side*.183,.085,.09]],.0025);
-    seam('structure',[[side*.443,.048,-.040],[side*.475,.048,.011],[side*.533,.048,.052]],.002);
-    seam('trim',[[side*.49,.048,.21],[side*.58,.048,.199],[side*.64,.048,.155]],.002);
-    for(const x of [.45,.65,.79])for(const z of [.17,.205]){
-      add('copper',new CylinderGeometry(.003,.003,.003,6),[side*x,.050,z]);
-    }
     for(const z of [-.27,.055,.305]){
       const y=z<0?.124:.184;
       for(const offset of [-.054,.054])add('trim',new CylinderGeometry(.003,.003,.004,6),[side*.306+offset,y,z]);
@@ -182,8 +175,6 @@ export function buildKestrelHull() {
     seam('structure',[[side*.272,.112,-.31],[side*.283,.124,-.277],[side*.33,.124,-.277],[side*.34,.114,-.30]],.002);
     box('structure',[side*.306,.126,-.268],[.031,.004,.009]);
     for(const x of [.278,.336])add('copper',new CylinderGeometry(.003,.003,.004,6),[side*x,.13,-.255]);
-    // Short copper service lines protected by the wing root.
-    seam('copper',[[side*.433,.014,.30],[side*.469,.014,.29],[side*.493,.014,.257]],.004);
     // Two small front cheek intakes have metal rims and dark internal throats.
     cylinder('trim',[side*.192,.022,-.34],.030,.014);
     cylinder('structure',[side*.192,.022,-.351],.024,.012);
@@ -201,5 +192,8 @@ export function buildKestrelHull() {
     geometry.computeBoundingSphere();
     const mesh=new Mesh(geometry,materials[kind]);mesh.name=`K07_${kind}`;root.add(mesh);
   }
-  return {root,paint:materials.paint,dispose(){root.children.forEach(m=>m.geometry.dispose());Object.values(materials).forEach(m=>m.dispose());root.clear();}};
+  // `materials` sai junto porque os módulos acoplados (asa, e futuramente os
+  // demais slots) precisam pintar com as mesmas instâncias do casco: material
+  // próprio, ainda que de cor igual, denuncia a emenda na luz da partida.
+  return {root,paint:materials.paint,materials,dispose(){root.children.forEach(m=>m.geometry.dispose());Object.values(materials).forEach(m=>m.dispose());root.clear();}};
 }

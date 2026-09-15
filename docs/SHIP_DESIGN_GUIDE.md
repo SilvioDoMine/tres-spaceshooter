@@ -2,6 +2,26 @@
 
 Este é o documento canônico para concept art, modelagem 3D e geração de naves por IA. Toda nave nova deve ser desenhada como uma plataforma modular compatível com os equipamentos existentes.
 
+## Corpos como personagens
+
+O produto trata cada **corpo** de nave como um personagem vendável. O corpo é o núcleo: fuselagem, raízes de encaixe e nada mais. Asas, cockpit, gerador, campo de força, propulsores e arma são módulos acoplados, e é a soma deles que forma a nave completa na tela.
+
+Consequências obrigatórias:
+
+- Um corpo novo não redesenha os equipamentos. Ele respeita o contrato de encaixe e passa a funcionar com todo o catálogo existente e futuro.
+- Um equipamento novo não é ajustado corpo a corpo. Ele é modelado uma vez, em espaço local do encaixe.
+- Sem esse contrato, cada corpo somado ao catálogo exigiria revisar todas as peças — o custo cresceria por multiplicação, não por soma.
+
+### Contrato de encaixe
+
+As âncoras vivem em `app/utils/shipSockets.js` e são a especificação canônica de posição. Regras:
+
+- Módulos são modelados em espaço **local**, com a origem no próprio encaixe; o lado é obtido espelhando X.
+- O corpo entrega a interface: base integrada à armadura, moldura escura, fixadores e conduíte. O módulo entrega apenas a peça funcional.
+- Os módulos usam as **instâncias de material do corpo** (`buildKestrelHull().materials`). Material próprio, ainda que de cor idêntica, denuncia a emenda sob a luz da partida.
+- As coordenadas de disparo em `weaponMounts` são compartilhadas com o combate e **não variam por módulo**. Toda asa preserva o envelope dos canhões diagonais; a silhueta é livre, a canhoneira não.
+- Um corpo deve respeitar `WING_ENVELOPE`: fora dessa faixa, a mesma asa lê desproporcional de um personagem para outro.
+
 ## Prioridade sobre referências visuais
 
 Este guia prevalece sobre blueprints, imagens de concept art e modelos de referência. Use essas imagens para silhueta, proporções e acabamento; adapte qualquer detalhe que contradiga os slots, os três estados de arma ou as regras de compatibilidade. Uma arma ou acessório desenhado no blueprint não deve ficar permanentemente no casco se depender de um equipamento ou carta. Registre as adaptações realizadas. Uma instrução explícita do usuário pode revisar o próprio guia.
@@ -10,7 +30,9 @@ Este guia prevalece sobre blueprints, imagens de concept art e modelos de refer�
 
 ### Kestrel-07 — adaptação do blueprint
 
-O casco atual é construído em `app/utils/kestrelModel.js`: armadura branca facetada, painéis turquesa personalizáveis, canopy escuro, asas varridas e duas naceles com anéis de cobre. Os detalhes estáticos são agrupados por material.
+O Kestrel-07 é o primeiro personagem da plataforma. Seu corpo é construído em `app/utils/kestrelModel.js`: armadura branca facetada, painéis turquesa personalizáveis, canopy escuro e duas naceles com anéis de cobre. Os detalhes estáticos são agrupados por material.
+
+**As asas não pertencem mais ao corpo.** Elas saíram do casco e viraram módulo em `app/utils/wingModels.js`, montado por `ShipWings.vue` na âncora do contrato. O corpo conserva apenas a raiz: superfície de encaixe, moldura e fixadores. A asa varrida original continua sendo a do slot vazio, agora como um modelo entre outros — equipar Falcão ou Nébula **substitui o modelo inteiro**, e não sobrepõe painel sobre a asa anterior, como acontecia antes.
 
 Referência visual aprovada: [blueprint Kestrel-07](kestrel-07-blueprint.png). O objetivo é reproduzir o desenho, incluindo silhueta, perfil inclinado da fuselagem e canopy, contorno das asas, carenagens e detalhes mecânicos. Não substituir esses volumes por blocos genéricos apenas semelhantes. As únicas adaptações deliberadas são as necessárias para compatibilidade com este guia e com os hardpoints do jogo.
 
@@ -350,5 +372,13 @@ As raridades não devem criar seis silhuetas desconectadas. A identidade princip
 - [ ] As famílias tecnológicas são reconhecíveis sem quebrar a identidade do casco.
 - [ ] As versões sem equipamento possuem tampas coerentes.
 - [ ] A concept art inclui todas as vistas obrigatórias.
+
+## Adaptação da prancha modular de asas
+
+- A Falcão usa uma carcaça varrida contínua, placas cerâmicas separadas por juntas de grafite, travas metálicas, radiadores e pequenos detalhes âmbar/ciano. Não é um leque de penas independentes.
+- A Nébula usa a mesma interface, com extensões bifurcadas, bordas violetas e lentes circulares alojadas nas faces superior e inferior. As lentes ficam orientadas pela normal da asa.
+- A asa padrão permanece mais simples. Equipar Falcão ou Nébula substitui a asa inteira, preservando o corpo central.
+- As proporções do encaixe e da silhueta da prancha são adaptadas ao envelope do chassi e aos hardpoints fixos. As armas auxiliares ilustradas na prancha não são canhões permanentes da asa: surgem somente quando o equipamento ou a melhoria de partida correspondente está ativo.
+- Os modelos usam os materiais compartilhados do casco e geometria agrupada por material. Trocar uma asa descarta sua geometria, mas preserva os materiais compartilhados.
 
 Princípio central: **o casco carrega as interfaces mecânicas; os equipamentos completam essas interfaces**.

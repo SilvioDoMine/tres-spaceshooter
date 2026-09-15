@@ -1,3 +1,5 @@
+import { SHIP_SOCKETS, WING_HARDPOINTS } from './shipSockets'
+
 // World-space formations: parallel shots retain their spacing throughout flight.
 export function shotFormation(count) {
   return Array.from({ length: count }, (_, i) => {
@@ -38,11 +40,17 @@ export function weaponMounts(front = 0, rear = 0, diagonal = 0) {
   add('front', 0, 1 + front);
   if (rear) add('rear', Math.PI, rear);
   if(diagonal) for(const side of [-1,1]) {
-    const angles=diagonal>=2?[[45,.12],[90,.36]]:[[45,.12]];
-    for(const [degrees,z] of angles) {
+    const angles=diagonal>=2?[[45,WING_HARDPOINTS.diagonal],[90,WING_HARDPOINTS.lateral]]:[[45,WING_HARDPOINTS.diagonal]];
+    for(const [degrees,socket] of angles) {
       const heading=rotateShot({x:0,z:-1},side*degrees*Math.PI/180);
+      // The wing socket supports the rear of the weapon, not its muzzle.
+      // ShipEquipment places its mounting block .28 model units behind
+      // the muzzle and scales auxiliary weapons to .43.
+      const muzzleOffset=.28*.43;
       mounts.push({id:`diagonal:${side}:${degrees}`,role:'diagonal',index:0,count:1,
-        x:side*.70,y:.065,z,dx:heading.x,dz:heading.z});
+        x:side*(SHIP_SOCKETS.wing.position[0]+socket.x)+heading.x*muzzleOffset,
+        y:socket.y+.035,z:socket.z+heading.z*muzzleOffset,
+        socketY:socket.y+.004,dx:heading.x,dz:heading.z});
     }
   }
   return mounts;
