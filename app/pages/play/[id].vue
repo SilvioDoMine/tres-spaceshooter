@@ -140,7 +140,7 @@ onUnmounted(() => {
         <GameEquipmentEffects />
         <GameHyperdriveBurst />
         
-        <GameWorld />
+        <GameWorld :key="Number(route.params.id)" :chapter="Number(route.params.id)" />
         <!-- <OrbitControls /> -->
       </GameOrchestrator>
     </TresCanvas>

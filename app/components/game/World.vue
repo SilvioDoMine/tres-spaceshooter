@@ -1,28 +1,28 @@
 <script setup lang="js">
 import GameStreamingDebris from './StreamingDebris.vue';
 import BgStarField from '~/components/lobby/backgrounds/BgStarField.vue';
+import { LEVELS } from '~/games/levels/index.js';
 
 const currentRun = useCurrentRunStore();
+const props=defineProps({chapter:Number});
+const chapterId=computed(()=>props.chapter ?? currentRun.levelConfig?.chapter ?? 1);
 const deepSpace=shallowRef();
 useLoop().onBeforeRender(()=>{if(deepSpace.value){const p=currentRun.getPlayerPosition();deepSpace.value.position.set(p.x,0,p.z)}});
 
 const stageWidth = ref(1);
 const stageHeight = ref(1);
 
-// Determine atmosphere color based on chapter
-const atmosphereColor = computed(() => {
-  return currentRun.levelConfig?.theme?.atmosphere ?? '#432097';
-});
+// O tema vem do capítulo pedido, não do run: a prévia do cenário monta este
+// componente sem nenhuma partida carregada.
+const theme = computed(() => LEVELS[chapterId.value]?.theme ?? currentRun.levelConfig?.theme);
 
-// Determine galaxy opacity based on chapter
-const galaxyOpacity = computed(() => {
-  const chapter = currentRun.levelConfig?.chapter || 1;
-  return currentRun.levelConfig?.theme?.galaxyOpacity ?? (chapter > 1 ? 0.5 : 0.35);
-});
+const atmosphereColor = computed(() => theme.value?.atmosphere ?? '#432097');
+
+const galaxyOpacity = computed(() => theme.value?.galaxyOpacity ?? (chapterId.value > 1 ? 0.5 : 0.35));
 
 // Determine level/chapter for effects
 const level = computed(() => {
-  return currentRun.levelConfig?.chapter || 1;
+  return chapterId.value;
 });
 
 watch(
@@ -56,7 +56,9 @@ watch(
 
     </TresMesh>
 
-    <GameOrbitalScenery /><GameStreamingDebris />
+    <GameNebulaShipyard v-if="chapterId===2" />
+    <GameFleetCommand v-else-if="chapterId===3" />
+    <template v-else><GameOrbitalScenery /><GameStreamingDebris /></template>
 
     <GameImpactEffects />
 <TresAmbientLight :intensity="0.5" color="#7586da" />
