@@ -1,5 +1,6 @@
 <script setup lang="js">
-import { useModal } from '~/composables/useModal';
+import { onMounted, onUnmounted } from 'vue';
+import { useModal, registerEscapeHandler, unregisterEscapeHandler } from '~/composables/useModal';
 
 const props = defineProps({
   /** ID único do modal */
@@ -16,6 +17,11 @@ const props = defineProps({
   disableOverlayClose: {
     type: Boolean,
     default: false,
+  },
+  /** Desabilitar fechamento com a tecla ESC (por padrão segue o overlay) */
+  disableEscClose: {
+    type: Boolean,
+    default: null,
   },
 });
 
@@ -38,6 +44,18 @@ function handleContentClick(e) {
   // Previne fechar quando clicar no conteúdo
   e.stopPropagation();
 }
+
+// ESC fecha o modal quando ele está no topo da pilha
+const closesOnEsc = props.disableEscClose === null
+  ? !props.disableOverlayClose
+  : !props.disableEscClose;
+
+onMounted(() => {
+  if (closesOnEsc) registerEscapeHandler(props.modalId, handleClose);
+});
+onUnmounted(() => {
+  if (closesOnEsc) unregisterEscapeHandler(props.modalId, handleClose);
+});
 </script>
 
 <template>

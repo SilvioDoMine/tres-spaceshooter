@@ -1,5 +1,6 @@
 <script setup lang="js">
-import { useModal } from '~/composables/useModal';
+import { onMounted, onUnmounted } from 'vue';
+import { useModal, registerEscapeHandler, unregisterEscapeHandler } from '~/composables/useModal';
 
 // Modal do lobby no mesmo formato dos diálogos da Loja e das telas da partida: painel de madeira clara com
 // contorno escuro e sombra dura, faixa de título (BaseRibbonTitle) pendurada no topo, X redondo no canto
@@ -35,6 +36,11 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  /** Desabilitar fechamento com a tecla ESC (por padrão segue o overlay) */
+  disableEscClose: {
+    type: Boolean,
+    default: null,
+  },
 });
 
 const emit = defineEmits(['close', 'open']);
@@ -65,6 +71,18 @@ function handleContentClick(e) {
   // Previne fechar quando clicar no conteúdo
   e.stopPropagation();
 }
+
+// ESC fecha o modal quando ele está no topo da pilha
+const closesOnEsc = props.disableEscClose === null
+  ? !props.disableOverlayClose
+  : !props.disableEscClose;
+
+onMounted(() => {
+  if (closesOnEsc) registerEscapeHandler(props.modalId, handleClose);
+});
+onUnmounted(() => {
+  if (closesOnEsc) unregisterEscapeHandler(props.modalId, handleClose);
+});
 </script>
 
 <template>

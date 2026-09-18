@@ -19,6 +19,53 @@ if (import.meta.client) {
   });
 }
 
+// Handlers de ESC registrados pelos modais (id -> função de fechar).
+// Só quem registra fecha com ESC; modais obrigatórios (game over, pausa) ficam de fora.
+const escapeHandlers = new Map();
+
+let escapeListenerAttached = false;
+
+function handleGlobalEscape(event) {
+  if (event.key !== 'Escape' || event.repeat || event.defaultPrevented) return;
+
+  const topId = modalStack.value[modalStack.value.length - 1];
+  if (!topId) return;
+
+  const handler = escapeHandlers.get(topId);
+  if (!handler) return;
+
+  // Consome o ESC para que atalhos de baixo (pausa, telas do lobby) não reajam ao mesmo toque
+  event.preventDefault();
+  event.stopPropagation();
+  handler();
+}
+
+function ensureEscapeListener() {
+  if (escapeListenerAttached || !import.meta.client) return;
+  // Captura: roda antes dos atalhos locais das telas/modais
+  window.addEventListener('keydown', handleGlobalEscape, true);
+  escapeListenerAttached = true;
+}
+
+/**
+ * Registra o fechamento por ESC de um modal.
+ * O handler só é chamado quando o modal está no topo da pilha.
+ */
+export function registerEscapeHandler(modalId, handler) {
+  ensureEscapeListener();
+  escapeHandlers.set(modalId, handler);
+}
+
+/**
+ * Remove o fechamento por ESC de um modal.
+ * Só apaga se o handler ainda for o registrado: na troca de rota a instância nova
+ * monta antes da antiga desmontar, e a antiga não pode derrubar o registro da nova.
+ */
+export function unregisterEscapeHandler(modalId, handler) {
+  if (handler && escapeHandlers.get(modalId) !== handler) return;
+  escapeHandlers.delete(modalId);
+}
+
 export function useModal(modalId) {
   /**
    * Verifica se este modal está aberto
