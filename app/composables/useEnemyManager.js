@@ -568,7 +568,7 @@ export function useEnemyManager() {
       overrides = {},
     } = options;
 
-    const room = playableRoomCount(useCurrentRun.levelConfig, useCurrentRun.currentStageIndex);
+    const room = useCurrentRun.currentStage?.combatTier ?? playableRoomCount(useCurrentRun.levelConfig, useCurrentRun.currentStageIndex);
     const exactBossHealth = enemyType === 'asteroidBoss' || enemyType === 'boss' || Boolean(enemyStats.exactStats);
     const chapter = useCurrentRun.levelConfig?.chapter || 1;
     const health = exactBossHealth ? enemyStats.health : scaledEnemyHealth(enemyStats.health, room, chapter);

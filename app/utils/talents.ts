@@ -18,6 +18,8 @@ export type TalentBonuses = Record<TalentStat, number>;
 
 export interface TalentBaseStats {
   maxHealth: number;
+  /** HP máximo obtido naturalmente por nível durante a partida. */
+  maxHealthPerLevel?: number;
   moveSpeed: number;
   projectiles: { damage: number; shotCooldown: number };
 }

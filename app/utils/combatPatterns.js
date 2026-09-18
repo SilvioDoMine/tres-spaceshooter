@@ -1,4 +1,4 @@
-import { SHIP_SOCKETS, WING_HARDPOINTS } from './shipSockets'
+import { SHIP_SOCKETS, WING_HARDPOINTS } from './shipSockets.js'
 
 // World-space formations: parallel shots retain their spacing throughout flight.
 export function shotFormation(count) {

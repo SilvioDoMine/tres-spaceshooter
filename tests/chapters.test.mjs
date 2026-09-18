@@ -19,20 +19,20 @@ const BOSSES = { 1: ['asteroidBoss', 'boss'], 2: ['hiveBoss', 'harpyBoss'], 3: [
 const roomsOf = level => level.stages.filter(stage => stage.type !== 'intro');
 const typesIn = stage => stage.waves.flatMap(w => w.enemies.map(g => g.enemyType));
 
-test('three chapters, each with an intro and twenty rooms, bosses at rooms 10 and 20', () => {
+test('three quick chapters preserve bosses and original combat tiers', () => {
   assert.equal(CHAPTER_COUNT, 3);
   for (let chapter = 1; chapter <= CHAPTER_COUNT; chapter++) {
     const level = LEVELS[chapter];
     assert.equal(level.chapter, chapter);
     assert.ok(CHAPTER_INFO[chapter]?.boss);
     assert.equal(level.stages[0].type, 'intro');
-    assert.equal(playableRoomCount(level), 20);
+    assert.equal(playableRoomCount(level), [35, 38, 40][chapter - 1]);
     const rooms = roomsOf(level);
     rooms.forEach((stage, i) => {
-      assert.equal(stage.type, i === 9 || i === 19 ? 'boss' : 'combat', `chapter ${chapter} room ${i + 1}`);
+      assert.equal(stage.type, stage.combatTier === 10 || stage.combatTier === 20 ? 'boss' : 'combat', `chapter ${chapter} room ${i + 1}`);
       typesIn(stage).forEach(type => assert.ok(KNOWN_ENEMIES.has(type), type));
     });
-    assert.deepEqual([rooms[9], rooms[19]].map(stage => stage.waves[0].enemies[0].enemyType), BOSSES[chapter]);
+    assert.deepEqual(rooms.filter(s => s.type === 'boss').map(stage => stage.waves[0].enemies[0].enemyType), BOSSES[chapter]);
   }
   assert.ok(LEVELS[1].rewardExperience < LEVELS[2].rewardExperience && LEVELS[2].rewardExperience < LEVELS[3].rewardExperience);
 });
@@ -41,7 +41,7 @@ test('mini-hive only shows up after the Hive has been beaten', () => {
   const appearances = level => roomsOf(level).map((stage, i) => typesIn(stage).includes('miniHive') ? i + 1 : null).filter(Boolean);
   assert.deepEqual(appearances(LEVELS[1]), []);
   const chapterTwo = appearances(LEVELS[2]);
-  assert.ok(chapterTwo.length >= 4 && chapterTwo.every(room => room > 10));
+  assert.ok(chapterTwo.length >= 4 && chapterTwo.every(room => room > roomsOf(LEVELS[2]).findIndex(s => s.type === 'boss') + 1));
   assert.ok(appearances(LEVELS[3]).length >= 4);
   assert.equal(enemyCategory('miniHive'), 'elite');
   assert.equal(enemyCategory('hiveDrone'), 'mini');

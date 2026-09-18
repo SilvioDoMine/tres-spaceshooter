@@ -1,11 +1,12 @@
-import { combat, group, intro, wave } from './helpers.js';
+import { chapterStages, combat, group, intro, wave } from './helpers.js';
 
 // Capítulo 2 — Estaleiro na nebulosa. Kamikazes cedo, elites no meio e minibosses no fim.
-// Sala 10: COLMEIA. Sala 20: HARPIA. Depois da Colmeia, a mini-colmeia entra no elenco.
+// Tier 10: COLMEIA. Tier 20: HARPIA. Depois da Colmeia, a mini-colmeia entra no elenco.
 export const LEVEL_2 = {
   levelId: 'level_nebula_shipyard_002', chapter: 2, width: 10, height: 20, rewardExperience: 160,
   theme: { atmosphere: '#7a2c1c', galaxyOpacity: .55 },
-  stages: [
+  structure: 'quick', targetPlayerLevel: 23,
+  stages: chapterStages([
     intro(),
     combat(1, [wave(group('ufo', 2))]),
     combat(2, [wave(group('miniasteroid', 2), group('ufo', 1)), wave(group('kamikaze', 1))]),
@@ -27,5 +28,5 @@ export const LEVEL_2 = {
     combat(18, [wave(group('torusEnemy', 3), group('ufofast', 2)), wave(group('miniHive', 2), group('asteroid', 1)), wave(group('compositeEnemy', 2))]),
     combat(19, [wave(group('ufofast', 2), group('compositeEnemy', 2), group('miniHive', 1)), wave(group('miniboss', 1), group('torusEnemy', 2))]),
     combat(20, [wave(group('harpyBoss', 1, 3))], 'boss'),
-  ],
+  ], 2),
 };

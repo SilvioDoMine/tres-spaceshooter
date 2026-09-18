@@ -149,9 +149,9 @@ const expectedRooms={
 };
 test('chapter room compositions match the encounter specification',()=>{
   const playableStages=LEVEL_1.stages.filter(stage=>stage.type!=='intro');
-  assert.equal(playableStages.length,20);
+  assert.equal(playableStages.length,35);
   for(const [room,waves] of Object.entries(expectedRooms)) {
-    const actual=playableStages[Number(room)-1].waves.map(w=>w.enemies.map(g=>[g.enemyType,g.count]));
+    const actual=playableStages.filter(s=>s.combatTier===Number(room)).flatMap(s=>s.waves).map(w=>w.enemies.map(g=>[g.enemyType,g.count]));
     assert.deepEqual(actual,waves,`room ${room}`);
   }
   assert.ok(playableStages.every(stage=>stage.type!=='upgrade'));
@@ -160,27 +160,25 @@ test('chapter room compositions match the encounter specification',()=>{
 test('replacement rooms sit between their neighboring combat encounters',()=>{
   const health={miniasteroid:90,ufo:130,ufofast:180,asteroid:500,torusEnemy:180,compositeEnemy:220,kamikaze:120};
   const playable=LEVEL_1.stages.filter(stage=>stage.type!=='intro');
-  const encounterHealth=room=>playable[room-1].waves.flatMap(w=>w.enemies)
+  const encounterHealth=room=>playable.filter(s=>s.combatTier===room).flatMap(s=>s.waves).flatMap(w=>w.enemies)
     .reduce((sum,group)=>sum+group.count*scaledEnemyHealth(health[group.enemyType]||0,room),0);
   assert.ok(encounterHealth(4)<encounterHealth(5) && encounterHealth(5)<encounterHealth(6));
   assert.ok(encounterHealth(14)<encounterHealth(15) && encounterHealth(15)<encounterHealth(16));
 });
 
-test('pre-final XP remains inside the intended level-up band',()=>{
+test('splitting rooms preserves pre-final enemy XP',()=>{
   const xpBase={miniasteroid:20,ufo:40,ufofast:55,asteroid:90,torusEnemy:70,compositeEnemy:80,kamikaze:60,miniboss:300};
   let total=0;
   const playableStages=LEVEL_1.stages.filter(stage=>stage.type!=='intro');
   for(let room=1;room<20;room++) {
     if(room===10){total+=1200;continue;}
-    for(const w of playableStages[room-1].waves||[])for(const g of w.enemies) {
+    for(const w of playableStages.filter(s=>s.combatTier===room).flatMap(s=>s.waves))for(const g of w.enemies) {
       total+=g.count*scaledEnemyExperience(xpBase[g.enemyType]||0,room);
       if(g.enemyType==='asteroid')total+=g.count*2*scaledEnemyExperience(5,room);
     }
   }
-  assert.equal(total,18450); assert.ok(total<21564);
-  let remainder=total,levelUps=0;
-  while(remainder>=Math.floor(100*(levelUps+1)**1.5)){remainder-=Math.floor(100*(levelUps+1)**1.5);levelUps++;}
-  assert.equal(levelUps,11);
+  assert.equal(total,18450);
+
 });
 
 test('final boss has 7800 HP and changes phase at 70 and 40 percent',()=>{

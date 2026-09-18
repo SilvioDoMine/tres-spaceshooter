@@ -6,6 +6,7 @@ import { useEnemyManager } from '~/composables/useEnemyManager';
 import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import { useSkillStore, SkillsList } from '~/stores/SkillStore';
+import { targetInsideView } from '~/utils/rangeCamera';
 import { worldHardpoint, advanceShot, bastionShieldBlocks, PLAYER_HITBOX_RADIUS, PROJECTILE_IFRAME, PROJECTILE_ORPHAN_LIFESPAN, segmentHit } from '~/utils/combatPatterns';
 
 const orb = { speed: 4, damage: 18, size: .22, range: 25, color: '#52caff' };
@@ -63,7 +64,15 @@ export const useProjectileStore = defineStore('projectileStore', () => {
     return nearest;
   }
   function nearestEnemyFromPlayer() {
-    return nearestEnemyFromPosition(currentRunStore.getPlayerPosition(),projectilesType.player.range*playerStats.getRangeMultiplier);
+    const position = currentRunStore.getPlayerPosition();
+    const view = useState('flight-view', () => ({ x: 0, z: 0, width: 0, height: 0 })).value;
+    let nearest = null, distance = projectilesType.player.range * playerStats.getRangeMultiplier;
+    for (const enemy of enemyManager.activeEnemies.value) {
+      if (enemy.state !== 'active' || !targetInsideView(enemy.position, view)) continue;
+      const d = Math.hypot(enemy.position.x - position.x, enemy.position.z - position.z);
+      if (d < distance) { nearest = enemy; distance = d; }
+    }
+    return nearest;
   }
   function collide(projectile,start) {
     if(projectile.ownerType==='enemy') {

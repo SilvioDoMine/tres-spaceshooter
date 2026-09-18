@@ -9,7 +9,7 @@ export function useEnemyAttacks() {
   function update(enemies,delta) {
     volleyGate=Math.max(0,volleyGate-delta);
     let bullets=shots.projectiles.filter(p=>p.ownerType==='enemy').length;
-    const room=playableRoomCount(run.levelConfig,run.currentStageIndex);
+    const room=run.currentStage?.combatTier ?? playableRoomCount(run.levelConfig,run.currentStageIndex);
     const chapter=run.levelConfig?.chapter;
     const player=run.getPlayerPosition();
     for(const enemy of enemies) {

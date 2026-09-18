@@ -18,3 +18,22 @@ Antes de criar, gerar, remodelar, importar ou alterar uma nave de jogador, um eq
 9. Confira visualmente combinações de equipamentos e melhorias temporárias antes de considerar o trabalho concluído.
 
 Se uma solicitação de modelagem contrariar o guia, siga a solicitação explícita do usuário e registre no resultado qual regra visual foi excepcionalmente alterada.
+
+## Novos capítulos, salas e progressão
+
+Antes de criar ou alterar capítulos, encontros, waves ou a curva de EXP, leia [docs/gameplay-progression.md](docs/gameplay-progression.md) e confira as configurações atuais em app/games/levels/.
+
+A arquitetura já está preparada para os futuros capítulos 4 e 5, mas eles ainda não possuem conteúdo jogável. Não confunda suporte de código com capítulos implementados e não registre capítulos vazios no lobby.
+
+- **Capítulo 4:** seguir o formato quick dos capítulos iniciais, com 30–40 salas jogáveis e uma única wave por sala. Matou todos os inimigos do encontro, libera o portal; não iniciar outra wave nessa sala.
+- **Capítulo 5:** introduzir o formato waves, com aproximadamente 20 salas e múltiplas waves por sala. Liberar o portal somente após concluir todas as waves.
+- **Capítulos especiais futuros:** o formato boss-rush permite sequências curtas, por exemplo cinco bosses. Isso é uma opção de estrutura, não conteúdo já criado nem uma exigência para o capítulo 5.
+- Reutilize chapterStages(stages, chapter, structure) de app/games/levels/helpers.js. Mantenha o campo structure da configuração coerente com o argumento passado ao helper. O padrão é quick até o capítulo 4 e waves a partir do 5.
+- A intro com portal fica fora da contagem. A primeira sala de combate deve aparecer como 1/total. Não fixe o total de salas em 20 na HUD, no resumo ou no desbloqueio.
+- Preserve combatTier como referência da dificuldade dos inimigos, separada do número exibido da sala. Ao criar um capítulo novo, confira as curvas de atributos e ataques existentes: não presuma que adicionar salas cria automaticamente novos patamares de dificuldade.
+- Ajuste estrutura e elenco antes da EXP. Use targetPlayerLevel e app/utils/runExperience.js, buscando nível 20–25 numa run normal e aproximadamente 25–30 com bônus de EXP. O alvo atual é 23; não é um limite rígido nem uma recompensa automática por sala. Evite longos intervalos sem evolução e não imponha exatamente um level up por sala.
+- Inclua no catálogo a EXP dos novos inimigos e confira recompensas de fragmentos e invocações. Um boss com recompensa zero não concede EXP; um boss-rush exige recompensas adequadas para sustentar a progressão.
+- Ao disponibilizar um capítulo completo, registre sua configuração e os textos correspondentes em app/games/levels/index.js (LEVELS e CHAPTER_INFO). Verifique também desbloqueio, vitória, resumo da partida e ambientação específica.
+- Valide contagem de salas, liberação do portal após a última wave, ordem dos bosses e progressão de EXP. Atualize os testes pertinentes em tests/runPacing.test.mjs e tests/chapters.test.mjs e execute os testes do projeto.
+
+Preserve também o enquadramento dinâmico do alcance: upgrades devem afastar a câmera sem reduzir o range. Em retrato, o círculo deve ficar próximo às bordas, com pequena margem, e continuar inteiro na tela.

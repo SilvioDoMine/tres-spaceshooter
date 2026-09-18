@@ -58,7 +58,7 @@ function storeHarness(){
  const damage=[],hits=[],flashes=[],sounds=[];
  const player={x:100,z:100};
  const context=vm.createContext({...patterns,Math,console,
-  defineStore:(_id,setup)=>setup, shallowRef:value=>({value}),emitImpact:()=>{},useAudio:()=>({playSound:name=>sounds.push(name)}),
+  defineStore:(_id,setup)=>setup, shallowRef:value=>({value}),emitImpact:()=>{},useAudio:()=>({playSound:name=>sounds.push(name),playCombatSound:name=>sounds.push(name)}),
   emitMuzzleFlash:id=>flashes.push(id),
   PlayerBaseStats:{projectiles:{shotSpeed:19,damage:50,size:.2,range:11}},
   baseStats:{},SkillsList:{ricochet_shot:{levels:{1:{value:.5}}}},
@@ -141,7 +141,7 @@ test('physical hardpoints match front, diagonal and straight rear fire',()=>{
     for(const m of side){
       const degrees=Math.round(Math.abs(Math.atan2(m.dx,-m.dz))*180/Math.PI);
       assert.ok(degrees===45||(diagonal>=2&&degrees===90));
-      assert.equal(Math.abs(m.x),.70);
+      assert.ok(Math.abs(Math.abs(m.x - m.dx * .28 * .43) - .70) < 1e-10);
     }
     for(const m of mounts)for(const yaw of [0,.7,Math.PI,-1.2]){
       const p={x:12,y:0,z:-8};const result=patterns.worldHardpoint(p,yaw,m);

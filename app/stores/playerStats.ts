@@ -195,8 +195,7 @@ export const usePlayerStats = defineStore('playerStats', () => {
   }
 
   function healthAfterSkillUpgrade(maxHealthBefore: number): void {
-    let newMaxHealth = attributes.value.maxHealth * getHealthMultiplier.value;
-    const amountToHeal = newMaxHealth - maxHealthBefore;
+    const amountToHeal = useCurrentRunStore().maxHealth - maxHealthBefore;
     console.log('Healing player for', amountToHeal, 'after skill upgrade');
     heal(amountToHeal);
   }
