@@ -104,8 +104,12 @@ a,
   -webkit-touch-callout: none;
 }
 
-/* Clique/toque não deixa borda de foco; navegação por teclado continua mostrando */
-:focus:not(:focus-visible) {
+/* Sem borda de foco do navegador em nenhuma UI.
+ * Num jogo o teclado está sempre em uso (WASD, ESC, P), então o Chrome entra em
+ * "modalidade teclado" e passa a marcar como :focus-visible até o que foi clicado
+ * com o mouse — por isso `:focus:not(:focus-visible)` não bastava. */
+:focus,
+:focus-visible {
   outline: none;
 }
 

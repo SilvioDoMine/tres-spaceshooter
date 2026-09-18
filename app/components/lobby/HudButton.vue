@@ -116,11 +116,6 @@ const NuxtLink = resolveComponent('NuxtLink');
     inset 0 -4px 0 rgba(0, 0, 0, 0.12);
 }
 
-.hudbtn:focus-visible .hudbtn__face {
-  outline: 3px solid #fff;
-  outline-offset: 2px;
-}
-
 .hudbtn.is-orange {
   --from: #ffd257;
   --to: #f08a14;

@@ -68,9 +68,4 @@ withDefaults(defineProps<{ label?: string }>(), { label: 'Fechar' });
     inset 0 2px 0 rgba(255, 255, 255, 0.55),
     inset 0 -3px 0 rgba(0, 0, 0, 0.15);
 }
-
-.xbtn:focus-visible {
-  outline: 3px solid #fff;
-  outline-offset: 2px;
-}
 </style>
