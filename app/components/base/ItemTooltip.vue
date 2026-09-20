@@ -1,20 +1,27 @@
 <script setup lang="ts">
 import { EQUIPMENT_RARITIES, EQUIPMENT_SLOTS } from '~/data/equipment';
+import { SIMPLE_ITEMS, type SimpleItemId } from '~/data/items';
 import { formatTalentValue } from '~/utils/talents';
 import { formatStat, getEquipment, itemAbilities, itemMainStat, type OwnedEquipment } from '~/utils/equipment';
 
-// Tooltip de item no estilo WoW: envolve qualquer gatilho (normalmente um LobbyEquipmentItemCard) e mostra
-// nome, raridade, atributo principal, descrição e habilidades num painel flutuante.
+// Tooltip de item: envolve qualquer gatilho (o ícone/card que já está na tela) e descreve o que ele é.
+// Duas variantes: `item` (equipamento) abre a ficha completa no estilo WoW — raridade, atributo principal,
+// descrição e habilidades; `resource` (ouro, gemas, exp, chaves...) abre a versão simples de nome + descrição.
 // Desktop abre no hover; touch abre no toque (e fecha ao tocar fora, rolar ou apertar Esc).
 const props = withDefaults(
   defineProps<{
+    /** Equipamento: variante completa */
     item?: OwnedEquipment | null;
+    /** Item simples do catálogo (~/data/items): variante enxuta */
+    resource?: SimpleItemId | null;
     /** Desliga o tooltip e o realce do gatilho (ex.: card vazio) */
     disabled?: boolean;
     /** Não aplica o realce de hover no gatilho (quem envolve já tem o seu) */
     noHighlight?: boolean;
+    /** Só hover: o toque não abre. Para onde tocar já faz outra coisa (abrir a ficha, comprar...) */
+    noTap?: boolean;
   }>(),
-  { item: null, disabled: false, noHighlight: false },
+  { item: null, resource: null, disabled: false, noHighlight: false, noTap: false },
 );
 
 const GAP = 12;
@@ -32,7 +39,9 @@ const rarity = computed(() => (props.item ? EQUIPMENT_RARITIES[props.item.rarity
 const main = computed(() => (props.item ? itemMainStat(props.item.defId, props.item.rarity) : null));
 const mainLabel = computed(() => (main.value?.stat === 'damageFlat' ? 'ATQ' : 'HP Máx.'));
 const abilities = computed(() => (props.item ? itemAbilities(props.item.defId, props.item.rarity) : []));
-const available = computed(() => !props.disabled && !!def.value && !!rarity.value && !!main.value);
+const simple = computed(() => (props.resource ? SIMPLE_ITEMS[props.resource] : null));
+const hasEquipment = computed(() => !!def.value && !!rarity.value && !!main.value);
+const available = computed(() => !props.disabled && (hasEquipment.value || !!simple.value));
 
 const abilityText = (ability: (typeof abilities.value)[number]['ability']) =>
   ability.stat ? formatTalentValue(ability.stat, ability.value ?? 0) : (ability.text ?? '');
@@ -85,7 +94,7 @@ function onPointerLeave(event: PointerEvent) {
 }
 
 function onClick() {
-  if (lastPointer === 'mouse') return;
+  if (lastPointer === 'mouse' || props.noTap) return;
   if (open.value) hide();
   else show(true);
 }
@@ -119,6 +128,7 @@ watch(open, (isOpen) => {
 
 // O item pode trocar com o tooltip aberto (fusão, navegação na mochila)
 watch(() => props.item?.uid, hide);
+watch(() => props.resource, hide);
 watch(available, (ok) => {
   if (!ok) hide();
 });
@@ -145,6 +155,7 @@ onUnmounted(() => {
 
     <Teleport to="body">
       <Transition name="itip">
+        <!-- Equipamento: ficha completa -->
         <div
           v-if="open && item && def && rarity && main"
           ref="panel"
@@ -178,16 +189,26 @@ onUnmounted(() => {
             </li>
           </ul>
         </div>
+
+        <!-- Item simples (ouro, gemas, exp, chaves...): só nome e descrição -->
+        <div
+          v-else-if="open && simple"
+          ref="panel"
+          class="itip is-simple"
+          :class="[`is-arrow-${position.side}`, { 'is-touch': touchOpen }]"
+          role="tooltip"
+          :style="{ top: `${position.top}px`, left: `${position.left}px`, '--arrow': `${position.arrow}px` }"
+        >
+          <span class="itip__arrow" aria-hidden="true"></span>
+          <h3 class="itip__simple-name">{{ simple.name }}</h3>
+          <p class="itip__simple-text">{{ simple.description }}</p>
+        </div>
       </Transition>
     </Teleport>
   </div>
 </template>
 
 <style scoped>
-.itip__trigger {
-  display: block;
-  width: 100%;
-}
 .itip__trigger.is-interactive {
   cursor: pointer;
   transition:
@@ -320,6 +341,27 @@ onUnmounted(() => {
 }
 .itip__abilities li.is-locked i {
   filter: grayscale(1) brightness(0.7);
+}
+
+/* Variante simples: mais estreita, texto centralizado e um filete separando nome e descrição */
+.itip.is-simple {
+  width: max-content;
+  max-width: min(260px, calc(100vw - 16px));
+  padding: 10px 14px 12px;
+  text-align: center;
+}
+.itip__simple-name {
+  margin: 0;
+  padding-bottom: 7px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+  font: 18px/1.15 'Lilita One', sans-serif;
+  -webkit-text-stroke: 4px #0f1530;
+  paint-order: stroke fill;
+}
+.itip__simple-text {
+  margin: 8px 0 0;
+  font: 12px/1.4 'Fredoka One', sans-serif;
+  color: #d5def2;
 }
 
 .itip-enter-active,

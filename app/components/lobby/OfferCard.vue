@@ -39,10 +39,12 @@ const handlePurchase = () => {
                     class="flex-row -ml-2 flex p-2 gap-2 bg-cyan-400 items-center rounded-r-md shadow-[inset_-2px_2px_2px_0px_rgba(0,0,0,0.2)] ring-1 ring-cyan-300"
                 >
                     <p class="text-xs text-black/60 font-bold italic">Compre para obter agora</p>
-                    <div class="flex items-center justify-center gap-1">
-                        <SvgGemIcon :size="25" />
-                        <p class="title-text text-md drop-shadow-[1px_1px_0px_rgba(0,0,0,1)]">{{ offer.onPurchase.cash }}</p>
-                    </div>
+                    <BaseItemTooltip resource="gems">
+                        <div class="flex items-center justify-center gap-1">
+                            <SvgGemIcon :size="25" />
+                            <p class="title-text text-md drop-shadow-[1px_1px_0px_rgba(0,0,0,1)]">{{ offer.onPurchase.cash }}</p>
+                        </div>
+                    </BaseItemTooltip>
                 </div>
 
                 <!-- Benefits List -->
@@ -101,26 +103,20 @@ const handlePurchase = () => {
         >
             <p class="text-sm">Resgate adicionalmente todos os dias ao comprar:</p>
             <div class="flex flex-row gap-2">
-                <BaseAbilityIcon
-                    v-if="offer.dailyRewards.cash"
-                    rarity="purple"
-                    size="sm"
-                    :quantity="`${offer.dailyRewards.cash}`"
-                >
-                    <p class="text-2xl">
-                        <SvgGemIcon :size="35" />
-                    </p>
-                </BaseAbilityIcon>
-                <BaseAbilityIcon
-                    v-if="offer.dailyRewards.gold"
-                    rarity="gray"
-                    size="sm"
-                    :quantity="`${offer.dailyRewards.gold}`"
-                >
-                    <p class="text-2xl">
-                        <SvgCoinIcon :size="30" />
-                    </p>
-                </BaseAbilityIcon>
+                <BaseItemTooltip v-if="offer.dailyRewards.cash" resource="gems" no-highlight>
+                    <BaseAbilityIcon rarity="purple" size="sm" :quantity="`${offer.dailyRewards.cash}`">
+                        <p class="text-2xl">
+                            <SvgGemIcon :size="35" />
+                        </p>
+                    </BaseAbilityIcon>
+                </BaseItemTooltip>
+                <BaseItemTooltip v-if="offer.dailyRewards.gold" resource="gold" no-highlight>
+                    <BaseAbilityIcon rarity="gray" size="sm" :quantity="`${offer.dailyRewards.gold}`">
+                        <p class="text-2xl">
+                            <SvgCoinIcon :size="30" />
+                        </p>
+                    </BaseAbilityIcon>
+                </BaseItemTooltip>
             </div>
         </div>
     </BaseCheckersCard>
@@ -136,28 +132,30 @@ const handlePurchase = () => {
         <div class="flex justify-between items-center w-full p-2">
             <!-- Daily Rewards -->
             <div class="flex flex-row gap-2">
-                <BaseAbilityIcon
-                    v-if="offer.dailyRewards?.cash"
-                    rarity="purple"
-                    size="sm"
-                    :clickable="offer.state === 'claimable'"
-                    :quantity="`${offer.dailyRewards.cash}`"
-                >
-                    <p class="text-2xl">
-                        <SvgGemIcon :size="35" />
-                    </p>
-                </BaseAbilityIcon>
-                <BaseAbilityIcon
-                    v-if="offer.dailyRewards?.gold"
-                    rarity="gray"
-                    size="sm"
-                    :clickable="offer.state === 'claimable'"
-                    :quantity="`${offer.dailyRewards.gold}`"
-                >
-                    <p class="text-2xl">
-                        <SvgCoinIcon :size="30" />
-                    </p>
-                </BaseAbilityIcon>
+                <BaseItemTooltip v-if="offer.dailyRewards?.cash" resource="gems" no-highlight>
+                    <BaseAbilityIcon
+                        rarity="purple"
+                        size="sm"
+                        :clickable="offer.state === 'claimable'"
+                        :quantity="`${offer.dailyRewards.cash}`"
+                    >
+                        <p class="text-2xl">
+                            <SvgGemIcon :size="35" />
+                        </p>
+                    </BaseAbilityIcon>
+                </BaseItemTooltip>
+                <BaseItemTooltip v-if="offer.dailyRewards?.gold" resource="gold" no-highlight>
+                    <BaseAbilityIcon
+                        rarity="gray"
+                        size="sm"
+                        :clickable="offer.state === 'claimable'"
+                        :quantity="`${offer.dailyRewards.gold}`"
+                    >
+                        <p class="text-2xl">
+                            <SvgCoinIcon :size="30" />
+                        </p>
+                    </BaseAbilityIcon>
+                </BaseItemTooltip>
             </div>
 
             <!-- Actions -->

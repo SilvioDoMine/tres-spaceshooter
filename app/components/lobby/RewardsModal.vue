@@ -2,6 +2,7 @@
 import { useModal } from '~/composables/useModal';
 import PlayModal from '~/components/play/PlayModal.vue';
 import BaseAbilityIcon from '~/components/base/AbilityIcon.vue';
+import { keyItemId } from '~/data/items';
 
 const MODAL_ID = 'rewards-modal';
 
@@ -89,67 +90,54 @@ const handleQuit = () => {
 
   <!-- Grid de habilidades -->
   <div class="abilities-grid">
-    <BaseAbilityIcon
-      v-if="displayedGold > 0"
-      data-modal-keep-open
-      rarity="gray"
-      size="sm"
-      :clickable="true"
-      :quantity="`${displayedGold}`"
-    >
-      <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">
-        <span class="drop-shadow-xs drop-shadow-black text-gold">
-          <SvgCoinIcon :size="25" />
-        </span>
-      </p>
-    </BaseAbilityIcon>
+    <BaseItemTooltip v-if="displayedGold > 0" resource="gold" no-highlight data-modal-keep-open>
+      <BaseAbilityIcon rarity="gray" size="sm" :clickable="true" :quantity="`${displayedGold}`">
+        <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">
+          <span class="drop-shadow-xs drop-shadow-black text-gold">
+            <SvgCoinIcon :size="25" />
+          </span>
+        </p>
+      </BaseAbilityIcon>
+    </BaseItemTooltip>
 
-    <BaseAbilityIcon
-      v-if="displayedCash > 0"
-      data-modal-keep-open
-      rarity="gray"
-      size="sm"
-      :clickable="true"
-      :quantity="`${displayedCash}`"
-    >
-      <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">
-        <span class="drop-shadow-xs drop-shadow-black text-green-500">
-          <SvgGemIcon :size="25" />
-        </span>
-      </p>
-    </BaseAbilityIcon>
+    <BaseItemTooltip v-if="displayedCash > 0" resource="gems" no-highlight data-modal-keep-open>
+      <BaseAbilityIcon rarity="gray" size="sm" :clickable="true" :quantity="`${displayedCash}`">
+        <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">
+          <span class="drop-shadow-xs drop-shadow-black text-green-500">
+            <SvgGemIcon :size="25" />
+          </span>
+        </p>
+      </BaseAbilityIcon>
+    </BaseItemTooltip>
 
-    <BaseAbilityIcon
-      v-if="displayedExp > 0"
-      data-modal-keep-open
-      rarity="gray"
-      size="sm"
-      :clickable="true"
-      :quantity="`${displayedExp}`"
-    >
-      <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">
-        <span class="drop-shadow-xs drop-shadow-black">
-          <SvgExpIcon :size="25" />
-        </span>
-      </p>
-    </BaseAbilityIcon>
+    <BaseItemTooltip v-if="displayedExp > 0" resource="exp" no-highlight data-modal-keep-open>
+      <BaseAbilityIcon rarity="gray" size="sm" :clickable="true" :quantity="`${displayedExp}`">
+        <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">
+          <span class="drop-shadow-xs drop-shadow-black">
+            <SvgExpIcon :size="25" />
+          </span>
+        </p>
+      </BaseAbilityIcon>
+    </BaseItemTooltip>
 
-    <BaseAbilityIcon
+    <BaseItemTooltip
       v-for="[type, amount] in displayedKeys"
       :key="`key-${type}`"
+      :resource="keyItemId(type)"
+      no-highlight
       data-modal-keep-open
-      rarity="gray"
-      size="sm"
-      :clickable="true"
-      :quantity="`${amount}`"
     >
-      <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">
-        <SvgKeyIcon :size="30" :type="type" />
-      </p>
-    </BaseAbilityIcon>
+      <BaseAbilityIcon rarity="gray" size="sm" :clickable="true" :quantity="`${amount}`">
+        <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">
+          <SvgKeyIcon :size="30" :type="type" />
+        </p>
+      </BaseAbilityIcon>
+    </BaseItemTooltip>
 
     <div v-for="item in displayedEquipment" :key="`eq-${item.uid}`" class="w-16" data-modal-keep-open>
-      <LobbyEquipmentItemCard :item="item" />
+      <BaseItemTooltip :item="item">
+        <LobbyEquipmentItemCard :item="item" />
+      </BaseItemTooltip>
     </div>
   </div>
 

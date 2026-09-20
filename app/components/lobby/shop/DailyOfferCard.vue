@@ -24,7 +24,9 @@ const item = computed(() => ({ uid: 0, defId: props.offer.defId, rarity: props.o
   >
     <span class="offer__shine" aria-hidden="true"></span>
     <strong class="offer__name">{{ def?.name }}</strong>
-    <span class="offer__item"><LobbyEquipmentItemCard :item="item" /></span>
+    <span class="offer__item">
+      <BaseItemTooltip :item="item" no-tap no-highlight><LobbyEquipmentItemCard :item="item" /></BaseItemTooltip>
+    </span>
 
     <span v-if="soldOut" class="offer__stock is-out">Sem Estoque</span>
     <span v-else class="offer__stock">Chances de compra restantes: {{ remaining }}</span>

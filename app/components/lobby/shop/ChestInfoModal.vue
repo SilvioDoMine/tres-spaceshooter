@@ -29,7 +29,9 @@ const percent = (value: number) => `${value.toLocaleString('pt-BR', { minimumFra
         </header>
         <div class="drop__grid">
           <div v-for="defId in row.items" :key="defId" class="drop__item">
-            <LobbyEquipmentItemCard :item="{ uid: 0, defId, rarity: row.rarity }" />
+            <BaseItemTooltip :item="{ uid: 0, defId, rarity: row.rarity }">
+              <LobbyEquipmentItemCard :item="{ uid: 0, defId, rarity: row.rarity }" />
+            </BaseItemTooltip>
             <span>{{ percent(row.itemPercent) }}</span>
           </div>
         </div>
@@ -85,8 +87,11 @@ const percent = (value: number) => `${value.toLocaleString('pt-BR', { minimumFra
 .drop__item {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2px;
+  /* `stretch` (e não `center`) para o card ocupar a coluna inteira: ele é `width: 100%` + `aspect-ratio`,
+     então encolhe se o pai deixar o filho com largura de conteúdo. O texto se centraliza pelo text-align. */
+  align-items: stretch;
+  gap: 6px;
+  text-align: center;
   font: 12px/1 'Lilita One', sans-serif;
   color: #4a3420;
 }

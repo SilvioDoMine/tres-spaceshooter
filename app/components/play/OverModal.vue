@@ -90,42 +90,42 @@ const expReward = computed(() => levelAccount.calculateExpReward(
 
   <!-- Grid de habilidades -->
   <div class="abilities-grid">
-    <BaseAbilityIcon
+    <BaseItemTooltip
+      v-if="useCurrentRunStore().currentGold > 0"
+      resource="gold"
+      no-highlight
       class="over-reward"
       :style="{ '--i': 0 }"
-      rarity="gray"
-      size="sm"
-      :clickable="true"
-      :quantity="`${useCurrentRunStore().currentGold}`"
-      v-if="useCurrentRunStore().currentGold > 0"
     >
-      <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">
-        <span class="drop-shadow-xs drop-shadow-black text-gold">
-          <SvgCoinIcon :size="25" />
-        </span>
-      </p>
-    </BaseAbilityIcon>
+      <BaseAbilityIcon rarity="gray" size="sm" :clickable="true" :quantity="`${useCurrentRunStore().currentGold}`">
+        <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">
+          <span class="drop-shadow-xs drop-shadow-black text-gold">
+            <SvgCoinIcon :size="25" />
+          </span>
+        </p>
+      </BaseAbilityIcon>
+    </BaseItemTooltip>
 
-    <BaseAbilityIcon
+    <BaseItemTooltip
+      v-if="expReward > 0"
+      resource="exp"
+      no-highlight
       class="over-reward"
       :style="{ '--i': 1 }"
-      rarity="gray"
-      size="sm"
-      :clickable="true"
-      :quantity="`${expReward}`"
-      v-if="expReward > 0"
     >
-      <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">
-        <span class="drop-shadow-xs drop-shadow-black">
-          <SvgExpIcon :size="25" />
-        </span>
-      </p>
-    </BaseAbilityIcon>
+      <BaseAbilityIcon rarity="gray" size="sm" :clickable="true" :quantity="`${expReward}`">
+        <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">
+          <span class="drop-shadow-xs drop-shadow-black">
+            <SvgExpIcon :size="25" />
+          </span>
+        </p>
+      </BaseAbilityIcon>
+    </BaseItemTooltip>
 
     <div v-if="useCurrentRunStore().runEquipment" class="w-16 over-reward" :style="{ '--i': 2 }">
-      <LobbyEquipmentItemTooltip :item="useCurrentRunStore().runEquipment">
+      <BaseItemTooltip :item="useCurrentRunStore().runEquipment">
         <LobbyEquipmentItemCard :item="useCurrentRunStore().runEquipment" />
-      </LobbyEquipmentItemTooltip>
+      </BaseItemTooltip>
     </div>
   </div>
 
