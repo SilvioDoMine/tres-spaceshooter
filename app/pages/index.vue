@@ -50,6 +50,10 @@ const tabBadges = computed(() => ({
   talents: talentStore.status === 'ok',
 }));
 
+// Marcos de conclusão de sala: baú "A Ser Resgatado" acima do INICIAR e a tela cheia que ele abre
+const { hasClaimable: hasClaimableMilestone } = useChapterMilestones();
+const milestonesOpen = ref(false);
+
 // Tocar nos saldos do topo abre a Loja na seção da moeda (nonce: repete o scroll mesmo já estando lá)
 const shopFocus = ref<{ section: 'daily' | 'chests' | 'gems' | 'gold'; nonce: number } | null>(null);
 function openShop(section: 'gems' | 'gold') {
@@ -70,6 +74,7 @@ watch(lobbyView, (next, prev) => {
 
 function openView(view: LobbyView) {
   if (isAnimating.value) return;
+  milestonesOpen.value = false;
   lobbyView.value = view;
 }
 
@@ -169,7 +174,7 @@ const isAnyModalOpen = computed(() =>
 // Controles de teclado
 function handleKeyPress(event: KeyboardEvent) {
   // Só permite navegação se nenhum modal estiver aberto (nem a abertura de baú, que é global)
-  if (event.defaultPrevented || isAnyModalOpen.value || chestOpening.session.value) return;
+  if (event.defaultPrevented || isAnyModalOpen.value || chestOpening.session.value || milestonesOpen.value) return;
 
   const key = event.key.toLowerCase();
 
@@ -384,11 +389,16 @@ onUnmounted(() => {
         :class="(isChangingLevel || isLocked || !isChapterView) ? 'translate-y-40 opacity-0' : 'translate-y-0 opacity-100'"
       >
         <div class="w-full pointer-events-auto">
-          <!-- Faixa do chefe: fica no mesmo bloco do INICIAR para entrar/sair junto com ele
-               (troca de capítulo, capítulo bloqueado e troca de aba) e ocupar pouca altura sobre a nave -->
-          <div class="chapter-info">
-            <span class="chapter-info__tag">Chefe</span>
-            <strong class="chapter-info__name">{{ CHAPTER_INFO[currentLevel]?.boss }}</strong>
+          <!-- Atalhos do capítulo (ocupam o espaço onde ficava a faixa do chefe): hoje só os marcos
+               de recompensa, mas a fileira já é o lugar dos próximos. Fica no mesmo bloco do INICIAR
+               para entrar e sair junto com ele (troca de capítulo, capítulo bloqueado e troca de aba). -->
+          <div class="chapter-extras">
+            <LobbyHudButton label="A Ser Resgatado" variant="orange" @click="milestonesOpen = true">
+              <img src="/images/icons/treasure/chest-1-1.png" alt="" class="chapter-extras__chest" >
+              <template #badge>
+                <BaseNotification v-if="hasClaimableMilestone" />
+              </template>
+            </LobbyHudButton>
           </div>
 
           <!-- Botão amarelo no estilo da faixa de título: contorno escuro, sombra dura, brilho e reflexo passando -->
@@ -452,6 +462,13 @@ onUnmounted(() => {
         <LobbyShopScreen v-else-if="lobbyView === 'shop'" :focus="shopFocus" />
       </Transition>
 
+      <!-- Marcos de conclusão de sala: entra por baixo, deixando topbar e barra de abas funcionando -->
+      <ClientOnly>
+        <Transition name="milestones-slide">
+          <LobbyMilestonesScreen v-if="milestonesOpen" @back="milestonesOpen = false" @open-rewards="handleOpenRewards" />
+        </Transition>
+      </ClientOnly>
+
       <LobbyTabBar :model-value="lobbyView" :badges="tabBadges" @update:model-value="openView" />
 
       <!-- Modals -->
@@ -473,12 +490,13 @@ onUnmounted(() => {
 .lobby-topbar-wrap--on-light .bg-white\/10{background-color:rgba(0,0,0,.25)}
 .lobby-topbar-wrap--on-light .bg-white\/20{background-color:rgba(0,0,0,.3)}
 .lobby-scene{position:absolute;inset:0}
-/* Faixa do chefe acima do INICIAR: faixa informativa de HUD (sem volume/sombra dura para não parecer botão),
-   fundo translúcido que some nas pontas e linhas finas em cima e embaixo */
-.chapter-info{display:flex;align-items:center;justify-content:center;gap:10px;width:fit-content;max-width:100%;margin:0 auto 12px;padding:5px 36px 6px;border-block:1px solid;border-image:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent) 1;background:linear-gradient(90deg,transparent,rgba(8,18,48,.6) 22%,rgba(8,18,48,.6) 78%,transparent);color:#fff;white-space:nowrap;pointer-events:none;user-select:none}
-.chapter-info__tag{flex-shrink:0;display:flex;align-items:center;gap:10px;font:11px/1 'Lilita One',sans-serif;letter-spacing:2px;color:#ff9b8a;text-transform:uppercase}
-.chapter-info__tag::after{content:'';width:4px;height:4px;rotate:45deg;background:rgba(255,255,255,.45)}
-.chapter-info__name{min-width:0;overflow:hidden;text-overflow:ellipsis;font:18px/1.1 'Lilita One',sans-serif;font-weight:400;letter-spacing:.5px;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.45)}
+/* Fileira de atalhos acima do INICIAR (marcos de recompensa e, depois, outros).
+   O rótulo do HudButton é de uma linha só; aqui ele quebra em duas e fica abaixo da face. */
+.chapter-extras{display:flex;align-items:flex-end;justify-content:center;gap:14px;margin:0 auto 12px;width:fit-content;max-width:100%}
+.chapter-extras :deep(.hudbtn){width:74px;padding-bottom:22px}
+.chapter-extras :deep(.hudbtn__label){white-space:normal;text-align:center;line-height:1.05;font-size:11px;-webkit-text-stroke-width:3px}
+.chapter-extras__chest{width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45))}
+
 /* Título do capítulo com contorno (igual aos títulos das cartas) */
 .chapter-heading__title{margin:0;font:34px/1.1 'Lilita One',sans-serif;letter-spacing:.5px;color:#fff;-webkit-text-stroke:7px #0d2a52;paint-order:stroke fill;text-shadow:0 4px 0 #0d2a52,0 8px 14px rgba(0,0,0,.45)}
 .chapter-heading__desc{display:inline-block;margin:6px 0 0;padding:3px 12px 4px;border-radius:999px;background:rgba(8,18,48,.55);border:2px solid rgba(255,255,255,.14);font:12px 'Fredoka One',sans-serif;color:#d4ecff}
@@ -495,6 +513,8 @@ onUnmounted(() => {
 .lobby-fx.is-out-left{translate:-140px 0;opacity:0;visibility:hidden}
 .lobby-fx.is-out-right{translate:140px 0;opacity:0;visibility:hidden}
 .lobby-fx.is-out-fade{opacity:0;visibility:hidden}
+.milestones-slide-enter-active,.milestones-slide-leave-active{transition:translate .3s ease,opacity .3s ease}
+.milestones-slide-enter-from,.milestones-slide-leave-to{translate:0 100%;opacity:0}
 .lobby-slide-next-enter-active,.lobby-slide-next-leave-active,.lobby-slide-prev-enter-active,.lobby-slide-prev-leave-active{transition:translate .4s ease-in-out}
 .lobby-slide-next-enter-from,.lobby-slide-prev-leave-to{translate:100% 0}
 .lobby-slide-next-leave-to,.lobby-slide-prev-enter-from{translate:-100% 0}
@@ -510,7 +530,7 @@ onUnmounted(() => {
 @media(hover:hover){.lobby-side:hover .lobby-side__icon{scale:1.08}}
 @media(max-width:650px){
  .lobby-topbar{font-size:11px;gap:4px}.lobby-topbar>div:first-child{min-width:0;flex:1}.lobby-topbar>div:first-child>div{gap:3px}.lobby-topbar>div:first-child>div>div{min-width:0}.lobby-topbar p{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lobby-topbar>div:last-child{gap:3px;flex-shrink:0}.lobby-topbar>div:last-child>div{padding:2px 5px;gap:3px}.lobby-topbar svg{width:18px;height:18px}
- .chapter-info{gap:8px;margin-bottom:10px;padding:4px 28px 5px}.chapter-info__tag{gap:8px;font-size:10px}.chapter-info__name{font-size:16px}
+ .chapter-extras{gap:10px;margin-bottom:8px}.chapter-extras :deep(.hudbtn){width:68px;padding-bottom:20px}.chapter-extras :deep(.hudbtn__face){width:50px;height:50px}.chapter-extras__chest{width:32px;height:32px}
  .chapter-heading__title{font-size:28px;-webkit-text-stroke-width:6px}
  .lobby-actions{bottom:94px;justify-content:space-between;gap:8px;padding:0}.chapter-start{flex:1 1 auto}.chapter-start button{height:58px;border-radius:16px}.start-btn__label{font-size:26px;-webkit-text-stroke-width:6px;text-shadow:0 3px 0 #8a5300}.start-btn__shine{top:6px;width:20px;height:8px}.chapter-return{bottom:108px;padding:0 104px}.chapter-return p{font-size:11px}
  .lobby-side{width:92px;height:60px;padding-bottom:5px}.lobby-side--left{border-left:0;border-radius:0 14px 14px 0}.lobby-side--right{border-right:0;border-radius:14px 0 0 14px}.lobby-side__icon{top:-22px;width:50px;height:50px}.lobby-side__label{font-size:12px;padding:1px 5px}
@@ -519,8 +539,13 @@ onUnmounted(() => {
 @media(max-height:500px) and (orientation:landscape){
  .lobby-scene{width:55%}.lobby-shortcuts{top:78px;width:55%}.lobby-shortcuts>div:first-child{flex-direction:row}.chapter-start,.chapter-return{translate:0 0}.chapter-heading{top:78px;left:auto;right:2%;width:42%}.chapter-heading h2{font-size:23px}
  .chapter-arrows{width:55%;top:58%;padding:0 8px}.chapter-arrows>div{padding:8px}
- .chapter-info{gap:6px;margin-bottom:8px;padding:3px 22px 4px}.chapter-info__tag{gap:6px;font-size:9px}.chapter-info__name{font-size:14px}
+ .chapter-extras{gap:8px;margin-bottom:6px}.chapter-extras :deep(.hudbtn){width:60px;padding-bottom:18px}.chapter-extras :deep(.hudbtn__face){width:44px;height:44px}.chapter-extras :deep(.hudbtn__label){font-size:10px}.chapter-extras__chest{width:28px;height:28px}
  .lobby-actions{left:auto;right:1%;bottom:70px;width:44%;gap:6px;padding:0 6px;justify-content:center}.chapter-start button{height:55px}.lobby-side{width:68px;height:55px;padding-bottom:4px;border:3px solid;border-radius:12px}.lobby-side__icon{top:-16px;width:40px;height:40px}.lobby-side__label{font-size:9px;padding:1px 3px}.chapter-return{left:auto;right:2%;transform:none;bottom:82px;width:42%;padding:0}.chapter-return p{font-size:10px}
+}
+
+/* Paisagem muito baixa: sem altura para o rótulo, fica só o baú (o nome vem do aria-label) */
+@media(max-height:400px) and (orientation:landscape){
+ .chapter-extras{margin-bottom:4px}.chapter-extras :deep(.hudbtn){width:44px;padding-bottom:0}.chapter-extras :deep(.hudbtn__face){width:38px;height:38px;border-radius:11px}.chapter-extras :deep(.hudbtn__label){display:none}.chapter-extras__chest{width:24px;height:24px}
 }
 
 @keyframes start-sheen {

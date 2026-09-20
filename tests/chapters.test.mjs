@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import * as fleet from '../app/utils/enemyFleet.js';
 import * as patterns from '../app/utils/combatPatterns.js';
 import { CHAPTER_COUNT, CHAPTER_INFO, LEVELS } from '../app/games/levels/index.js';
-import { completeChapter, emptyChapterProgress, playChapter, sanitizeChapterProgress } from '../app/utils/chapterProgress.js';
+import { claimMilestone, completeChapter, emptyChapterProgress, playChapter, recordClearedRooms, sanitizeChapterProgress } from '../app/utils/chapterProgress.js';
 import { playableRoomCount } from '../app/utils/progression.js';
 import {
   BASTION_SHIELD_HALF_ARC, CHAPTER_BOSSES, HIVE_HUNT_SHOT, HIVE_MUZZLES, HIVE_TURRET_SALVO, attackDirections, attackProfile,
@@ -79,16 +79,49 @@ test('mini-harpy flies the Harpy loop with a shorter burst, a smaller dash and w
 });
 
 test('chapter progress unlocks the next chapter and survives bad data', () => {
-  assert.deepEqual(emptyChapterProgress(), { maxUnlocked: 1, completed: [], lastPlayed: 1 });
+  const fresh = { clearedRooms: {}, claimedMilestones: [] };
+  assert.deepEqual(emptyChapterProgress(), { maxUnlocked: 1, completed: [], lastPlayed: 1, ...fresh });
   let progress = completeChapter(emptyChapterProgress(), 1, 3);
-  assert.deepEqual(progress, { maxUnlocked: 2, completed: [1], lastPlayed: 2 });
+  assert.deepEqual(progress, { maxUnlocked: 2, completed: [1], lastPlayed: 2, ...fresh });
   progress = completeChapter(progress, 1, 3);
-  assert.deepEqual(progress, { maxUnlocked: 2, completed: [1], lastPlayed: 1 });
+  assert.deepEqual(progress, { maxUnlocked: 2, completed: [1], lastPlayed: 1, ...fresh });
   progress = completeChapter(completeChapter(progress, 2, 3), 3, 3);
-  assert.deepEqual(progress, { maxUnlocked: 3, completed: [1, 2, 3], lastPlayed: 3 });
-  assert.deepEqual(sanitizeChapterProgress({ maxUnlocked: 'x', completed: [9, -1, '2', 2] }, 3), { maxUnlocked: 3, completed: [2], lastPlayed: 3 });
-  assert.deepEqual(sanitizeChapterProgress(null, 3), { maxUnlocked: 1, completed: [], lastPlayed: 1 });
+  assert.deepEqual(progress, { maxUnlocked: 3, completed: [1, 2, 3], lastPlayed: 3, ...fresh });
+  assert.deepEqual(sanitizeChapterProgress({ maxUnlocked: 'x', completed: [9, -1, '2', 2] }, 3), { maxUnlocked: 3, completed: [2], lastPlayed: 3, ...fresh });
+  assert.deepEqual(sanitizeChapterProgress(null, 3), { maxUnlocked: 1, completed: [], lastPlayed: 1, ...fresh });
   assert.equal(sanitizeChapterProgress({ maxUnlocked: 99 }, 3).maxUnlocked, 3);
+});
+
+test('cleared rooms and claimed milestones ride along without wiping the old save', () => {
+  // Save anterior aos marcos: os capítulos liberados continuam, os marcos começam do zero
+  const legacy = sanitizeChapterProgress({ maxUnlocked: 3, completed: [1, 2], lastPlayed: 2 }, 3);
+  assert.equal(legacy.maxUnlocked, 3);
+  assert.deepEqual(legacy.clearedRooms, {});
+  assert.deepEqual(legacy.claimedMilestones, []);
+
+  // Só sobe, respeita o teto do capítulo e ignora capítulo fora de faixa
+  let progress = recordClearedRooms(legacy, 2, 12, 3);
+  assert.equal(progress.clearedRooms[2], 12);
+  assert.equal(recordClearedRooms(progress, 2, 7, 3).clearedRooms[2], 12);
+  assert.equal(recordClearedRooms(progress, 2, 999, 3, 38).clearedRooms[2], 38);
+  assert.deepEqual(recordClearedRooms(progress, 9, 5, 3).clearedRooms, { 2: 12 });
+
+  // Resgatar um marco não mexe no resto do progresso e é idempotente
+  progress = claimMilestone(progress, '2:10', 3);
+  assert.deepEqual(progress.claimedMilestones, ['2:10']);
+  assert.deepEqual(claimMilestone(progress, '2:10', 3).claimedMilestones, ['2:10']);
+  assert.deepEqual(claimMilestone(progress, '', 3).claimedMilestones, ['2:10']);
+  assert.deepEqual(progress.completed, [1, 2]);
+
+  // Concluir um capítulo depois disso preserva salas e marcos
+  const done = completeChapter(progress, 3, 3);
+  assert.equal(done.clearedRooms[2], 12);
+  assert.deepEqual(done.claimedMilestones, ['2:10']);
+
+  // Lixo no save não derruba o resto
+  const dirty = sanitizeChapterProgress({ clearedRooms: { 1: 'x', 0: 5, 9: 5, 2: -3, 3: 7 }, claimedMilestones: ['1:5', '1:5', 7, null] }, 3);
+  assert.deepEqual(dirty.clearedRooms, { 3: 7 });
+  assert.deepEqual(dirty.claimedMilestones, ['1:5']);
 });
 
 test('lobby reopens on the last chapter played, or on a newly unlocked one', () => {

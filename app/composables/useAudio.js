@@ -1,5 +1,5 @@
 import { createSpatialAudio } from '~/utils/spatialAudio';
-import { playUiSynth } from '~/utils/uiSynth';
+import { playUiSynth, UI_HAPTICS } from '~/utils/uiSynth';
 import { playHeartSynth } from '~/utils/heartSynth';
 import { playLootSynth } from '~/utils/lootSynth';
 import { playResultSynth } from '~/utils/resultSynth';
@@ -317,10 +317,13 @@ export function useAudio() {
         lobbyMusic?.stop(fade);
     }
 
-    // Som sintetizado de microinteração da UI (tap, hover, toggle, modal...)
-    function playUiSound(kind) {
+    // Som sintetizado de microinteração da UI (tap, hover, toggle, modal, resgate de recompensa...).
+    // haptics acompanha o som com a vibração do próprio tipo (usado fora do toque, ex.: resgate concluído).
+    function playUiSound(kind, { haptics = false } = {}) {
         const settings = audioSettings.value;
         if (!settings.uiSoundsEnabled) return;
+
+        if (haptics && UI_HAPTICS[kind]) vibrate(UI_HAPTICS[kind]);
 
         const volume = getGeneralVolume() * (settings.volumeUi / 100);
         if (volume <= 0) return;

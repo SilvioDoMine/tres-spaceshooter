@@ -1,19 +1,17 @@
 import { watch } from 'vue';
 import { useAudio } from '~/composables/useAudio';
 import { modalStack } from '~/composables/useModal';
+import { UI_HAPTICS } from '~/utils/uiSynth';
+
+const HAPTICS = UI_HAPTICS as Record<string, number | number[]>;
 
 // Microinterações globais da UI: som + vibração ao tocar em qualquer elemento interativo,
 // som discreto de hover no desktop e som ao abrir/fechar modais.
 // Um elemento pode escolher o som com data-ui-sound="confirm|tab|..." ou silenciar com data-ui-sound="off".
 const INTERACTIVE = 'button, a[href], [role="button"], [role="checkbox"], [data-ui-sound], .cursor-pointer';
 
-const HAPTICS: Record<string, number | number[]> = {
-  tap: 8,
-  tab: 10,
-  toggleOn: 14,
-  toggleOff: 14,
-  confirm: [12, 40, 18],
-};
+// Modais com sting próprio (o de recompensas toca a fanfarra) dispensam o som genérico de abertura
+const MODALS_WITH_OWN_SOUND = new Set(['rewards-modal']);
 
 function findInteractive(target: EventTarget | null): HTMLElement | null {
   if (!(target instanceof Element)) return null;
@@ -65,6 +63,11 @@ export default defineNuxtPlugin(() => {
 
   watch(() => modalStack.value.length, (length, previous) => {
     if (length === previous) return;
-    audio.playUiSound(length > previous ? 'open' : 'close');
+    if (length < previous) {
+      audio.playUiSound('close');
+      return;
+    }
+    if (MODALS_WITH_OWN_SOUND.has(modalStack.value[length - 1])) return;
+    audio.playUiSound('open');
   });
 });

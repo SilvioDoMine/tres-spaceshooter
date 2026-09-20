@@ -535,6 +535,11 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
     const roomsReached = playableRoomCount(levelConfig.value, currentStageIndex.value);
 
+    // Marcos de recompensa: vale a sala limpa, não a sala onde o jogador morreu
+    const chapter = Number(levelConfig.value?.chapter) || 1;
+    const clearedRooms = completedChapter || isStageCompleted.value ? roomsReached : roomsReached - 1;
+    useChapterProgressStore().recordRooms(chapter, clearedRooms, playableRoomCount(levelConfig.value));
+
     // Estatísticas da conta (a Loja libera os baús grátis depois da 1ª partida)
     const killed = Object.values(useEnemyManagerStore().killedEnemies as Record<string, number>).reduce(
       (sum, value) => sum + (Number(value) || 0),

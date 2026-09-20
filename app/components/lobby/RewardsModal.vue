@@ -1,5 +1,6 @@
 <script setup lang="js">
 import { useModal } from '~/composables/useModal';
+import { useAudio } from '~/composables/useAudio';
 import PlayModal from '~/components/play/PlayModal.vue';
 import BaseAbilityIcon from '~/components/base/AbilityIcon.vue';
 import { keyItemId } from '~/data/items';
@@ -7,6 +8,7 @@ import { keyItemId } from '~/data/items';
 const MODAL_ID = 'rewards-modal';
 
 const { open, close, isOpen } = useModal(MODAL_ID);
+const audio = useAudio();
 
 const props = defineProps({
   gold: {
@@ -52,6 +54,8 @@ const openWithRewards = (rewards) => {
 watch(isOpen, (newVal) => {
   if (newVal) {
     console.log('Modal aberto com displayedGold:', displayedGold.value, 'displayedExp:', displayedExp.value);
+    // Fanfarra de recompensa junto com o confete (o plugin de UI não toca o som genérico neste modal)
+    audio.playUiSound('reward', { haptics: true });
     confettiOnPageSides(500);
     confettiOnBottom(500);
   } else {

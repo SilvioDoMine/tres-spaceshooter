@@ -11,6 +11,9 @@ const lobbyStore = useLobbyStore();
 const useAudioPlayer = useAudio();
 const enableParticles = ref(true);
 const shipAppearance = useShipAppearance();
+
+// Reset de conta: o botão só abre a confirmação, quem apaga é o ResetProgressModal
+const resetProgressModal = useModal('reset-progress-modal');
 </script>
 
 <template>
@@ -127,7 +130,7 @@ const shipAppearance = useShipAppearance();
                     <BaseButton
                         variant="red"
                         size="sm"
-                        @click=""
+                        @click="resetProgressModal.open()"
                     >
                         Resetar Progresso
                     </BaseButton>
@@ -141,6 +144,8 @@ const shipAppearance = useShipAppearance();
                 </div>
         </div>
     </BaseModal>
+
+    <LobbyResetProgressModal />
 </template>
 
 <style scoped>

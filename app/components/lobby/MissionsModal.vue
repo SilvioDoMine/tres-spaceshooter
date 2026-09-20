@@ -3,6 +3,7 @@ import BaseModal from '~/components/ui/BaseModal.vue';
 import MissionItem from '~/components/lobby/MissionItem.vue';
 import { useMissions } from '~/composables/useMissions.js';
 import { useBadgeAnimation } from '~/composables/useBadgeAnimation.js';
+import { useAudio } from '~/composables/useAudio';
 
 const {
     getNextResetTime,
@@ -15,6 +16,7 @@ const {
 } = useMissions();
 
 const { animateBadges } = useBadgeAnimation();
+const audio = useAudio();
 
 // Define emits
 const emit = defineEmits(['openRewards']);
@@ -78,6 +80,9 @@ const handleClaimReward = ({ missionId, sourceElement }) => {
     }
 
     console.log('Claimed reward successfully!');
+
+    // Som curto de resgate: a missão isolada não abre o modal de recompensas
+    audio.playUiSound('claim', { haptics: true });
 
     // Restaura a posição do scroll após a reordenação e durante a transição
     const maintainScroll = () => {
