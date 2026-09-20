@@ -73,6 +73,7 @@ const handleQuit = () => {
   title="Recompensas"
   max-width="max-w-lg"
   :disable-overlay-close="false"
+  close-on-content-click
   @close="handleQuit"
 >
   <!-- Title slot -->
@@ -90,6 +91,7 @@ const handleQuit = () => {
   <div class="abilities-grid">
     <BaseAbilityIcon
       v-if="displayedGold > 0"
+      data-modal-keep-open
       rarity="gray"
       size="sm"
       :clickable="true"
@@ -104,6 +106,7 @@ const handleQuit = () => {
 
     <BaseAbilityIcon
       v-if="displayedCash > 0"
+      data-modal-keep-open
       rarity="gray"
       size="sm"
       :clickable="true"
@@ -118,6 +121,7 @@ const handleQuit = () => {
 
     <BaseAbilityIcon
       v-if="displayedExp > 0"
+      data-modal-keep-open
       rarity="gray"
       size="sm"
       :clickable="true"
@@ -131,6 +135,7 @@ const handleQuit = () => {
     <BaseAbilityIcon
       v-for="[type, amount] in displayedKeys"
       :key="`key-${type}`"
+      data-modal-keep-open
       rarity="gray"
       size="sm"
       :clickable="true"
@@ -141,14 +146,14 @@ const handleQuit = () => {
       </p>
     </BaseAbilityIcon>
 
-    <div v-for="item in displayedEquipment" :key="`eq-${item.uid}`" class="w-16">
+    <div v-for="item in displayedEquipment" :key="`eq-${item.uid}`" class="w-16" data-modal-keep-open>
       <LobbyEquipmentItemCard :item="item" />
     </div>
   </div>
 
   <!-- Slot de actions para os botões grandes -->
   <template #actions>
-    <p @click="handleQuit" class="title-text text-white animate-pulse animate">Toque para continuar</p class="text-title text-white">
+    <p class="title-text text-white animate-pulse animate">Toque para continuar</p>
   </template>
 </PlayModal>
 </template>

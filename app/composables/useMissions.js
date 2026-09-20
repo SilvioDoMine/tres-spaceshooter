@@ -4,7 +4,7 @@ const dailyMissions = [
     {
         id: 1,
         description: 'Entre no Spaceshooter',
-        rewardPoints: 25,
+        rewardPoints: 20,
         missionType: 'login',
         missionGoal: 1,
         params: [], // Parâmetros adicionais, se necessário
@@ -12,7 +12,7 @@ const dailyMissions = [
     {
         id: 2,
         description: 'Complete 2 partidas',
-        rewardPoints: 25,
+        rewardPoints: 20,
         missionType: 'stage-complete',
         missionGoal: 2,
         params: [], // Parâmetros adicionais, se necessário
@@ -20,7 +20,7 @@ const dailyMissions = [
     {
         id: 3,
         description: 'Derrote 150 inimigos',
-        rewardPoints: 25,
+        rewardPoints: 20,
         missionType: 'kill-enemies',
         missionGoal: 150,
         params: [], // Parâmetros adicionais, se necessário
@@ -33,30 +33,30 @@ const dailyMissions = [
     //     missionGoal: 500,
     //     params: [], // Parâmetros adicionais, se necessário
     // },
-    // {
-    //     id: 5,
-    //     description: 'Aprimore equipamento 1 vez',
-    //     rewardPoints: 30,
-    //     missionType: 'upgrade-equipment',
-    //     missionGoal: 1,
-    //     params: [], // Parâmetros adicionais, se necessário
-    // },
+    {
+        id: 5,
+        description: 'Funda 1 equipamento no Mecânico',
+        rewardPoints: 10,
+        missionType: 'upgrade-equipment',
+        missionGoal: 1,
+        params: [], // Parâmetros adicionais, se necessário
+    },
     {
         id: 6,
         description: 'Jogue por 5 minutos',
-        rewardPoints: 25,
+        rewardPoints: 20,
         missionType: 'play-time',
         missionGoal: 5, // em minutos
         params: [], // Parâmetros adicionais, se necessário
     },
-    // {
-    //     id: 7,
-    //     description: 'Gaste 20 cifrões',
-    //     rewardPoints: 20,
-    //     missionType: 'spend-cash',
-    //     missionGoal: 20,
-    //     params: [], // Parâmetros adicionais, se necessário
-    // }
+    {
+        id: 7,
+        description: 'Gaste gemas (qualquer quantia)',
+        rewardPoints: 10,
+        missionType: 'spend-cash',
+        missionGoal: 1,
+        params: [], // Parâmetros adicionais, se necessário
+    },
 ];
 
 const dailyMilestones = {

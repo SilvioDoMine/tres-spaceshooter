@@ -108,6 +108,7 @@ export const useEquipmentStore = defineStore('equipment', () => {
     const next = fuseItems(inventory.value, mainUid, materialUids);
     if (!next) return null;
     const change = commit(next);
+    useMissions().handleEvent('upgrade-equipment', 1);
     return { item: findItem(mainUid)!, ...change };
   }
 

@@ -18,6 +18,11 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  /** Fechar ao clicar em qualquer ponto do conteúdo, exceto em elementos marcados com data-modal-keep-open */
+  closeOnContentClick: {
+    type: Boolean,
+    default: false,
+  },
   /** Desabilitar fechamento com a tecla ESC (por padrão segue o overlay) */
   disableEscClose: {
     type: Boolean,
@@ -43,6 +48,9 @@ function handleOverlayClick() {
 function handleContentClick(e) {
   // Previne fechar quando clicar no conteúdo
   e.stopPropagation();
+  if (props.closeOnContentClick && !e.target.closest('[data-modal-keep-open]')) {
+    handleClose();
+  }
 }
 
 // ESC fecha o modal quando ele está no topo da pilha

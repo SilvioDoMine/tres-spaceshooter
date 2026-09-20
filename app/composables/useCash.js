@@ -33,6 +33,8 @@ export function useCash() {
         if (cashSettings.value.totalCash >= amount) {
             cashSettings.value.totalCash -= amount;
             saveCashSettings();
+            // Missão diária: basta gastar gemas uma vez, qualquer quantia
+            if (amount > 0) useMissions().handleEvent('spend-cash', 1);
             return true;
         }
         return false; // Não há cash suficiente
