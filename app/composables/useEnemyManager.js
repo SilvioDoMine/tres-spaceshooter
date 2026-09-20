@@ -286,12 +286,25 @@ export const baseStats = {
       gold: { min: 300, max: 450 }
     }
   },
+  chapter4Boss: {
+    color: '#53c7eb', shape: 'square', exactStats: true, size: 5, visualScale: 1.5,
+    speed: .8, health: 16000, baseXP: 1400, fixedXP: true,
+    deathSound: 'enemy-death2', hitSound: 'hit-soft3',
+    drops: { exp: { min: 1400, max: 1400 }, gold: { min: 350, max: 500 } },
+  },
+  chapter5Boss: {
+    color: '#c48cff', shape: 'square', exactStats: true, size: 5.5, visualScale: 1.5,
+    speed: .65, health: 19500, baseXP: 1800, fixedXP: true,
+    deathSound: 'enemy-death2', hitSound: 'hit-soft3',
+    drops: { exp: { min: 1800, max: 1800 }, gold: { min: 450, max: 650 } },
+  },
   kamikazeBoss: {
     color: '#ff4d4d',
     shape: 'cone',
     size: 2,
     speed: 3,
     health: 1600,
+    baseXP: 650,
     distanceKeep: 10,
     chargeRecoveryCooldown: 1, // Sem cooldown após charge
     deathSound: 'enemy-death3',
@@ -471,6 +484,7 @@ const onDeathBehavior = {
           baseXP: fragmentXP,
           fixedXP: true,
           asteroidGeneration: nextGeneration,
+          size: nextGeneration === 1 ? 1.45 : .85,
           room: 10,
           // Opcional: dar uma direção inicial levemente desviada
           initialDirection: { ...rotatedDirection },
@@ -481,6 +495,7 @@ const onDeathBehavior = {
   hiveBoss: (enemy) => dismissSummons(enemy),
   miniHive: (enemy) => dismissSummons(enemy),
   colossusBoss: (enemy) => dismissSummons(enemy),
+  chapter5Boss: (enemy) => dismissSummons(enemy),
 }
 
 // Os reforços chamados por um boss caem junto com ele

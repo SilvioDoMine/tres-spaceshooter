@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import vm from 'node:vm';
+import * as fleet from '../app/utils/enemyFleet.js';
 import * as patterns from '../app/utils/combatPatterns.js';
 import { CHAPTER_COUNT, CHAPTER_INFO, LEVELS } from '../app/games/levels/index.js';
 import { completeChapter, emptyChapterProgress, playChapter, sanitizeChapterProgress } from '../app/utils/chapterProgress.js';
@@ -14,19 +15,19 @@ import {
 import { HARPY, HIVE, HIVE_DRONE, MINI_HARPY, MINI_HIVE, createBossBehaviors } from '../app/utils/bossBehaviors.js';
 
 const KNOWN_ENEMIES = new Set(['miniasteroid', 'asteroid', 'asteroidBoss', 'ufo', 'ufofast', 'kamikaze', 'miniboss', 'boss',
-  'torusEnemy', 'compositeEnemy', 'miniHive', 'miniHarpy', ...CHAPTER_BOSSES]);
-const BOSSES = { 1: ['asteroidBoss', 'boss'], 2: ['hiveBoss', 'harpyBoss'], 3: ['bastionBoss', 'colossusBoss'] };
+  'torusEnemy', 'compositeEnemy', 'miniHive', 'miniHarpy', 'kamikazeBoss', ...CHAPTER_BOSSES]);
+const BOSSES = { 1: ['asteroidBoss', 'boss'], 2: ['hiveBoss', 'harpyBoss'], 3: ['bastionBoss', 'colossusBoss'], 4: ['kamikazeBoss', 'chapter4Boss'], 5: ['bastionBoss', 'chapter5Boss'] };
 const roomsOf = level => level.stages.filter(stage => stage.type !== 'intro');
 const typesIn = stage => stage.waves.flatMap(w => w.enemies.map(g => g.enemyType));
 
-test('three quick chapters preserve bosses and original combat tiers', () => {
-  assert.equal(CHAPTER_COUNT, 3);
+test('five playable chapters preserve bosses and combat tiers', () => {
+  assert.equal(CHAPTER_COUNT, 5);
   for (let chapter = 1; chapter <= CHAPTER_COUNT; chapter++) {
     const level = LEVELS[chapter];
     assert.equal(level.chapter, chapter);
     assert.ok(CHAPTER_INFO[chapter]?.boss);
     assert.equal(level.stages[0].type, 'intro');
-    assert.equal(playableRoomCount(level), [35, 38, 40][chapter - 1]);
+    assert.equal(playableRoomCount(level), [35, 38, 40, 38, 20][chapter - 1]);
     const rooms = roomsOf(level);
     rooms.forEach((stage, i) => {
       assert.equal(stage.type, stage.combatTier === 10 || stage.combatTier === 20 ? 'boss' : 'combat', `chapter ${chapter} room ${i + 1}`);
@@ -123,8 +124,11 @@ test('chapter bosses are boss category with bounded, well-formed volleys', () =>
       const p = attackProfile(type, 10, volley, enemy);
       assert.ok(p.count >= 1 && p.count <= 12, `${type} count`);
       assert.ok(p.charge < p.interval, `${type} telegraph fits the interval`);
-      // Exceções propositais: a lança da Colmeia (rápida e letal) e a rajada seguida da Harpia
-      if (type !== 'hiveBoss' && type !== 'harpyBoss') assert.ok(p.interval >= .9 && p.speed <= 7, `${type} timing`);
+      // Exceções propositais: a lança da Colmeia (rápida e letal) e a rajada seguida da Harpia.
+      // Passos encadeados (varredura do último boss) também correm rápido de
+      // propósito — o descanso mora no fim do ciclo, não entre os passos.
+      const chained = p.ignoreVolleyGate || p.salvoStep > 0;
+      if (type !== 'hiveBoss' && type !== 'harpyBoss' && !chained) assert.ok(p.interval >= .9 && p.speed <= 7, `${type} timing`);
       const directions = attackDirections(p, { x: 0, z: 1 }, volley);
       assert.equal(directions.length, p.count);
       directions.forEach(d => assert.ok(Math.abs(Math.hypot(d.x, d.z) - 1) < 1e-9));
@@ -271,7 +275,7 @@ test('hive hunts slowly toward the player, then turns into a stationary turret w
 
 function attacksHarness(player) {
   const bullets = [], run = { currentStageIndex: 10, getPlayerPosition: () => player };
-  const context = vm.createContext({ ...patterns, playableRoomCount, Math,
+  const context = vm.createContext({ ...patterns, ...fleet, playableRoomCount, Math,
     useCurrentRunStore: () => run,
     useProjectileStore: () => ({ projectiles: bullets, spawnProjectile: (...args) => bullets.push({ ownerType: 'enemy', args }) }),
     useState: () => ({ value: { x: 0, z: 0, width: 30, height: 23 } }),

@@ -1,0 +1,101 @@
+[
+  {
+    "enemy": "miniasteroid",
+    "triangles": 2484,
+    "meshes": 6,
+    "markers": 2,
+    "errors": [],
+    "blocked_muzzles": [],
+    "status": "PASS"
+  },
+  {
+    "enemy": "asteroidBoss",
+    "triangles": 18792,
+    "meshes": 18,
+    "markers": 22,
+    "errors": [],
+    "blocked_muzzles": [],
+    "status": "PASS"
+  },
+  {
+    "enemy": "miniboss",
+    "triangles": 18308,
+    "meshes": 10,
+    "markers": 17,
+    "errors": [],
+    "blocked_muzzles": [],
+    "status": "PASS"
+  },
+  {
+    "enemy": "boss",
+    "triangles": 21820,
+    "meshes": 11,
+    "markers": 17,
+    "errors": [],
+    "blocked_muzzles": [],
+    "status": "PASS"
+  },
+  {
+    "enemy": "hiveDrone",
+    "triangles": 1668,
+    "meshes": 4,
+    "markers": 2,
+    "errors": [],
+    "blocked_muzzles": [],
+    "status": "PASS"
+  },
+  {
+    "enemy": "kamikazeBoss",
+    "triangles": 4856,
+    "meshes": 5,
+    "markers": 5,
+    "errors": [],
+    "blocked_muzzles": [],
+    "status": "PASS"
+  },
+  {
+    "enemy": "angel",
+    "triangles": 3496,
+    "meshes": 5,
+    "markers": 1,
+    "errors": [],
+    "blocked_muzzles": [],
+    "status": "PASS"
+  },
+  {
+    "enemy": "torusEnemy",
+    "triangles": 17980,
+    "meshes": 9,
+    "markers": 7,
+    "errors": [],
+    "blocked_muzzles": [],
+    "status": "PASS"
+  },
+  {
+    "enemy": "compositeEnemy",
+    "triangles": 6592,
+    "meshes": 7,
+    "markers": 5,
+    "errors": [],
+    "blocked_muzzles": [],
+    "status": "PASS"
+  },
+  {
+    "enemy": "chapter4Boss",
+    "triangles": 25052,
+    "meshes": 6,
+    "markers": 21,
+    "errors": [],
+    "blocked_muzzles": [],
+    "status": "PASS"
+  },
+  {
+    "enemy": "chapter5Boss",
+    "triangles": 35876,
+    "meshes": 22,
+    "markers": 25,
+    "errors": [],
+    "blocked_muzzles": [],
+    "status": "PASS"
+  }
+]

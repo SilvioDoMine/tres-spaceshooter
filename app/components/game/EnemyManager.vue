@@ -1,4 +1,6 @@
 <script setup lang="js">
+import EnemyFleet from './enemies/EnemyFleet.vue';
+import { ENEMY_FLEET, fleetHeading } from '~/utils/enemyFleet';
 import EnemyRaider from './enemies/EnemyRaider.vue';
 import EnemyBoss from './enemies/EnemyBoss.vue';
 import { shallowRef } from 'vue';
@@ -48,6 +50,7 @@ const setVisualMeshRef = (enemyId) => (el) => {
     });
     refs.materials = [...materials];
     refs.visualState = null;
+    refs.measuredHull = false; refs.hpBar = null;
   }
 };
 
@@ -118,15 +121,18 @@ onBeforeRender(({ delta }) => {
     const frozen = Boolean(enemy.elementState?.freeze);
     const heading = frozen && refs.heading !== undefined
       ? refs.heading
-      : enemy.visualHeading ?? Math.atan2(enemy.position.x - player.x, enemy.position.z - player.z);
+      : ENEMY_FLEET[enemy.type] ? fleetHeading(enemy, player) : enemy.visualHeading ?? Math.atan2(enemy.position.x - player.x, enemy.position.z - player.z);
     refs.heading = heading;
     visualMesh.rotation.set(0, heading + deathRotation, deathRotation * .2);
 
     // Tamanho real do casco, medido no modelo em escala cheia (o `size` do baseStats é número de
     // balanceamento: um inimigo comum pode usar modelo de chefe e ter size pequeno). A explosão da
     // morte lê isto para nunca sair menor que o inimigo.
-    if (enemy.state === 'active' && !refs.measuredHull) {
-      hpBox.setFromObject(visualMesh);
+    const hullObject = visualMesh.getObjectByName('enemy-hull') || visualMesh;
+    const hullReady = !ENEMY_FLEET[enemy.type] || visualMesh.userData.fleetReady;
+    if (hullReady && (!refs.measuredHull || !refs.hpBar)) visualMesh.updateWorldMatrix(true, true);
+    if (enemy.state === 'active' && hullReady && !refs.measuredHull) {
+      hpBox.setFromObject(hullObject);
       const { x, z } = visualMesh.position;
       const reach = Math.max(x - hpBox.min.x, hpBox.max.x - x, z - hpBox.min.z, hpBox.max.z - z);
       if (Number.isFinite(reach) && reach > 0) {
@@ -137,10 +143,10 @@ onBeforeRender(({ delta }) => {
 
     // Barra de vida acima e à frente do casco: mede o modelo uma vez, já em escala cheia.
     // O alcance usa o maior lado para valer em qualquer rumo.
-    if (enemy.state === 'active' && !refs.hpBar) {
+    if (enemy.state === 'active' && hullReady && !refs.hpBar) {
       refs.hpBar = uiGroup.getObjectByName('enemy-hp-bar');
       if (refs.hpBar) {
-        hpBox.setFromObject(visualMesh);
+        hpBox.setFromObject(hullObject);
         const { x, y, z } = visualMesh.position;
         const reach = Math.max(x - hpBox.min.x, hpBox.max.x - x, z - hpBox.min.z, hpBox.max.z - z);
         refs.hpBar.position.set(0, Math.max(0, hpBox.max.y - y) + 0.1, -(reach + 0.25));
@@ -172,7 +178,7 @@ onUnmounted(() => {
     >
       <!-- Componente dinâmico baseado no shape do inimigo -->
       <component
-        :is="baseStats[enemy.type].model ? EnemyBoss : EnemyRaider"
+        :is="ENEMY_FLEET[enemy.type] ? EnemyFleet : baseStats[enemy.type].model ? EnemyBoss : EnemyRaider"
         :enemy="enemy"
         :base-stats="baseStats"
         :set-visual-mesh-ref="setVisualMeshRef"

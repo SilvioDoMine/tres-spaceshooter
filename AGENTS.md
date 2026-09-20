@@ -23,7 +23,7 @@ Se uma solicitação de modelagem contrariar o guia, siga a solicitação explí
 
 Antes de criar ou alterar capítulos, encontros, waves ou a curva de EXP, leia [docs/gameplay-progression.md](docs/gameplay-progression.md) e confira as configurações atuais em app/games/levels/.
 
-A arquitetura já está preparada para os futuros capítulos 4 e 5, mas eles ainda não possuem conteúdo jogável. Não confunda suporte de código com capítulos implementados e não registre capítulos vazios no lobby.
+Os capítulos 4 e 5 possuem versões iniciais jogáveis em LevelFourConfig.js e LevelFiveConfig.js. Preserve os encontros e a estrutura descritos em docs/gameplay-progression.md; não registre capítulos vazios no lobby.
 
 - **Capítulo 4:** seguir o formato quick dos capítulos iniciais, com 30–40 salas jogáveis e uma única wave por sala. Matou todos os inimigos do encontro, libera o portal; não iniciar outra wave nessa sala.
 - **Capítulo 5:** introduzir o formato waves, com aproximadamente 20 salas e múltiplas waves por sala. Liberar o portal somente após concluir todas as waves.

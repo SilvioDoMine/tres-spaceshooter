@@ -1,0 +1,1779 @@
+[
+  {
+    "enemy": "miniasteroid",
+    "name": "ESTILHACO",
+    "attack": "one aimed orb; drifting collision fragment",
+    "sockets": [
+      {
+        "name": "muzzle_front",
+        "position_glTF": [
+          0.0,
+          0.0,
+          -0.5699999928474426
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "engine_0.08",
+        "position_glTF": [
+          0.08,
+          -0.055,
+          0.5
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      }
+    ],
+    "asset": "miniasteroid_estilhaco.glb",
+    "scale": 0.75,
+    "front": "-Z",
+    "up": "+Y",
+    "status": "existing_type",
+    "triangles": 2484,
+    "optimized_meshes": 6,
+    "bytes": 127108
+  },
+  {
+    "enemy": "asteroidBoss",
+    "name": "GEODO",
+    "attack": "10 ring / 5 fan; then 2 fragments with 5 ring / 3 fan; then 4 aimed fragments",
+    "sockets": [
+      {
+        "name": "fracture_anchor_0",
+        "position_glTF": [
+          0.5,
+          0,
+          -0.0
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          -1
+        ]
+      },
+      {
+        "name": "fracture_anchor_1",
+        "position_glTF": [
+          3.061616997868383e-17,
+          0,
+          -0.5
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          -1
+        ]
+      },
+      {
+        "name": "fracture_anchor_2",
+        "position_glTF": [
+          -0.5,
+          0,
+          -6.123233995736766e-17
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          -1
+        ]
+      },
+      {
+        "name": "fracture_anchor_3",
+        "position_glTF": [
+          -9.184850993605148e-17,
+          0,
+          0.5
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          -1
+        ]
+      },
+      {
+        "name": "muzzle_ring_0",
+        "position_glTF": [
+          0.0,
+          0.20000000298023224,
+          -1.100000023841858
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "muzzle_ring_1",
+        "position_glTF": [
+          0.6465637683868408,
+          0.20000000298023224,
+          -0.8899186849594116
+        ],
+        "direction_glTF": [
+          0.5877852439880371,
+          0.0,
+          -0.80901700258255
+        ]
+      },
+      {
+        "name": "muzzle_ring_2",
+        "position_glTF": [
+          1.0461621284484863,
+          0.20000000298023224,
+          -0.33991870284080505
+        ],
+        "direction_glTF": [
+          0.9510565400123596,
+          0.0,
+          -0.30901700258255005
+        ]
+      },
+      {
+        "name": "muzzle_ring_3",
+        "position_glTF": [
+          1.0461621284484863,
+          0.20000000298023224,
+          0.33991870284080505
+        ],
+        "direction_glTF": [
+          0.9510565400123596,
+          0.0,
+          0.30901700258255005
+        ]
+      },
+      {
+        "name": "muzzle_ring_4",
+        "position_glTF": [
+          0.6465637683868408,
+          0.20000000298023224,
+          0.8899186849594116
+        ],
+        "direction_glTF": [
+          0.5877852439880371,
+          0.0,
+          0.80901700258255
+        ]
+      },
+      {
+        "name": "muzzle_ring_5",
+        "position_glTF": [
+          1.3471115378436846e-16,
+          0.20000000298023224,
+          1.100000023841858
+        ],
+        "direction_glTF": [
+          1.2246468525851679e-16,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "name": "muzzle_ring_6",
+        "position_glTF": [
+          -0.6465637683868408,
+          0.20000000298023224,
+          0.8899186849594116
+        ],
+        "direction_glTF": [
+          -0.5877852439880371,
+          0.0,
+          0.80901700258255
+        ]
+      },
+      {
+        "name": "muzzle_ring_7",
+        "position_glTF": [
+          -1.0461621284484863,
+          0.20000000298023224,
+          0.33991870284080505
+        ],
+        "direction_glTF": [
+          -0.9510565400123596,
+          0.0,
+          0.30901700258255005
+        ]
+      },
+      {
+        "name": "muzzle_ring_8",
+        "position_glTF": [
+          -1.0461621284484863,
+          0.20000000298023224,
+          -0.33991870284080505
+        ],
+        "direction_glTF": [
+          -0.9510565400123596,
+          0.0,
+          -0.30901700258255005
+        ]
+      },
+      {
+        "name": "muzzle_ring_9",
+        "position_glTF": [
+          -0.6465637683868408,
+          0.20000000298023224,
+          -0.8899186849594116
+        ],
+        "direction_glTF": [
+          -0.5877852439880371,
+          0.0,
+          -0.80901700258255
+        ]
+      },
+      {
+        "name": "muzzle_fan_0",
+        "position_glTF": [
+          -0.3930777907371521,
+          0.3799999952316284,
+          -0.6269688010215759
+        ],
+        "direction_glTF": [
+          -0.5311862230300903,
+          0.0,
+          -0.8472551107406616
+        ]
+      },
+      {
+        "name": "muzzle_fan_1",
+        "position_glTF": [
+          -0.20450317859649658,
+          0.3799999952316284,
+          -0.7111810445785522
+        ],
+        "direction_glTF": [
+          -0.27635565400123596,
+          0.0,
+          -0.9610554575920105
+        ]
+      },
+      {
+        "name": "muzzle_fan_2",
+        "position_glTF": [
+          0.0,
+          0.3799999952316284,
+          -0.7400000095367432
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "muzzle_fan_3",
+        "position_glTF": [
+          0.20450317859649658,
+          0.3799999952316284,
+          -0.7111810445785522
+        ],
+        "direction_glTF": [
+          0.27635565400123596,
+          0.0,
+          -0.9610554575920105
+        ]
+      },
+      {
+        "name": "muzzle_fan_4",
+        "position_glTF": [
+          0.3930777907371521,
+          0.3799999952316284,
+          -0.6269688010215759
+        ],
+        "direction_glTF": [
+          0.5311862230300903,
+          0.0,
+          -0.8472551107406616
+        ]
+      },
+      {
+        "name": "terminal_fragment_muzzle",
+        "position_glTF": [
+          0,
+          0.2,
+          -0.5
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          -1
+        ]
+      },
+      {
+        "name": "engine_-0.38",
+        "position_glTF": [
+          -0.38,
+          -0.12,
+          0.9199999999999999
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "engine_0.38",
+        "position_glTF": [
+          0.38,
+          -0.12,
+          0.9199999999999999
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      }
+    ],
+    "asset": "asteroidBoss_geodo.glb",
+    "scale": 2.25,
+    "front": "-Z",
+    "up": "+Y",
+    "status": "existing_type",
+    "triangles": 18792,
+    "optimized_meshes": 18,
+    "bytes": 967988
+  },
+  {
+    "enemy": "miniboss",
+    "name": "MARTELO",
+    "attack": "alternates 10 radial orbs and 5 plasma fan shots",
+    "sockets": [
+      {
+        "name": "muzzle_fan_0",
+        "position_glTF": [
+          -0.5418099164962769,
+          0.10000000149011612,
+          -0.864200234413147
+        ],
+        "direction_glTF": [
+          -0.5311862230300903,
+          0.0,
+          -0.8472551107406616
+        ]
+      },
+      {
+        "name": "muzzle_fan_1",
+        "position_glTF": [
+          -0.28188276290893555,
+          0.10000000149011612,
+          -0.9802765250205994
+        ],
+        "direction_glTF": [
+          -0.27635565400123596,
+          0.0,
+          -0.9610554575920105
+        ]
+      },
+      {
+        "name": "muzzle_fan_2",
+        "position_glTF": [
+          0.0,
+          0.10000000149011612,
+          -1.0199999809265137
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "muzzle_fan_3",
+        "position_glTF": [
+          0.28188276290893555,
+          0.10000000149011612,
+          -0.9802765250205994
+        ],
+        "direction_glTF": [
+          0.27635565400123596,
+          0.0,
+          -0.9610554575920105
+        ]
+      },
+      {
+        "name": "muzzle_fan_4",
+        "position_glTF": [
+          0.5418099164962769,
+          0.10000000149011612,
+          -0.864200234413147
+        ],
+        "direction_glTF": [
+          0.5311862230300903,
+          0.0,
+          -0.8472551107406616
+        ]
+      },
+      {
+        "name": "muzzle_ring_0",
+        "position_glTF": [
+          0.0,
+          0.4000000059604645,
+          -0.4300000071525574
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "muzzle_ring_1",
+        "position_glTF": [
+          0.25274765491485596,
+          0.4000000059604645,
+          -0.34787729382514954
+        ],
+        "direction_glTF": [
+          0.5877852439880371,
+          0.0,
+          -0.80901700258255
+        ]
+      },
+      {
+        "name": "muzzle_ring_2",
+        "position_glTF": [
+          0.40895429253578186,
+          0.4000000059604645,
+          -0.13287730515003204
+        ],
+        "direction_glTF": [
+          0.9510565400123596,
+          0.0,
+          -0.30901700258255005
+        ]
+      },
+      {
+        "name": "muzzle_ring_3",
+        "position_glTF": [
+          0.40895429253578186,
+          0.4000000059604645,
+          0.13287730515003204
+        ],
+        "direction_glTF": [
+          0.9510565400123596,
+          0.0,
+          0.30901700258255005
+        ]
+      },
+      {
+        "name": "muzzle_ring_4",
+        "position_glTF": [
+          0.25274765491485596,
+          0.4000000059604645,
+          0.34787729382514954
+        ],
+        "direction_glTF": [
+          0.5877852439880371,
+          0.0,
+          0.80901700258255
+        ]
+      },
+      {
+        "name": "muzzle_ring_5",
+        "position_glTF": [
+          5.265981333767324e-17,
+          0.4000000059604645,
+          0.4300000071525574
+        ],
+        "direction_glTF": [
+          1.2246468525851679e-16,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "name": "muzzle_ring_6",
+        "position_glTF": [
+          -0.25274765491485596,
+          0.4000000059604645,
+          0.34787729382514954
+        ],
+        "direction_glTF": [
+          -0.5877852439880371,
+          0.0,
+          0.80901700258255
+        ]
+      },
+      {
+        "name": "muzzle_ring_7",
+        "position_glTF": [
+          -0.40895429253578186,
+          0.4000000059604645,
+          0.13287730515003204
+        ],
+        "direction_glTF": [
+          -0.9510565400123596,
+          0.0,
+          0.30901700258255005
+        ]
+      },
+      {
+        "name": "muzzle_ring_8",
+        "position_glTF": [
+          -0.40895429253578186,
+          0.4000000059604645,
+          -0.13287730515003204
+        ],
+        "direction_glTF": [
+          -0.9510565400123596,
+          0.0,
+          -0.30901700258255005
+        ]
+      },
+      {
+        "name": "muzzle_ring_9",
+        "position_glTF": [
+          -0.25274765491485596,
+          0.4000000059604645,
+          -0.34787729382514954
+        ],
+        "direction_glTF": [
+          -0.5877852439880371,
+          0.0,
+          -0.80901700258255
+        ]
+      },
+      {
+        "name": "engine_-0.2",
+        "position_glTF": [
+          -0.2,
+          -0.01,
+          0.94
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "engine_0.2",
+        "position_glTF": [
+          0.2,
+          -0.01,
+          0.94
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      }
+    ],
+    "asset": "miniboss_martelo.glb",
+    "scale": 3,
+    "front": "-Z",
+    "up": "+Y",
+    "status": "existing_type",
+    "triangles": 18308,
+    "optimized_meshes": 10,
+    "bytes": 972240
+  },
+  {
+    "enemy": "boss",
+    "name": "SENTINELA",
+    "attack": "10-shot ring alternates 5-shot fan; three health phases",
+    "sockets": [
+      {
+        "name": "muzzle_ring_0",
+        "position_glTF": [
+          0.0,
+          0.3199999928474426,
+          -0.8999999761581421
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "muzzle_ring_1",
+        "position_glTF": [
+          0.5290067195892334,
+          0.3199999928474426,
+          -0.7281153202056885
+        ],
+        "direction_glTF": [
+          0.5877852439880371,
+          0.0,
+          -0.80901700258255
+        ]
+      },
+      {
+        "name": "muzzle_ring_2",
+        "position_glTF": [
+          0.8559508919715881,
+          0.3199999928474426,
+          -0.27811530232429504
+        ],
+        "direction_glTF": [
+          0.9510565400123596,
+          0.0,
+          -0.30901700258255005
+        ]
+      },
+      {
+        "name": "muzzle_ring_3",
+        "position_glTF": [
+          0.8559508919715881,
+          0.3199999928474426,
+          0.27811530232429504
+        ],
+        "direction_glTF": [
+          0.9510565400123596,
+          0.0,
+          0.30901700258255005
+        ]
+      },
+      {
+        "name": "muzzle_ring_4",
+        "position_glTF": [
+          0.5290067195892334,
+          0.3199999928474426,
+          0.7281153202056885
+        ],
+        "direction_glTF": [
+          0.5877852439880371,
+          0.0,
+          0.80901700258255
+        ]
+      },
+      {
+        "name": "muzzle_ring_5",
+        "position_glTF": [
+          1.1021821011522021e-16,
+          0.3199999928474426,
+          0.8999999761581421
+        ],
+        "direction_glTF": [
+          1.2246468525851679e-16,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "name": "muzzle_ring_6",
+        "position_glTF": [
+          -0.5290067195892334,
+          0.3199999928474426,
+          0.7281153202056885
+        ],
+        "direction_glTF": [
+          -0.5877852439880371,
+          0.0,
+          0.80901700258255
+        ]
+      },
+      {
+        "name": "muzzle_ring_7",
+        "position_glTF": [
+          -0.8559508919715881,
+          0.3199999928474426,
+          0.27811530232429504
+        ],
+        "direction_glTF": [
+          -0.9510565400123596,
+          0.0,
+          0.30901700258255005
+        ]
+      },
+      {
+        "name": "muzzle_ring_8",
+        "position_glTF": [
+          -0.8559508919715881,
+          0.3199999928474426,
+          -0.27811530232429504
+        ],
+        "direction_glTF": [
+          -0.9510565400123596,
+          0.0,
+          -0.30901700258255005
+        ]
+      },
+      {
+        "name": "muzzle_ring_9",
+        "position_glTF": [
+          -0.5290067195892334,
+          0.3199999928474426,
+          -0.7281153202056885
+        ],
+        "direction_glTF": [
+          -0.5877852439880371,
+          0.0,
+          -0.80901700258255
+        ]
+      },
+      {
+        "name": "muzzle_fan_0",
+        "position_glTF": [
+          -0.6374234557151794,
+          0.0,
+          -1.016706109046936
+        ],
+        "direction_glTF": [
+          -0.5311862230300903,
+          0.0,
+          -0.8472551107406616
+        ]
+      },
+      {
+        "name": "muzzle_fan_1",
+        "position_glTF": [
+          -0.3316267728805542,
+          0.0,
+          -1.1532665491104126
+        ],
+        "direction_glTF": [
+          -0.27635565400123596,
+          0.0,
+          -0.9610554575920105
+        ]
+      },
+      {
+        "name": "muzzle_fan_2",
+        "position_glTF": [
+          0.0,
+          0.0,
+          -1.2000000476837158
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "muzzle_fan_3",
+        "position_glTF": [
+          0.3316267728805542,
+          0.0,
+          -1.1532665491104126
+        ],
+        "direction_glTF": [
+          0.27635565400123596,
+          0.0,
+          -0.9610554575920105
+        ]
+      },
+      {
+        "name": "muzzle_fan_4",
+        "position_glTF": [
+          0.6374234557151794,
+          0.0,
+          -1.016706109046936
+        ],
+        "direction_glTF": [
+          0.5311862230300903,
+          0.0,
+          -0.8472551107406616
+        ]
+      },
+      {
+        "name": "engine_-0.3",
+        "position_glTF": [
+          -0.3,
+          -0.06,
+          0.94
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "engine_0.3",
+        "position_glTF": [
+          0.3,
+          -0.06,
+          0.94
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      }
+    ],
+    "asset": "boss_sentinela.glb",
+    "scale": 3,
+    "front": "-Z",
+    "up": "+Y",
+    "status": "existing_type",
+    "triangles": 21820,
+    "optimized_meshes": 11,
+    "bytes": 1112760
+  },
+  {
+    "enemy": "hiveDrone",
+    "name": "VESPA",
+    "attack": "launch acceleration, homing turn-limited collision, no shots",
+    "sockets": [
+      {
+        "name": "engine_0",
+        "position_glTF": [
+          0,
+          -0.015,
+          0.54
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "impact_tip",
+        "position_glTF": [
+          0,
+          0,
+          -0.64
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          -1
+        ]
+      }
+    ],
+    "asset": "hiveDrone_vespa.glb",
+    "scale": 0.7,
+    "front": "-Z",
+    "up": "+Y",
+    "status": "existing_type",
+    "triangles": 1668,
+    "optimized_meshes": 4,
+    "bytes": 78336
+  },
+  {
+    "enemy": "kamikazeBoss",
+    "name": "ARIETE",
+    "attack": "charged collision plus one aimed orb between charges",
+    "sockets": [
+      {
+        "name": "engine_-0.47",
+        "position_glTF": [
+          -0.47,
+          -0.035,
+          0.6499999999999999
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "engine_0.47",
+        "position_glTF": [
+          0.47,
+          -0.035,
+          0.6499999999999999
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "muzzle_front",
+        "position_glTF": [
+          0.0,
+          0.0,
+          -0.7799999713897705
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "impact_left",
+        "position_glTF": [
+          -0.49,
+          0,
+          -1.3
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          -1
+        ]
+      },
+      {
+        "name": "impact_right",
+        "position_glTF": [
+          0.49,
+          0,
+          -1.3
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          -1
+        ]
+      }
+    ],
+    "asset": "kamikazeBoss_ariete.glb",
+    "scale": 2,
+    "front": "-Z",
+    "up": "+Y",
+    "status": "existing_type",
+    "triangles": 4856,
+    "optimized_meshes": 5,
+    "bytes": 237876
+  },
+  {
+    "enemy": "angel",
+    "name": "FAROL",
+    "attack": "stationary friendly upgrade giver, no shots",
+    "sockets": [
+      {
+        "name": "upgrade_pickup",
+        "position_glTF": [
+          0,
+          0.25,
+          0
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          -1
+        ]
+      }
+    ],
+    "asset": "angel_farol.glb",
+    "scale": 1.2,
+    "front": "-Z",
+    "up": "+Y",
+    "status": "existing_type",
+    "triangles": 3496,
+    "optimized_meshes": 5,
+    "bytes": 190656
+  },
+  {
+    "enemy": "torusEnemy",
+    "name": "ORBITA",
+    "attack": "five orbs in rotating radial pattern",
+    "sockets": [
+      {
+        "name": "muzzle_ring_0",
+        "position_glTF": [
+          0.0,
+          0.07999999821186066,
+          -0.9900000095367432
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "muzzle_ring_1",
+        "position_glTF": [
+          0.9415459632873535,
+          0.07999999821186066,
+          -0.3059268295764923
+        ],
+        "direction_glTF": [
+          0.9510565400123596,
+          0.0,
+          -0.30901700258255005
+        ]
+      },
+      {
+        "name": "muzzle_ring_2",
+        "position_glTF": [
+          0.5819073915481567,
+          0.07999999821186066,
+          0.8009268045425415
+        ],
+        "direction_glTF": [
+          0.5877852439880371,
+          0.0,
+          0.80901700258255
+        ]
+      },
+      {
+        "name": "muzzle_ring_3",
+        "position_glTF": [
+          -0.5819073915481567,
+          0.07999999821186066,
+          0.8009268045425415
+        ],
+        "direction_glTF": [
+          -0.5877852439880371,
+          0.0,
+          0.80901700258255
+        ]
+      },
+      {
+        "name": "muzzle_ring_4",
+        "position_glTF": [
+          -0.9415459632873535,
+          0.07999999821186066,
+          -0.3059268295764923
+        ],
+        "direction_glTF": [
+          -0.9510565400123596,
+          0.0,
+          -0.30901700258255005
+        ]
+      },
+      {
+        "name": "engine_-0.48",
+        "position_glTF": [
+          -0.48,
+          -0.14,
+          0.78
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "engine_0.48",
+        "position_glTF": [
+          0.48,
+          -0.14,
+          0.78
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      }
+    ],
+    "asset": "torusEnemy_orbita.glb",
+    "scale": 1,
+    "front": "-Z",
+    "up": "+Y",
+    "status": "existing_type",
+    "triangles": 17980,
+    "optimized_meshes": 9,
+    "bytes": 816148
+  },
+  {
+    "enemy": "compositeEnemy",
+    "name": "TRIADE",
+    "attack": "three-shot plasma fan",
+    "sockets": [
+      {
+        "name": "muzzle_fan_0",
+        "position_glTF": [
+          -0.6499999761581421,
+          0.0,
+          -0.5899999737739563
+        ],
+        "direction_glTF": [
+          -0.27635565400123596,
+          0.0,
+          -0.9610554575920105
+        ]
+      },
+      {
+        "name": "engine_-0.64",
+        "position_glTF": [
+          -0.64,
+          -0.04,
+          0.6399999999999999
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "muzzle_fan_2",
+        "position_glTF": [
+          0.6499999761581421,
+          0.0,
+          -0.5899999737739563
+        ],
+        "direction_glTF": [
+          0.27635565400123596,
+          0.0,
+          -0.9610554575920105
+        ]
+      },
+      {
+        "name": "engine_0.64",
+        "position_glTF": [
+          0.64,
+          -0.04,
+          0.6399999999999999
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "muzzle_fan_1",
+        "position_glTF": [
+          0.0,
+          0.0,
+          -0.8399999737739563
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      }
+    ],
+    "asset": "compositeEnemy_triade.glb",
+    "scale": 1.5,
+    "front": "-Z",
+    "up": "+Y",
+    "status": "existing_type",
+    "triangles": 6592,
+    "optimized_meshes": 7,
+    "bytes": 342748
+  },
+  {
+    "enemy": "chapter4Boss",
+    "name": "LEVIATA",
+    "attack": "PROPOSED: charged axial beam, 3 missiles, alternating 6-gun broadsides",
+    "sockets": [
+      {
+        "name": "muzzle_broadside_-1_0",
+        "position_glTF": [
+          -1.75,
+          0.10000000149011612,
+          1.2400000095367432
+        ],
+        "direction_glTF": [
+          -1.0,
+          0.0,
+          -0.0
+        ]
+      },
+      {
+        "name": "muzzle_broadside_-1_1",
+        "position_glTF": [
+          -1.75,
+          0.10000000149011612,
+          0.8399999737739563
+        ],
+        "direction_glTF": [
+          -1.0,
+          0.0,
+          -0.0
+        ]
+      },
+      {
+        "name": "muzzle_broadside_-1_2",
+        "position_glTF": [
+          -1.75,
+          0.10000000149011612,
+          0.4399999976158142
+        ],
+        "direction_glTF": [
+          -1.0,
+          0.0,
+          -0.0
+        ]
+      },
+      {
+        "name": "muzzle_broadside_-1_3",
+        "position_glTF": [
+          -1.75,
+          0.10000000149011612,
+          0.03999999910593033
+        ],
+        "direction_glTF": [
+          -1.0,
+          0.0,
+          -0.0
+        ]
+      },
+      {
+        "name": "muzzle_broadside_-1_4",
+        "position_glTF": [
+          -1.75,
+          0.10000000149011612,
+          -0.36000001430511475
+        ],
+        "direction_glTF": [
+          -1.0,
+          0.0,
+          -0.0
+        ]
+      },
+      {
+        "name": "muzzle_broadside_-1_5",
+        "position_glTF": [
+          -1.75,
+          0.10000000149011612,
+          -0.7599999904632568
+        ],
+        "direction_glTF": [
+          -1.0,
+          0.0,
+          -0.0
+        ]
+      },
+      {
+        "name": "engine_-0.94",
+        "position_glTF": [
+          -0.94,
+          -0.09,
+          1.9300000000000002
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "engine_-0.29",
+        "position_glTF": [
+          -0.29,
+          -0.04,
+          2.36
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "muzzle_broadside_1_0",
+        "position_glTF": [
+          1.75,
+          0.10000000149011612,
+          1.2400000095367432
+        ],
+        "direction_glTF": [
+          1.0,
+          0.0,
+          -0.0
+        ]
+      },
+      {
+        "name": "muzzle_broadside_1_1",
+        "position_glTF": [
+          1.75,
+          0.10000000149011612,
+          0.8399999737739563
+        ],
+        "direction_glTF": [
+          1.0,
+          0.0,
+          -0.0
+        ]
+      },
+      {
+        "name": "muzzle_broadside_1_2",
+        "position_glTF": [
+          1.75,
+          0.10000000149011612,
+          0.4399999976158142
+        ],
+        "direction_glTF": [
+          1.0,
+          0.0,
+          -0.0
+        ]
+      },
+      {
+        "name": "muzzle_broadside_1_3",
+        "position_glTF": [
+          1.75,
+          0.10000000149011612,
+          0.03999999910593033
+        ],
+        "direction_glTF": [
+          1.0,
+          0.0,
+          -0.0
+        ]
+      },
+      {
+        "name": "muzzle_broadside_1_4",
+        "position_glTF": [
+          1.75,
+          0.10000000149011612,
+          -0.36000001430511475
+        ],
+        "direction_glTF": [
+          1.0,
+          0.0,
+          -0.0
+        ]
+      },
+      {
+        "name": "muzzle_broadside_1_5",
+        "position_glTF": [
+          1.75,
+          0.10000000149011612,
+          -0.7599999904632568
+        ],
+        "direction_glTF": [
+          1.0,
+          0.0,
+          -0.0
+        ]
+      },
+      {
+        "name": "engine_0.94",
+        "position_glTF": [
+          0.94,
+          -0.09,
+          1.9300000000000002
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "engine_0.29",
+        "position_glTF": [
+          0.29,
+          -0.04,
+          2.36
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "muzzle_siege_beam",
+        "position_glTF": [
+          0.0,
+          0.15000000596046448,
+          -2.569999933242798
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "muzzle_missile_0",
+        "position_glTF": [
+          -0.3499999940395355,
+          0.5600000023841858,
+          -1.2000000476837158
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "muzzle_missile_1",
+        "position_glTF": [
+          0.0,
+          0.5600000023841858,
+          -1.2000000476837158
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "muzzle_missile_2",
+        "position_glTF": [
+          0.3499999940395355,
+          0.5600000023841858,
+          -1.2000000476837158
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "beam_telegraph",
+        "position_glTF": [
+          0,
+          0.15,
+          -2.6
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          -1
+        ]
+      }
+    ],
+    "asset": "chapter4Boss_leviata.glb",
+    "scale": 3.2,
+    "front": "-Z",
+    "up": "+Y",
+    "status": "proposal",
+    "triangles": 25052,
+    "optimized_meshes": 6,
+    "bytes": 1259464
+  },
+  {
+    "enemy": "chapter5Boss",
+    "name": "CATEDRAL",
+    "attack": "PROPOSED: 12 radial pulses, four rotating beams, six drone launches, exposed core phase",
+    "sockets": [
+      {
+        "name": "drone_launch_0",
+        "position_glTF": [
+          0.0,
+          0.0,
+          -2.359999895095825
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "drone_launch_1",
+        "position_glTF": [
+          2.0438199043273926,
+          0.0,
+          -1.1799999475479126
+        ],
+        "direction_glTF": [
+          0.8660253882408142,
+          0.0,
+          -0.5
+        ]
+      },
+      {
+        "name": "drone_launch_2",
+        "position_glTF": [
+          2.0438199043273926,
+          0.0,
+          1.1799999475479126
+        ],
+        "direction_glTF": [
+          0.8660253882408142,
+          0.0,
+          0.5
+        ]
+      },
+      {
+        "name": "drone_launch_3",
+        "position_glTF": [
+          2.8901664132823185e-16,
+          0.0,
+          2.359999895095825
+        ],
+        "direction_glTF": [
+          1.2246468525851679e-16,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "name": "drone_launch_4",
+        "position_glTF": [
+          -2.0438199043273926,
+          0.0,
+          1.1799999475479126
+        ],
+        "direction_glTF": [
+          -0.8660253882408142,
+          0.0,
+          0.5
+        ]
+      },
+      {
+        "name": "drone_launch_5",
+        "position_glTF": [
+          -2.0438199043273926,
+          0.0,
+          -1.1799999475479126
+        ],
+        "direction_glTF": [
+          -0.8660253882408142,
+          0.0,
+          -0.5
+        ]
+      },
+      {
+        "name": "muzzle_ring_0",
+        "position_glTF": [
+          0.0,
+          0.30000001192092896,
+          -2.819999933242798
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "muzzle_ring_1",
+        "position_glTF": [
+          1.409999966621399,
+          0.30000001192092896,
+          -2.4421916007995605
+        ],
+        "direction_glTF": [
+          0.5,
+          0.0,
+          -0.8660253882408142
+        ]
+      },
+      {
+        "name": "muzzle_ring_2",
+        "position_glTF": [
+          2.4421916007995605,
+          0.30000001192092896,
+          -1.409999966621399
+        ],
+        "direction_glTF": [
+          0.8660253882408142,
+          0.0,
+          -0.5
+        ]
+      },
+      {
+        "name": "muzzle_ring_3",
+        "position_glTF": [
+          2.819999933242798,
+          0.30000001192092896,
+          -1.726751969500858e-16
+        ],
+        "direction_glTF": [
+          1.0,
+          0.0,
+          -6.123234262925839e-17
+        ]
+      },
+      {
+        "name": "muzzle_ring_4",
+        "position_glTF": [
+          2.4421916007995605,
+          0.30000001192092896,
+          1.409999966621399
+        ],
+        "direction_glTF": [
+          0.8660253882408142,
+          0.0,
+          0.5
+        ]
+      },
+      {
+        "name": "muzzle_ring_5",
+        "position_glTF": [
+          1.409999966621399,
+          0.30000001192092896,
+          2.4421916007995605
+        ],
+        "direction_glTF": [
+          0.5,
+          0.0,
+          0.8660253882408142
+        ]
+      },
+      {
+        "name": "muzzle_ring_6",
+        "position_glTF": [
+          3.453503939001716e-16,
+          0.30000001192092896,
+          2.819999933242798
+        ],
+        "direction_glTF": [
+          1.2246468525851679e-16,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "name": "muzzle_ring_7",
+        "position_glTF": [
+          -1.409999966621399,
+          0.30000001192092896,
+          2.4421916007995605
+        ],
+        "direction_glTF": [
+          -0.5,
+          0.0,
+          0.8660253882408142
+        ]
+      },
+      {
+        "name": "muzzle_ring_8",
+        "position_glTF": [
+          -2.4421916007995605,
+          0.30000001192092896,
+          1.409999966621399
+        ],
+        "direction_glTF": [
+          -0.8660253882408142,
+          0.0,
+          0.5
+        ]
+      },
+      {
+        "name": "muzzle_ring_9",
+        "position_glTF": [
+          -2.819999933242798,
+          0.30000001192092896,
+          5.180256040851472e-16
+        ],
+        "direction_glTF": [
+          -1.0,
+          0.0,
+          1.8369701465288538e-16
+        ]
+      },
+      {
+        "name": "muzzle_ring_10",
+        "position_glTF": [
+          -2.4421916007995605,
+          0.30000001192092896,
+          -1.409999966621399
+        ],
+        "direction_glTF": [
+          -0.8660253882408142,
+          0.0,
+          -0.5
+        ]
+      },
+      {
+        "name": "muzzle_ring_11",
+        "position_glTF": [
+          -1.409999966621399,
+          0.30000001192092896,
+          -2.4421916007995605
+        ],
+        "direction_glTF": [
+          -0.5,
+          0.0,
+          -0.8660253882408142
+        ]
+      },
+      {
+        "name": "muzzle_beam_0",
+        "position_glTF": [
+          0.0,
+          1.1200000047683716,
+          -1.0800000429153442
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "muzzle_beam_1",
+        "position_glTF": [
+          1.0800000429153442,
+          1.1200000047683716,
+          -6.613092606913212e-17
+        ],
+        "direction_glTF": [
+          1.0,
+          0.0,
+          -6.123234262925839e-17
+        ]
+      },
+      {
+        "name": "muzzle_beam_2",
+        "position_glTF": [
+          1.3226185213826425e-16,
+          1.1200000047683716,
+          1.0800000429153442
+        ],
+        "direction_glTF": [
+          1.2246468525851679e-16,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "name": "muzzle_beam_3",
+        "position_glTF": [
+          -1.0800000429153442,
+          1.1200000047683716,
+          1.9839278482484127e-16
+        ],
+        "direction_glTF": [
+          -1.0,
+          0.0,
+          1.8369701465288538e-16
+        ]
+      },
+      {
+        "name": "engine_-0.65",
+        "position_glTF": [
+          -0.65,
+          -0.29,
+          2.22
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "engine_0.65",
+        "position_glTF": [
+          0.65,
+          -0.29,
+          2.22
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "reactor_weakpoint",
+        "position_glTF": [
+          0,
+          0.8,
+          0
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          -1
+        ]
+      }
+    ],
+    "asset": "chapter5Boss_catedral.glb",
+    "scale": 3.4,
+    "front": "-Z",
+    "up": "+Y",
+    "status": "proposal",
+    "triangles": 35876,
+    "optimized_meshes": 22,
+    "bytes": 1772440
+  }
+]

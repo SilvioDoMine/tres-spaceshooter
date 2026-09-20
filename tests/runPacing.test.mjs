@@ -24,7 +24,7 @@ function simulate(chapter, bonus = () => 1) {
 }
 
 test('early chapters split waves into 30–40 playable rooms, preserving combat tiers and unique ids', () => {
-  for (const chapter of Object.values(LEVELS)) {
+  for (const chapter of Object.values(LEVELS).filter(level => level.structure === 'quick')) {
     const rooms = chapter.stages.filter(s => s.type !== 'intro');
     assert.ok(rooms.length >= 30 && rooms.length <= 40);
     assert.ok(rooms.every(s => s.waves.length === 1));

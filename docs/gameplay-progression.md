@@ -1,6 +1,6 @@
 # Progressão de capítulos e EXP
 
-Os capítulos atuais usam uma wave por sala: capítulo 1 tem 35 salas, capítulo 2 tem 38 e capítulo 3 tem 40. A intro fica fora da contagem. As waves antigas viraram salas independentes, mantendo o elenco e os tiers de dificuldade. No capítulo 3, os dois grupos pequenos do primeiro encontro foram reunidos numa única wave.
+Os capítulos 1–4 usam uma wave por sala: 35, 38, 40 e 38 salas respectivamente. O capítulo 5 tem 20 salas: duas waves por combate na primeira metade e três na segunda; os dois encontros de boss têm uma wave. A intro fica fora da contagem. Os capítulos 4 e 5 são versões iniciais jogáveis, com balanceamento sujeito a playtest.
 
 ## Estruturas
 
@@ -9,7 +9,9 @@ chapterStages(stages, chapter, structure) em app/games/levels/helpers.js aceita:
 - waves: preserva todas as waves na mesma sala. Padrão a partir do capítulo 5; planejar cerca de 20 salas.
 - boss-rush: aceita somente encontros de boss, por exemplo cinco salas.
 
-Os capítulos 4 e 5 ainda não possuem conteúdo jogável. O suporte à estrutura está pronto, sem desbloquear capítulos vazios. combatTier controla a dificuldade independentemente do número exibido da sala. structure na configuração documenta o formato; passe o mesmo formato ao helper quando substituir o padrão.
+Capítulo 4: Aríete no tier 10 e Leviatã no tier 20. Capítulo 5: Bastião no tier 10 e Catedral no tier 20. Os capítulos são desbloqueados em sequência; saves com o capítulo 3 concluído passam a liberar o 4. combatTier continua entre 1 e 20, independente do número exibido da sala. structure na configuração é passado explicitamente ao helper. O portal do capítulo 5 só abre depois da última wave e de todos os inimigos, incluindo invocações e fragmentos.
+
+As curvas de vida e dano agora têm patamares próprios para capítulos 4 e 5. Bosses novos usam vida exata (16.000/19.500) e recompensas fixas de 1.400/1.800 EXP. Drones invocados continuam sem EXP e desaparecem com a nave-mãe. O Aríete concede 650 EXP base. Não são concedidos níveis por entrar numa sala.
 
 ## EXP
 

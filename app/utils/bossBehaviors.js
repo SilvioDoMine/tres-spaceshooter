@@ -1,4 +1,5 @@
 import { finalBossPhase } from './combatPatterns.js';
+import { ENEMY_FLEET, fleetHeading, fleetSocketWorld } from './enemyFleet.js';
 
 // Movimento e ações especiais dos bosses dos capítulos 2 e 3 e das suas versões em miniatura.
 // Os tiros ficam em useEnemyAttacks/attackProfile, que leem o estado escrito aqui.
@@ -268,6 +269,33 @@ export function createBossBehaviors({ enemyManager, activeEnemies, playerPositio
   }
 
   return {
+    chapter4Boss(enemy, dt) {
+      // Siege cannon locks the hull throughout warning and beam, leaving a dodge window.
+      if (!enemy.attackClock?.charging && !(enemy.beamLock?.remaining > 0)) orbit(enemy, dt, 10, 14, .25);
+      contact(enemy, toPlayer(enemy).d);
+    },
+
+    chapter5Boss(enemy, dt) {
+      const phase = finalBossPhase(enemy);
+      if (!enemy.attackClock?.charging && !(enemy.beamLock?.remaining > 0)) orbit(enemy, dt, 10, 14, .2);
+      contact(enemy, toPlayer(enemy).d);
+      enemy.hangarTimer = Math.max(0, (enemy.hangarTimer || 0) - dt);
+      enemy.hangarOpen = enemy.hangarTimer > 0;
+      if (phase < 2 || enemy.attackClock?.charging || enemy.beamLock?.remaining > 0) return;
+      enemy.carrierTimer = (enemy.carrierTimer ?? 3) - dt;
+      if (enemy.carrierTimer > 0 || liveSummons(enemy) >= 6) return;
+      const sockets = ENEMY_FLEET.chapter5Boss.sockets.filter(s => s.role.startsWith('drone_launch_'));
+      const yaw = fleetHeading(enemy, playerPosition.value);
+      const amount = Math.min(phase === 3 ? 6 : 3, 6 - liveSummons(enemy));
+      enemy.hangarTimer = 2; enemy.hangarOpen = true;
+      sockets.slice(0, amount).forEach(socket => {
+        const { origin, direction } = fleetSocketWorld(enemy, socket, yaw);
+        enemyManager.spawnEnemy('hiveDrone', { position: origin, delay: .7,
+          overrides: { summonerId: enemy.id, bossThreat: true, launchDirection: direction } });
+      });
+      enemy.carrierTimer = phase === 3 ? 9 : 12;
+    },
+
     hiveBoss(enemy, dt) {
       hiveCycle(enemy, dt, HIVE);
     },
