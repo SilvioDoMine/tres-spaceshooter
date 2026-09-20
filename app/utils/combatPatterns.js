@@ -1,4 +1,4 @@
-import { SHIP_SOCKETS, WING_HARDPOINTS } from './shipSockets'
+import { SHIP_SOCKETS, WING_HARDPOINTS } from './shipSockets.js'
 
 // World-space formations: parallel shots retain their spacing throughout flight.
 export function shotFormation(count) {
@@ -119,7 +119,7 @@ export function xpMultiplier(room = 2) {
 }
 // A cada capítulo os inimigos comuns aguentam mais e batem mais forte (os bosses têm valores próprios).
 function clampChapter(chapter = 1) {
-  return Math.max(1, Math.min(3, Number(chapter) || 1));
+  return Math.max(1, Math.min(5, Number(chapter) || 1));
 }
 export function chapterHealthMultiplier(chapter = 1) {
   return Number((1 + .45 * (clampChapter(chapter) - 1)).toFixed(2));
@@ -135,6 +135,8 @@ export const ENEMY_THREAT = Object.freeze({
   1: Object.freeze({ shot: [150, 400], collision: [800, 950], boss: 1500 }),
   2: Object.freeze({ shot: [450, 550], collision: [1400, 1800], boss: 2200 }),
   3: Object.freeze({ shot: [600, 750], collision: [2000, 2600], boss: 3000 }),
+  4: Object.freeze({ shot: [750, 900], collision: [2600, 3100], boss: 3500 }),
+  5: Object.freeze({ shot: [850, 1000], collision: [2900, 3400], boss: 3900 }),
 });
 // Bosses, fragmentos do boss asteroide e o que eles lançam (enemy.bossThreat) batem como boss
 export function isBossThreat(type, enemy = {}) {
@@ -274,7 +276,7 @@ export function attackDirections(profile, aim, volley) {
 }
 
 // ==================== BOSSES DOS CAPÍTULOS 2 E 3 ====================
-export const CHAPTER_BOSSES = Object.freeze(['hiveBoss', 'harpyBoss', 'bastionBoss', 'colossusBoss']);
+export const CHAPTER_BOSSES = Object.freeze(['hiveBoss', 'harpyBoss', 'bastionBoss', 'colossusBoss', 'chapter4Boss', 'chapter5Boss']);
 
 const bossShot = (pattern, projectile, count, values) => ({ category: 'boss', pattern, projectile, count, range: 25, ...values });
 
@@ -313,6 +315,36 @@ export function miniHiveProfile(room = 2) {
 
 /** Rajadas de cada boss; dependem do estado que a IA escreve no inimigo (hangar, vida, fase). */
 export function chapterBossProfile(type, volley = 0, enemy = {}) {
+  if (type === 'chapter4Boss' || type === 'chapter5Boss') {
+    const phase = finalBossPhase(enemy);
+    const beam = { phase, beam: true, beamDuration: .8, beamWidth: .28, speed: 0, charge: 1.4, interval: 3.8, lockLead: .65, range: 24 };
+    if (type === 'chapter4Boss') {
+      if (volley % 3 === 0) return bossShot('aim', 'enemyBeam', 1, beam);
+      return volley % 3 === 1
+        ? bossShot('aim', 'enemyMissile', 3, { phase, charge: .85, interval: 2.6, speed: 6.5, range: 26 })
+        // Carga mais longa que as outras: a bordada precisa desse tempo para o
+        // casco girar e apresentar o flanco antes de a salva sair.
+        : bossShot('broadside', 'enemyPlasma', 12, { phase, charge: 1.45, interval: 3.1, speed: 5.5, spread: 0 });
+    }
+    // Ciclo do último boss: feixes em espiral, uma rajada que cobre todos os
+    // lados de uma vez e, no fim, a varredura giratória.
+    const cycle = volley % 10;
+    if (cycle === 0) return bossShot('spiral', 'enemyBeam', 4, { ...beam, charge: 1.6, interval: 4.2, twist: 0 });
+    if (cycle === 1) return bossShot('ring', 'enemyOrb', 12, { phase, charge: .9, interval: phase === 3 ? 1.6 : 2, speed: 4.5, range: 26 });
+    // Varredura: passos curtos girando o emissor entre um e outro. O anel de uma
+    // salva só joga quase tudo fora, porque o jogador ocupa uma direção apenas;
+    // girando, o mesmo número de tiros varre o círculo e desenha a espiral.
+    const step = cycle - 2, steps = 8;
+    const sweepCharge = step === 0 ? .8 : .05;
+    return bossShot('ring', 'enemyOrb', 3, {
+      phase, speed: 5.2, range: 26, sweep: true, sweepStep: step, sweepSteps: steps,
+      charge: sweepCharge,
+      ignoreVolleyGate: step > 0,
+      // O intervalo é contado a partir do fim da carga, então somá-la mantém o
+      // telegraph sempre cabendo no passo — e o descanso real fica no último.
+      interval: sweepCharge + (step === steps - 1 ? (phase === 3 ? 1.9 : 2.5) : .16),
+    });
+  }
   if (type === 'hiveBoss') {
     // Pelas duas saídas da proa, convergindo no jogador (sem ponto cego entre as balas)
     const aimed = { muzzles: HIVE_MUZZLES, converge: true };

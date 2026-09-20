@@ -58,6 +58,7 @@ watch(
 
     <GameNebulaShipyard v-if="chapterId===2" />
     <GameFleetCommand v-else-if="chapterId===3" />
+    <GameFrontierScenery v-else-if="chapterId >= 4" :chapter="chapterId" />
     <template v-else><GameOrbitalScenery /><GameStreamingDebris /></template>
 
     <GameImpactEffects />

@@ -6,12 +6,16 @@ import { stripTypeScriptTypes } from 'node:module';
 import vm from 'node:vm';
 import { ref, shallowRef, computed, reactive } from 'vue';
 import * as gameSpeed from '../app/utils/gameSpeed.js';
+import { buildExperienceCurve, experienceForLevel } from '../app/utils/runExperience.js';
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
     try { return nextResolve(specifier, context); }
     catch (error) {
-      if (specifier.startsWith('.') && !specifier.endsWith('.ts')) return nextResolve(specifier + '.ts', context);
+      if (specifier.startsWith('.') && !/\.[cm]?[jt]s$/.test(specifier)) {
+        try { return nextResolve(specifier + '.js', context); }
+        catch { return nextResolve(specifier + '.ts', context); }
+      }
       throw error;
     }
   },
@@ -22,7 +26,7 @@ const { computePlayerStats } = await import('../app/utils/equipment.ts');
 const { combatAttributes, incomingHit, outgoingHit, withRunSkills, adrenalineMultiplier, headshotKills, siphonHeal, experienceBonus, emergencyRepairHeal } = await import('../app/utils/shipAttributes.ts');
 const elemental = await import('../app/utils/elementalStatus.js');
 const patterns = await import('../app/utils/combatPatterns.js');
-const base = { maxHealth: 250, moveSpeed: 7, projectiles: { damage: 50, shotCooldown: .85 } };
+const base = { maxHealth: 250, maxHealthPerLevel: 50, moveSpeed: 7, projectiles: { damage: 50, shotCooldown: .85 } };
 const attrs = overrides => combatAttributes({ ...emptyTalentBonuses(), ...overrides });
 
 test('critical rolls per contact, adding bonus to 2x without multiplying the projectile permanently', () => {
@@ -100,12 +104,12 @@ test('elemental shot cards build the projectile payload in the real stores', () 
 test('player freezes from an elemental attack, thaws on other damage and burns over time', () => {
   const { run, messages } = runHarness();
   run.takeDamage(20, { source: 'attack', elements: { ice: { damage: .5, shatter: .5, duration: 1 } } });
-  assert.equal(run.currentHealth, 250 - 20 - 10);
+  assert.equal(run.currentHealth, 300 - 20 - 10);
   assert.ok(run.getPlayerElements().freeze);
   assert.equal(messages.at(-1)[1], 'freeze');
   run.takeDamage(30, 'environment'); // outra fonte quebra o gelo: +10 de dano bruto
   assert.equal(run.getPlayerElements().freeze, null);
-  assert.equal(run.currentHealth, 250 - 20 - 10 - 30 - 10);
+  assert.equal(run.currentHealth, 300 - 20 - 10 - 30 - 10);
   const before = run.currentHealth;
   run.takeDamage(40, { source: 'attack', elements: { fire: { burn: .25, duration: 2 } } });
   for (let i = 0; i < 40; i++) run.updateElements(.05);
@@ -157,7 +161,7 @@ test('Reparo de Emergência heals instantly, never takes a slot and is only offe
   assert.equal(skills.isOfferable(card), true);
   for (let i = 0; i < 3; i++) skills.selectSkill({ ...card, currentLevel: 0 });
   assert.equal(skills.currentSkills.length, 0);
-  assert.ok(run.currentHealth >= 50 + 62 && run.currentHealth <= 250);
+  assert.ok(run.currentHealth >= 100 + 75 && run.currentHealth <= 300);
   assert.equal(messages.at(-1)[1], 'heal');
   assert.equal(skills.isOfferable(card), run.currentHealth < run.maxHealth, 'still repeatable while hurt');
   const maxed = { ...context.SkillsList.siphon };
@@ -271,6 +275,7 @@ function runHarness(overrides = {}) {
     useSpatialDilation: () => ({ reset() {} }),
     useChapterProgressStore: () => ({ progress: { completed: [] } }),
     ...gameSpeed,
+    buildExperienceCurve, experienceForLevel, baseStats: {},
     emitImpact() {},
   });
   function load(file, names) {
@@ -386,8 +391,8 @@ test('run starts with permanent attributes, initial choice and extra reroll; upg
     maxHealthFlat: 50, damageFlat: 10, moveSpeedPercent: 5,
     attackSpeedPercent: 5, startingSkillChoices: 1, skillRerolls: 1,
   });
-  assert.equal(run.maxHealth, 300);
-  assert.equal(run.currentHealth, 300);
+  assert.equal(run.maxHealth, 350);
+  assert.equal(run.currentHealth, 350);
   assert.equal(stats.damage, 60);
   assert.equal(run.shotCooldownTotal, .85 / 1.05);
   assert.equal(run.skillRerollCount, 1);
@@ -407,19 +412,35 @@ test('run starts with permanent attributes, initial choice and extra reroll; upg
   assert.ok(Math.abs(run.currentMoveSpeed - 7.35) < 1e-10);
 });
 
+test('natural HP progression grants 50 per level and remains separate from the HP card', () => {
+  const { context, run, stats, skills } = runHarness();
+  const expected = new Map([[1, 300], [2, 350], [5, 500], [10, 750]]);
+  assert.equal(run.maxHealth, expected.get(1));
+  for (let level = 2; level <= 10; level++) {
+    run.addExp(run.expToNextLevel);
+    if (expected.has(level)) assert.equal(run.maxHealth, expected.get(level));
+  }
+  assert.equal(run.currentHealth, 750, 'the newly gained maximum HP is available immediately');
+
+  skills.selectSkill({ ...context.SkillsList.health_percentage, currentLevel: 0 });
+  stats.update(.01);
+  assert.equal(run.maxHealth, 800, 'the HP card still adds its own 20% bonus');
+  assert.equal(run.currentHealth, 800);
+});
+
 test('actual run heals on level-up, accumulates fractional gold, and distinguishes attack/collision/environment', () => {
   const { run, messages } = runHarness({ maxHealthFlat: 50, levelUpHealPercent: 10,
     battleGoldPercent: 20, dodgePercent: 100, collisionReductionFlat: 15, collisionReductionPercent: 10 });
   run.takeDamage(100, 'attack');
-  assert.equal(run.currentHealth, 300);
+  assert.equal(run.currentHealth, 350);
   assert.equal(messages.at(-1)[1], 'dodge');
   run.takeDamage(100, 'collision');
-  assert.equal(run.currentHealth, 300, 'dodge also avoids collisions');
+  assert.equal(run.currentHealth, 350, 'dodge also avoids collisions');
   assert.equal(messages.at(-1)[1], 'dodge');
   run.takeDamage(100, 'environment');
-  assert.equal(run.currentHealth, 200);
+  assert.equal(run.currentHealth, 250);
   run.addExp(100);
-  assert.equal(run.currentHealth, 230);
+  assert.equal(run.currentHealth, 340);
   for (let i = 0; i < 5; i++) run.addGold(1);
   assert.equal(run.currentGold, 6);
 });
@@ -436,13 +457,13 @@ test('hearts fly into the ship with bonuses, remain when full or paused, and cle
   run.takeDamage(150, 'environment');
   run.gameState = 'paused';
   hearts.update(1);
-  assert.equal(run.currentHealth, 100);
+  assert.equal(run.currentHealth, 150);
   run.gameState = 'playing';
   hearts.update(.1);
   assert.equal(hearts.hearts[0].flight, 0, 'damaged ship starts pulling the heart');
-  assert.equal(run.currentHealth, 100, 'heals only when the heart reaches the ship');
+  assert.equal(run.currentHealth, 150, 'heals only when the heart reaches the ship');
   hearts.update(1);
-  assert.equal(run.currentHealth, 220);
+  assert.equal(run.currentHealth, 270);
   assert.equal(hearts.hearts.length, 0);
   assert.equal(hearts.consumeBursts().length, 1);
   assert.equal(hearts.consumeBursts().length, 0);
@@ -466,14 +487,14 @@ test('hearts fly to the ship once the room is cleared, nearest first, and still 
   assert.equal(hearts.hearts.find(heart => heart.startX === 10).flight, -1, 'farther heart waits its turn');
   for (let i = 0; i < 10; i++) hearts.update(.1);
   assert.equal(hearts.hearts.length, 0);
-  assert.equal(run.currentHealth, 100, 'both hearts healed 25');
+  assert.equal(run.currentHealth, 150, 'both hearts healed 25');
 
   hearts.tryDrop({ x: 6, z: 0 }, () => 0);
   hearts.update(.1);
   assert.ok(hearts.hearts[0].flight > 0);
   run.loadStage(config.stages[0]);
   assert.equal(hearts.hearts.length, 0);
-  assert.equal(run.currentHealth, 125, 'heart mid-flight still heals after leaving');
+  assert.equal(run.currentHealth, 175, 'heart mid-flight still heals after leaving');
 });
 
 test('full-health warning only repeats after leaving the heart completely', () => {

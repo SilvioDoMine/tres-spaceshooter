@@ -552,7 +552,7 @@ export const useSkillStore = defineStore('SkillStore', () => {
       // Após a adição do nível da skill
       switch (skill.id) {
         case 'health_percentage':
-          useCurrentRunStore().setMaxHealth(usePlayerStats().maxHealth);
+          useCurrentRunStore().refreshMaxHealthFromStats();
           usePlayerStats().healthAfterSkillUpgrade(maxHealthBefore);
           break;
         // Cura por tempo removida das cartas

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { useLoop } from '@tresjs/core';
+import EnemyFleet from '~/components/game/enemies/EnemyFleet.vue';
+import { ENEMY_FLEET } from '~/utils/enemyFleet';
 import EnemyRaider from '~/components/game/enemies/EnemyRaider.vue';
 import EnemyBoss from '~/components/game/enemies/EnemyBoss.vue';
 import { shallowRef, ref, watch, computed } from 'vue'
@@ -41,13 +43,16 @@ const atmosphereColors = {
 
 // Boss configurations
 const bosses = [
-  { id: 1, type: 'composite', displayType: 'SENTINELA • Patrulha orbital' },
+  { id: 1, type: 'boss', displayType: 'SENTINELA • Patrulha orbital' },
   { id: 2, type: 'square', model: 'harpy', displayType: 'HARPIA • Interceptador pesado' },
   { id: 3, type: 'cone', model: 'colossus', displayType: 'COLOSSO • Comando da frota' },
+  { id: 4, type: 'chapter4Boss', displayType: 'LEVIATÃ • Couraçado de cerco' },
+  { id: 5, type: 'chapter5Boss', displayType: 'CATEDRAL • Nave-mãe' },
 ]
 
 // Mock Base Stats for visual representation
 const baseStats = {
+  boss: { size: 2 }, chapter4Boss: { size: .95 }, chapter5Boss: { size: .9 },
   square: { color: 'hotpink', size: 2 },
   cone: { color: '#ff4d4d', size: 2 },
   dodecahedron: { color: 'gray', size: 2 },
@@ -110,7 +115,7 @@ onBeforeRender(({ delta, elapsed }) => {
       bossGroup.rotation.x += delta * 0.8
       bossGroup.rotation.y += delta * 0.8
       bossGroup.rotation.z += delta * 0.8
-    } else if (bossType === 'composite') {
+    } else {
       // Composite has both slow rotation and bobbing
       bossGroup.rotation.y += delta * 0.3
       bossGroup.position.y = Math.sin(elapsed * 1) * 0.5
@@ -145,9 +150,10 @@ onBeforeRender(({ delta, elapsed }) => {
         <!-- Rotated Boss Model -->
         <TresGroup :ref="(el) => bossRefs[index] = el">
           <component 
-            :is="boss.model ? EnemyBoss : EnemyRaider"
+            :is="ENEMY_FLEET[boss.type] ? EnemyFleet : boss.model ? EnemyBoss : EnemyRaider"
             :model="boss.model"
-            :enemy="{ id: boss.id, type: boss.type }"
+            :enemy="{ id: boss.id, type: boss.type, size: baseStats[boss.type].size, position: {x:0,y:0,z:0} }"
+            :preview="true"
             :baseStats="baseStats"
             :setVisualMeshRef="setVisualMeshRef"
             :opacity="boss.id > maxUnlockedLevel ? 0.3 : 1"

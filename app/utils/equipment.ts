@@ -158,6 +158,7 @@ export function computePlayerStats(base: TalentBaseStats, talents: TalentBonuses
     effects,
     damage: Math.round(applied.damage),
     maxHealth: Math.round(applied.maxHealth),
+    maxHealthPerLevel: base.maxHealthPerLevel ?? 0,
     baseDamage: base.projectiles.damage,
     baseHealth: base.maxHealth,
     gearDamage: Math.round(gear.damageFlat * gearMultiplier),

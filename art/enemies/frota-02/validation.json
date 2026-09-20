@@ -1,0 +1,56 @@
+[
+  {
+    "enemy": "ufofast",
+    "status": "PASS",
+    "triangles": 6592,
+    "meshes": 7,
+    "muzzles": 3,
+    "markers_verified": 6,
+    "bytes": 321276
+  },
+  {
+    "enemy": "asteroid",
+    "status": "PASS",
+    "triangles": 9740,
+    "meshes": 18,
+    "muzzles": 5,
+    "markers_verified": 10,
+    "bytes": 485080
+  },
+  {
+    "enemy": "miniHive",
+    "status": "PASS",
+    "triangles": 6776,
+    "meshes": 10,
+    "muzzles": 2,
+    "markers_verified": 6,
+    "bytes": 325276
+  },
+  {
+    "enemy": "miniHarpy",
+    "status": "PASS",
+    "triangles": 6436,
+    "meshes": 7,
+    "muzzles": 3,
+    "markers_verified": 7,
+    "bytes": 316472
+  },
+  {
+    "enemy": "kamikaze",
+    "status": "PASS",
+    "triangles": 3192,
+    "meshes": 5,
+    "muzzles": 0,
+    "markers_verified": 3,
+    "bytes": 147364
+  },
+  {
+    "enemy": "ufo",
+    "status": "PASS",
+    "triangles": 12792,
+    "meshes": 11,
+    "muzzles": 1,
+    "markers_verified": 2,
+    "bytes": 687704
+  }
+]

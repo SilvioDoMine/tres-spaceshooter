@@ -3,6 +3,7 @@ import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import * as patterns from '../app/utils/combatPatterns.js';
+import * as fleet from '../app/utils/enemyFleet.js';
 import { playableRoomCount } from '../app/utils/progression.js';
 const {shotFormation,advanceShot,segmentHit,attackProfile,attackDirections}=patterns;
 
@@ -57,8 +58,8 @@ function storeHarness(){
  {id:'b',state:'active',position:{x:3,z:0},size:1}];
  const damage=[],hits=[],flashes=[],sounds=[];
  const player={x:100,z:100};
- const context=vm.createContext({...patterns,Math,console,
-  defineStore:(_id,setup)=>setup, shallowRef:value=>({value}),emitImpact:()=>{},useAudio:()=>({playSound:name=>sounds.push(name)}),
+ const context=vm.createContext({...patterns,...fleet,Math,console,
+  defineStore:(_id,setup)=>setup, shallowRef:value=>({value}),emitImpact:()=>{},useAudio:()=>({playSound:name=>sounds.push(name),playCombatSound:name=>sounds.push(name)}),
   emitMuzzleFlash:id=>flashes.push(id),
   PlayerBaseStats:{projectiles:{shotSpeed:19,damage:50,size:.2,range:11}},
   baseStats:{},SkillsList:{ricochet_shot:{levels:{1:{value:.5}}}},
@@ -109,7 +110,7 @@ test('a removed shot cannot hit two overlapping enemies; volley grants damage gr
 });
 test('enemy shots wait for telegraph, honor visibility and global projectile budget',()=>{
  const bullets=[],run={currentStageIndex:1,getPlayerPosition:()=>({x:0,z:0})};
- const context=vm.createContext({...patterns,playableRoomCount,Math,
+ const context=vm.createContext({...patterns,...fleet,playableRoomCount,Math,
   useCurrentRunStore:()=>run,useProjectileStore:()=>({projectiles:bullets,spawnProjectile:(...args)=>bullets.push({ownerType:'enemy',args})}),
   useState:()=>({value:{x:0,z:0,width:30,height:23}})
  });
@@ -141,7 +142,7 @@ test('physical hardpoints match front, diagonal and straight rear fire',()=>{
     for(const m of side){
       const degrees=Math.round(Math.abs(Math.atan2(m.dx,-m.dz))*180/Math.PI);
       assert.ok(degrees===45||(diagonal>=2&&degrees===90));
-      assert.equal(Math.abs(m.x),.70);
+      assert.ok(Math.abs(Math.abs(m.x - m.dx * .28 * .43) - .70) < 1e-10);
     }
     for(const m of mounts)for(const yaw of [0,.7,Math.PI,-1.2]){
       const p={x:12,y:0,z:-8};const result=patterns.worldHardpoint(p,yaw,m);

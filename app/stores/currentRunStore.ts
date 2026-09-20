@@ -2,7 +2,8 @@ import { canFastGame, clearedRoomSpeedBoost, nextGameSpeed, sanitizeGameSpeed } 
 import { emitImpact } from '~/utils/combatEffects'
 import { defineStore } from 'pinia';
 import { ref, shallowRef } from 'vue';
-import { useEnemyManager } from '~/composables/useEnemyManager';
+import { baseStats, useEnemyManager } from '~/composables/useEnemyManager';
+import { buildExperienceCurve, experienceForLevel } from '~/utils/runExperience';
 import { useSkillStore } from '~/stores/SkillStore';
 import { useEnemyManagerStore } from '~/stores/enemyManagerStore';
 import { useStatisticsStore } from '~/stores/useStatisticsStore';
@@ -35,6 +36,7 @@ export const PlayerBaseStats = {
   id: 'player',
   color: 'yellow',
   maxHealth: 250,
+  maxHealthPerLevel: 50,
   moveSpeed: 7.0, // unidades por segundo
   regenRate: 0, // porcentagem da vida por segundo
   projectiles: {
@@ -113,6 +115,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   let goldRemainder = 0;
   const runEquipment = ref<OwnedEquipment | null>(null); // Equipamento ganho ao fim da partida
 
+  const experienceCurve = shallowRef<number[]>([]);
   const expToNextLevel = ref(getExpForLevel(currentLevel.value));
 
   // -- PROGRESSÃO DE SALAS
@@ -190,6 +193,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     runEquipment.value = null;
     currentExp.value = 0;
     currentLevel.value = 1;
+    experienceCurve.value = [];
     expToNextLevel.value = getExpForLevel(currentLevel.value);
     skillRerollCount.value = 0;
     gameState.value = 'init';
@@ -455,15 +459,33 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     }
   }
 
+  /**
+   * Recalcula o HP máximo juntando os atributos permanentes, a carta de HP e
+   * a progressão natural da partida. O bônus natural é aditivo e independente
+   * do multiplicador da carta de HP.
+   */
+  function refreshMaxHealthFromStats(healGainedHealth = false) {
+    const previousMaxHealth = maxHealth.value;
+    const levelHealth = currentLevel.value * playerStats.attributes.maxHealthPerLevel;
+    const nextMaxHealth = playerStats.maxHealth + levelHealth;
+    setMaxHealth(nextMaxHealth);
+
+    if (healGainedHealth && nextMaxHealth > previousMaxHealth) {
+      healPlayer(nextMaxHealth - previousMaxHealth, false);
+    }
+  }
+
   function setMoveSpeed(newMoveSpeed: number) {
     currentMoveSpeed.value = newMoveSpeed;
   }
 
   function gameStart(levelConfiguration: any) {
     endRun(); // Reseta qualquer estado de jogo anterior
+    experienceCurve.value = buildExperienceCurve(levelConfiguration, baseStats);
+    expToNextLevel.value = getExpForLevel(currentLevel.value);
     playerStats.initialize(useEquipmentStore().stats);
     useEquipmentEffectsStore().initialize(playerStats.attributes.effects);
-    maxHealth.value = playerStats.maxHealth;
+    refreshMaxHealthFromStats();
     currentHealth.value = maxHealth.value;
     shotCooldownTotal.value = playerStats.attributes.shotCooldown;
     shotCooldown.value = shotCooldownTotal.value;
@@ -608,6 +630,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
   function levelUp() {
     currentLevel.value += 1;
+    refreshMaxHealthFromStats(true);
     healPlayer(maxHealth.value * playerStats.attributes.levelUpHealFraction);
     currentExp.value = currentExp.value - expToNextLevel.value;
     expToNextLevel.value = getExpForLevel(currentLevel.value);
@@ -623,12 +646,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
   }
 
   function getExpForLevel(level: number): number {
-    const baseExp = 100;
-    const exponent = 1.5;
-
-    console.log(`Calculating EXP for level ${level}:`, Math.floor(baseExp * Math.pow(level, exponent)));
-
-    return Math.floor(baseExp * Math.pow(level, exponent));
+    return experienceForLevel(level, experienceCurve.value);
   }
 
   return {
@@ -652,6 +670,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     getPlayerElements, // Estado elemental da nave do jogador
     healPlayer, // Função para curar o jogador
     setMaxHealth, // Função para definir a saúde máxima do jogador
+    refreshMaxHealthFromStats, // Reaplica atributos + HP natural do nível atual
     currentHealth, // Saúde atual do jogador
     maxHealth, // Saúde máxima do jogador
     shotCooldownTotal, // Cooldown total do tiro

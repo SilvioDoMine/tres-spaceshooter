@@ -6,7 +6,9 @@ import { useEnemyManager } from '~/composables/useEnemyManager';
 import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import { useSkillStore, SkillsList } from '~/stores/SkillStore';
+import { targetInsideView } from '~/utils/rangeCamera';
 import { worldHardpoint, advanceShot, bastionShieldBlocks, PLAYER_HITBOX_RADIUS, PROJECTILE_IFRAME, PROJECTILE_ORPHAN_LIFESPAN, segmentHit } from '~/utils/combatPatterns';
+import { ENEMY_FLEET, fleetSocketWorld } from '~/utils/enemyFleet';
 
 const orb = { speed: 4, damage: 18, size: .22, range: 25, color: '#52caff' };
 export const projectilesType = {
@@ -15,6 +17,7 @@ export const projectilesType = {
   enemyOrb: {...orb}, ufo: {...orb}, ufofast: {...orb}, boss: {...orb}, miniboss: {...orb},
   enemyPlasma: {...orb, color: '#ff719c'},
   enemyMissile: {...orb, color: '#ffbf66'},
+  enemyBeam: {...orb, speed: 0, size: .28, color: '#ff647d'},
   // Colmeia: tiro do modo caça e lança da torreta (grandes, para não passar raspando)
   hiveShot: {...orb, size: .42, color: '#ffa53d'},
   enemyLance: {...orb, size: .45, color: '#fff06a'},
@@ -23,7 +26,7 @@ export const projectilesType = {
 };
 // Família de som (combatSynth) de cada tiro de inimigo; o que não está aqui usa o "orb"
 const ENEMY_SHOT_VOICE = {
-  enemyPlasma: 'plasma', enemyMissile: 'missile', enemyLance: 'lance', hiveShot: 'heavy', harpyShot: 'heavy',
+  enemyPlasma: 'plasma', enemyMissile: 'missile', enemyLance: 'lance', enemyBeam: 'lance', hiveShot: 'heavy', harpyShot: 'heavy',
 };
 export const useProjectileStore = defineStore('projectileStore', () => {
   const enemyManager = useEnemyManager(), currentRunStore = useCurrentRunStore();
@@ -63,7 +66,15 @@ export const useProjectileStore = defineStore('projectileStore', () => {
     return nearest;
   }
   function nearestEnemyFromPlayer() {
-    return nearestEnemyFromPosition(currentRunStore.getPlayerPosition(),projectilesType.player.range*playerStats.getRangeMultiplier);
+    const position = currentRunStore.getPlayerPosition();
+    const view = useState('flight-view', () => ({ x: 0, z: 0, width: 0, height: 0 })).value;
+    let nearest = null, distance = projectilesType.player.range * playerStats.getRangeMultiplier;
+    for (const enemy of enemyManager.activeEnemies.value) {
+      if (enemy.state !== 'active' || !targetInsideView(enemy.position, view)) continue;
+      const d = Math.hypot(enemy.position.x - position.x, enemy.position.z - position.z);
+      if (d < distance) { nearest = enemy; distance = d; }
+    }
+    return nearest;
   }
   function collide(projectile,start) {
     if(projectile.ownerType==='enemy') {
@@ -152,6 +163,24 @@ export const useProjectileStore = defineStore('projectileStore', () => {
         keep.push(projectile);continue;
       }
       if(projectile.beam) {
+        if (projectile.ownerType === 'enemy') {
+          const owner = enemyManager.activeEnemies.value.find(e => e.id === projectile.ownerId && e.state === 'active');
+          // No lingering beam after the carrier dies, freezes or is stunned.
+          if (!owner || owner.elementState?.freeze || owner.stunTimer > 0) continue;
+          const socket = ENEMY_FLEET[owner.type]?.sockets.find(s => s.role === projectile.muzzleRole);
+          if (!socket) continue;
+          const { origin, direction } = fleetSocketWorld(owner, socket, projectile.beamYaw);
+          projectile.position = origin; projectile.direction = direction;
+          projectile.beamAge += deltaTime;
+          if (projectile.beamAge > projectile.beamDuration) continue;
+          const end = { x: origin.x + direction.x * projectile.range, z: origin.z + direction.z * projectile.range };
+          if (projectile.beamAge >= .055 && hitGrace <= 0 && segmentHit(origin, end, currentRunStore.getPlayerPosition(), PLAYER_HITBOX_RADIUS + projectile.beamWidth) !== null) {
+            hitGrace = PROJECTILE_IFRAME;
+            currentRunStore.takeDamage(projectile.damage, { source: 'attack', attackerId: projectile.ownerId });
+          }
+          if (projectile.beamAge < projectile.beamDuration) keep.push(projectile);
+          continue;
+        }
         const {origin,direction}=worldHardpoint(currentRunStore.getPlayerPosition(),currentRunStore.getPlayerRotation().y,projectile.beamMount);
         projectile.position=origin;projectile.direction=direction;
         projectile.beamAge+=deltaTime;
@@ -179,6 +208,7 @@ export const useProjectileStore = defineStore('projectileStore', () => {
       for(let step=0;step<steps;step++) {
         const start={...projectile.position};
         advanceShot(projectile,distance/steps);projectile.distanceTraveled+=distance/steps;
+        if (projectile.ownerType === 'enemy' && projectile.launchHeight !== undefined) projectile.position.y = projectile.launchHeight * Math.max(0, 1 - projectile.distanceTraveled / 6) + .08 * Math.min(1, projectile.distanceTraveled / 6);
         collide(projectile,start);
         if(projectile._markedForRemoval)break;
       }

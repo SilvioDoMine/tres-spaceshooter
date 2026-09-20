@@ -170,18 +170,25 @@ const beamMaterial=new ShaderMaterial({transparent:true,depthWrite:false,side:2,
  float a=(core+aura*.5)*pulse*tip;if(a<.006)discard;
  gl_FragColor=vec4(mix(vec3(.12,.55,1.),vec3(.85,1.,1.),core),a);}`});
 const beams=new InstancedMesh(beamGeometry,beamMaterial,32);beams.count=0;beams.frustumCulled=false;root.add(beams);
+const enemyBeamMaterial=beamMaterial.clone();
+enemyBeamMaterial.fragmentShader=enemyBeamMaterial.fragmentShader
+  .replace('vec3(.12,.55,1.)','vec3(1.,.12,.35)')
+  .replace('exp(-x*x*1800.)','exp(-x*x*28.)').replace('exp(-x*x*85.)','exp(-x*x*6.)');
+const enemyBeams=new InstancedMesh(beamGeometry,enemyBeamMaterial,12);enemyBeams.count=0;enemyBeams.frustumCulled=false;root.add(enemyBeams);
 let time=0;
 useGameLoop().onBeforeRender(({delta})=>{
  time+=Math.min(delta,.1);materials.forEach(m=>m.uniforms.time.value=time);
- beamMaterial.uniforms.time.value=time;let beamCount=0; const counts=Array(batches.length).fill(0);let trailCount=0;
+ beamMaterial.uniforms.time.value=time;enemyBeamMaterial.uniforms.time.value=time;let beamCount=0,enemyBeamCount=0; const counts=Array(batches.length).fill(0);let trailCount=0;
  for(const p of store.projectiles){
   if(p.spawnDelay>0)continue;
   if(p.beam){
     const age=p.beamAge||0;const envelope=Math.min(1,age/.055)*Math.min(1,Math.max(0,(p.beamDuration-age)/.13));
     dummy.position.set(p.position.x,p.position.y,p.position.z);
     dummy.rotation.set(0,Math.atan2(p.direction.x,p.direction.z),0);
-    dummy.scale.set(.6*envelope,1,p.beamLength||.01);dummy.updateMatrix();
-    if(beamCount<32)beams.setMatrixAt(beamCount++,dummy.matrix);
+    const hostile=p.ownerType==='enemy';
+    dummy.scale.set((hostile?p.beamWidth*2:.6)*envelope,1,p.beamLength||.01);dummy.updateMatrix();
+    if(hostile){if(enemyBeamCount<12)enemyBeams.setMatrixAt(enemyBeamCount++,dummy.matrix);}
+    else if(beamCount<32)beams.setMatrixAt(beamCount++,dummy.matrix);
     dummy.position.set(p.position.x+p.direction.x*(p.beamLength||0),p.position.y,p.position.z+p.direction.z*(p.beamLength||0));
     dummy.scale.set(.55*envelope,1,.3*envelope);dummy.updateMatrix();batches[3].setMatrixAt(counts[3]++,dummy.matrix);continue;
   }
@@ -191,7 +198,7 @@ useGameLoop().onBeforeRender(({delta})=>{
   // Bolas inimigas crescem junto com a hitbox (tamanho padrão .22 = escala 1)
   const ball=tier===4||tier>=7;
   const size=p.ownerType==='enemy'?(ball?Math.max(1,(p.size||.22)/.22):1):1+Math.min(.55,Math.max(0,p.power-1)*.35);
-  dummy.position.set(p.position.x,p.ownerType==='player'?(p.position.y??0):1,p.position.z);
+  dummy.position.set(p.position.x,p.position.y??0,p.position.z);
 
   dummy.rotation.set(0,Math.atan2(p.direction.x,p.direction.z),0);
   dummy.scale.set(size,1,p.ownerType==='enemy'?(tier===7?size*1.9:tier===6?1.8:tier===5?1.35:size):p.ion?1.7:1+Math.min(.4,(p.power-1)*.2));
@@ -205,11 +212,11 @@ useGameLoop().onBeforeRender(({delta})=>{
    trails.setMatrixAt(trailCount++,dummy.matrix);
   }
  }
- beams.count=beamCount;beams.instanceMatrix.needsUpdate=true; batches.forEach((mesh,i)=>{mesh.count=counts[i];mesh.instanceMatrix.needsUpdate=true});
+ beams.count=beamCount;beams.instanceMatrix.needsUpdate=true;enemyBeams.count=enemyBeamCount;enemyBeams.instanceMatrix.needsUpdate=true; batches.forEach((mesh,i)=>{mesh.count=counts[i];mesh.instanceMatrix.needsUpdate=true});
  trails.count=trailCount;trails.instanceMatrix.needsUpdate=true;
 });
 onUnmounted(()=>{
- beams.dispose();beamGeometry.dispose();beamMaterial.dispose(); batches.forEach(mesh=>mesh.dispose());trails.dispose();
+ beams.dispose();enemyBeams.dispose();enemyBeamMaterial.dispose();beamGeometry.dispose();beamMaterial.dispose(); batches.forEach(mesh=>mesh.dispose());trails.dispose();
  geometry.dispose();orbGeometry.dispose();trailGeometry.dispose();trailMaterial.dispose();
  materials.forEach(m=>m.dispose());store.cleanup();
 });

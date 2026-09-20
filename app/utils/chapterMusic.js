@@ -36,6 +36,12 @@ const THEMES = {
     },
 };
 
+// New sectors reuse the established voices with their own tempo and transposition.
+THEMES[4] = { ...THEMES[3], tempo: 102, padBright: 1200,
+  chords: THEMES[3].chords.map(c => ({ bass: c.bass - 2, pad: c.pad.map(n => n - 2), arp: c.arp.map(n => n - 2) })) };
+THEMES[5] = { ...THEMES[2], tempo: 112, padBright: 1600,
+  chords: THEMES[2].chords.map(c => ({ bass: c.bass + 3, pad: c.pad.map(n => n + 3), arp: c.arp.map(n => n + 3) })) };
+
 // Volume de cada camada por intensidade
 const LEVELS = {
     calm: { pad: 1, arp: 0.55, bass: 0, drums: 0, boss: 0 },

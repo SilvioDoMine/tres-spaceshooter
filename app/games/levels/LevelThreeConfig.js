@@ -1,13 +1,14 @@
-import { combat, group, intro, wave } from './helpers.js';
+import { chapterStages, combat, group, intro, wave } from './helpers.js';
 
 // Capítulo 3 — Comando da frota. Liberado depois da Harpia: traz todos os inimigos dos capítulos anteriores,
-// incluindo mini-colmeias e mini-harpias. Sala 10: BASTIÃO. Sala 20: COLOSSO.
+// incluindo mini-colmeias e mini-harpias. Tier 10: BASTIÃO. Tier 20: COLOSSO.
 export const LEVEL_3 = {
   levelId: 'level_fleet_command_003', chapter: 3, width: 10, height: 20, rewardExperience: 260,
   theme: { atmosphere: '#1d3f86', galaxyOpacity: .65 },
-  stages: [
+  structure: 'quick', targetPlayerLevel: 23,
+  stages: chapterStages([
     intro(),
-    combat(1, [wave(group('ufofast', 2), group('miniasteroid', 2)), wave(group('kamikaze', 1), group('ufo', 1))]),
+    combat(1, [wave(group('ufofast', 2), group('miniasteroid', 2), group('kamikaze', 1), group('ufo', 1))]),
     combat(2, [wave(group('miniHive', 1), group('ufo', 2)), wave(group('kamikaze', 2))]),
     combat(3, [wave(group('miniHarpy', 1), group('torusEnemy', 1)), wave(group('asteroid', 1), group('kamikaze', 2))]),
     combat(4, [wave(group('compositeEnemy', 1), group('miniHive', 1), group('ufofast', 1)), wave(group('torusEnemy', 2), group('miniasteroid', 2))]),
@@ -27,5 +28,5 @@ export const LEVEL_3 = {
     combat(18, [wave(group('miniboss', 2)), wave(group('kamikaze', 3), group('ufofast', 2), group('ufo', 1))]),
     combat(19, [wave(group('compositeEnemy', 2), group('miniHive', 1), group('torusEnemy', 2)), wave(group('miniHarpy', 2), group('kamikaze', 2)), wave(group('miniboss', 1), group('asteroid', 2))]),
     combat(20, [wave(group('colossusBoss', 1, 3))], 'boss'),
-  ],
+  ], 3),
 };

@@ -1,10 +1,11 @@
-import { combat, group, intro, wave } from './helpers.js';
+import { chapterStages, combat, group, intro, wave } from './helpers.js';
 
-// The intro is outside the room count; the following entries are playable rooms 1–20.
+// The intro is outside the room count; each wave becomes a playable room; combat tiers retain original difficulty.
 export const LEVEL_1 = {
   levelId: 'level_open_space_001', chapter: 1, width: 10, height: 20, rewardExperience: 80,
   theme: { atmosphere: '#432097', galaxyOpacity: .35 },
-  stages: [
+  structure: 'quick', targetPlayerLevel: 23,
+  stages: chapterStages([
     intro(),
     combat(1, [wave(group('miniasteroid', 2))]),
     combat(2, [wave(group('miniasteroid', 3))]),
@@ -26,5 +27,5 @@ export const LEVEL_1 = {
     combat(18, [wave(group('torusEnemy', 2), group('compositeEnemy', 2), group('ufofast', 1), group('asteroid', 2)), wave(group('torusEnemy', 2), group('compositeEnemy', 2), group('ufofast', 1), group('asteroid', 2))]),
     combat(19, [wave(group('ufofast', 1), group('kamikaze', 1), group('torusEnemy', 1), group('asteroid', 1), group('compositeEnemy', 1)), wave(group('ufofast', 1), group('kamikaze', 1), group('torusEnemy', 1), group('asteroid', 1), group('compositeEnemy', 1)), wave(group('asteroid', 1), group('compositeEnemy', 1), group('miniboss', 1))]),
     combat(20, [wave(group('boss', 1, 3))], 'boss'),
-  ],
+  ], 1),
 };

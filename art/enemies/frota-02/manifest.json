@@ -1,0 +1,528 @@
+[
+  {
+    "enemy": "ufofast",
+    "name": "TRIDENTE",
+    "attack": "fan 3, spread .28; every third volley uses missiles",
+    "sockets": [
+      {
+        "name": "engine_-0.64",
+        "position_glTF": [
+          -0.64,
+          -0.04,
+          0.78
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "engine_0.64",
+        "position_glTF": [
+          0.64,
+          -0.04,
+          0.78
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "muzzle_fan_0",
+        "position_glTF": [
+          -0.14370493590831757,
+          0.0,
+          -0.4997488260269165
+        ],
+        "direction_glTF": [
+          -0.27635565400123596,
+          0.0,
+          -0.9610554575920105
+        ]
+      },
+      {
+        "name": "muzzle_fan_1",
+        "position_glTF": [
+          0.0,
+          0.0,
+          -0.5199999809265137
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "muzzle_fan_2",
+        "position_glTF": [
+          0.14370493590831757,
+          0.0,
+          -0.4997488260269165
+        ],
+        "direction_glTF": [
+          0.27635565400123596,
+          0.0,
+          -0.9610554575920105
+        ]
+      },
+      {
+        "name": "legacy_center",
+        "position_glTF": [
+          0,
+          0,
+          0
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          -1
+        ]
+      }
+    ],
+    "triangles": 6592,
+    "asset": "ufofast_tridente.glb",
+    "scale": "model coordinates; apply enemy.size once",
+    "front": "-Z",
+    "up": "+Y",
+    "optimized_meshes": 7,
+    "bytes": 321276
+  },
+  {
+    "enemy": "asteroid",
+    "name": "NODULO",
+    "attack": "5-shot rotating ring; splits into two miniasteroid fragments",
+    "sockets": [
+      {
+        "name": "engine_-0.39",
+        "position_glTF": [
+          -0.39,
+          -0.095,
+          0.8
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "fragment_spawn_-1",
+        "position_glTF": [
+          -0.43,
+          0,
+          0
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          -1
+        ]
+      },
+      {
+        "name": "engine_0.39",
+        "position_glTF": [
+          0.39,
+          -0.095,
+          0.8
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "fragment_spawn_1",
+        "position_glTF": [
+          0.43,
+          0,
+          0
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          -1
+        ]
+      },
+      {
+        "name": "muzzle_radial_0",
+        "position_glTF": [
+          0.0,
+          0.15000000596046448,
+          -0.3700000047683716
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "muzzle_radial_1",
+        "position_glTF": [
+          0.3518909215927124,
+          0.15000000596046448,
+          -0.1143362894654274
+        ],
+        "direction_glTF": [
+          0.9510565400123596,
+          0.0,
+          -0.30901700258255005
+        ]
+      },
+      {
+        "name": "muzzle_radial_2",
+        "position_glTF": [
+          0.21748054027557373,
+          0.15000000596046448,
+          0.2993362843990326
+        ],
+        "direction_glTF": [
+          0.5877852439880371,
+          0.0,
+          0.80901700258255
+        ]
+      },
+      {
+        "name": "muzzle_radial_3",
+        "position_glTF": [
+          -0.21748054027557373,
+          0.15000000596046448,
+          0.2993362843990326
+        ],
+        "direction_glTF": [
+          -0.5877852439880371,
+          0.0,
+          0.80901700258255
+        ]
+      },
+      {
+        "name": "muzzle_radial_4",
+        "position_glTF": [
+          -0.3518909215927124,
+          0.15000000596046448,
+          -0.1143362894654274
+        ],
+        "direction_glTF": [
+          -0.9510565400123596,
+          0.0,
+          -0.30901700258255005
+        ]
+      },
+      {
+        "name": "legacy_center",
+        "position_glTF": [
+          0,
+          0,
+          0
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          -1
+        ]
+      }
+    ],
+    "triangles": 9740,
+    "asset": "asteroid_nodulo.glb",
+    "scale": "model coordinates; apply enemy.size once",
+    "front": "-Z",
+    "up": "+Y",
+    "optimized_meshes": 18,
+    "bytes": 485080
+  },
+  {
+    "enemy": "miniHive",
+    "name": "BERCO",
+    "attack": "two converging forward shots; stops and launches 2 drones",
+    "sockets": [
+      {
+        "name": "muzzle_hive_left",
+        "position_glTF": [
+          -0.3199999928474426,
+          0.0,
+          -1.1399999856948853
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "drone_launch_left",
+        "position_glTF": [
+          -0.6581793068761734,
+          0,
+          -0.38
+        ],
+        "direction_glTF": [
+          -0.866,
+          0,
+          -0.5
+        ]
+      },
+      {
+        "name": "engine_-0.47",
+        "position_glTF": [
+          -0.47,
+          -0.055,
+          0.8799999999999999
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "muzzle_hive_right",
+        "position_glTF": [
+          0.3199999928474426,
+          0.0,
+          -1.1399999856948853
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "drone_launch_right",
+        "position_glTF": [
+          0.6581793068761734,
+          0,
+          -0.38
+        ],
+        "direction_glTF": [
+          0.866,
+          0,
+          -0.5
+        ]
+      },
+      {
+        "name": "engine_0.47",
+        "position_glTF": [
+          0.47,
+          -0.055,
+          0.8799999999999999
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      }
+    ],
+    "triangles": 6776,
+    "asset": "miniHive_berco.glb",
+    "scale": "model coordinates; apply enemy.size once",
+    "front": "-Z",
+    "up": "+Y",
+    "optimized_meshes": 10,
+    "bytes": 325276
+  },
+  {
+    "enemy": "miniHarpy",
+    "name": "TESOURA",
+    "attack": "central glide shot; four twin-wing bursts; charged dash",
+    "sockets": [
+      {
+        "name": "muzzle_wing_left",
+        "position_glTF": [
+          -1.1200000047683716,
+          0.0,
+          -0.4099999964237213
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "engine_-0.19",
+        "position_glTF": [
+          -0.19,
+          -0.05,
+          0.6699999999999999
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "muzzle_wing_right",
+        "position_glTF": [
+          1.1200000047683716,
+          0.0,
+          -0.4099999964237213
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "engine_0.19",
+        "position_glTF": [
+          0.19,
+          -0.05,
+          0.6699999999999999
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "muzzle_glide",
+        "position_glTF": [
+          0.0,
+          0.0,
+          -1.0399999618530273
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "dash_axis",
+        "position_glTF": [
+          0,
+          0,
+          -1.06
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          -1
+        ]
+      },
+      {
+        "name": "legacy_center",
+        "position_glTF": [
+          0,
+          0,
+          0
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          -1
+        ]
+      }
+    ],
+    "triangles": 6436,
+    "asset": "miniHarpy_tesoura.glb",
+    "scale": "model coordinates; apply enemy.size once",
+    "front": "-Z",
+    "up": "+Y",
+    "optimized_meshes": 7,
+    "bytes": 316472
+  },
+  {
+    "enemy": "kamikaze",
+    "name": "AGULHA",
+    "attack": "tracks, charges, collides; no projectile attacks",
+    "sockets": [
+      {
+        "name": "engine_0",
+        "position_glTF": [
+          0,
+          -0.025,
+          1.0
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "name": "impact_tip",
+        "position_glTF": [
+          0,
+          0,
+          -1.15
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          -1
+        ]
+      },
+      {
+        "name": "dash_axis",
+        "position_glTF": [
+          0,
+          0,
+          -1.15
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          -1
+        ]
+      }
+    ],
+    "triangles": 3192,
+    "asset": "kamikaze_agulha.glb",
+    "scale": "model coordinates; apply enemy.size once",
+    "front": "-Z",
+    "up": "+Y",
+    "optimized_meshes": 5,
+    "bytes": 147364
+  },
+  {
+    "enemy": "ufo",
+    "name": "FENDA",
+    "attack": "one aimed forward plasma shot",
+    "sockets": [
+      {
+        "name": "muzzle_front",
+        "position_glTF": [
+          0.0,
+          0.0,
+          -1.2200000286102295
+        ],
+        "direction_glTF": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "name": "legacy_center",
+        "position_glTF": [
+          0,
+          0,
+          0
+        ],
+        "direction_glTF": [
+          0,
+          0,
+          -1
+        ]
+      }
+    ],
+    "triangles": 12792,
+    "asset": "ufo_fenda.glb",
+    "scale": "model coordinates; apply enemy.size once",
+    "front": "-Z",
+    "up": "+Y",
+    "optimized_meshes": 11,
+    "bytes": 687704
+  }
+]

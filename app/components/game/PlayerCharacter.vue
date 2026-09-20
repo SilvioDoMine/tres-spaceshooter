@@ -4,7 +4,7 @@ import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import type { TresInstance } from '@tresjs/core';
 import * as THREE from 'three';
-import { CameraUtils } from '~/utils/CameraUtils';
+import { rangeCameraHeight } from '~/utils/rangeCamera';
 import { DILATION_CONFIG } from '~/utils/spatialDilation';
 import { applyElementalTint, collectMaterials } from '~/utils/elementalVisuals';
 // Suavização da pilotagem. Para desfazer, veja o cabeçalho de ~/utils/shipHandling.
@@ -55,6 +55,7 @@ let elementTime = 0;
 // ==================== CONFIGURAÇÃO DA CÂMERA ====================
 const CAMERA_HEIGHT = 52;
 const CAMERA_FOV = 25;
+const { sizes } = useTresContext();
 const viewportWidth = ref(1280), viewportHeight = ref(720);
 function resizeViewport() { viewportWidth.value = window.innerWidth; viewportHeight.value = window.innerHeight; }
 onMounted(() => { resizeViewport(); window.addEventListener('resize', resizeViewport); });
@@ -62,6 +63,11 @@ onUnmounted(() => window.removeEventListener('resize', resizeViewport));
 
 // Posição calculada da câmera (atualizada a cada frame)
 const cameraPosition = shallowRef({ x: initialPosition.x, y: CAMERA_HEIGHT, z: initialPosition.z });
+let previousRange = -1, previousAspect = -1;
+watch(() => currentRun.currentStage, () => {
+  const p = currentRun.getPlayerPosition();
+  cameraPosition.value = { x: p.x, y: cameraPosition.value.y, z: p.z };
+});
 
 // Opcional: Se você estiver usando um modelo GLTF
 // const { nodes, materials } = await useGLTF('/models/player.gltf', { draco: true });
@@ -150,11 +156,25 @@ onBeforeRender(({ delta }) => {
   const target = { x: position.x + move.x * 2.6, z: position.z + move.z * 2.6 };
   cameraPosition.value = {
     x: cameraPosition.value.x + (target.x - cameraPosition.value.x) * blend,
-    y: CAMERA_HEIGHT,
+    y: cameraPosition.value.y,
     z: cameraPosition.value.z + (target.z - cameraPosition.value.z) * blend,
   };
-  const height = 2 * CAMERA_HEIGHT * Math.tan(CAMERA_FOV * Math.PI / 360);
-  flightView.value = { x: cameraPosition.value.x, z: cameraPosition.value.z, height, width: height * viewportWidth.value / Math.max(1, viewportHeight.value) };});
+  const aspect = (sizes.width.value || viewportWidth.value) / Math.max(1, sizes.height.value || viewportHeight.value);
+  const range = projectilesType.player.range * playerStats.getRangeMultiplier;
+  // Pausa mantém posição e zoom, salvo alteração real de viewport ou alcance.
+  if (currentRun.isPlaying || aspect !== previousAspect || range !== previousRange) {
+    const required = rangeCameraHeight(range, aspect,
+      Math.max(aspect < 1 ? 0 : 2.6, Math.abs(position.x - cameraPosition.value.x - cameraShake.value.x)),
+      Math.max(aspect < 1 ? 0 : 2.6, Math.abs(position.z - cameraPosition.value.z - cameraShake.value.z)), CAMERA_FOV);
+    // Abrir imediatamente garante alcance visível; fechar suavemente evita pulsação.
+    cameraPosition.value.y = required >= cameraPosition.value.y ? required
+      : cameraPosition.value.y + (required - cameraPosition.value.y) * blend;
+    previousRange = range; previousAspect = aspect;
+  }
+  const height = 2 * cameraPosition.value.y * Math.tan(CAMERA_FOV * Math.PI / 360);
+  flightView.value = { x: cameraPosition.value.x + cameraShake.value.x,
+    z: cameraPosition.value.z + cameraShake.value.z, height, width: height * aspect };
+});
 </script>
 
 <template>
