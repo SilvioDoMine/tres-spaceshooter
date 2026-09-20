@@ -100,11 +100,16 @@ onUnmounted(() => window.removeEventListener('keydown', onKey, true));
   gap: 16px 12px;
   width: min(560px, 100%);
   max-height: 60vh;
-  overflow: auto;
+  /* Folga para o contorno das fontes e o brilho girando não serem cortados pela borda que rola */
+  padding: 6px 10px;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 .grant__list.is-single {
   display: flex;
   justify-content: center;
+  /* Um item só nunca precisa rolar: sem caixa de rolagem, o nome não é cortado */
+  overflow: visible;
 }
 .grant__entry {
   display: flex;

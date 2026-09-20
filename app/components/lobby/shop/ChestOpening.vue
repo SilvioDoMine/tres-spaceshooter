@@ -72,12 +72,26 @@ function updateAnchor() {
   anchor.value = { x: (point.x * 0.5 + 0.5) * 100, y: (-point.y * 0.5 + 0.5) * 100 };
 }
 
+/** Folga mínima acima do nome do item (o rótulo ainda sobe 8px por CSS) */
+const ITEM_TOP_MARGIN = 24;
+/** Quanto o bloco (nome + card) desce para não sair pela borda de cima em telas baixas */
+const safeDrop = ref(0);
+
+function updateSafeDrop() {
+  const el = itemEl.value;
+  if (!el) return;
+  const center = (anchor.value.y / 100) * window.innerHeight;
+  safeDrop.value = Math.max(0, ITEM_TOP_MARGIN + el.offsetHeight / 2 - center);
+}
+
 function onFrame(frame: ChestFrame) {
   const el = itemEl.value;
   if (!el) return;
   const p = frame.item;
+  // A subida para no alvo: o overshoot do easing fica só no "pop" da escala, senão o item sobe e volta
+  const lift = (1 - Math.min(1, p)) * window.innerHeight * 0.34;
   el.style.opacity = String(Math.min(1, p * 4));
-  el.style.transform = `translate(-50%, calc(-50% + ${(1 - p) * 34}vh)) scale(${0.15 + 0.85 * p})`;
+  el.style.transform = `translate(-50%, calc(-50% + ${lift + safeDrop.value}px)) scale(${0.15 + 0.85 * p})`;
 }
 
 function onOpened() {
@@ -136,8 +150,12 @@ function onKey(event: KeyboardEvent) {
   }
 }
 
+// O bloco do item tem altura em px (nome + card), então a folga depende do item revelado e do tamanho da tela
+watch([playId, () => anchor.value.y], () => nextTick(updateSafeDrop));
+
 onMounted(() => {
   updateAnchor();
+  nextTick(updateSafeDrop);
   window.addEventListener('resize', updateAnchor);
   window.addEventListener('keydown', onKey, true);
 });
