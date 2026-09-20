@@ -286,6 +286,18 @@ export const SkillsList ={
       2: { value: 0.4, chains: 2, description: '+40% do dano como raio, que salta para 2 inimigos.' },
     },
   },
+  homing_shot: {
+    id: 'homing_shot',
+    name: 'Caça Rastreador',
+    description: 'Os projéteis perseguem o inimigo, fazendo a curva atrás dele. A curva usa a própria velocidade do tiro, então alvo colado na lateral ainda escapa.',
+    icon: 'homing-shot',
+    rarity: 'epic',
+    // value: raio mínimo da curva. Menor = curva mais fechada = erra menos.
+    // O alcance da arma não muda: a distância percorrida na curva gasta o mesmo orçamento do tiro reto.
+    levels: {
+      1: { value: 2.6, description: 'Os projéteis perseguem o alvo mais próximo.' },
+    },
+  },
   fire_trail: {
     id: 'fire_trail',
     name: 'Rastro de Fogo',

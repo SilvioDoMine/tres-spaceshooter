@@ -244,6 +244,8 @@ export function usePlayerControls() {
             const mounts = weaponMounts(front, rear, diagonal);
             // Fogo, gelo e raio viajam em todos os projéteis; o raio salta dentro do alcance da arma
             const elements = usePlayerStats().elementalPayload(projectilesType.player.range * usePlayerStats().getRangeMultiplier);
+            // Caça Rastreador: raio da curva levado por cada projétil (0 desliga a perseguição)
+            const homing = usePlayerStats().homingRadius;
             // Multishot: a rajada inteira sai de novo, um tiro atrás do outro em cada arma
             for (let round = 0; round <= multi; round++) {
               const repeat = round > 0;
@@ -262,12 +264,12 @@ export function usePlayerControls() {
                     power: power * burstMultiplier, silent: repeat || shotIndex > 0, ion: equipmentEffects.effects.weaponStyle === 'ion',
                     burst: special && volley.burst, beam: special && volley.burst, beamMount: mount, beamAge: 0, beamTick: 0, beamDuration: .65, aoeRadius: 0,
                     spawnDelay: round * MULTISHOT_INTERVAL, muzzleId: repeat ? mount.id : null, releaseSound: repeat && shotIndex === 0,
-                    elements,
+                    elements, homing,
                   });
                 if (!repeat) emitMuzzleFlash(mount.id, special && volley.burst);
                 if (special && volley.echo) {
                   projectileStore.spawnProjectile('player', origin, heading, 'player', 'player',
-                    hits, bounces, damage, [], { power, silent: true, echo: true, spawnDelay: .10, canCrit: volley.echoCanCrit, elements });
+                    hits, bounces, damage, [], { power, silent: true, echo: true, spawnDelay: .10, canCrit: volley.echoCanCrit, elements, homing });
                 }
               });
             }

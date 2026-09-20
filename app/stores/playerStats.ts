@@ -161,6 +161,9 @@ export const usePlayerStats = defineStore('playerStats', () => {
   // Aprendizado: multiplica a EXP dos abates; cresce com as salas concluídas desde que a carta foi pega
   const experienceMultiplier = computed((): number => 1 + experienceBonus(skillLevelData('exp_growth'), skillStore.experienceRooms));
 
+  // Caça Rastreador: raio mínimo da curva dos projéteis (0 sem a carta). Não mexe no alcance.
+  const homingRadius = computed((): number => skillLevelData('homing_shot')?.value || 0);
+
   // Rastro de Fogo: acende o rastro que o Propulsor Cometa também alimenta (null sem a carta)
   const fireTrail = computed(() => {
     const level = skillLevelData('fire_trail');
@@ -263,6 +266,7 @@ export const usePlayerStats = defineStore('playerStats', () => {
     adrenalineDamageMultiplier,
     elementalPayload,
     fireTrail,
+    homingRadius,
   };
 });
 

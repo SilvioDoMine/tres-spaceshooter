@@ -7,7 +7,7 @@ import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import { useSkillStore, SkillsList } from '~/stores/SkillStore';
 import { targetInsideView } from '~/utils/rangeCamera';
-import { worldHardpoint, advanceShot, bastionShieldBlocks, PLAYER_HITBOX_RADIUS, PROJECTILE_IFRAME, PROJECTILE_ORPHAN_LIFESPAN, segmentHit } from '~/utils/combatPatterns';
+import { worldHardpoint, advanceShot, bastionShieldBlocks, homingDirection, inRearTurn, PLAYER_HITBOX_RADIUS, PROJECTILE_IFRAME, PROJECTILE_ORPHAN_LIFESPAN, segmentHit } from '~/utils/combatPatterns';
 import { ENEMY_FLEET, fleetSocketWorld } from '~/utils/enemyFleet';
 
 const orb = { speed: 4, damage: 18, size: .22, range: 25, color: '#52caff' };
@@ -75,6 +75,19 @@ export const useProjectileStore = defineStore('projectileStore', () => {
       if (d < distance) { nearest = enemy; distance = d; }
     }
     return nearest;
+  }
+  /**
+   * Alvo perseguido: mantém o atual enquanto ele viver e ainda não tiver sido atingido por este
+   * tiro; senão troca para o mais próximo dentro do alcance da arma (o mesmo limite do ricochete).
+   */
+  function homingTarget(projectile) {
+    const current=projectile.homingTargetId
+      ? enemyManager.activeEnemies.value.find(e=>e.id===projectile.homingTargetId&&e.state==='active'&&!projectile.hitsList.includes(e.id))
+      : null;
+    if(current)return current;
+    const next=nearestEnemyFromPosition(projectile.position,projectile.range*playerStats.getRangeMultiplier,null,projectile.hitsList);
+    projectile.homingTargetId=next?next.id:null;
+    return next;
   }
   function collide(projectile,start) {
     if(projectile.ownerType==='enemy') {
@@ -203,16 +216,19 @@ export const useProjectileStore = defineStore('projectileStore', () => {
         continue;
       }
       const distance=projectile.speed*deltaTime*(projectile.ownerType==='player'?playerStats.getProjectileSpeedMultiplier:1);
+      // Caça Rastreador: o alvo é escolhido uma vez por frame; a curva é refeita a cada sub-passo
+      const chased=projectile.homing>0&&!inRearTurn(projectile)?homingTarget(projectile):null;
       // Curves use short segments; faster straight shots use swept collisions.
-      const steps=projectile.rearTurn?Math.max(1,Math.ceil(distance/.22)):1;
+      const steps=projectile.rearTurn||chased?Math.max(1,Math.ceil(distance/.22)):1;
       for(let step=0;step<steps;step++) {
         const start={...projectile.position};
+        if(chased)projectile.direction=homingDirection(projectile.direction,projectile.position,chased.position,distance/steps,projectile.homing);
         advanceShot(projectile,distance/steps);projectile.distanceTraveled+=distance/steps;
         if (projectile.ownerType === 'enemy' && projectile.launchHeight !== undefined) projectile.position.y = projectile.launchHeight * Math.max(0, 1 - projectile.distanceTraveled / 6) + .08 * Math.min(1, projectile.distanceTraveled / 6);
         collide(projectile,start);
         if(projectile._markedForRemoval)break;
       }
-      if(projectile.ion || projectile.echo || projectile.ricochet || projectile.rearTurn) {
+      if(projectile.ion || projectile.echo || projectile.ricochet || projectile.rearTurn || projectile.homing>0) {
         projectile.trail.push({...projectile.position});
         while(projectile.trail.length>14)projectile.trail.shift();
       }

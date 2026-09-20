@@ -182,6 +182,7 @@ Os hardpoints temporários devem parecer extensões do armamento equipado e usar
 | Tiros Múltiplos | Cada arma dispara 2 vezes no nível 1 e 3 vezes no nível 2 | Repete o disparo pelo mesmo canhão. Não duplicar canhões nem criar novos hardpoints. |
 | Tiro Ricochete | Salta entre 1 e 5 vezes, perdendo metade do dano por salto | Rastro deve desenhar claramente a mudança de alvo; não altera o canhão. |
 | Tiro Perfurante | Atinge até 2, 3, 5 ou 8 inimigos | Projétil mantém direção e atravessa o alvo; usar núcleo ou rastro que comunique penetração. |
+| Caça Rastreador | Projéteis perseguem o alvo; a curva usa a velocidade do tiro e nem sempre alcança | Rastro curvo deve mostrar a perseguição e a curva perdida quando o tiro erra. Não altera o canhão nem o alcance da arma. |
 | Alcance Estendido | Aumenta progressivamente a distância do projétil | Pode alongar e estabilizar o rastro, sem aumentar fisicamente o canhão. |
 | Dano Aumentado | Eleva o dano total até 225% do base | Intensidade, núcleo e espessura podem crescer discretamente; preservar a identidade da arma. |
 | Velocidade Aumentada | Nave até +30%; projétil até +40% | Intensificar chama e compressão do rastro durante o movimento, sem trocar propulsores. |

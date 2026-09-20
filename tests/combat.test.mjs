@@ -5,7 +5,19 @@ import { test } from 'node:test';
 import * as patterns from '../app/utils/combatPatterns.js';
 import * as fleet from '../app/utils/enemyFleet.js';
 import { playableRoomCount } from '../app/utils/progression.js';
-const {shotFormation,advanceShot,segmentHit,attackProfile,attackDirections}=patterns;
+const {shotFormation,advanceShot,segmentHit,attackProfile,attackDirections,homingDirection}=patterns;
+
+/** Persegue `target` em passos de `step` e devolve o caminho e a menor distância alcançada. */
+function chase(target,{radius=2.6,step=.05,distance=11,from={x:0,z:0},heading={x:1,z:0}}={}){
+ const p={position:{...from},direction:{...heading}};
+ let closest=Infinity;
+ for(let traveled=0;traveled<distance;traveled+=step){
+  p.direction=homingDirection(p.direction,p.position,target,step,radius);
+  advanceShot(p,step);
+  closest=Math.min(closest,Math.hypot(p.position.x-target.x,p.position.z-target.z));
+ }
+ return {end:{...p.position},closest};
+}
 
 test('two parallel muzzles and five-shot arrow preserve symmetry',()=>{
  const pair=shotFormation(2);
@@ -28,6 +40,44 @@ test('rear shot leaves forward, turns 180 degrees, then travels straight',()=>{
   assert.ok(Math.abs(p.position.x-x)<1e-8 && Math.abs(p.position.z-z-3)<1e-8);
  }
 });
+test('homing turns toward the target and never beyond its minimum radius',()=>{
+ // Alvo à esquerda: gira o máximo permitido por essa distância (step/radius radianos)
+ const turned=homingDirection({x:1,z:0},{x:0,z:0},{x:0,z:5},.26,2.6);
+ assert.ok(Math.abs(Math.atan2(turned.z,turned.x)-.1)<1e-9);
+ // Alvo quase de frente: gira só o necessário, sem passar do alvo
+ const small=homingDirection({x:1,z:0},{x:0,z:0},{x:10,z:.2},1,2.6);
+ assert.ok(Math.abs(Math.atan2(small.z,small.x)-Math.atan2(.2,10))<1e-9);
+ // Sem a carta (raio 0) e com o alvo em cima do projétil a direção não muda
+ assert.deepEqual(homingDirection({x:1,z:0},{x:0,z:0},{x:0,z:5},.26,0),{x:1,z:0});
+ assert.deepEqual(homingDirection({x:1,z:0},{x:0,z:0},{x:0,z:0},.26,2.6),{x:1,z:0});
+});
+
+test('the shot speed sets how fast the curve is drawn, not how tight it is',()=>{
+ // Alvo distante e de lado: o giro fica no limite o tempo todo. O arco total é distância/raio,
+ // ou seja, a curvatura é 1/raio em qualquer velocidade — o tiro rápido só chega lá antes.
+ const sweep=(step,distance)=>{
+  const p={position:{x:0,z:0},direction:{x:1,z:0}};
+  let turned=0;
+  for(let traveled=0;traveled<distance-1e-9;traveled+=step){
+   const before=Math.atan2(p.direction.z,p.direction.x);
+   p.direction=homingDirection(p.direction,p.position,{x:0,z:-1000},step,2.6);
+   turned+=before-Math.atan2(p.direction.z,p.direction.x);
+   advanceShot(p,step);
+  }
+  return turned;
+ };
+ for(const step of [.02,.05,.1,.2])assert.ok(Math.abs(sweep(step,3)-3/2.6)<1e-9,`passo ${step}`);
+});
+
+test('homing still misses a target parked inside its turning circle',()=>{
+ // Alvo a 1 de distância, perpendicular: cabe dentro do círculo de giro (raio 2.6) e escapa
+ assert.ok(chase({x:0,z:1}).closest>.6);
+ // O mesmo alvo à frente é alcançado sem dificuldade
+ assert.ok(chase({x:8,z:2}).closest<.3);
+ // Quanto menor o raio, mais fechada a curva e menos alvos escapam
+ assert.ok(chase({x:1.2,z:2},{radius:2.6}).closest>chase({x:1.2,z:2},{radius:1.7}).closest);
+});
+
 test('swept hit detects a target crossed between frames',()=>{
  assert.notEqual(segmentHit({x:-5,z:0},{x:5,z:0},{x:0,z:0},.3),null);
  assert.equal(segmentHit({x:-5,z:0},{x:5,z:0},{x:0,z:1},.3),null);
@@ -98,6 +148,29 @@ test('ricochet continues once, keeps trail and never hits previous target again'
  assert.equal(hits[1].n,25);
  assert.equal(store.projectiles.value.length,0);
 });
+test('homing shots curve onto an off-axis enemy that a straight shot would miss',()=>{
+ const shoot=options=>{
+  const harness=storeHarness();
+  harness.enemies.length=0;
+  harness.enemies.push({id:'a',state:'active',position:{x:6,z:4},size:1});
+  harness.store.spawnProjectile('player',{x:0,z:0},{x:1,z:0},'p','player',1,0,50,[],options);
+  // 12 passos de .05 a 19/s = 11.4 percorridos: passa do alcance 11 da arma
+  for(let i=0;i<12;i++)harness.store.update(.05);
+  return harness;
+ };
+ assert.equal(shoot({}).hits.length,0,'tiro reto passa longe');
+ const chased=shoot({homing:2.6});
+ assert.deepEqual(chased.hits.map(h=>h.id),['a']);
+ // O alcance não muda: o tiro morre no mesmo orçamento de distância
+ assert.equal(shoot({homing:2.6}).store.projectiles.value.length,0);
+ const missed=storeHarness();
+ missed.enemies.length=0;
+ missed.enemies.push({id:'a',state:'active',position:{x:0,z:1},size:.2});
+ missed.store.spawnProjectile('player',{x:0,z:0},{x:1,z:0},'p','player',1,0,50,[],{homing:2.6});
+ for(let i=0;i<12;i++)missed.store.update(.05);
+ assert.equal(missed.hits.length,0,'alvo dentro do círculo de giro escapa');
+});
+
 test('a removed shot cannot hit two overlapping enemies; volley grants damage grace',()=>{
  const {store,enemies,hits,damage,player}=storeHarness();
  enemies[1].position.x=0;

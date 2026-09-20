@@ -16,6 +16,8 @@ const u = (name: string) => `url(#${id(name)})`;
 const link = (name: string) => `#${id(name)}`;
 
 const HEART = 'M50 86C22 68 10 54 10 38C10 24 20 15 32 15C40 15 46 20 50 26C54 20 60 15 68 15C80 15 90 24 90 38C90 54 78 68 50 86Z';
+// Caça Rastreador: gancho de perseguição, do rabicho fechado até a ponta onde vai o projétil
+const HOMING_HOOK = 'M72 62C80 70 76 86 58 90C36 95 12 84 12 60C12 38 30 20 50 19';
 const ICE_ARMS = [0, 60, 120, 180, 240, 300];
 const PELLETS = [-50, -25, 0, 25, 50].map((angle) => ({
   angle,
@@ -404,6 +406,14 @@ const PELLETS = [-50, -25, 0, 25, 50].map((angle) => ({
         <use :href="link('bolt')" transform="translate(50 24)" />
         <use :href="link('bolt')" transform="translate(70 32)" />
         <use :href="link('ship')" transform="translate(50 66) scale(.64)" />
+      </g>
+
+      <!-- Caça Rastreador: o projétil descreve a curva atrás do alvo -->
+      <g v-else-if="icon === 'homing-shot'">
+        <path :d="HOMING_HOOK" fill="none" stroke="#1b2238" stroke-width="23" stroke-linecap="round" />
+        <path :d="HOMING_HOOK" fill="none" :stroke="u('red')" stroke-width="13.5" stroke-linecap="round" />
+        <path d="M15 53C18 37 30 26 44 22" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity="0.45" />
+        <use :href="link('bolt')" transform="translate(57 21) rotate(62)" />
       </g>
 
       <!-- Tiro de Fogo: bola de fogo em disparada -->

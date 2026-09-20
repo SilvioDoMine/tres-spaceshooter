@@ -63,9 +63,35 @@ export function worldHardpoint(position, yaw, mount) {
     direction: { x: c * mount.dx + s * mount.dz, z: -s * mount.dx + c * mount.dz } };
 }
 
+/** A curva de retorno do tiro traseiro ainda está sendo percorrida. */
+export const inRearTurn = projectile =>
+  Boolean(projectile.rearTurn) && projectile.rearTurn.traveled < (Math.PI + 3) * projectile.rearTurn.radius;
+
+/**
+ * Caça Rastreador: gira a direção do projétil na direção do alvo.
+ *
+ * O giro é medido por distância percorrida (`distance / radius` radianos), não por tempo. Assim a
+ * velocidade do tiro é a própria velocidade da curva — um tiro mais rápido fecha o mesmo arco mais
+ * cedo — e o raio mínimo da curva continua sendo `radius` em qualquer velocidade.
+ *
+ * É esse raio mínimo que faz o tiro errar: alvo dentro do círculo de raio `radius` encostado na
+ * lateral da trajetória não cabe na curva, e o projétil passa por fora.
+ */
+export function homingDirection(direction, position, target, distance, radius) {
+  const dx = target.x - position.x, dz = target.z - position.z;
+  if (!(radius > 0) || Math.hypot(dx, dz) < .001) return direction;
+  const current = Math.atan2(direction.z, direction.x);
+  let diff = Math.atan2(dz, dx) - current;
+  while (diff > Math.PI) diff -= 2 * Math.PI;
+  while (diff < -Math.PI) diff += 2 * Math.PI;
+  const maxTurn = distance / radius;
+  const angle = current + Math.max(-maxTurn, Math.min(maxTurn, diff));
+  return { x: Math.cos(angle), z: Math.sin(angle) };
+}
+
 // A return loop rejoins its launch lane behind the ship; never tracks a target.
 export function advanceShot(projectile, distance) {
-  if (projectile.rearTurn && projectile.rearTurn.traveled < (Math.PI + 3) * projectile.rearTurn.radius) {
+  if (inRearTurn(projectile)) {
     const turn = projectile.rearTurn;
     const length = (Math.PI + 3) * turn.radius;
     const arc = Math.min(distance, length - turn.traveled);

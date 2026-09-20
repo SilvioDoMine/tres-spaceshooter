@@ -15,6 +15,7 @@ const { SkillsList } = await import('../app/stores/SkillStore.js');
 const skillSource = readFileSync(new URL('../app/stores/SkillStore.js', import.meta.url), 'utf8');
 const runSource = readFileSync(new URL('../app/stores/currentRunStore.ts', import.meta.url), 'utf8');
 const effectsSource = readFileSync(new URL('../app/stores/useEquipmentEffectsStore.ts', import.meta.url), 'utf8');
+const projectileSource = readFileSync(new URL('../app/stores/projectileStore.js', import.meta.url), 'utf8');
 
 test('player upgrade tables use final non-cumulative values', () => {
   assert.deepEqual(Object.values(SkillsList.health_percentage.levels).map(x => 250 * x.value), [300,350,425,525,650]);
@@ -36,6 +37,20 @@ test('shot upgrades match formation, damage, piercing, rear fire and range', () 
   assert.deepEqual(Object.values(SkillsList.back_shot.levels).map(x => x.value), [.65,.65]);
   assert.deepEqual(Object.values(SkillsList.range_extension.levels).map(x => Number((11*x.value).toFixed(6))), [13.5,16,19,22,25]);
   assert.ok(Math.abs(202.5/.85-238.23529411764707)<1e-12);
+});
+
+test('homing is a single-level epic card that never extends the range', () => {
+  const card = SkillsList.homing_shot;
+  assert.equal(card.rarity, 'epic');
+  assert.equal(card.icon, 'homing-shot');
+  assert.deepEqual(Object.keys(card.levels), ['1']);
+  assert.equal(card.levels[1].value, 2.6);
+  // O alcance só ganha folga na curva do tiro traseiro; a perseguição não entra na conta
+  const range = projectileSource.match(/const range=projectile\.range\*[^;]+;/)[0];
+  assert.ok(range.includes('rearTurn'));
+  assert.ok(!range.includes('homing'), 'perseguir não pode aumentar o alcance da arma');
+  // A perseguição gasta o mesmo orçamento: cada sub-passo soma em distanceTraveled
+  assert.match(projectileSource, /homingDirection\([^)]*\);\s*\n?\s*advanceShot\(projectile,distance\/steps\);projectile\.distanceTraveled\+=distance\/steps;/);
 });
 
 test('fire trail is a single-level rare card that reuses the comet trail', () => {
