@@ -230,14 +230,18 @@ onUnmounted(() => {
         <div v-else-if="phase === 'summary'" class="copen__summary">
           <h2 class="copen__title">Parabéns:</h2>
           <div class="copen__grid" :class="{ 'is-few': items.length <= 3 }">
+            <!-- click.stop: tocar no item abre a ficha dele; só o toque no fundo fecha a tela -->
             <div
               v-for="(item, i) in items"
               :key="item.uid"
               class="copen__cell"
               :class="{ 'is-high': rarityIndex(item.rarity) >= rarityIndex(chest.pity.rarity) }"
               :style="{ animationDelay: `${Math.min(i, 12) * 70}ms` }"
+              @click.stop
             >
-              <LobbyEquipmentItemCard :item="item" />
+              <BaseItemTooltip :item="item">
+                <LobbyEquipmentItemCard :item="item" />
+              </BaseItemTooltip>
             </div>
           </div>
 
