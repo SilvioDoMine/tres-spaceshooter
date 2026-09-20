@@ -113,6 +113,10 @@ const PELLETS = [-50, -25, 0, 25, 50].map((angle) => ({
           <stop offset="0" stop-color="#ff6b7d" stop-opacity="0.7" />
           <stop offset="1" stop-color="#ff6b7d" stop-opacity="0" />
         </radialGradient>
+        <radialGradient :id="id('glowFire')" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stop-color="#ffb627" stop-opacity="0.75" />
+          <stop offset="1" stop-color="#ffb627" stop-opacity="0" />
+        </radialGradient>
         <radialGradient :id="id('glowIce')" cx="0.5" cy="0.5" r="0.5">
           <stop offset="0" stop-color="#dff8ff" stop-opacity="0.9" />
           <stop offset="1" stop-color="#dff8ff" stop-opacity="0" />
@@ -140,6 +144,16 @@ const PELLETS = [-50, -25, 0, 25, 50].map((angle) => ({
           <path d="M-4 11L0 24L4 11Z" fill="#5ce1ff" stroke="none" opacity="0.55" />
           <path d="M0 -17C4 -12 6 -7 6 -2V8C6 11 3 13 0 13C-3 13 -6 11 -6 8V-2C-6 -7 -4 -12 0 -17Z" :fill="u('plasma')" />
           <path d="M0 -10C2 -7 2.5 -4 2.5 -1V6C2.5 7.5 1.5 8.5 0 8.5C-1.5 8.5 -2.5 7.5 -2.5 6V-1C-2.5 -4 -2 -7 0 -10Z" fill="#fff" stroke="none" opacity="0.9" />
+        </g>
+
+        <!-- Chama solta, centrada na origem: o tamanho vem da escala do <use> -->
+        <g :id="id('flame')" stroke="#1b2238" stroke-width="3.5" stroke-linejoin="round">
+          <path d="M1 -18C3 -10 9 -6 9 1C9 8 5 14 0 14C-5 14 -9 8 -9 1C-9 -4 -4 -6 -3 -12C-1 -9 0 -13 1 -18Z" :fill="u('fire')" />
+          <path
+            d="M.5 -8C1.5 -3 4.5 -2 4.5 2C4.5 6.5 2.5 10 0 10C-2.5 10 -4.5 6.5 -4.5 2C-4.5 -1 -2 -3 .5 -8Z"
+            :fill="u('fireCore')"
+            stroke="none"
+          />
         </g>
 
         <!-- Brilho de 4 pontas (a cor vem do fill do <use>) -->
@@ -409,6 +423,19 @@ const PELLETS = [-50, -25, 0, 25, 50].map((angle) => ({
           />
           <circle cx="50" cy="35" r="9" fill="#fff" stroke="none" />
         </g>
+      </g>
+
+      <!-- Rastro de Fogo: a nave acende o chão por onde passa -->
+      <g v-else-if="icon === 'fire-trail'">
+        <ellipse cx="38" cy="68" rx="44" ry="26" :fill="u('glowFire')" transform="rotate(-44 38 68)" />
+        <use :href="link('flame')" transform="translate(12 90) scale(.48) rotate(-14)" opacity="0.65" />
+        <use :href="link('flame')" transform="translate(24 81) scale(.7) rotate(-10)" opacity="0.82" />
+        <use :href="link('flame')" transform="translate(36 70) scale(.92) rotate(-7)" />
+        <use :href="link('flame')" transform="translate(48 58) scale(1.12) rotate(-4)" />
+        <use :href="link('flame')" transform="translate(59 45) scale(1.32)" />
+        <use :href="link('spark')" fill="#ffd23f" transform="translate(74 60) scale(.75)" />
+        <use :href="link('spark')" fill="#fff" transform="translate(19 64) scale(.55)" />
+        <use :href="link('ship')" transform="translate(70 26) rotate(34) scale(.6)" />
       </g>
 
       <!-- Tiro de Gelo: cristal de gelo -->

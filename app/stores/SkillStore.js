@@ -286,6 +286,18 @@ export const SkillsList ={
       2: { value: 0.4, chains: 2, description: '+40% do dano como raio, que salta para 2 inimigos.' },
     },
   },
+  fire_trail: {
+    id: 'fire_trail',
+    name: 'Rastro de Fogo',
+    description: 'A nave acende o chão por onde passa. Quem encostar no rastro se queima.',
+    icon: 'fire-trail',
+    rarity: 'rare',
+    // Mesmo rastro do Propulsor Cometa: com o propulsor equipado a largura fica com a maior das
+    // duas fontes e o dano soma, então a carta sempre acrescenta alguma coisa.
+    levels: {
+      1: { value: 0.12, width: 1, description: 'O rastro causa 12% do seu dano como fogo, no máximo 2x por segundo por inimigo.' },
+    },
+  },
   multishot: {
     id: 'multishot',
     name: 'Tiros Múltiplos',

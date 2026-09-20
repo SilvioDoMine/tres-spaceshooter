@@ -101,6 +101,24 @@ test('elemental shot cards build the projectile payload in the real stores', () 
   });
 });
 
+test('every room load wipes the world effects left in the previous room', () => {
+  const { run, equipmentEffects } = runHarness();
+  const afterStart = equipmentEffects.roomResets;
+  assert.ok(afterStart > 0, 'a sala inicial já entra limpa');
+  run.loadStage(run.currentStage);
+  assert.equal(equipmentEffects.roomResets, afterStart + 1);
+});
+
+test('fire trail card exposes the trail parameters in the real stores', () => {
+  const { context, stats, skills } = runHarness();
+  assert.equal(stats.fireTrail, null);
+  skills.currentSkills.push({ ...context.SkillsList.fire_trail, currentLevel: 1 });
+  assert.deepEqual(JSON.parse(JSON.stringify(stats.fireTrail)), { damage: .12, width: 1 });
+  // 12% do dano já multiplicado pelas cartas de dano, não do dano base
+  skills.currentSkills.push({ ...context.SkillsList.damage_percentage, currentLevel: 5 });
+  assert.equal(stats.damage * stats.fireTrail.damage, 112.5 * .12);
+});
+
 test('player freezes from an elemental attack, thaws on other damage and burns over time', () => {
   const { run, messages } = runHarness();
   run.takeDamage(20, { source: 'attack', elements: { ice: { damage: .5, shatter: .5, duration: 1 } } });
@@ -258,7 +276,7 @@ function runHarness(overrides = {}) {
   const permanent = computePlayerStats(base, { ...emptyTalentBonuses(), ...overrides }, emptyTalentBonuses());
   const equipmentEffects = {
     initialize() {}, cleanup() {}, onDodge() {}, blockIncoming: () => false,
-    onPlayerDamaged() {},
+    onPlayerDamaged() {}, resetRoom() { equipmentEffects.roomResets++; }, roomResets: 0,
   };
   const context = vm.createContext({
     ref, shallowRef, computed, Math, console: { log() {}, warn() {} },
@@ -295,7 +313,8 @@ function runHarness(overrides = {}) {
   const run = context.useCurrentRunStore();
   run.gameStart(config);
   return { context, run, stats: context.usePlayerStats(), skills: context.useSkillStore(),
-    hearts: context.useHeartStore(), loot: context.useLootStore(), config, messages, sounds, permanent };
+    hearts: context.useHeartStore(), loot: context.useLootStore(), config, messages, sounds, permanent,
+    equipmentEffects };
 }
 
 test('coins stay on the floor even under the ship and only fly in once the room is cleared', () => {

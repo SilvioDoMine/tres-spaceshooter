@@ -221,6 +221,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
     isDoorActive.value = false;
     playerPosition.value = { ...stage.playerStartPosition };
     resetElementState(playerElements);
+    // Rastro, orbes e clarão ficam na sala que foi deixada para trás
+    useEquipmentEffectsStore().resetRoom();
     resetCollision();
     isWaveInProgress.value = false;
     roomCurrentWaveIndex.value = 0;

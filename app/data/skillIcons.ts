@@ -21,6 +21,7 @@ export const SKILL_ICON_KEYS = [
   'siphon',
   'front-shot',
   'fire-shot',
+  'fire-trail',
   'ice-crystal',
   'lightning',
   'burst',

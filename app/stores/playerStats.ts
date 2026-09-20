@@ -161,6 +161,12 @@ export const usePlayerStats = defineStore('playerStats', () => {
   // Aprendizado: multiplica a EXP dos abates; cresce com as salas concluídas desde que a carta foi pega
   const experienceMultiplier = computed((): number => 1 + experienceBonus(skillLevelData('exp_growth'), skillStore.experienceRooms));
 
+  // Rastro de Fogo: acende o rastro que o Propulsor Cometa também alimenta (null sem a carta)
+  const fireTrail = computed(() => {
+    const level = skillLevelData('fire_trail');
+    return level ? { damage: level.value, width: level.width } : null;
+  });
+
   // Tiro de Fogo, Gelo e Raio: payload elemental levado por cada projétil (null sem nenhum)
   function elementalPayload(range: number): any {
     const fire = skillLevelData('fire_shot'), ice = skillLevelData('ice_shot'), lightning = skillLevelData('lightning_shot');
@@ -256,6 +262,7 @@ export const usePlayerStats = defineStore('playerStats', () => {
     experienceMultiplier,
     adrenalineDamageMultiplier,
     elementalPayload,
+    fireTrail,
   };
 });
 

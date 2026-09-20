@@ -220,6 +220,7 @@ Estas cartas não exigem novas peças físicas permanentes. Sua comunicação de
 | Adrenalina | Aumenta dano conforme a vida diminui | Pulsação vermelha discreta e energia mais intensa quando a vida está baixa. |
 | Manobra Evasiva | Aumenta a chance de desvio | Rastro curto ou pós-imagem somente durante o desvio. |
 | Sifão | Chance de curar 5% da vida ao abater | Fluxo de energia do inimigo destruído até a nave. |
+| Rastro de Fogo | Acende um rastro de fogo por onde a nave passa; quem encostar se queima | Reaproveita o rastro do Propulsor Cometa, depositado no chão atrás da nave. Nenhuma peça nova no casco ou no propulsor. |
 
 ### Compatibilidade obrigatória entre cartas
 
@@ -304,6 +305,7 @@ Cada motor precisa de carcaça, câmara interna escura, anel externo, núcleo em
 - Centro branco, bordas laranja.
 - Rastro contínuo de plasma e poeira quente, com brasas discretas.
 - O rastro alarga e desaparece gradualmente.
+- O mesmo rastro é aceso pela carta Rastro de Fogo, inclusive sem o propulsor equipado. Com os dois, a largura fica com a maior das fontes e o dano soma.
 
 ### Propulsor Vórtice
 

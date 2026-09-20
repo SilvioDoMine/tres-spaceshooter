@@ -37,6 +37,17 @@ export const useEquipmentEffectsStore = defineStore('equipmentEffects', () => {
   }
   function cleanup() { initialize(emptyEquipmentEffects()); }
 
+  /**
+   * Troca de sala: o que está depositado no mundo não acompanha a nave para a sala seguinte.
+   * Os equipamentos e os contadores da partida (rajada de plasma, limiares da explosão solar)
+   * continuam valendo — some só o rastro, os orbes, o clarão e os sinais já na tela.
+   */
+  function resetRoom() {
+    trail.value = []; orbPositions.value = []; flare.value = null; feedback.value = [];
+    lastTrailPosition = null;
+    orbHitTimers.clear(); trailHitTimers.clear();
+  }
+
   function prepareVolley(rng = Math.random) {
     shotCounter++;
     const burst = effects.value.plasmaEvery > 0 && shotCounter % effects.value.plasmaEvery === 0;
@@ -140,20 +151,26 @@ export const useEquipmentEffectsStore = defineStore('equipmentEffects', () => {
       }
     }
 
-    if (effects.value.cometTrailWidth > 0 && run.isPlaying) {
+    // Rastro: o Propulsor Cometa e a carta Rastro de Fogo alimentam o mesmo rastro. A largura fica
+    // com a maior das duas fontes e o dano soma, então a carta rende mesmo com o propulsor equipado.
+    const fireTrail = stats.fireTrail;
+    const trailWidth = Math.max(effects.value.cometTrailWidth, fireTrail?.width || 0);
+    const trailDamage = effects.value.cometTrailDamageMultiplier + (fireTrail?.damage || 0);
+    if (trailWidth > 0 && run.isPlaying) {
       const move = run.getMoveVector();
       const moving = Math.hypot(move.x, move.z) > .05;
       if (moving && (!lastTrailPosition || Math.hypot(player.x - lastTrailPosition.x, player.z - lastTrailPosition.z) >= .55)) {
-        const point = { id: ++trailSerial, x: player.x+Math.sin(run.getPlayerRotation().y)*.65, z: player.z+Math.cos(run.getPlayerRotation().y)*.65, ttl: 3.5, maxTtl: 3.5, width: effects.value.cometTrailWidth };
+        const point = { id: ++trailSerial, x: player.x+Math.sin(run.getPlayerRotation().y)*.65, z: player.z+Math.cos(run.getPlayerRotation().y)*.65, ttl: 3.5, maxTtl: 3.5, width: trailWidth };
         trail.value = [...trail.value.slice(-63), point];
         lastTrailPosition = { x: player.x, z: player.z };
       } else if (!moving) lastTrailPosition = null;
     }
     trail.value = trail.value.map(point => ({ ...point, ttl: point.ttl - delta })).filter(point => point.ttl > 0);
-    if (trail.value.length) for (const enemy of manager.activeEnemies.value) {
+    if (trail.value.length && trailDamage > 0) for (const enemy of manager.activeEnemies.value) {
       if (enemy.state !== 'active' || trailHitTimers.has(enemy.id)) continue;
       if (trail.value.some(point => Math.hypot(point.x - enemy.position.x, point.z - enemy.position.z) <= point.width * Math.max(0,point.ttl/point.maxTtl) + enemy.size * .35)) {
-        manager.takeDamage(enemy.id, stats.damage * effects.value.cometTrailDamageMultiplier, 'equipment');
+        // Com a carta o dano sai como fogo (texto de queimadura); sem ela continua sendo dano de equipamento
+        manager.takeDamage(enemy.id, stats.damage * trailDamage, 'equipment', fireTrail ? { text: 'burn' } : {});
         trailHitTimers.set(enemy.id, .5);
       }
     }
@@ -169,7 +186,7 @@ export const useEquipmentEffectsStore = defineStore('equipmentEffects', () => {
 
   return {
     feedback, regenerating, effects, orbPositions, trail, flare, attackSpeedBuffTime, shieldCooldown,
-    initialize, cleanup, update, prepareVolley, onDodge, effectiveShotCooldown,
+    initialize, cleanup, resetRoom, update, prepareVolley, onDodge, effectiveShotCooldown,
     blockIncoming, onPlayerDamaged, criticalBonusFor, damageMultiplierFor, enemyTimeScale,
   };
 });

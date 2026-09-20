@@ -14,6 +14,7 @@ globalThis.defineStore = () => () => ({});
 const { SkillsList } = await import('../app/stores/SkillStore.js');
 const skillSource = readFileSync(new URL('../app/stores/SkillStore.js', import.meta.url), 'utf8');
 const runSource = readFileSync(new URL('../app/stores/currentRunStore.ts', import.meta.url), 'utf8');
+const effectsSource = readFileSync(new URL('../app/stores/useEquipmentEffectsStore.ts', import.meta.url), 'utf8');
 
 test('player upgrade tables use final non-cumulative values', () => {
   assert.deepEqual(Object.values(SkillsList.health_percentage.levels).map(x => 250 * x.value), [300,350,425,525,650]);
@@ -35,6 +36,22 @@ test('shot upgrades match formation, damage, piercing, rear fire and range', () 
   assert.deepEqual(Object.values(SkillsList.back_shot.levels).map(x => x.value), [.65,.65]);
   assert.deepEqual(Object.values(SkillsList.range_extension.levels).map(x => Number((11*x.value).toFixed(6))), [13.5,16,19,22,25]);
   assert.ok(Math.abs(202.5/.85-238.23529411764707)<1e-12);
+});
+
+test('fire trail is a single-level rare card that reuses the comet trail', () => {
+  const card = SkillsList.fire_trail;
+  assert.equal(card.rarity, 'rare');
+  assert.equal(card.icon, 'fire-trail');
+  assert.deepEqual(Object.keys(card.levels), ['1']);
+  assert.equal(card.levels[1].value, .12);
+  assert.equal(card.levels[1].width, 1);
+  // Nunca é mais forte que o Propulsor Cometa épico (25% por contato)
+  assert.ok(card.levels[1].value < .25);
+  // A largura e o dano somam com o propulsor no mesmo rastro
+  assert.match(effectsSource, /const trailWidth = Math\.max\(effects\.value\.cometTrailWidth, fireTrail\?\.width \|\| 0\)/);
+  assert.match(effectsSource, /const trailDamage = effects\.value\.cometTrailDamageMultiplier \+ \(fireTrail\?\.damage \|\| 0\)/);
+  // Com a carta o contato sai como fogo
+  assert.match(effectsSource, /fireTrail \? \{ text: 'burn' \} : \{\}/);
 });
 
 test('speed values persist when a stage is loaded and do not affect cooldown', () => {
