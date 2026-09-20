@@ -128,7 +128,9 @@ const handleQuit = () => {
       :quantity="`${displayedExp}`"
     >
       <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">
-        <SvgExpIcon :size="35" />
+        <span class="drop-shadow-xs drop-shadow-black">
+          <SvgExpIcon :size="25" />
+        </span>
       </p>
     </BaseAbilityIcon>
 

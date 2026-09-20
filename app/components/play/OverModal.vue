@@ -116,12 +116,16 @@ const expReward = computed(() => levelAccount.calculateExpReward(
       v-if="expReward > 0"
     >
       <p class="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">
-        <SvgExpIcon :size="35" />
+        <span class="drop-shadow-xs drop-shadow-black">
+          <SvgExpIcon :size="25" />
+        </span>
       </p>
     </BaseAbilityIcon>
 
     <div v-if="useCurrentRunStore().runEquipment" class="w-16 over-reward" :style="{ '--i': 2 }">
-      <LobbyEquipmentItemCard :item="useCurrentRunStore().runEquipment" />
+      <LobbyEquipmentItemTooltip :item="useCurrentRunStore().runEquipment">
+        <LobbyEquipmentItemCard :item="useCurrentRunStore().runEquipment" />
+      </LobbyEquipmentItemTooltip>
     </div>
   </div>
 
