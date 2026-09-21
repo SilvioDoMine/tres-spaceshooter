@@ -26,18 +26,18 @@ const dailyMissions = [
         missionGoal: 150,
         params: [], // Parâmetros adicionais, se necessário
     },
-    // {
-    //     id: 4,
-    //     description: 'Gaste 500 de ouro',
-    //     rewardPoints: 20,
-    //     missionType: 'spend-gold',
-    //     missionGoal: 500,
-    //     params: [], // Parâmetros adicionais, se necessário
-    // },
+    {
+        id: 4,
+        description: 'Gaste 500 de ouro',
+        rewardPoints: 15,
+        missionType: 'spend-gold',
+        missionGoal: 500,
+        params: [], // Parâmetros adicionais, se necessário
+    },
     {
         id: 5,
         description: 'Funda 1 equipamento no Mecânico',
-        rewardPoints: 10,
+        rewardPoints: 15,
         missionType: 'upgrade-equipment',
         missionGoal: 1,
         params: [], // Parâmetros adicionais, se necessário
@@ -53,7 +53,7 @@ const dailyMissions = [
     {
         id: 7,
         description: 'Gaste gemas (qualquer quantia)',
-        rewardPoints: 10,
+        rewardPoints: 15,
         missionType: 'spend-cash',
         missionGoal: 1,
         params: [], // Parâmetros adicionais, se necessário
