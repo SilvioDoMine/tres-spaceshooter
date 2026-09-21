@@ -6,20 +6,25 @@ const emit = defineEmits<{ back: []; openRewards: [rewards: unknown] }>();
 
 const { milestones, currentIndex, current, currentCleared, allClaimed, claim } = useChapterMilestones();
 
-// Quantos marcos aparecem de cada lado: em telas largas a fila preenche o espaço em vez de sobrar
-// vazio, mas continua sem navegação — os vizinhos só mostram que há mais marcos antes e depois.
-// Largura de um escudo grande, de um pequeno e do espaço entre eles (espelha o CSS do trilho)
-const SHIELD_MAIN = 168;
-const SHIELD_SIDE = 116;
-const SHIELD_GAP = 36;
+// Quantos marcos aparecem de cada lado: o trilho ocupa a largura toda, então a fila é montada com
+// vizinhos suficientes para transbordar as bordas — continua sem navegação, os vizinhos só mostram
+// que há mais marcos antes e depois. `main` é a largura do escudo grande (Shield.vue) e `side` a do
+// slot dos vizinhos (`--side-w` do trilho); ambos espelham o CSS de cada faixa de tela.
+const LAYOUTS = {
+  base: { main: 168, side: 116, gap: 36 },
+  narrow: { main: 148, side: 100, gap: 26 },
+  shortLandscape: { main: 90, side: 84, gap: 16 },
+};
 
 const sideCount = ref(1);
 function updateSideCount() {
   const { innerWidth: w, innerHeight: h } = window;
-  // Paisagem baixa divide a tela em duas colunas: aí o carrossel volta a ter um vizinho de cada lado
-  if (h <= 560 && w > h) return (sideCount.value = 1);
-  const fits = Math.floor((w - SHIELD_MAIN) / (2 * (SHIELD_SIDE + SHIELD_GAP)));
-  sideCount.value = Math.min(5, Math.max(1, fits));
+  // Paisagem baixa divide a tela em duas colunas: o trilho só tem metade da largura para preencher
+  const shortLandscape = h <= 560 && w > h;
+  const { main, side, gap } = shortLandscape ? LAYOUTS.shortLandscape : w <= 479 ? LAYOUTS.narrow : LAYOUTS.base;
+  const rail = shortLandscape ? w / 2 - 12 : w;
+  // Arredonda para cima para a fila sempre passar das bordas e ser cortada pelo `overflow: hidden`
+  sideCount.value = Math.max(1, Math.ceil((rail - main) / (2 * (side + gap))));
 }
 
 // Slots de tamanho fixo (vazios nas pontas da lista) para o marco atual ficar sempre no centro
@@ -68,7 +73,7 @@ onBeforeUnmount(() => {
     <div class="ms__body">
       <!-- Carrossel travado no marco atual: os vizinhos só mostram que a fila continua -->
       <Transition name="ms-advance" mode="out-in">
-        <div :key="current?.key ?? 'empty'" class="ms__rail" :style="{ '--sides': sideCount }">
+        <div :key="current?.key ?? 'empty'" class="ms__rail">
           <div v-for="(milestone, i) in before" :key="milestone?.key ?? `before-${i}`" class="ms__slot is-side" aria-hidden="true">
             <LobbyMilestonesShield v-if="milestone" :chapter="milestone.chapter" :room="milestone.room" :state="milestone.state" size="sm" />
           </div>
@@ -178,13 +183,11 @@ onBeforeUnmount(() => {
   margin-bottom: 15px;
 }
 
-/* Trilho de largura limitada: os das pontas vazam e são cortados, mostrando que a fila continua.
-   `--sides` (quantos vizinhos por lado) vem do script e a largura acompanha. */
+/* Trilho na largura inteira: o script monta vizinhos suficientes para a fila passar das bordas,
+   que cortam os das pontas e mostram que a fila continua. */
 .ms__rail {
-  --main-w: 168px;
   --side-w: 116px;
   --gap: 36px;
-  --sides: 1;
 
   flex-shrink: 0;
   display: flex;
@@ -192,7 +195,6 @@ onBeforeUnmount(() => {
   justify-content: center;
   gap: var(--gap);
   width: 100%;
-  max-width: calc(var(--main-w) + var(--sides) * 2 * (var(--side-w) + var(--gap)) - 92px);
   padding: 8px 0;
   overflow: hidden;
 }
@@ -282,7 +284,6 @@ onBeforeUnmount(() => {
 
 @media (max-width: 479px) {
   .ms__rail {
-    --main-w: 148px;
     --side-w: 100px;
     --gap: 26px;
   }
@@ -304,10 +305,8 @@ onBeforeUnmount(() => {
     padding: 0 8px 36px;
   }
   .ms__rail {
-    --main-w: 116px;
     --side-w: 84px;
     --gap: 16px;
-    max-width: 100%;
     padding: 0;
   }
   .ms__panel {
