@@ -396,12 +396,14 @@ onUnmounted(() => {
   animation: copen-title 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
 .copen__grid {
+  /* Sobra reservada para o halo das raridades altas: ele avança exatamente este
+     raio para fora da célula, então cabe no padding e não cria rolagem */
+  --glow: 20px;
   display: grid;
   grid-template-columns: repeat(4, 76px);
   gap: 14px;
   max-height: 55vh;
-  /* Espaço para o brilho girando das raridades altas não criar rolagem lateral */
-  padding: 14px;
+  padding: var(--glow);
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -414,13 +416,20 @@ onUnmounted(() => {
   position: relative;
   animation: copen-pop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) both;
 }
+/* Quem gira é o ângulo do gradiente, não o elemento: girar a caixa quadrada aumentaria
+   o retângulo dela em até 41% e o grid ganharia barra de rolagem no meio da animação */
+@property --copen-ray {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
 .copen__cell.is-high::before {
   content: '';
   position: absolute;
-  inset: -22%;
+  inset: calc(var(--glow) * -1);
   z-index: -1;
   border-radius: 50%;
-  background: repeating-conic-gradient(rgba(255, 240, 160, 0.4) 0 12deg, transparent 12deg 30deg);
+  background: repeating-conic-gradient(from var(--copen-ray), rgba(255, 240, 160, 0.4) 0 12deg, transparent 12deg 30deg);
   mask: radial-gradient(closest-side, #000 35%, transparent);
   animation: copen-spin 6s linear infinite;
 }
@@ -458,7 +467,7 @@ onUnmounted(() => {
 }
 @keyframes copen-spin {
   to {
-    rotate: 360deg;
+    --copen-ray: 360deg;
   }
 }
 @keyframes copen-wiggle {
