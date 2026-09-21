@@ -1,3 +1,4 @@
+import { specializeEncounter } from '../../utils/fleetTactics.js';
 // Blocos de construção das salas, compartilhados por todos os capítulos.
 export const door = () => ({ position: { x: 0, y: 0, z: -9 }, size: { width: 4, height: 8 } });
 export const start = (z = 0) => ({ x: 0, y: 0, z });
@@ -28,7 +29,8 @@ export function chapterStages(stages, chapter, structure = chapter <= 4 ? 'quick
     const encounters = structure === 'quick' ? stage.waves.map(w => [w]) : [stage.waves];
     return encounters.map(waves => ({ ...stage, combatTier,
       stageId: `${++room}_${stage.type === 'boss' ? 'Boss' : 'Combat'}`,
-      waves: waves.map(w => ({ ...w, enemies: w.enemies.map(g => ({ ...g })) })),
+      waves: stage.type === 'boss' ? waves.map(w => ({ ...w, enemies: w.enemies.map(g => ({ ...g })) }))
+        : specializeEncounter(waves, chapter, room),
     }));
   });
 }

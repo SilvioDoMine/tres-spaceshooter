@@ -1,9 +1,14 @@
+import { FLEET_MODEL_REVISIONS } from '../data/fleetModelRevisions.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ENEMY_FLEET } from './enemyFleet.js';
+import { enemyFamilyUrl } from './enemyFamilies.js';
 
 const cache = new Map();
-export async function loadFleetModel(type) {
-  const url = ENEMY_FLEET[type].url;
+export async function loadFleetModel(type, model) {
+  const familyUrl = enemyFamilyUrl(type, model);
+  const entry = ENEMY_FLEET[type];
+  // The public filename stays stable, so changed base GLBs need a content version.
+  const url = familyUrl ? `${familyUrl}?v=${FLEET_MODEL_REVISIONS[model] ?? 'initial'}` : `${entry.url}${entry.revision ? `?v=${entry.revision}` : ''}`;
   if (!cache.has(url)) cache.set(url, new GLTFLoader().loadAsync(url).then(gltf => gltf.scene).catch(error => {
     cache.delete(url);
     throw error;

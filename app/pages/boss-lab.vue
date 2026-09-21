@@ -3,23 +3,50 @@ import { baseStats } from '~/composables/useEnemyManager';
 import type { BossModel } from '~/utils/bossModels';
 import BgStarField from '~/components/lobby/backgrounds/BgStarField.vue';
 import EnemyBoss from '~/components/game/enemies/EnemyBoss.vue';
+import EnemyFleet from '~/components/game/enemies/EnemyFleet.vue';
+import { ENEMY_FLEET, TACTICAL_FLEET } from '~/utils/enemyFleet';
+import { attackProfile } from '~/utils/combatPatterns';
+import { FAMILY_ROLES, enemyFamilyModel } from '~/utils/enemyFamilies';
 
 // Bancada dos bosses dos capítulos 2 e 3 (só em dev): modelo, fases, carga do ataque e vista do jogo.
-if (!import.meta.dev) await navigateTo('/');
+if (!import.meta.dev && import.meta.client && !['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) await navigateTo('/');
 useHead({ title: 'Boss Lab' });
 
-const BOSSES: { type: string; model: BossModel; name: string; role: string; chapter: number; idea: string }[] = [
+const BOSSES: { type: string; model?: BossModel; visualModel?: string; fleetRole?: string; name: string; role: string; chapter: number; idea: string }[] = [
   { type: 'hiveBoss', model: 'hive', name: 'COLMEIA', role: 'Capítulo 2 · sala 10', chapter: 2, idea: 'Caça: avança devagar com tiros duplos rápidos e para um instante após cada disparo. Torreta (fase 3 aqui): lança caças kamikazes e dispara salvas de 3 rajadas muito rápidas.' },
   { type: 'harpyBoss', model: 'harpy', name: 'HARPIA', role: 'Capítulo 2 · sala 20', chapter: 2, idea: 'Plana rápido ao redor atirando pouco, vira 180° e para: rajada seguida das asas. Na volta seguinte carrega uma investida longa e larga.' },
   { type: 'bastionBoss', model: 'bastion', name: 'BASTIÃO', role: 'Capítulo 3 · sala 10', chapter: 3, idea: 'Anel de escudos bloqueia tiros; dispara em espiral pelos vãos.' },
   { type: 'colossusBoss', model: 'colossus', name: 'COLOSSO', role: 'Capítulo 3 · sala 20', chapter: 3, idea: 'Baterias em leque, bordada com escoltas e reator exposto na fase 3.' },
 ];
+for (const [type, chapter] of [['boss',1],['asteroidBoss',1],['miniboss',1],['kamikazeBoss',4],['chapter4Boss',4],['chapter5Boss',5]] as const) {
+  BOSSES.push({type, chapter, name: ENEMY_FLEET[type].name, role: `Capítulo ${chapter}`, idea: 'Modelo Blender com armas nos hardpoints físicos da partida.'});
+}
+for (const chapter of [2,3,4,5]) for (const type of FAMILY_ROLES) {
+  BOSSES.push({type, chapter, visualModel: enemyFamilyModel(type,chapter), name: `C${chapter} · ${ENEMY_FLEET[type].name}`, role: 'Frota do capítulo', idea: 'Casco próprio do capítulo; comportamento e atributos do papel original.'});
+}
 
 const index = ref(0);
+const tacticalDescriptions = {
+  sniper: 'Canhão longo; mira visível, trava antes do disparo e recua se você se aproxima.',
+  skirmisher: 'Três disparos curtos pelo canhão frontal; aproxima, ataca e recua para recarregar.',
+  broadside: 'Quatro canhões nos bordos. Vira o casco para disparar uma salva lateral.',
+  spiral: 'Três emissores no rotor; orbita e avança o ângulo entre salvas para formar uma espiral.',
+};
+for (const [visualModel, entry] of Object.entries(TACTICAL_FLEET)) {
+  BOSSES.push({ type: 'ufo', visualModel, fleetRole: entry.fleetRole, chapter: entry.chapter,
+    name: `C${entry.chapter} · ${entry.name}`, role: 'Unidade especializada', idea: tacticalDescriptions[entry.fleetRole] });
+}
+BOSSES.push({type: 'miniasteroid',chapter:1,name:'ESTILHAÇO',role:'Fragmento revisado',idea:'Silhueta quebrada, placas claras e fissura luminosa para leitura em telas pequenas.'});
 const boss = computed(() => BOSSES[index.value]!);
+const previewEnemy = computed(() => ({id:'lab',type:boss.value.type,visualModel:boss.value.visualModel,
+  fleetRole:boss.value.fleetRole, attackCharge:charge.value,
+  size:baseStats[boss.value.type].size,visualScale:baseStats[boss.value.type].visualScale,
+  position:{x:0,y:0,z:0},health:100,maxHealth:100,room:20,state:'active',
+  attackClock:{charging:charge.value>0,volley:previewVolley.value,profile:attackProfile(boss.value.type,20,previewVolley.value,{fleetRole:boss.value.fleetRole})}}));
 const size = computed(() => baseStats[boss.value.type].size as number);
 const phase = ref(1);
 const charge = ref(0);
+const previewVolley = ref(0);
 const speed = ref(1);
 const autoSpin = ref(true);
 const view = ref<'free' | 'game'>('free');
@@ -30,6 +57,7 @@ let chargeClock = -1;
 let frame = 0;
 let last = 0;
 function chargeAttack() {
+  previewVolley.value++;
   chargeClock = 0;
 }
 function tick(now: number) {
@@ -44,11 +72,16 @@ function tick(now: number) {
   }
   frame = requestAnimationFrame(tick);
 }
-onMounted(() => { frame = requestAnimationFrame(tick); });
-onUnmounted(() => cancelAnimationFrame(frame));
+const viewportAspect = ref(1);
+function updateViewport() { viewportAspect.value = window.innerWidth / Math.max(1, window.innerHeight); }
+onMounted(() => { updateViewport(); window.addEventListener('resize', updateViewport); frame = requestAnimationFrame(tick); });
+onUnmounted(() => { cancelAnimationFrame(frame); window.removeEventListener('resize', updateViewport); });
 
 watch(index, () => { phase.value = 1; });
-const freeCamera = computed(() => [0, size.value * 2.6, size.value * 3.4] as [number, number, number]);
+const freeCamera = computed(() => {
+  const framing = Math.max(1, 1 / viewportAspect.value);
+  return [0, size.value * 2.6 * framing, size.value * 3.4 * framing] as [number, number, number];
+});
 </script>
 
 <template>
@@ -65,9 +98,11 @@ const freeCamera = computed(() => [0, size.value * 2.6, size.value * 3.4] as [nu
 
       <!-- Na vista do jogo o boss fica de frente para a nave, como o EnemyManager orienta -->
       <TresGroup :rotation="[0, view === 'game' ? Math.PI : angle, 0]" :position="[0, 0, view === 'game' ? -4 : 0]">
-        <EnemyBoss
-          :key="boss.type"
-          :enemy="{ id: 'lab', type: boss.type }"
+        <component
+          :is="ENEMY_FLEET[boss.type] ? EnemyFleet : EnemyBoss"
+          :key="index"
+          :enemy="previewEnemy"
+          :preview="true"
           :base-stats="baseStats"
           :set-visual-mesh-ref="noRef"
           :phase="phase"
@@ -85,7 +120,7 @@ const freeCamera = computed(() => [0, size.value * 2.6, size.value * 3.4] as [nu
 
     <div class="lab__panel">
       <select v-model.number="index">
-        <option v-for="(option, i) in BOSSES" :key="option.type" :value="i">{{ option.name }} ({{ option.role }})</option>
+        <option v-for="(option, i) in BOSSES" :key="i" :value="i">{{ option.name }} ({{ option.role }})</option>
       </select>
       <span>Fase</span>
       <button v-for="p in [1, 2, 3]" :key="p" :class="{ on: phase === p }" @click="phase = p">{{ p }}</button>

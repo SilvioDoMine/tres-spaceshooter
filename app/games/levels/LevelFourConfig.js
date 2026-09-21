@@ -25,7 +25,7 @@ const encounters = [
 ];
 export const LEVEL_4 = {
   levelId: 'level_siege_line_004', chapter: 4, width: 10, height: 20, rewardExperience: 320,
-  theme: { atmosphere: '#123f55', galaxyOpacity: .5 },
+  theme: { atmosphere: '#126446', galaxyOpacity: .42 },
   structure: 'quick', targetPlayerLevel: 23,
   stages: chapterStages([intro(), ...encounters.map((pair, i) => {
     const tier = i + 1;

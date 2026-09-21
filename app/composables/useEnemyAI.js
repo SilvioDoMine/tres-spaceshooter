@@ -6,6 +6,7 @@ import { useProjectileStore } from '~/stores/projectileStore';
 import { useEnemyAttacks } from '~/composables/useEnemyAttacks';
 import { createBossBehaviors, HARPY } from '~/utils/bossBehaviors';
 import { useEquipmentEffectsStore } from '~/stores/useEquipmentEffectsStore';
+import { moveSpecialist } from '~/utils/fleetTactics';
 
 export function useEnemyAI() {
     const enemyManager = useEnemyManager();
@@ -587,6 +588,10 @@ export function useEnemyAI() {
         },
     }
 
+    // Estas variantes já têm ataques próprios; compartilham apenas a navegação orbital.
+    behaviors.torusEnemy = behaviors.ufo;
+    behaviors.compositeEnemy = behaviors.ufo;
+
     // Bosses dos capítulos 2 e 3 (hangar, investida, escudos, escoltas)
     Object.assign(behaviors, createBossBehaviors({ enemyManager, activeEnemies, playerPosition, applyCollisionDamage }));
 
@@ -668,7 +673,9 @@ export function useEnemyAI() {
             const previousX = enemy.position.x;
             const previousZ = enemy.position.z;
 
-            if (enemy.type === 'ufo' || enemy.type === 'ufofast') {
+            if (moveSpecialist(enemy, playerPosition.value, movementDelta)) {
+                // A special hull's movement and gun cycle form one readable role.
+            } else if (['ufo', 'ufofast', 'torusEnemy', 'compositeEnemy'].includes(enemy.type)) {
                 const dx=playerPosition.value.x-enemy.position.x,dz=playerPosition.value.z-enemy.position.z;
                 const d=Math.hypot(dx,dz);
                 if(d>.001) {

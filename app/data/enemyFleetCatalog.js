@@ -3,6 +3,7 @@ export const ENEMY_FLEET = {
   "ufofast": {
     "name": "TRIDENTE",
     "url": "/models/enemies/ufofast_tridente.glb",
+    "revision": "1f0ea86278b3",
     "sockets": [
       {
         "role": "engine_-0.64",
@@ -93,6 +94,7 @@ export const ENEMY_FLEET = {
   "asteroid": {
     "name": "NODULO",
     "url": "/models/enemies/asteroid_nodulo.glb",
+    "revision": "bb2cc78c607d",
     "sockets": [
       {
         "role": "engine_-0.39",
@@ -239,6 +241,7 @@ export const ENEMY_FLEET = {
   "miniHive": {
     "name": "BERCO",
     "url": "/models/enemies/miniHive_berco.glb",
+    "revision": "3c22535ccb3d",
     "sockets": [
       {
         "role": "muzzle_hive_left",
@@ -329,6 +332,7 @@ export const ENEMY_FLEET = {
   "miniHarpy": {
     "name": "TESOURA",
     "url": "/models/enemies/miniHarpy_tesoura.glb",
+    "revision": "c9d38837c256",
     "sockets": [
       {
         "role": "muzzle_wing_left",
@@ -433,6 +437,7 @@ export const ENEMY_FLEET = {
   "kamikaze": {
     "name": "AGULHA",
     "url": "/models/enemies/kamikaze_agulha.glb",
+    "revision": "c9c3d145b369",
     "sockets": [
       {
         "role": "engine_0",
@@ -481,6 +486,7 @@ export const ENEMY_FLEET = {
   "ufo": {
     "name": "FENDA",
     "url": "/models/enemies/ufo_fenda.glb",
+    "revision": "8def6f23b833",
     "sockets": [
       {
         "role": "muzzle_front",
@@ -515,6 +521,7 @@ export const ENEMY_FLEET = {
   "miniasteroid": {
     "name": "ESTILHACO",
     "url": "/models/enemies/miniasteroid_estilhaco.glb",
+    "revision": "114e52e95bc2",
     "sockets": [
       {
         "role": "muzzle_front",
@@ -549,6 +556,7 @@ export const ENEMY_FLEET = {
   "asteroidBoss": {
     "name": "GEODO",
     "url": "/models/enemies/asteroidBoss_geodo.glb",
+    "revision": "41c76846153d",
     "sockets": [
       {
         "role": "fracture_anchor_0",
@@ -863,6 +871,7 @@ export const ENEMY_FLEET = {
   "miniboss": {
     "name": "MARTELO",
     "url": "/models/enemies/miniboss_martelo.glb",
+    "revision": "95b8c4f584d2",
     "sockets": [
       {
         "role": "muzzle_fan_0",
@@ -1107,6 +1116,7 @@ export const ENEMY_FLEET = {
   "boss": {
     "name": "SENTINELA",
     "url": "/models/enemies/boss_sentinela.glb",
+    "revision": "ced7a1c8895f",
     "sockets": [
       {
         "role": "muzzle_ring_0",
@@ -1351,6 +1361,7 @@ export const ENEMY_FLEET = {
   "hiveDrone": {
     "name": "VESPA",
     "url": "/models/enemies/hiveDrone_vespa.glb",
+    "revision": "7a0beb45ef6c",
     "sockets": [
       {
         "role": "engine_0",
@@ -1385,6 +1396,7 @@ export const ENEMY_FLEET = {
   "kamikazeBoss": {
     "name": "ARIETE",
     "url": "/models/enemies/kamikazeBoss_ariete.glb",
+    "revision": "0f1b01409a91",
     "sockets": [
       {
         "role": "engine_-0.47",
@@ -1461,6 +1473,7 @@ export const ENEMY_FLEET = {
   "angel": {
     "name": "FAROL",
     "url": "/models/enemies/angel_farol.glb",
+    "revision": "a74817333d6c",
     "sockets": [
       {
         "role": "upgrade_pickup",
@@ -1481,6 +1494,7 @@ export const ENEMY_FLEET = {
   "torusEnemy": {
     "name": "ORBITA",
     "url": "/models/enemies/torusEnemy_orbita.glb",
+    "revision": "c1ac8ef6d303",
     "sockets": [
       {
         "role": "muzzle_ring_0",
@@ -1585,6 +1599,7 @@ export const ENEMY_FLEET = {
   "compositeEnemy": {
     "name": "TRIADE",
     "url": "/models/enemies/compositeEnemy_triade.glb",
+    "revision": "f2fdd1c64d4d",
     "sockets": [
       {
         "role": "muzzle_fan_0",
@@ -1661,6 +1676,7 @@ export const ENEMY_FLEET = {
   "chapter4Boss": {
     "name": "LEVIATA",
     "url": "/models/enemies/chapter4Boss_leviata.glb",
+    "revision": "8f4ff001a4ba",
     "sockets": [
       {
         "role": "muzzle_broadside_-1_0",
@@ -1961,6 +1977,7 @@ export const ENEMY_FLEET = {
   "chapter5Boss": {
     "name": "CATEDRAL",
     "url": "/models/enemies/chapter5Boss_catedral.glb",
+    "revision": "1183325f1df1",
     "sockets": [
       {
         "role": "drone_launch_0",

@@ -8,7 +8,7 @@ const formations = [
 ];
 export const LEVEL_5 = {
   levelId: 'level_carrier_sanctum_005', chapter: 5, width: 10, height: 20, rewardExperience: 400,
-  theme: { atmosphere: '#44205f', galaxyOpacity: .72 },
+  theme: { atmosphere: '#793b51', galaxyOpacity: .44 },
   structure: 'waves', targetPlayerLevel: 23,
   stages: chapterStages([intro(), ...Array.from({ length: 20 }, (_, i) => {
     const tier = i + 1;

@@ -75,6 +75,13 @@ export function buildHive(): BossBuild {
     }
     // Poço do núcleo
     b.add(new TorusGeometry(.3, .035, 6, 24), 2, [0, .29, 0], [Math.PI / 2, 0, 0])
+    // Armored hangar shoulders leave the sliding doors and launch lanes clear.
+    for (const side of [-1,1]) {
+      b.plate([[side*.38,-.67],[side*.70,-.44],[side*.61,.32],[side*.39,.42]],.07,0,[0,.24,0],.015)
+      b.plate([[side*.44,-.43],[side*.56,-.34],[side*.51,.16],[side*.43,.20]],.025,1,[0,.335,0],.01)
+      b.plate([[side*.20,-.64],[side*.39,-.71],[side*.40,-.87],[side*.26,-.92]],.10,2,[0,-.01,0],.015)
+      b.plate([[side*.20,.58],[side*.48,.60],[side*.43,.98],[side*.24,.95]],.14,0,[0,-.08,0],.02)
+    }
   })
 
   const doors = hangarAngles.flatMap((a) => [-1, 1].map((sign) => {
@@ -114,17 +121,16 @@ export function buildHarpy(): BossBuild {
     b.plate([[0, -.95], [.08, -.7], [.12, -.2], [.12, .55], [-.12, .55], [-.12, -.2], [-.08, -.7]], .07, 2, [0, .12, 0], .015)
     b.plate([[0, -.88], [.06, -.7], [.07, -.48], [-.07, -.48], [-.06, -.7]], .03, 4, [0, .2, 0], .01)
     b.plate([[-.03, .05], [.03, .05], [.05, .62], [-.05, .62]], .16, 1, [0, .17, 0], .01)
-    for (let j = 0; j < 6; j++) b.box(.2, .02, .03, 1, [0, .21, -.3 + j * .12])
+    // Broad intake shoulders, not a stack of thin slats over the fuselage.
+    for (const s of [-1, 1]) b.plate([[s*.1,-.30],[s*.22,-.14],[s*.22,.3],[s*.11,.39]],.045,1,[0,.15,0],.012)
     for (const s of [-1, 1]) {
       // Asa principal em flecha
-      b.plate([[s * .2, -.4], [s * 1.18, .18], [s * 1.26, .46], [s * .95, .42], [s * .24, .36]], .07, 0, [0, -.04, 0], .02)
-      b.plate([[s * .3, -.22], [s * 1.06, .22], [s * 1.1, .36], [s * .32, .24]], .025, 2, [0, .045, 0], .01)
-      // Penas: placas em camadas no bordo de fuga
-      for (let k = 0; k < 4; k++) {
-        const x = .32 + k * .21
-        b.plate([[s * x, .26 + k * .05], [s * (x + .21), .3 + k * .05], [s * (x + .16), .66 + k * .07], [s * (x - .02), .56 + k * .05]], .035, k % 2 ? 1 : 0, [0, -.02 - k * .012, 0], .01)
-        b.box(.03, .02, .22, 3, [s * (x + .09), .03, .42 + k * .06], [0, s * -.2, 0])
-      }
+      b.plate([[s*.16,-.5],[s*.55,-.18],[s*1.27,.12],[s*1.30,.42],[s*.91,.34],[s*.48,.68],[s*.19,.44]],.10,0,[0,-.08,0],.025)
+      b.plate([[s*.25,-.3],[s*.53,-.08],[s*1.13,.18],[s*.98,.27],[s*.43,.13]],.04,2,[0,.06,0],.012)
+      b.plate([[s*.28,.18],[s*.69,.29],[s*.43,.62],[s*.25,.43]],.055,1,[0,.045,0],.012)
+      b.plate([[s*.35,.24],[s*.57,.30],[s*.41,.48]],.018,3,[0,.12,0],.008)
+      // A single reinforced spar joins the wing-tip receiver to the shoulder.
+      b.plate([[s*.68,.1],[s*1.19,.10],[s*1.19,.35],[s*.73,.32]],.10,1,[0,-.06,0],.015)
       // Garras junto ao nariz
       b.plate([[s * .12, -.78], [s * .4, -.6], [s * .34, -.36], [s * .18, -.42]], .06, 3, [0, -.02, 0], .012)
       b.add(new CylinderGeometry(.1, .12, .36, 12), 1, [s * .19, 0, .62], [Math.PI / 2, 0, 0])
@@ -138,6 +144,7 @@ export function buildHarpy(): BossBuild {
 
   const wingGuns = [-1, 1].map(side => {
     const gun = piece(body, colors, 'Harpia — canhão', (b) => {
+      b.plate([[-.10,-.14],[.10,-.14],[.11,.13],[-.11,.13]],.07,2,[0,-.09,0],.015)
       b.add(new CylinderGeometry(.07, .08, .46, 10), 1, [0, 0, -.05], [Math.PI / 2, 0, 0])
       b.add(new CylinderGeometry(.028, .034, .36, 8), 2, [0, 0, -.44], [Math.PI / 2, 0, 0])
       b.add(new TorusGeometry(.045, .016, 5, 10), 4, [0, 0, -.63])
@@ -175,6 +182,14 @@ export function buildBastion(): BossBuild {
       b.add(new SphereGeometry(.05, 8, 6), 4, at(.52, .5))
     }
     b.add(new CylinderGeometry(.12, .2, .22, 12), 1, [0, .34, 0])
+    // Four buttresses support the upper emitter tier; the shield ring stays free.
+    for (let i=0;i<4;i++) {
+      const a=i*Math.PI/2
+      const points=[[.22,-.13],[.64,-.19],[.74,0],[.64,.19],[.22,.13]]
+        .map(([x,z])=>[Math.cos(a)*x!-Math.sin(a)*z!,Math.sin(a)*x!+Math.cos(a)*z!])
+      b.plate(points,.11,0,[0,.18,0],.025)
+      b.add(new CylinderGeometry(.065,.11,.19,8),2,[Math.cos(a)*.4,.35,Math.sin(a)*.4])
+    }
   })
 
   const core = piece(root, colors, 'Bastião — núcleo', (b) => {
@@ -202,28 +217,31 @@ export function buildBastion(): BossBuild {
 
 /** COLOSSO: couraçado com torre de comando, 4 baterias giratórias e reator com escotilha. */
 export function buildColossus(): BossBuild {
-  const colors = ['#6c5a2f', '#1b191e', '#a59c8a', '#a3302a', '#ff5a26']
+  const colors = ['#515b61', '#171e27', '#a0acb3', '#a3302a', '#ff5a26']
   const root = new Group(); root.name = 'Colosso'
   const turretSpots = [[-.3, -.72], [.3, -.72], [-.34, .18], [.34, .18]]
 
   piece(root, colors, 'Colosso — casco', (b) => {
-    const hull = [[0, -1.28], [.28, -.9], [.48, -.25], [.54, .55], [.44, 1.08], [-.44, 1.08], [-.54, .55], [-.48, -.25], [-.28, -.9]]
-    b.plate(hull, .24, 0, [0, -.18, 0])
+    const hull = [[-.28,-1.22],[.28,-1.22],[.52,-.86],[.60,-.25],[.60,.63],[.44,1.08],[-.44,1.08],[-.60,.63],[-.60,-.25],[-.52,-.86]]
+    b.plate(hull, .30, 0, [0, -.24, 0],.045)
     b.plate(hull.map(([x, z]) => [x! * .8, z! * .86 + .04]), .08, 2, [0, .08, 0], .02)
-    b.plate([[0, -1.36], [.1, -1.1], [-.1, -1.1]], .12, 1, [0, -.12, 0], .015)
+    b.plate([[-.30,-1.26],[.30,-1.26],[.46,-.96],[-.46,-.96]],.17,1,[0,-.22,0],.025)
+    b.plate([[-.22,-1.18],[.22,-1.18],[.32,-.94],[-.32,-.94]],.08,2,[0,-.015,0],.02)
     // Faixas vermelhas e blindagem lateral
     for (const s of [-1, 1]) {
-      b.box(.05, .12, 1.1, 3, [s * .52, -.02, .12], [0, s * .04, 0])
-      for (let j = 0; j < 6; j++) b.box(.16, .1, .14, 1, [s * .5, .02, -.35 + j * .2])
-      b.plate([[s * .5, .5], [s * .7, .62], [s * .68, .95], [s * .46, .98]], .12, 0, [0, -.1, 0], .015)
+      b.plate([[s*.43,-.69],[s*.70,-.48],[s*.74,.70],[s*.58,.98],[s*.43,.74]],.24,1,[0,-.17,0],.025)
+      for (const z of [-.35,.17,.67]) {
+        b.plate([[s*.47,z-.18],[s*.66,z-.12],[s*.67,z+.14],[s*.48,z+.19]],.10,0,[0,.08,0],.018)
+        b.box(.025,.025,.13,3,[s*.64,.205,z])
+      }
     }
     // Poço do reator
     b.box(.36, .06, .34, 1, [0, .15, -.27])
     b.add(new TorusGeometry(.19, .025, 6, 20), 3, [0, .18, -.27], [Math.PI / 2, 0, 0])
     // Torre de comando
-    b.box(.34, .3, .38, 0, [0, .3, .62])
-    b.box(.42, .08, .22, 1, [0, .48, .52])
-    for (let j = 0; j < 5; j++) b.box(.05, .03, .02, 4, [-.12 + j * .06, .49, .405])
+    b.plate([[-.24,.42],[.24,.42],[.20,.87],[-.20,.87]],.26,0,[0,.14,0],.035)
+    b.plate([[-.24,.40],[.24,.40],[.18,.76],[-.18,.76]],.09,1,[0,.43,0],.018)
+    b.box(.29,.035,.025,4,[0,.47,.37])
     b.add(new CylinderGeometry(.012, .02, .42, 6), 2, [0, .72, .7])
     b.box(.3, .015, .02, 2, [0, .8, .7])
     // Bases das baterias
@@ -250,8 +268,8 @@ export function buildColossus(): BossBuild {
 
   const turrets = turretSpots.map(([x, z], i) => {
     const turret = piece(root, colors, 'Colosso — bateria', (b) => {
-      b.box(.2, .1, .22, 0, [0, .05, .01])
-      b.box(.14, .03, .12, 3, [0, .11, .04])
+      b.plate([[-.12,-.12],[.12,-.12],[.13,.06],[.08,.14],[-.08,.14],[-.13,.06]],.10,0,[0,0,0],.018)
+      b.plate([[-.065,-.05],[.065,-.05],[.06,.08],[-.06,.08]],.025,3,[0,.125,0],.008)
       for (const side of [-1, 1]) b.add(new CylinderGeometry(.02, .026, .32, 8), 1, [side * .05, .06, -.24], [Math.PI / 2, 0, 0])
     }, [x!, .18, z!])
     turret.userData.index = i

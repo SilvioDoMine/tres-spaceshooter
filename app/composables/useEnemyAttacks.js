@@ -23,6 +23,11 @@ export function useEnemyAttacks() {
       if(enemy.state!=='active' || enemy.type==='angel' || enemy.type==='kamikaze' || (enemy.stunTimer || 0) > 0 || enemy.elementState?.freeze || enemy.dashState || enemy.holdFire) { enemy.attackCharge=0;continue; }
       if(!enemy.attackClock)enemy.attackClock={remaining:1+Math.random()*1.6,volley:0,charging:false};
       const clock=enemy.attackClock, profile=clock.charging && clock.profile ? clock.profile : attackProfile(enemy.type,room,clock.volley,enemy);
+      if (enemy.fleetRole === 'spiral') {
+        const target = -clock.volley * (profile.twist ?? .42);
+        const current = enemy.tacticalRotor ?? target;
+        enemy.tacticalRotor = current + Math.max(-delta * 1.4, Math.min(delta * 1.4, target - current));
+      }
       if(profile.movementSpeed)enemy.speed=profile.movementSpeed;
       const dx=player.x-enemy.position.x,dz=player.z-enemy.position.z,d=Math.hypot(dx,dz);
       const visible=Math.abs(enemy.position.x-view.value.x)<view.value.width*.5-.6

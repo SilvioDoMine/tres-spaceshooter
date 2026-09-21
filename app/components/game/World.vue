@@ -58,7 +58,7 @@ watch(
 
     <GameNebulaShipyard v-if="chapterId===2" />
     <GameFleetCommand v-else-if="chapterId===3" />
-    <GameFrontierScenery v-else-if="chapterId >= 4" :chapter="chapterId" />
+    <GameFrontierScenery v-else-if="chapterId >= 4" :key="chapterId" :chapter="chapterId" />
     <template v-else><GameOrbitalScenery /><GameStreamingDebris /></template>
 
     <GameImpactEffects />
@@ -67,7 +67,3 @@ watch(
     <TresDirectionalLight :intensity="1.8" :position="[-8,5,-4]" color="#496dff" />
   </TresGroup>
 </template>
-
-
-
-

@@ -1,4 +1,5 @@
 import { SHIP_SOCKETS, WING_HARDPOINTS } from './shipSockets.js'
+import { specialistProfile } from './fleetTactics.js';
 
 // World-space formations: parallel shots retain their spacing throughout flight.
 export function shotFormation(count) {
@@ -240,6 +241,8 @@ export function finalBossPhase(enemy = {}) {
 }
 
 export function attackProfile(type, room = 2, volley = 0, enemy = {}) {
+  const specialist = specialistProfile(enemy.fleetRole, volley, room);
+  if (specialist) return specialist;
   if (CHAPTER_BOSSES.includes(type)) return chapterBossProfile(type, volley, enemy);
   if (type === 'miniHive') return miniHiveProfile(room);
   if (type === 'miniHarpy') return miniHarpyProfile(enemy);

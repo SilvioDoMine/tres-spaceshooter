@@ -1,5 +1,8 @@
 import { ENEMY_FLEET } from '../data/enemyFleetCatalog.js';
+import { TACTICAL_FLEET } from '../data/tacticalFleetCatalog.js';
+export { TACTICAL_FLEET } from '../data/tacticalFleetCatalog.js';
 export { ENEMY_FLEET } from '../data/enemyFleetCatalog.js';
+export { enemyFamilyModel as chapterFleetModel } from './enemyFamilies.js';
 
 export function fleetScale(enemy) {
   return enemy.visualScale ?? enemy.size ?? 1;
@@ -40,6 +43,7 @@ export function advanceFleetHeading(enemy, player, delta) {
 }
 
 export function fleetRotorAngle(enemy, profile, volley) {
+  if (profile.pattern === 'spiral') return enemy.tacticalRotor ?? -volley * (profile.twist ?? .42);
   // Na varredura o emissor avança uma fração do vão entre bocas a cada passo,
   // de modo que os passos somados fechem o círculo — é isso que vira espiral.
   if (profile.sweep) {
@@ -64,7 +68,9 @@ export function fleetSocketWorld(enemy, socket, yaw, rotor = 0) {
 
 /** One physical exit per projectile. Never multiply a fan by every muzzle. */
 export function fleetSockets(type, profile, enemy = {}) {
-  const sockets = ENEMY_FLEET[type]?.sockets ?? [];
+  const specialist = TACTICAL_FLEET[enemy.visualModel];
+  const sockets = (specialist ?? ENEMY_FLEET[type])?.sockets ?? [];
+  if (specialist) return sockets.filter(socket => socket.role.startsWith('muzzle'));
   let selected;
   if (type === 'chapter4Boss') {
     const prefix = profile.beam ? 'muzzle_siege_beam' : profile.projectile === 'enemyMissile' ? 'muzzle_missile_' : 'muzzle_broadside_';

@@ -42,7 +42,7 @@ for (let i = 0; i < 12; i++) {
   const flash = new Mesh(flashGeometry, flashMaterial); flash.visible = false; effects.add(flash); flashes.push(flash);
   if (i < 4) { const warning = new Mesh(warningGeometry, warningMaterial); warning.visible = false; effects.add(warning); warnings.push(warning); }
 }
-loadFleetModel(props.enemy.type).then(model => {
+loadFleetModel(props.enemy.type, props.enemy.visualModel).then(model => {
   if (disposed) { model.dispose(); return; }
   release = model.dispose;
   model.root.traverse(part => {
@@ -100,12 +100,12 @@ useGameLoop().onBeforeRender(({ delta }) => {
       warningMaterial.uniforms.charge.value = enemy.dashCharge || 0;
       return;
     }
-    mesh.visible = !props.preview && !frozen && enemy.state === 'active' && clock?.charging && profile.beam && index < sockets.length;
+    mesh.visible = !props.preview && !frozen && enemy.state === 'active' && clock?.charging && (profile.beam || profile.telegraph) && index < sockets.length;
     if (!mesh.visible) return;
     const { origin, direction } = fleetSocketWorld(localEnemy, index === 0 && telegraphSocket ? telegraphSocket : sockets[index], 0, rotor);
     mesh.position.set(origin.x, origin.y + .015, origin.z);
     mesh.rotation.y = Math.atan2(-direction.x, -direction.z);
-    mesh.scale.set(profile.beamWidth * 2, 1, profile.range);
+    mesh.scale.set(profile.beam ? profile.beamWidth * 2 : .45, 1, profile.range);
     warningMaterial.uniforms.charge.value = charge;
   });
   warningMaterial.uniforms.time.value = time;

@@ -76,7 +76,7 @@ const generateStars = (count, radius) => {
     positions[i * 3] = x
     positions[i * 3 + 1] = y
     positions[i * 3 + 2] = z
-    
+
     sizes[i] = Math.random()
     randoms[i] = Math.random()
   }
@@ -90,16 +90,16 @@ const starVertexShader = `
   attribute float random;
   uniform float uTime;
   uniform float uBaseSize;
-  
+
   varying float vRandom;
-  
+
   void main() {
     vRandom = random;
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-    
+
     // Twinkle effect
     float twinkle = 0.8 + 0.4 * sin(uTime * 2.0 + random * 10.0);
-    
+
     gl_PointSize = uBaseSize * size * twinkle * (300.0 / -mvPosition.z);
     gl_Position = projectionMatrix * mvPosition;
   }
@@ -107,32 +107,32 @@ const starVertexShader = `
 
 const starFragmentShader = `
   varying float vRandom;
-  
+
   void main() {
     // Distance from center of point (0.0 to 0.5)
     vec2 pos = gl_PointCoord - vec2(0.5);
     float dist = length(pos);
-    
+
     // Circular glow
     float circle = 1.0 - smoothstep(0.1, 0.5, dist);
-    
+
     // Radiating spikes (cross flare)
     float rays = max(
       1.0 - abs(pos.x * 10.0),
       1.0 - abs(pos.y * 10.0)
     );
     rays = pow(rays, 3.0); // Sharpen
-    
+
     // Combine for final star shape
     // Foreground stars (vRandom > 0.8) get more flare
     float glow = circle * 0.8;
     float flare = rays * smoothstep(0.8, 1.0, vRandom) * 0.5;
-    
+
     float alpha = glow + flare;
-    
+
     // Soft edges
     if (alpha < 0.01) discard;
-    
+
     gl_FragColor = vec4(1.0, 1.0, 1.0, alpha);
   }
 `
@@ -160,7 +160,7 @@ const smokeFragmentShader = `
       return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
                  mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
   }
-  
+
   float fbm(vec2 p) {
       float v = 0.0;
       float a = 0.5;
@@ -175,10 +175,10 @@ const smokeFragmentShader = `
   void main() {
       // Slow moving smoke
       float n = fbm(vUv * 4.0 + uTime * 0.05);
-      
+
       // Very transparent
       float opacity = smoothstep(0.3, 0.8, n) * 0.15;
-      
+
       gl_FragColor = vec4(uColor, opacity);
   }
 `
@@ -229,33 +229,33 @@ const galaxyFragmentShader = `
   void main() {
       vec2 uv = vUv;
       float levelMix = smoothstep(2.0, 3.0, uLevel); // 0.0 at L2, 1.0 at L3
-      
+
       // Center the UVs
       vec2 centered = uv * 2.0 - 1.0;
-      
+
       // Rotate 45 degrees
       float angle = 0.785;
       mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
       centered *= rot;
-      
+
       // Shape Distortion (Aurora-like wavy ribbon) - Interpolated
       float distortion = sin(centered.x * 2.0 + uTime * 0.2) * 0.3;
       distortion += sin(centered.x * 5.0 - uTime * 0.1) * 0.1;
-      
+
       centered.y += distortion * levelMix; // Apply distortion gradually
-      
+
       // Squeeze Y to make a band
       float bandDist = abs(centered.y);
       float bandMask = smoothstep(0.8, 0.0, bandDist); // Fade out at edges
-      
+
       if (bandMask < 0.01) discard;
-      
+
       // Noise texture for clouds
       float n = snoise(uv * 5.0 + uTime * 0.05); // Base shape
       float detail = snoise(uv * 10.0 - uTime * 0.02); // Details
-      
+
       float clouds = n * 0.6 + detail * 0.4;
-      
+
       // Colors
       // Default / Level 2 Base: Warm/Magma Theme (Orange/Red/Gold)
       vec3 colorL2_1 = vec3(1.0, 0.4, 0.1); // Bright Orange
@@ -266,7 +266,7 @@ const galaxyFragmentShader = `
       vec3 colorL3_1 = vec3(0.1, 0.8, 0.9); // Cyan
       vec3 colorL3_2 = vec3(0.9, 0.2, 0.8); // Magenta/Pink
       vec3 colorL3_3 = vec3(0.2, 0.1, 0.6); // Deep Purple
-      
+
       // Complex mix for L3
       float rainbow = sin(uv.x * 3.0 + uTime * 0.1) * 0.5 + 0.5;
       vec3 level3Color = mix(colorL3_1, colorL3_2, clouds);
@@ -274,10 +274,13 @@ const galaxyFragmentShader = `
 
       // Interpolate between Level 2 and Level 3 Colors based on levelMix
       vec3 finalColor = mix(level2Color, level3Color, levelMix);
-      
+      // Later chapters have their own palette instead of inheriting chapter 3.
+      if (uLevel > 3.5 && uLevel < 4.5) finalColor = mix(vec3(.015,.12,.09),vec3(.12,.67,.43),clouds);
+      if (uLevel >= 4.5) finalColor = mix(vec3(.19,.035,.09),vec3(.78,.39,.30),clouds);
+
       // Combine mask and noise
       float alpha = bandMask * (clouds * 0.5 + 0.5) * uOpacity * 0.6; // Slightly opacity increase
-      
+
       gl_FragColor = vec4(finalColor, alpha);
   }
 `
@@ -290,27 +293,27 @@ onBeforeRender(({ elapsed, delta }) => {
     const speed = layers[index].speed * 0.1
     system.rotation.y = elapsed * speed * 0.5
     system.rotation.x = elapsed * speed * 0.2
-    
+
     // Update uniforms
     if (system.material.uniforms) {
       system.material.uniforms.uTime.value = elapsed
     }
   })
-  
+
   // Update smoke
   if (smokeMaterial.value) {
     smokeMaterial.value.uniforms.uTime.value = elapsed
     // Interpolate color values separately
     smokeMaterial.value.uniforms.uColor.value.lerp(targetColor, delta * 2.0)
   }
-  
+
   // Update galaxy
   if (galaxyMaterial.value) {
     galaxyMaterial.value.uniforms.uTime.value = elapsed
     // Interpolate opacity
     const currentOpacity = galaxyMaterial.value.uniforms.uOpacity.value
     galaxyMaterial.value.uniforms.uOpacity.value += (targetGalaxyOpacity.value - currentOpacity) * delta * 2.0
-    
+
     // Interpolate Level morphing
     const currentLevel = galaxyMaterial.value.uniforms.uLevel.value
     galaxyMaterial.value.uniforms.uLevel.value += (targetLevel.value - currentLevel) * delta * 2.0
@@ -325,8 +328,8 @@ onBeforeRender(({ elapsed, delta }) => {
     <TresDirectionalLight :position="[2, 2, 5]" :intensity="1.5" color="#ffffff" />
 
     <!-- Star Layers -->
-    <TresPoints 
-      v-for="(layer, index) in layers" 
+    <TresPoints
+      v-for="(layer, index) in layers"
       :key="index"
       :ref="(el) => starSystems[index] = el"
     >
@@ -362,10 +365,10 @@ onBeforeRender(({ elapsed, delta }) => {
         :blending="THREE.AdditiveBlending"
       />
     </TresPoints>
-    
+
     <!-- Galaxy Rift Band (Milky Way) -->
     <TresMesh :scale="150" :rotation="[0.5, 0.5, 0]">
-      <TresSphereGeometry :args="[1, 64, 64]" /> 
+      <TresSphereGeometry :args="[1, 64, 64]" />
       <!-- Using Sphere instead of plane to wrap around the deep distance -->
       <TresShaderMaterial
         ref="galaxyMaterial"
@@ -378,7 +381,7 @@ onBeforeRender(({ elapsed, delta }) => {
         :blending="THREE.AdditiveBlending"
       />
     </TresMesh>
-    
+
     <!-- Distant Smoke/Nebula Background -->
     <TresMesh :scale="90">
       <TresSphereGeometry :args="[1, 32, 32]" />

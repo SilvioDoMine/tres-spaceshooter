@@ -1,4 +1,5 @@
 import { useEnemyManagerStore } from '~/stores/enemyManagerStore';
+import { chapterFleetModel } from '~/utils/enemyFleet';
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { useMissions } from '~/composables/useMissions';
 import { storeToRefs } from 'pinia';
@@ -22,7 +23,7 @@ export const baseStats = {
     speed: 1.5,
     health: 90,
     baseXP: 20,
-    size: 0.75,
+    size: 1.0, // Remodelado para leitura mobile; visual e colisão crescem juntos.
     deathSound: 'hit-hard3',
     hitSound: 'hit-soft2',
     drops: {
@@ -603,6 +604,7 @@ export function useEnemyManager() {
       room,
       health,
       maxHealth: health,
+      visualModel: chapterFleetModel(enemyType, chapter),
       onHitDamage: enemyType==='angel'?0:contact,
       ...overrides, // Permite sobrescrever qualquer propriedade
     };
@@ -623,6 +625,7 @@ export function useEnemyManager() {
       for (let i = 0; i < count; i++) {
         spawnEnemy(enemyType, {
           delay: Math.max(.8, delay),
+          overrides: enemyGroup.fleetRole ? { fleetRole: enemyGroup.fleetRole, visualModel: enemyGroup.visualModel } : {},
         });
       }
     });
