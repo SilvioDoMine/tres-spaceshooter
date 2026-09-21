@@ -24,7 +24,16 @@ const resetProgressModal = useModal('reset-progress-modal');
         <!-- content box -->
         <div class="flex flex-col gap-4 pointer-events-auto">
 
-                <BaseInset variant="dark" class="text-cyan-100 p-4 flex flex-col gap-3"><h3 class="title-text">Kestrel-07 · Hangar</h3><label class="flex justify-between">Cor dos painéis<input aria-label="Cor dos painéis" type="color" v-model="shipAppearance.color" /></label><label class="flex justify-between">Propulsores animados<input type="checkbox" v-model="shipAppearance.thrusters" /></label></BaseInset><!-- Settings Controls -->
+                <BaseInset variant="dark" class="text-cyan-100 p-4 flex flex-col gap-3"><h3 class="title-text">Kestrel-07 · Hangar</h3><label class="flex justify-between">Cor dos painéis<input aria-label="Cor dos painéis" type="color" v-model="shipAppearance.color" /></label><label class="flex justify-between">Propulsores animados<input type="checkbox" v-model="shipAppearance.thrusters" /></label></BaseInset>                <!-- Som travado pelo navegador (iPhone: um toque libera; a chavinha de
+                     silencioso do aparelho cala o áudio da web mesmo com o jogo instalado) -->
+                <BaseInset v-if="useAudioPlayer.audioBlocked.value" variant="sunken" class="p-3 text-amber-900">
+                    <p class="text-sm">
+                        <strong>Sem som?</strong> Toque na tela para liberar o áudio. No iPhone, confira
+                        também a chavinha de silencioso na lateral do aparelho: ela cala o som do jogo.
+                    </p>
+                </BaseInset>
+
+                <!-- Settings Controls -->
                 <BaseInset class="flex gap-2 items-center w-full p-2">
 
                     <!-- Stats -->

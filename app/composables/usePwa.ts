@@ -20,6 +20,8 @@ const precacheLoaded = ref(0);
 const precacheDone = ref(false);
 const registration = shallowRef<ServiceWorkerRegistration | null>(null);
 let started = false;
+// Uma troca de versão por carregamento: evita cair num ciclo de reloads.
+let applying = false;
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -85,12 +87,26 @@ export function usePwa() {
     return outcome === 'accepted';
   }
 
-  /** Aplica a versão nova já baixada e recarrega o jogo. */
+  /**
+   * Aplica a versão nova já baixada e recarrega o jogo.
+   * Chamado sozinho pelo plugin num momento seguro; o toast só existe para
+   * avisar quem está no meio de uma partida.
+   */
   function applyUpdate() {
     const waiting = registration.value?.waiting;
-    if (!waiting) return;
+    if (!waiting || applying) return;
+    applying = true;
     navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload(), { once: true });
     waiting.postMessage({ type: 'SKIP_WAITING' });
+  }
+
+  /** Pergunta ao servidor se saiu versão nova (o navegador só checa de vez em quando). */
+  async function checkForUpdate() {
+    try {
+      await registration.value?.update();
+    } catch {
+      // Offline: fica para a próxima checagem.
+    }
   }
 
   /**
@@ -145,6 +161,7 @@ export function usePwa() {
     setup,
     install,
     applyUpdate,
+    checkForUpdate,
     requestPersistentStorage,
     storageEstimate,
     precacheAll,

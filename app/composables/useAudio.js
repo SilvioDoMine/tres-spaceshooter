@@ -96,7 +96,111 @@ let lobbyMusic = null;
 let lobbyMusicWanted = false;
 // Trilha gerada da fase; toca pela mesma cadeia filtro -> volume da música de fundo
 let chapterMusic = null;
-const LOBBY_UNLOCK_EVENTS = ['pointerdown', 'keydown', 'touchstart'];
+// ===================== Desbloqueio do áudio (regra do iOS) =====================
+// O Safari só libera som depois de um toque do jogador, e um AudioContext criado
+// fora de um gesto (na tela de loading, por exemplo) nasce suspenso e muitas vezes
+// não volta mais. Por isso:
+//   - o preload decodifica os efeitos num contexto offline, que não precisa de gesto;
+//   - o contexto real só nasce no primeiro toque, com resume() e um "tique" mudo,
+//     que é o que o WebKit exige para abrir a saída de áudio;
+//   - ao voltar de segundo plano o contexto é retomado (o iOS o interrompe ao sair
+//     do app, e sem isso o jogo volta mudo).
+// O que nenhuma dessas coisas resolve: a chavinha de silencioso do iPhone, que
+// silencia áudio da web mesmo com o jogo instalado. Daí o aviso em audioBlocked.
+const UNLOCK_EVENTS = ['pointerdown', 'touchend', 'keydown'];
+const audioBlocked = ref(false);
+let decodeContext = null;
+let unlockBound = false;
+
+const generalVolumeRatio = () => audioSettings.value.volumeGeneral / 100;
+const backgroundVolumeRatio = () => audioSettings.value.volumeBackground / 100;
+
+/** Contexto só para decodificar: funciona sem gesto e não fica preso em "suspended". */
+function getDecodeContext() {
+    if (audioContext) return audioContext;
+    if (!decodeContext) {
+        const OfflineContextClass = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+        if (!OfflineContextClass) return null;
+        decodeContext = new OfflineContextClass(1, 1, 44100);
+    }
+    return decodeContext;
+}
+
+function createAudioContext() {
+    if (audioContext) return audioContext;
+    try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioContextClass();
+        isInitialized.value = true;
+    } catch (error) {
+        console.error('Failed to initialize audio:', error);
+    }
+    return audioContext;
+}
+
+/** Buffer de um quadro em silêncio: destrava a saída de áudio no WebKit. */
+function playSilentTick() {
+    try {
+        const source = audioContext.createBufferSource();
+        source.buffer = audioContext.createBuffer(1, 1, audioContext.sampleRate);
+        source.connect(audioContext.destination);
+        source.start(0);
+    } catch {
+        // Contexto recém-criado pode recusar: o resume() seguinte resolve.
+    }
+}
+
+/** Retoma o contexto (suspenso pelo navegador ou interrompido pelo iOS). */
+async function resumeAudio() {
+    if (!audioContext) return false;
+    if (audioContext.state !== 'running') {
+        try {
+            await audioContext.resume();
+        } catch {
+            // Sem gesto ainda: o próximo toque tenta de novo.
+        }
+    }
+    const running = audioContext.state === 'running';
+    audioBlocked.value = !running;
+    return running;
+}
+
+/** Chamado a cada toque: cria o contexto na primeira vez e o mantém rodando. */
+function unlockAudio() {
+    if (audioContext?.state === 'running') {
+        audioBlocked.value = false;
+        return;
+    }
+    if (!createAudioContext()) return;
+
+    // resume() precisa sair de dentro do gesto, antes de qualquer await
+    const resuming = audioContext.resume?.().catch(() => {}) ?? Promise.resolve();
+    playSilentTick();
+    resuming.then(() => {
+        audioBlocked.value = audioContext.state !== 'running';
+        beginLobbyMusic();
+    });
+}
+
+function beginLobbyMusic() {
+    if (!lobbyMusicWanted || audioContext?.state !== 'running') return;
+    lobbyMusic ??= createLobbyMusic(audioContext);
+    lobbyMusic.start(generalVolumeRatio() * backgroundVolumeRatio());
+}
+
+/** Liga os gatilhos globais. Chamado uma vez pelo plugin audioUnlock.client.ts. */
+export function setupAudioUnlock() {
+    if (unlockBound || typeof window === 'undefined') return;
+    unlockBound = true;
+
+    // Sem { once: true }: o iOS pode interromper o áudio de novo, e aí o próximo toque conserta
+    UNLOCK_EVENTS.forEach(name => window.addEventListener(name, unlockAudio, { passive: true }));
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') resumeAudio();
+    });
+    window.addEventListener('focus', () => resumeAudio());
+}
 
 export function useAudio() {
     let spatialAudio = null;
@@ -136,29 +240,22 @@ export function useAudio() {
         audioSettings.value.volumeEffects = volume;
     }
 
-    // Inicializa o sistema de áudio
+    // Inicializa o sistema de áudio. Chamado de dentro do jogo (já houve toque);
+    // a tela de loading não passa por aqui, para não criar o contexto travado no iOS.
     async function init() {
-        if (isInitialized.value) { if(audioContext?.state === 'suspended') await audioContext.resume(); return; }
-
-        try {
-            // Web Audio API para efeitos sonoros
-            const AudioContextClass = window.AudioContext || (window).webkitAudioContext;
-            audioContext = new AudioContextClass();
-            isInitialized.value = true;
-            console.log('Audio system initialized');
-        } catch (error) {
-            console.error('Failed to initialize audio:', error);
-        }
+        createAudioContext();
+        await resumeAudio();
     }
 
     // Carrega um efeito sonoro
     async function loadSound(name, url) {
         if (soundBuffers.has(name)) return;
-        if (!audioContext) await init();
+        const context = getDecodeContext();
+        if (!context) return;
 
         try {
             if (!decodedByUrl.has(url)) {
-                decodedByUrl.set(url, fetch(url).then(response => response.arrayBuffer()).then(data => audioContext.decodeAudioData(data)));
+                decodedByUrl.set(url, fetch(url).then(response => response.arrayBuffer()).then(data => context.decodeAudioData(data)));
             }
             soundBuffers.set(name, await decodedByUrl.get(url));
             console.log(`Sound loaded: ${name}`);
@@ -168,13 +265,13 @@ export function useAudio() {
         }
     }
 
-    // Decodifica um efeito já baixado. O contexto pode nascer suspenso (sem gesto do
-    // usuário): decodificar funciona assim mesmo e o init() o retoma no primeiro toque.
+    // Decodifica um efeito já baixado pela tela de loading. Roda no contexto offline:
+    // o contexto que toca só é criado no primeiro toque do jogador (regra do iOS).
     async function registerSoundData(url, arrayBuffer) {
-        if (!audioContext) await init();
-        if (!audioContext || decodedByUrl.has(url)) return;
+        const context = getDecodeContext();
+        if (!context || decodedByUrl.has(url)) return;
 
-        const pending = audioContext.decodeAudioData(arrayBuffer);
+        const pending = context.decodeAudioData(arrayBuffer);
         decodedByUrl.set(url, pending);
         let buffer;
         try {
@@ -289,31 +386,15 @@ export function useAudio() {
         playResultSynth(audioContext, kind, getGeneralVolume() * getEffectsVolume());
     }
 
-    function beginLobbyMusic() {
-        if (!lobbyMusicWanted || audioContext?.state !== 'running') return;
-        lobbyMusic ??= createLobbyMusic(audioContext);
-        lobbyMusic.start(getGeneralVolume() * getBackgroundVolume());
-    }
-
-    async function unlockLobbyMusic() {
-        LOBBY_UNLOCK_EVENTS.forEach(name => window.removeEventListener(name, unlockLobbyMusic));
-        await init();
-        beginLobbyMusic();
-    }
-
-    // Toca a música do lobby; sem gesto do usuário ainda, começa no primeiro toque/tecla
+    // Toca a música do lobby. Sem toque do jogador ainda, fica pendente: o
+    // desbloqueio global (setupAudioUnlock) começa a tocar no primeiro toque.
     function startLobbyMusic() {
         lobbyMusicWanted = true;
-        if (audioContext?.state === 'running') {
-            beginLobbyMusic();
-            return;
-        }
-        LOBBY_UNLOCK_EVENTS.forEach(name => window.addEventListener(name, unlockLobbyMusic, { passive: true }));
+        beginLobbyMusic();
     }
 
     function stopLobbyMusic(fade = 1.2) {
         lobbyMusicWanted = false;
-        LOBBY_UNLOCK_EVENTS.forEach(name => window.removeEventListener(name, unlockLobbyMusic));
         lobbyMusic?.stop(fade);
     }
 
@@ -508,6 +589,8 @@ export function useAudio() {
         // Audio system
         init,
         isInitialized,
+        audioBlocked,
+        resumeAudio,
 
         // Sound effects
         loadSound,

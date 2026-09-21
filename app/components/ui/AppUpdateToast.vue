@@ -1,19 +1,23 @@
 <script setup lang="ts">
-// Aparece quando o service worker já baixou uma versão nova do jogo.
-// A troca só acontece no toque do jogador, para não recarregar no meio da partida.
-const { updateReady, applyUpdate } = usePwa();
+// A versão nova é aplicada sozinha (plugins/pwa.client.ts) assim que der:
+// fora de partida, sem modal aberto e com o jogo já carregado.
+// Este aviso só aparece para quem está no meio de uma run, explicando a espera —
+// recarregar ali perderia a partida.
+const { updateReady } = usePwa();
+const route = useRoute();
 const dismissed = ref(false);
-const show = computed(() => updateReady.value && !dismissed.value);
+
+const show = computed(() => updateReady.value && route.path.startsWith('/play') && !dismissed.value);
+
+// Ao sair da partida o aviso perde o sentido (a troca acontece na hora)
+watch(() => route.path, () => { dismissed.value = false; });
 </script>
 
 <template>
   <Transition name="update-toast">
     <div v-if="show" class="update-toast pointer-events-auto">
-      <p class="update-toast__text">Nova versão disponível.</p>
-      <div class="update-toast__actions">
-        <button class="update-toast__button is-primary" @click="applyUpdate()">Atualizar</button>
-        <button class="update-toast__button" @click="dismissed = true">Depois</button>
-      </div>
+      <p class="update-toast__text">Nova versão pronta. Ela entra quando você voltar ao lobby.</p>
+      <button class="update-toast__button" @click="dismissed = true">Ok</button>
     </div>
   </Transition>
 </template>
@@ -43,21 +47,11 @@ const show = computed(() => updateReady.value && !dismissed.value);
   color: #dceaff;
 }
 
-.update-toast__actions {
-  display: flex;
-  gap: 6px;
-}
-
 .update-toast__button {
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: 999px;
   font-size: 13px;
   font-weight: 700;
-  color: #cfe6ff;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.update-toast__button.is-primary {
   color: #041022;
   background: #7cc7ff;
 }

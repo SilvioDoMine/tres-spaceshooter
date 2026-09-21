@@ -35,9 +35,20 @@ guarda o progresso sem depender da limpeza automática do navegador.
 3. **Visitas seguintes.** Tudo sai do cache; o jogo abre sem rede.
 4. **Deploy novo.** Como o `sw.js` carrega a revisão do build, o navegador
    reinstala o service worker. O precache rebaixa **apenas** os arquivos cujo
-   hash mudou e o `activate` apaga do cache o que saiu do manifesto. O jogador
-   vê "Nova versão disponível"; a troca só acontece no toque dele, para não
-   recarregar no meio de uma partida.
+   hash mudou e o `activate` apaga do cache o que saiu do manifesto.
+
+## Atualização automática
+
+O jogador não precisa fazer nada nem reinstalar: `plugins/pwa.client.ts` aplica
+a versão nova sozinho (`SKIP_WAITING` + reload) no primeiro momento seguro —
+fora de `/play`, sem modal aberto e com o preload concluído. Recarregar durante
+uma run perderia a partida, e durante um baú cortaria a animação; nesses casos a
+troca espera. Quem está no meio de uma partida vê apenas o aviso
+`AppUpdateToast` ("entra quando você voltar ao lobby").
+
+Além da checagem que o navegador faz em cada abertura, o jogo pergunta por
+versão nova ao voltar do segundo plano (`visibilitychange`) e a cada 15 minutos,
+para quem deixa o app aberto por horas.
 
 `npm run build` imprime `[pwa] precache-manifest: N do shell + M assets (X MB)`.
 
@@ -84,6 +95,26 @@ Para conferir o layout no navegador, sem iPhone, simule as medidas do aparelho:
 document.documentElement.style.setProperty('--safe-top', '59px');
 document.documentElement.style.setProperty('--safe-bottom', '34px');
 ```
+
+## Som no iPhone
+
+Instalar o jogo **não** libera o áudio: o WebKit exige um toque do jogador antes
+de tocar qualquer som, dentro ou fora do app instalado. O que o jogo faz
+(`composables/useAudio.js` + `plugins/audioUnlock.client.ts`):
+
+- a tela de loading decodifica os efeitos num `OfflineAudioContext`, que não
+  precisa de gesto — antes o `AudioContext` real nascia ali, travado, e no iOS um
+  contexto criado assim frequentemente não volta mais;
+- o contexto que toca é criado no primeiro toque, em qualquer tela, com
+  `resume()` e um buffer mudo de um quadro (o que o WebKit exige para abrir a saída);
+- ao voltar do segundo plano o contexto é retomado (`visibilitychange` e `focus`),
+  porque o iOS interrompe o áudio quando o app sai da frente;
+- `audioBlocked` fica `true` quando o contexto não roda mesmo depois do toque, e
+  as Configurações mostram o aviso correspondente.
+
+O que **não** dá para resolver por código: a chavinha de silencioso na lateral do
+iPhone silencia áudio da web, inclusive de PWA instalado — um app nativo escolhe
+a categoria de áudio, uma página não. Por isso o aviso cita a chavinha.
 
 ## Web Push
 
