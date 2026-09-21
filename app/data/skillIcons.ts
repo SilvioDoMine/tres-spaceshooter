@@ -5,6 +5,8 @@ export const SKILL_ICON_KEYS = [
   'coins',
   'damage-up',
   'health-up',
+  'vital-core',
+  'heart-fury',
   'datapad',
   'wrench',
   'thrusters',

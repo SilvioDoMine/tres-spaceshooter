@@ -5,6 +5,7 @@ import { useCurrentRunStore, PlayerBaseStats } from '~/stores/currentRunStore';
 import { usePlayerStats } from '~/stores/playerStats';
 import { useCombatTextStore } from '~/stores/useCombatTextStore';
 import { useAudio } from '~/composables/useAudio';
+import { useSkillStore } from '~/stores/SkillStore';
 
 // delay >= 0: na fila para voar sozinho depois da sala limpa
 type Heart = { id: number; x: number; z: number; startX: number; startZ: number; flight: number; delay: number; heal: number; warned: boolean };
@@ -39,6 +40,11 @@ export const useHeartStore = defineStore('hearts', () => {
     waiting.sort((a, b) => Math.hypot(a.x - player.x, a.z - player.z) - Math.hypot(b.x - player.x, b.z - player.z));
     waiting.forEach((heart, i) => { heart.delay = i * HEART_STAGGER; });
   }
+  // Com Núcleo Vital ou Fúria Carmesim o coração rende mesmo sem cura, então a vida cheia não segura mais a coleta
+  function worthWithoutHeal() {
+    const skills = useSkillStore();
+    return skills.hasSkill('vital_core') || skills.hasSkill('heart_fury');
+  }
   function update(delta = 0) {
     const run = useCurrentRunStore();
     if (!run.isPlaying || run.currentHealth <= 0) return;
@@ -60,6 +66,8 @@ export const useHeartStore = defineStore('hearts', () => {
         heart.x = heart.startX + (player.x - heart.startX) * ease;
         heart.z = heart.startZ + (player.z - heart.startZ) * ease;
         if (heart.flight < 1) continue;
+        // Núcleo Vital e Fúria Carmesim leem o coração antes da cura: valem mesmo com a vida cheia
+        usePlayerStats().collectHeart();
         run.healPlayer(heart.heal);
         useAudio().playHeartSound('heal');
         bursts.push({ x: player.x, z: player.z });
@@ -69,7 +77,7 @@ export const useHeartStore = defineStore('hearts', () => {
       const distance = Math.hypot(heart.x - player.x, heart.z - player.z);
       if (distance > WARNING_RESET_RADIUS) heart.warned = false;
       if (distance > PICKUP_RADIUS) continue;
-      if (run.currentHealth + incoming >= run.maxHealth) {
+      if (run.currentHealth + incoming >= run.maxHealth && !worthWithoutHeal()) {
         if (distance > WARNING_RADIUS) continue;
         if (!heart.warned) useCombatTextStore().emitForTarget(PlayerBaseStats.id, 'full', 'VIDA CHEIA');
         heart.warned = true;
@@ -83,8 +91,11 @@ export const useHeartStore = defineStore('hearts', () => {
   /** Troca de sala: corações já voando ou na fila curam na hora; os parados no chão ficam para trás. */
   function collectAll() {
     const run = useCurrentRunStore();
-    const heal = hearts.value.reduce((sum, heart) => sum + (heart.flight >= 0 ? heart.heal : heart.delay >= 0 ? usePlayerStats().attributes.heartHeal : 0), 0);
+    const collected = hearts.value.filter(heart => heart.flight >= 0 || heart.delay >= 0);
+    const heal = collected.reduce((sum, heart) => sum + (heart.flight >= 0 ? heart.heal : usePlayerStats().attributes.heartHeal), 0);
     cleanup();
+    // Cada coração que entrou na nave conta para Núcleo Vital e Fúria Carmesim, mesmo chegando pela troca de sala
+    for (let i = 0; i < collected.length; i++) usePlayerStats().collectHeart();
     if (heal > 0) run.healPlayer(heal);
   }
   function consumeBursts() {

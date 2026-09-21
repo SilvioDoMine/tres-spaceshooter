@@ -516,6 +516,79 @@ test('hearts fly to the ship once the room is cleared, nearest first, and still 
   assert.equal(run.currentHealth, 175, 'heart mid-flight still heals after leaving');
 });
 
+test('Núcleo Vital soma vida máxima a cada coração e vale com a vida cheia', () => {
+  const { run, hearts, stats, skills, context, messages } = runHarness();
+  skills.selectSkill({ ...context.SkillsList.vital_core, currentLevel: 0 });
+  stats.update(.01);
+  assert.equal(run.maxHealth, 300, 'a carta sozinha não muda a vida máxima');
+
+  hearts.tryDrop({ x: 0, z: 0 }, () => 0);
+  for (let i = 0; i < 10; i++) hearts.update(.1);
+  assert.equal(hearts.hearts.length, 0, 'com a carta a vida cheia não segura mais o coração');
+  assert.equal(messages.filter(m => m[1] === 'full').length, 0, 'e nem avisa VIDA CHEIA');
+  assert.equal(run.maxHealth, 306);
+  assert.equal(run.currentHealth, 306, 'o HP ganho já entra curado');
+  assert.deepEqual(messages.at(-1).slice(1), ['vital', '+6 VIDA MÁX']);
+
+  hearts.tryDrop({ x: 0, z: 0 }, () => 0);
+  for (let i = 0; i < 10; i++) hearts.update(.1);
+  assert.equal(run.maxHealth, 312, 'cada coração acumula');
+  assert.equal(stats.heartMaxHealthBonus, 12);
+});
+
+test('Núcleo Vital acumula junto com a carta de HP e com o nível, sem multiplicar', () => {
+  const { run, hearts, stats, skills, context } = runHarness();
+  skills.selectSkill({ ...context.SkillsList.health_percentage, currentLevel: 0 });
+  skills.selectSkill({ ...context.SkillsList.vital_core, currentLevel: 0 });
+  stats.update(.01);
+  assert.equal(run.maxHealth, 350, '250 x 1,2 + 50 do nível');
+  hearts.tryDrop({ x: 0, z: 0 }, () => 0);
+  for (let i = 0; i < 10; i++) hearts.update(.1);
+  assert.equal(run.maxHealth, 356, 'o coração entra aditivo, fora do multiplicador da carta de HP');
+});
+
+test('Fúria Carmesim acende o dano por 30s, renova com outro coração e apaga no fim', () => {
+  const { run, hearts, stats, skills, context } = runHarness();
+  assert.equal(stats.damage, 50);
+  skills.selectSkill({ ...context.SkillsList.heart_fury, currentLevel: 0 });
+  assert.equal(stats.damage, 50, 'sem coração a carta não muda nada');
+  assert.equal(stats.heartFuryActive, false);
+
+  hearts.tryDrop({ x: 0, z: 0 }, () => 0);
+  for (let i = 0; i < 10; i++) hearts.update(.1);
+  assert.equal(hearts.hearts.length, 0, 'a vida cheia não segura o coração');
+  assert.equal(stats.heartFuryTime, 30);
+  assert.ok(Math.abs(stats.damage - 57.5) < 1e-10, '+15% no nível 1');
+
+  for (let i = 0; i < 100; i++) stats.update(.25); // 25s
+  assert.ok(Math.abs(stats.heartFuryTime - 5) < 1e-9);
+  hearts.tryDrop({ x: 0, z: 0 }, () => 0);
+  for (let i = 0; i < 10; i++) hearts.update(.1);
+  assert.equal(stats.heartFuryTime, 30, 'um coração novo renova a duração inteira');
+
+  for (let i = 0; i < 121; i++) stats.update(.25); // 30,25s
+  assert.equal(stats.heartFuryTime, 0);
+  assert.equal(stats.heartFuryActive, false);
+  assert.equal(stats.damage, 50, 'o bônus some quando o tempo acaba');
+  assert.equal(run.currentHealth, 300);
+});
+
+test('corações em voo na troca de sala ainda contam para as cartas de coração', () => {
+  const { run, hearts, stats, skills, config, context } = runHarness();
+  skills.selectSkill({ ...context.SkillsList.vital_core, currentLevel: 0 });
+  skills.selectSkill({ ...context.SkillsList.heart_fury, currentLevel: 0 });
+  stats.update(.01);
+  run.takeDamage(100, 'environment');
+  run.isStageCompleted = true;
+  hearts.tryDrop({ x: 6, z: 0 }, () => 0);
+  hearts.update(.1);
+  assert.ok(hearts.hearts[0].flight > 0, 'o coração está a caminho');
+  run.loadStage(config.stages[0]);
+  assert.equal(hearts.hearts.length, 0);
+  assert.equal(run.maxHealth, 306, 'o Núcleo Vital ganhou o coração que chegou pela troca de sala');
+  assert.equal(stats.heartFuryTime, 30);
+});
+
 test('full-health warning only repeats after leaving the heart completely', () => {
   const { run, hearts, messages } = runHarness();
   const warnings = () => messages.filter(m => m[1] === 'full').length;

@@ -16,6 +16,7 @@ const skillSource = readFileSync(new URL('../app/stores/SkillStore.js', import.m
 const runSource = readFileSync(new URL('../app/stores/currentRunStore.ts', import.meta.url), 'utf8');
 const effectsSource = readFileSync(new URL('../app/stores/useEquipmentEffectsStore.ts', import.meta.url), 'utf8');
 const projectileSource = readFileSync(new URL('../app/stores/projectileStore.js', import.meta.url), 'utf8');
+const heartSource = readFileSync(new URL('../app/stores/useHeartStore.ts', import.meta.url), 'utf8');
 
 test('player upgrade tables use final non-cumulative values', () => {
   assert.deepEqual(Object.values(SkillsList.health_percentage.levels).map(x => 250 * x.value), [300,350,425,525,650]);
@@ -27,6 +28,22 @@ test('player upgrade tables use final non-cumulative values', () => {
   assert.equal(SkillsList.exp_growth.rarity, 'uncommon');
   assert.equal(SkillsList.emergency_repair.rarity, 'uncommon');
   assert.deepEqual({ ...SkillsList.emergency_repair.levels[1], description: undefined }, { min: .25, max: .75, description: undefined });
+});
+
+test('heart cards stay uncommon and pay off on every heart, full health included', () => {
+  // Núcleo Vital: vida máxima aditiva por coração; ~15 corações por capítulo mantêm o teto abaixo da carta de HP
+  assert.equal(SkillsList.vital_core.rarity, 'uncommon');
+  assert.deepEqual(Object.values(SkillsList.vital_core.levels).map(x => x.value), [6,9,12,16,20]);
+  assert.ok(15 * 20 < 250 * (SkillsList.health_percentage.levels[5].value - 1));
+  // Fúria Carmesim: bônus temporário sempre menor que o da carta de dano permanente
+  assert.equal(SkillsList.heart_fury.rarity, 'uncommon');
+  assert.deepEqual(Object.values(SkillsList.heart_fury.levels).map(x => x.value), [.15,.22,.30,.40,.50]);
+  assert.deepEqual(Object.values(SkillsList.heart_fury.levels).map(x => x.duration), [30,30,30,30,30]);
+  assert.ok(1 + SkillsList.heart_fury.levels[5].value < SkillsList.damage_percentage.levels[5].value);
+  // As duas cartas liberam a coleta com a vida cheia e são lidas quando o coração entra na nave
+  assert.match(heartSource, /skills\.hasSkill\('vital_core'\) \|\| skills\.hasSkill\('heart_fury'\)/);
+  assert.match(heartSource, /run\.currentHealth \+ incoming >= run\.maxHealth && !worthWithoutHeal\(\)/);
+  assert.equal((heartSource.match(/usePlayerStats\(\)\.collectHeart\(\)/g) || []).length, 2);
 });
 
 test('shot upgrades match formation, damage, piercing, rear fire and range', () => {

@@ -3,6 +3,7 @@ import { useEnemyManagerStore } from '~/stores/enemyManagerStore';
 import { useHeartStore } from '~/stores/useHeartStore';
 import { useLootStore } from '~/stores/useLootStore';
 import { useProjectileStore } from '~/stores/projectileStore';
+import { SkillsList, useSkillStore } from '~/stores/SkillStore';
 import { playableRoomCount } from '~/utils/progression';
 
 // Comandos de debug no console para testar partidas (só em dev, com a partida rodando):
@@ -13,6 +14,7 @@ import { playableRoomCount } from '~/utils/progression';
 //   killAll()        -> só limpa inimigos e tiros da sala (a próxima onda entra normalmente)
 //   levelUp()        -> sobe 1 nível da nave e abre a escolha de habilidades
 //   levelUp(3)       -> sobe 3 níveis; as escolhas abrem uma depois da outra
+//   grantSkill('heart_fury', 3) -> dá a carta no nível pedido, sem depender do sorteio
 //   dropHearts(3)    -> solta 3 corações em volta da nave
 //   dropCoins(8)     -> solta 8 moedas em volta da nave (voam para ela quando a sala for limpa)
 //   dropExp(150)     -> solta 150 de EXP em pedrinhas na frente da nave (mesma regra das moedas)
@@ -94,6 +96,20 @@ export default defineNuxtPlugin(() => {
     return `Nível ${run.currentLevel} (${count} ${count === 1 ? 'escolha' : 'escolhas'} de habilidade)`;
   }
 
+  // Dá uma carta da partida já no nível pedido, para conferir o efeito sem depender do sorteio
+  function grantSkill(id: string, level = 1) {
+    const run = useCurrentRunStore();
+    if (!run.levelConfig) return console.warn('[grantSkill] Nenhuma partida em andamento (abra /play/:id).');
+    const card: any = (SkillsList as any)[id];
+    if (!card) return console.warn(`[grantSkill] Carta desconhecida. Use uma de: ${Object.keys(SkillsList).join(', ')}`);
+    const skills = useSkillStore();
+    const top = Object.keys(card.levels).length;
+    const target = Math.max(1, Math.min(top, Math.floor(Number(level) || 1)));
+    const current = () => skills.currentSkills.find((s: any) => s.id === id)?.currentLevel ?? 0;
+    while (current() < target) skills.selectSkill({ ...card, currentLevel: current() });
+    return `${card.name} nível ${current()}/${top}`;
+  }
+
   // Solta corações em volta da nave (rng 0 garante o drop), para conferir o visual
   function dropHearts(count = 3) {
     const run = activeRun();
@@ -127,7 +143,7 @@ export default defineNuxtPlugin(() => {
     return `${useLootStore().loot.length} peças de espólio no chão`;
   }
 
-  Object.assign(window, { skipRoom, goToRoom, finishChapter, loseRun, killAll, levelUp, dropHearts, dropCoins, dropExp });
+  Object.assign(window, { skipRoom, goToRoom, finishChapter, loseRun, killAll, levelUp, grantSkill, dropHearts, dropCoins, dropExp });
 
-  console.info('[debug] skipRoom() • goToRoom(10) • finishChapter() • loseRun() • killAll() • levelUp(3) • dropHearts(3) • dropCoins(8) • dropExp(150)');
+  console.info('[debug] skipRoom() • goToRoom(10) • finishChapter() • loseRun() • killAll() • levelUp(3) • grantSkill(\'heart_fury\', 3) • dropHearts(3) • dropCoins(8) • dropExp(150)');
 });

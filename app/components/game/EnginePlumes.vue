@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Group, Mesh, MeshBasicMaterial, ConeGeometry, TorusGeometry, AdditiveBlending } from 'three'
 const props = defineProps<{ gameplay?: boolean; preview?: Record<string, string | number> }>()
-const root = new Group()
+// Nomeado para efeitos que medem o casco (a chama estica com o acelerador e falsearia o tamanho)
+const root = new Group(); root.name = 'EnginePlumes'
 const jets: Mesh[] = []
 const rings: Mesh[] = []
 const core = new MeshBasicMaterial({ color:'#a9f8ff', transparent:true, opacity:.9, blending:AdditiveBlending, depthWrite:false })

@@ -214,6 +214,50 @@ const PELLETS = [-50, -25, 0, 25, 50].map((angle) => ({
         <path d="M78 66V82" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.6" />
       </g>
 
+      <!-- Núcleo Vital: coração-reator + célula que acumula vida a cada coração -->
+      <g v-else-if="icon === 'vital-core'" stroke="#1b2238" stroke-width="3.5">
+        <circle cx="40" cy="46" r="40" :fill="u('glowRed')" stroke="none" />
+        <path
+          d="M42 78C18 63 10 50 10 38C10 26 18 18 28 18C35 18 40 22 42 27C44 22 49 18 56 18C66 18 74 26 74 38C74 50 66 63 42 78Z"
+          :fill="u('red')"
+        />
+        <path d="M18 36C19 30 23 26 29 26" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round" opacity="0.8" />
+        <circle cx="42" cy="41" r="15" :fill="u('metal')" stroke-width="3" />
+        <circle cx="42" cy="41" r="9" :fill="u('fireCore')" stroke-width="2.5" />
+        <path d="M36 45l6-8 6 8" fill="none" stroke="#c46f06" stroke-width="3" stroke-linecap="round" />
+        <rect x="70" y="30" width="22" height="58" rx="6" :fill="u('metal')" />
+        <rect x="75" y="22" width="12" height="9" rx="3" :fill="u('metal')" stroke-width="3" />
+        <rect x="75" y="68" width="12" height="14" rx="2" :fill="u('red')" stroke-width="2.5" />
+        <rect x="75" y="52" width="12" height="12" rx="2" :fill="u('red')" stroke-width="2.5" />
+        <rect x="75" y="38" width="12" height="10" rx="2" :fill="u('gold')" stroke-width="2.5" />
+        <use :href="link('spark')" fill="#fff" transform="translate(81 18) scale(.55)" />
+      </g>
+
+      <!-- Fúria Carmesim: coração energizado com a aura girando em volta -->
+      <g v-else-if="icon === 'heart-fury'" stroke="#1b2238" stroke-width="3.5">
+        <circle cx="50" cy="50" r="44" :fill="u('glowRed')" stroke="none" />
+        <g transform="rotate(-18 50 52)">
+          <path d="M8 52A42 19 0 0 1 92 52" fill="none" stroke-width="10" stroke-linecap="round" />
+          <path d="M8 52A42 19 0 0 1 92 52" fill="none" stroke="#ff8fa3" stroke-width="4.5" stroke-linecap="round" />
+        </g>
+        <path
+          d="M50 84C26 68 16 55 16 42C16 30 24 22 34 22C41 22 46 26 50 32C54 26 59 22 66 22C76 22 84 30 84 42C84 55 74 68 50 84Z"
+          :fill="u('red')"
+        />
+        <path d="M24 40C25 34 29 30 35 30" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round" opacity="0.8" />
+        <path
+          d="M50 37L54.6 48.6L67 50L57.8 58.3L60.4 70.5L50 64.1L39.6 70.5L42.2 58.3L33 50L45.4 48.6Z"
+          :fill="u('gold')"
+          stroke-width="2.5"
+        />
+        <g transform="rotate(-18 50 52)">
+          <path d="M92 52A42 19 0 0 1 8 52" fill="none" stroke-width="10" stroke-linecap="round" />
+          <path d="M92 52A42 19 0 0 1 8 52" fill="none" stroke="#ffd23f" stroke-width="4.5" stroke-linecap="round" />
+          <circle cx="86" cy="55" r="6.5" :fill="u('gold')" stroke-width="3" />
+          <circle cx="14" cy="55" r="5" :fill="u('gold')" stroke-width="3" />
+        </g>
+      </g>
+
       <!-- Aprendizado: datapad com gráfico subindo + estrela -->
       <g v-else-if="icon === 'datapad'" stroke="#1b2238" stroke-width="3.5">
         <rect x="12" y="22" width="72" height="62" rx="10" :fill="u('metal')" />

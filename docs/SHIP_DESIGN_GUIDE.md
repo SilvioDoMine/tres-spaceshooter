@@ -221,6 +221,8 @@ Estas cartas não exigem novas peças físicas permanentes. Sua comunicação de
 | Adrenalina | Aumenta dano conforme a vida diminui | Pulsação vermelha discreta e energia mais intensa quando a vida está baixa. |
 | Manobra Evasiva | Aumenta a chance de desvio | Rastro curto ou pós-imagem somente durante o desvio. |
 | Sifão | Chance de curar 5% da vida ao abater | Fluxo de energia do inimigo destruído até a nave. |
+| Núcleo Vital | Cada coração coletado soma vida máxima pelo resto da partida | Feedback na coleta e atualização da barra de vida. Nenhuma peça nova no casco. |
+| Fúria Carmesim | Cada coração coletado aumenta o dano por 30s | Elétrons vermelhos girando rentes ao casco, em planos cruzados, com rastro curto que apaga atrás deles. O raio vem do tamanho do modelo, então asas e naves diferentes mantêm os elétrons colados. Nunca um anel, domo ou casca parada em volta da nave: isso leria como campo de força. |
 | Rastro de Fogo | Acende um rastro de fogo por onde a nave passa; quem encostar se queima | Reaproveita o rastro do Propulsor Cometa, depositado no chão atrás da nave. Nenhuma peça nova no casco ou no propulsor. |
 
 ### Compatibilidade obrigatória entre cartas

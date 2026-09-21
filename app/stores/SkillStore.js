@@ -94,6 +94,34 @@ export const SkillsList ={
       1: { min: 0.25, max: 0.75, description: 'Restaura de 25% a 75% da vida máxima' },
     }
   },
+  vital_core: {
+    id: 'vital_core',
+    name: 'Núcleo Vital',
+    description: 'Cada coração coletado aumenta sua vida máxima pelo resto da partida. Vale também com a vida cheia.',
+    icon: 'vital-core',
+    rarity: 'uncommon',
+    levels: {
+      1: { value: 6, description: '+6 de vida máxima por coração' },
+      2: { value: 9, description: '+9 de vida máxima por coração' },
+      3: { value: 12, description: '+12 de vida máxima por coração' },
+      4: { value: 16, description: '+16 de vida máxima por coração' },
+      5: { value: 20, description: '+20 de vida máxima por coração' },
+    }
+  },
+  heart_fury: {
+    id: 'heart_fury',
+    name: 'Fúria Carmesim',
+    description: 'Cada coração coletado acende uma aura ao redor da nave e aumenta seu dano por 30s. Um novo coração renova a duração.',
+    icon: 'heart-fury',
+    rarity: 'uncommon',
+    levels: {
+      1: { value: 0.15, duration: 30, description: '+15% de dano por 30s' },
+      2: { value: 0.22, duration: 30, description: '+22% de dano por 30s' },
+      3: { value: 0.30, duration: 30, description: '+30% de dano por 30s' },
+      4: { value: 0.40, duration: 30, description: '+40% de dano por 30s' },
+      5: { value: 0.50, duration: 30, description: '+50% de dano por 30s' },
+    }
+  },
   general_speed: {
     id: 'general_speed',
     name: 'Velocidade Aumentada',

@@ -20,10 +20,16 @@ export const usePlayerStats = defineStore('playerStats', () => {
     regenRate.value = 0;
     pendingRegenText = 0;
     regenTextTimer = 0;
+    heartMaxHealthBonus.value = 0;
+    heartFuryTime.value = 0;
   }
   const amountToHeal = ref(0);
   const regenRate = ref(0); // Porcentagem da vida por segundo
   const bonusDamageFlat = ref(50);
+  // Núcleo Vital: vida máxima acumulada com os corações da partida (aditiva, fora do multiplicador da carta de HP)
+  const heartMaxHealthBonus = ref(0);
+  // Fúria Carmesim: segundos restantes do bônus de dano aceso pelo último coração
+  const heartFuryTime = ref(0);
   let pendingRegenText = 0;
   let regenTextTimer = 0;
 
@@ -53,6 +59,9 @@ export const usePlayerStats = defineStore('playerStats', () => {
       run.healPlayer(regenAmount, false);
       if (regenAmount > 0) pendingRegenText += regenAmount;
     }
+
+    // Fúria Carmesim: o cronômetro corre junto com a simulação, então Fast Game o consome mais rápido também
+    if (heartFuryTime.value > 0) heartFuryTime.value = Math.max(0, heartFuryTime.value - delta);
 
     regenTextTimer += delta;
     if (regenTextTimer >= REGEN_TEXT_INTERVAL) {
@@ -181,6 +190,31 @@ export const usePlayerStats = defineStore('playerStats', () => {
     };
   }
 
+  // Fúria Carmesim: enquanto o cronômetro corre, o bônus do nível atual multiplica o dano
+  const heartFuryActive = computed((): boolean => heartFuryTime.value > 0);
+  const getHeartFuryMultiplier = computed((): number => (heartFuryActive.value ? 1 + (skillLevelData('heart_fury')?.value || 0) : 1));
+
+  /**
+   * Coração recolhido pela nave: Núcleo Vital soma vida máxima permanente e Fúria Carmesim
+   * (re)acende o bônus de dano. As duas cartas valem mesmo com a vida cheia.
+   */
+  function collectHeart() {
+    const run = useCurrentRunStore();
+    const core = skillLevelData('vital_core');
+    if (core) {
+      heartMaxHealthBonus.value += core.value;
+      // O HP ganho já entra curado: a barra cresce em vez de abrir um buraco
+      run.refreshMaxHealthFromStats(true);
+      useCombatTextStore().emitForTarget(PlayerBaseStats.id, 'vital', `+${core.value} VIDA MÁX`);
+    }
+    const fury = skillLevelData('heart_fury');
+    if (fury) {
+      // Um coração novo renova a duração inteira; o texto só sai quando a aura acende
+      if (!heartFuryActive.value) useCombatTextStore().emitForTarget(PlayerBaseStats.id, 'fury', 'FÚRIA');
+      heartFuryTime.value = fury.duration;
+    }
+  }
+
   // Adrenalina: lida no disparo, conforme a vida atual
   function adrenalineDamageMultiplier(): number {
     const run = useCurrentRunStore();
@@ -238,8 +272,8 @@ export const usePlayerStats = defineStore('playerStats', () => {
   return {
     attributes,
     initialize,
-    damage: computed(() => attributes.value.damage * getDamageMultiplier.value),
-    maxHealth: computed(() => attributes.value.maxHealth * getHealthMultiplier.value),
+    damage: computed(() => attributes.value.damage * getDamageMultiplier.value * getHeartFuryMultiplier.value),
+    maxHealth: computed(() => attributes.value.maxHealth * getHealthMultiplier.value + heartMaxHealthBonus.value),
     moveSpeed: computed(() => attributes.value.moveSpeed * getSpeedMultiplier.value),
     update, // Essencial para ser chamado pelo useGameLoop
 
@@ -265,6 +299,13 @@ export const usePlayerStats = defineStore('playerStats', () => {
     experienceMultiplier,
     adrenalineDamageMultiplier,
     elementalPayload,
+
+    // Corações: Núcleo Vital e Fúria Carmesim
+    collectHeart,
+    heartMaxHealthBonus,
+    heartFuryTime,
+    heartFuryActive,
+    getHeartFuryMultiplier,
     fireTrail,
     homingRadius,
   };
