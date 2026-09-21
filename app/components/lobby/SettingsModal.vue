@@ -125,6 +125,9 @@ const resetProgressModal = useModal('reset-progress-modal');
 
                 </BaseInset>
 
+                <!-- Instalação, tela acesa, tela cheia e notificações -->
+                <LobbyAppSettings />
+
                 <!-- Actions -->
                 <div class="flex flex-row gap-2 justify-between">
                     <BaseButton

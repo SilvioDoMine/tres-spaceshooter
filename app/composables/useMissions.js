@@ -4,7 +4,7 @@ import { useShopStore } from '~/stores/useShopStore';
 const dailyMissions = [
     {
         id: 1,
-        description: 'Entre no Spaceshooter',
+        description: 'Entre no Hyfight Spaceshooter',
         rewardPoints: 25,
         missionType: 'login',
         missionGoal: 1,

@@ -2,7 +2,7 @@
 import { useCurrentRunStore } from '~/stores/currentRunStore';
 import { useMissions } from '~/composables/useMissions.js';
 
-// Meta tags para prevenir zoom e gestos mobile
+// Meta tags para prevenir zoom e gestos mobile + instalação como aplicativo (PWA)
 useHead({
   meta: [
     {
@@ -18,9 +18,23 @@ useHead({
       content: 'black-translucent'
     },
     {
+      // Nome sob o ícone quando o jogador adiciona à tela de início do iPhone
+      name: 'apple-mobile-web-app-title',
+      content: 'Hyfight'
+    },
+    {
       name: 'mobile-web-app-capable',
       content: 'yes'
+    },
+    {
+      name: 'theme-color',
+      content: '#020420'
     }
+  ],
+  link: [
+    { rel: 'manifest', href: '/manifest.webmanifest' },
+    { rel: 'apple-touch-icon', href: '/icons/apple-touch-icon.png', sizes: '180x180' },
+    { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/icons/icon-192.png' }
   ]
 });
 
@@ -126,6 +140,7 @@ const appVersion = useAppVersion();
     <div class="pointer-events-none absolute top-0 right-0 bottom-2 left-0 flex items-end justify-center">
       <p class="text-white/30">Versão {{ appVersion }}</p>
     </div>
+    <ClientOnly><UiAppUpdateToast /><UiOrientationGuard /></ClientOnly>
   </div>
 </template>
 

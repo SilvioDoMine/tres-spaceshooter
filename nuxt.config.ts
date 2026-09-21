@@ -2,6 +2,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { readdirSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { writePrecacheManifest } from './scripts/precache-manifest.mjs';
 
 // Pastas de public/ que a tela de loading baixa inteiras antes de liberar o jogo
 const PRELOAD_DIRS = ['images', 'models', 'sounds', 'fonts'];
@@ -38,6 +39,10 @@ function assetManifestPlugin() {
   };
 }
 
+function appVersion() {
+  return process.env.NUXT_PUBLIC_APP_VERSION || process.env.APP_VERSION || 'DEBUG';
+}
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: ['@tresjs/nuxt', '@nuxt/devtools', '@pinia/nuxt'],
@@ -53,7 +58,21 @@ export default defineNuxtConfig({
       // Preenchido no build pelo Dockerfile a partir do build arg APP_VERSION,
       // que o workflow Release & Deploy grava no Coolify antes de cada deploy.
       // Sem nenhuma das duas (dev local sem .env), vira 'DEBUG'.
-      appVersion: process.env.NUXT_PUBLIC_APP_VERSION || process.env.APP_VERSION || 'DEBUG',
+      appVersion: appVersion(),
+      // Chave pública VAPID do servidor de push. Vazia = sem Web Push;
+      // a permissão de notificação continua servindo para avisos locais do jogo.
+      pushPublicKey: process.env.NUXT_PUBLIC_PUSH_PUBLIC_KEY || '',
+      // Endpoint que recebe a inscrição de push do jogador (POST JSON). Opcional.
+      pushSubscribeUrl: process.env.NUXT_PUBLIC_PUSH_SUBSCRIBE_URL || '',
+    },
+  },
+  hooks: {
+    // Lista para o service worker tudo que foi publicado, com hash por arquivo.
+    // Roda depois que o Nitro copia public/ e o build do client para .output/public.
+    'nitro:build:public-assets': (nitro) => {
+      const manifest = writePrecacheManifest(nitro.options.output.publicDir, { version: appVersion() });
+      const total = [...manifest.shell, ...manifest.assets].reduce((sum, file) => sum + file.size, 0);
+      console.log(`[pwa] precache-manifest: ${manifest.shell.length} do shell + ${manifest.assets.length} assets (${(total / 1024 / 1024).toFixed(1)} MB)`);
     },
   },
   extends: [
