@@ -51,7 +51,9 @@ function appMinVersion() {
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ['@tresjs/nuxt', '@nuxt/devtools', '@pinia/nuxt'],
+  // @nuxt/eslint gera .nuxt/eslint.config.mjs, que eslint.config.mjs importa:
+  // sem o módulo registrado aqui o arquivo nunca existe e o lint não roda.
+  modules: ['@tresjs/nuxt', '@nuxt/devtools', '@pinia/nuxt', '@nuxt/eslint'],
   compatibilityDate: '2025-11-01',
   css: ['~/assets/css/main.css'],
   vite: {

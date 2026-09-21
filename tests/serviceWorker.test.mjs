@@ -75,7 +75,6 @@ function boot({ server, caches, active = false }) {
     return response;
   };
 
-  // eslint-disable-next-line no-new-func
   new Function('self', 'caches', 'fetch', 'console', SOURCE)(self, caches, fetchMock, {
     info: () => {}, warn: () => {}, error: () => {},
   });
