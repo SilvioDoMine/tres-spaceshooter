@@ -66,6 +66,13 @@ export default defineNuxtConfig({
       pushSubscribeUrl: process.env.NUXT_PUBLIC_PUSH_SUBSCRIBE_URL || '',
     },
   },
+  routeRules: {
+    // O sw.js e o manifesto precisam ser revalidados a cada abertura: em cache
+    // (o Cloudflare guardava os dois por 4h), o jogador continuaria com o service
+    // worker antigo e a versão nova demoraria a chegar.
+    '/sw.js': { headers: { 'cache-control': 'no-cache, must-revalidate' } },
+    '/precache-manifest.json': { headers: { 'cache-control': 'no-cache, must-revalidate' } },
+  },
   hooks: {
     // Lista para o service worker tudo que foi publicado, com hash por arquivo.
     // Roda depois que o Nitro copia public/ e o build do client para .output/public.
