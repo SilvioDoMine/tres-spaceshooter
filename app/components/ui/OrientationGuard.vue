@@ -35,7 +35,7 @@ const { blocked } = useOrientationGuard();
   gap: 12px;
   padding: 24px;
   text-align: center;
-  background: #020420;
+  background: #000814;
   color: #cfe6ff;
 }
 

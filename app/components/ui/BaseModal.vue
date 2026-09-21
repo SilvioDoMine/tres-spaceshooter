@@ -133,7 +133,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-height: calc(100dvh - 80px);
+  max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 80px);
   padding: 14px 12px 14px;
   border-radius: 22px;
   background: linear-gradient(180deg, #f5cf99 0%, #e8b06c 55%, #d99a55 100%);

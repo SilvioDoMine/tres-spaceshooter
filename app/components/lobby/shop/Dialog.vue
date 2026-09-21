@@ -52,7 +52,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey, true));
   display: flex;
   flex-direction: column;
   /* % não limita item de grid com altura automática: usa a tela menos o padding e o título pendurado */
-  max-height: calc(100dvh - 72px);
+  max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 72px);
   padding: 44px 12px 14px;
   border-radius: 22px;
   background: linear-gradient(#f1c58c, #d99a55);

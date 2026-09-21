@@ -23,7 +23,7 @@ const percent = computed(() => `${Math.round(Math.min(Math.max(props.progress, 0
   align-items: center;
   justify-content: center;
   gap: 28px;
-  background: #000;
+  background: #000814;
 }
 
 .app-loading__logo {

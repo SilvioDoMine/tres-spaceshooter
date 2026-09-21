@@ -122,7 +122,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey, true));
   --tint: #9aa3b2;
   position: relative;
   width: min(380px, 100%);
-  max-height: calc(100dvh - 48px);
+  max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 48px);
   overflow: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.25) transparent;

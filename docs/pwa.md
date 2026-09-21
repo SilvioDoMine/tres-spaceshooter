@@ -59,6 +59,32 @@ O aviso de girar o aparelho vale para celular e tablet, instalado ou não
 (`(orientation: landscape) and (pointer: coarse) and (hover: none)`), e não
 atinge desktop nem notebook com touch.
 
+## Área segura (Dynamic Island, notch, indicador de home)
+
+Instalado no iPhone, o jogo ocupa a tela inteira e a Dynamic Island engolia a
+barra do topo enquanto o indicador de home cobria a TabBar. A correção está em
+`app/app.vue`:
+
+- `:root` declara `--safe-top/right/bottom/left` a partir de `env(safe-area-inset-*)`;
+- `.game-root` usa essas variáveis em `top/right/bottom/left` (não em `padding`:
+  o containing block de um filho `absolute` é o *padding box* do ancestral, então
+  padding não afastaria nada) e recebe `transform: translateZ(0)`, o que faz dele
+  o containing block também dos filhos `position: fixed` — modais, joystick,
+  avisos e HUD da partida passam a respeitar a área visível sem precisar de
+  ajuste individual.
+
+As faixas resultantes ficam com o fundo do `body` em `#000814`, a mesma
+`clear-color` dos `TresCanvas`, para a emenda não aparecer. Modais que limitavam
+altura por `100dvh` descontam as variáveis (`BaseModal`, `shop/Dialog`,
+`equipment/ItemModal`).
+
+Para conferir o layout no navegador, sem iPhone, simule as medidas do aparelho:
+
+```js
+document.documentElement.style.setProperty('--safe-top', '59px');
+document.documentElement.style.setProperty('--safe-bottom', '34px');
+```
+
 ## Web Push
 
 O cliente está pronto, mas **não há servidor de push**. Sem configuração, a

@@ -28,7 +28,7 @@ useHead({
     },
     {
       name: 'theme-color',
-      content: '#020420'
+      content: '#000814'
     }
   ],
   link: [
@@ -145,10 +145,11 @@ const appVersion = useAppVersion();
 </template>
 
 <style>
-/* Cor de fundo para dead zones no mobile (iPhone, etc) */
+/* Faixas de área segura (Dynamic Island, indicador de home) na mesma cor do
+   fundo das cenas (clear-color dos TresCanvas), para a emenda não aparecer */
 html,
 body {
-  background-color: #020420;
+  background-color: #000814;
   margin: 0;
   padding: 0;
   /* Previne double-tap zoom - permite apenas pan/scroll */
@@ -166,8 +167,30 @@ body {
   opacity: 0;
 }
 
-/* Suporte para safe area no iOS */
+/* Área segura do aparelho (Dynamic Island, notch, indicador de home).
+   Em variáveis para dar para simular no navegador ao testar o layout:
+   document.documentElement.style.setProperty('--safe-top', '59px') */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}
+
+/* Todo o jogo vive aqui dentro: cena, HUD, modais e avisos.
+   `position` + `transform` fazem deste elemento o containing block dos filhos
+   `absolute` E `fixed` — sem o transform, o HUD e os modais se prendem à tela
+   inteira e somem sob a Dynamic Island e o indicador de home no iPhone. */
 .game-root {
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  position: absolute;
+  /* inset e não padding: o containing block de um filho absolute é o padding box
+     do ancestral, então padding não afastaria nada. Encolhendo a caixa, todo
+     `top: 0` / `bottom: 0` de dentro do jogo passa a valer na área visível. */
+  top: var(--safe-top);
+  right: var(--safe-right);
+  bottom: var(--safe-bottom);
+  left: var(--safe-left);
+  overflow: hidden;
+  transform: translateZ(0);
 }
 </style>
