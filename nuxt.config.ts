@@ -43,6 +43,12 @@ function appVersion() {
   return process.env.NUXT_PUBLIC_APP_VERSION || process.env.APP_VERSION || 'DEBUG';
 }
 
+// Força atualização obrigatória sem depender de um major bump. Vazio = o padrão
+// vale (o major da própria versão), ver scripts/precache-manifest.mjs.
+function appMinVersion() {
+  return process.env.APP_MIN_VERSION || undefined;
+}
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: ['@tresjs/nuxt', '@nuxt/devtools', '@pinia/nuxt'],
@@ -77,9 +83,13 @@ export default defineNuxtConfig({
     // Lista para o service worker tudo que foi publicado, com hash por arquivo.
     // Roda depois que o Nitro copia public/ e o build do client para .output/public.
     'nitro:build:public-assets': (nitro) => {
-      const manifest = writePrecacheManifest(nitro.options.output.publicDir, { version: appVersion() });
+      const manifest = writePrecacheManifest(nitro.options.output.publicDir, {
+        version: appVersion(),
+        minVersion: appMinVersion(),
+      });
       const total = [...manifest.shell, ...manifest.assets].reduce((sum, file) => sum + file.size, 0);
       console.log(`[pwa] precache-manifest: ${manifest.shell.length} do shell + ${manifest.assets.length} assets (${(total / 1024 / 1024).toFixed(1)} MB)`);
+      console.log(`[pwa] versão ${manifest.version} — obrigatória a partir de ${manifest.minVersion ?? '(nenhuma)'}`);
     },
   },
   extends: [

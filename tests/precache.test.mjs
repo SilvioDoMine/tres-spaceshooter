@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 
-const { buildPrecacheManifest, writePrecacheManifest, isGameAsset } = await import('../scripts/precache-manifest.mjs');
+const { buildPrecacheManifest, writePrecacheManifest, isGameAsset, minVersionFor } = await import('../scripts/precache-manifest.mjs');
 
 function fakeBuild(files) {
   const dir = mkdtempSync(join(tmpdir(), 'precache-'));
@@ -72,4 +72,28 @@ test('isGameAsset reconhece as pastas pré-carregadas pela tela de loading', () 
   assert.equal(isGameAsset('/models/kestrel.glb'), true);
   assert.equal(isGameAsset('/_nuxt/app.js'), false);
   assert.equal(isGameAsset('/icons/icon-192.png'), false);
+});
+
+test('minVersion sai do major da versão: só um major bump é obrigatório', () => {
+  assert.equal(minVersionFor('v2.9.6'), 'v2.0.0');
+  assert.equal(minVersionFor('v3.0.0'), 'v3.0.0');
+  assert.equal(minVersionFor('v0.1.0'), 'v0.0.0');
+});
+
+test('APP_MIN_VERSION força a obrigatoriedade sem major bump', () => {
+  assert.equal(minVersionFor('v2.9.6', 'v2.9.6'), 'v2.9.6');
+});
+
+test('build sem tag não obriga ninguém a atualizar', () => {
+  assert.equal(minVersionFor('DEBUG'), null);
+  assert.equal(minVersionFor(undefined), null);
+  assert.equal(minVersionFor('v2.9'), null);
+});
+
+test('o manifesto carrega a versão e o piso de compatibilidade', () => {
+  const dir = fakeBuild({ 'index.html': 'a' });
+
+  assert.equal(buildPrecacheManifest(dir, { version: 'v2.9.6' }).minVersion, 'v2.0.0');
+  assert.equal(buildPrecacheManifest(dir, { version: 'v2.9.6', minVersion: 'v2.5.0' }).minVersion, 'v2.5.0');
+  assert.equal(buildPrecacheManifest(dir).minVersion, null);
 });

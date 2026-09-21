@@ -45,8 +45,24 @@ export function isGameAsset(url) {
 }
 
 /**
+ * Versão mínima que o jogador pode continuar jogando. Abaixo dela o app se
+ * atualiza mesmo no meio de uma partida (ver app/plugins/pwa.client.ts).
+ *
+ * O padrão é o major da própria versão: scripts/next-version.sh já promove a
+ * major todo commit marcado `feat!:`, `BREAKING CHANGE` ou `[major]`, então é lá
+ * que se declara "este release quebra o save/balanceamento". APP_MIN_VERSION
+ * força o mesmo efeito sem um major bump.
+ */
+export function minVersionFor(version, override) {
+  if (override) return override;
+  const match = /^v(\d+)\.\d+\.\d+$/.exec(version || '');
+  // Build sem tag (dev local): nada é obrigatório.
+  return match ? `v${match[1]}.0.0` : null;
+}
+
+/**
  * @param {string} publicDir pasta publicada (.output/public)
- * @param {{ version?: string }} [options]
+ * @param {{ version?: string, minVersion?: string }} [options]
  */
 export function buildPrecacheManifest(publicDir, options = {}) {
   const files = [];
@@ -54,9 +70,11 @@ export function buildPrecacheManifest(publicDir, options = {}) {
 
   const shell = files.filter(file => !isGameAsset(file.url));
   const assets = files.filter(file => isGameAsset(file.url));
+  const version = options.version || 'DEBUG';
 
   return {
-    version: options.version || 'DEBUG',
+    version,
+    minVersion: minVersionFor(version, options.minVersion),
     // Muda sempre que qualquer arquivo muda: é o nome do cache do service worker.
     revision: createHash('md5').update(files.map(f => `${f.url}:${f.rev}`).join('\n')).digest('hex').slice(0, 12),
     shell,

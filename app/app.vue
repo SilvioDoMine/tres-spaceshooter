@@ -46,6 +46,13 @@ useMobileGestureLock();
 const { progress: assetsProgress, done: assetsReady, start: preloadAssets } = useAssetPreloader();
 preloadAssets();
 
+// Com uma versão nova baixando, a tela de loading segura o jogo até ela estar
+// pronta (poucos segundos, com teto em usePwa): a troca acontece aqui dentro em
+// vez de recarregar o lobby logo depois — dois carregamentos seguidos.
+const pwa = usePwa();
+const gameReady = computed(() => assetsReady.value && !pwa.updateInstalling.value);
+const updatingTo = computed(() => (pwa.updateInstalling.value ? pwa.publishedVersion.value : null));
+
 const currentRunStore = useCurrentRunStore();
 currentRunStore.initializePermanentState();
 
@@ -128,12 +135,12 @@ const appVersion = useAppVersion();
 
 <template>
   <div class="game-root">
-    <template v-if="assetsReady">
+    <template v-if="gameReady">
       <NuxtPage />
       <ClientOnly><LobbyEquipmentGrantModal /><LobbyShopChestOpening /></ClientOnly>
     </template>
     <Transition name="app-loading-fade">
-      <AppLoadingScreen v-if="!assetsReady" :progress="assetsProgress" />
+      <AppLoadingScreen v-if="!gameReady" :progress="assetsProgress" :updating-to="updatingTo" />
     </Transition>
     <!-- pointer-events-none: esta div cobre a tela toda, sem isso ela
          engole todo clique e toque do jogo. -->

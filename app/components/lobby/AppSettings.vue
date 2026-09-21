@@ -8,12 +8,34 @@ const push = usePushNotifications();
 const instructions = useModal('install-app-modal');
 
 const cacheSize = ref('');
+const appVersion = useAppVersion();
 
 onMounted(async () => {
   push.sync();
   const estimate = await pwa.storageEstimate();
   if (estimate?.usage) cacheSize.value = `${(estimate.usage / 1024 / 1024).toFixed(0)} MB`;
 });
+
+// O jogo se atualiza sozinho; este botão existe para quem quer conferir na hora,
+// e para dar um sinal visível de que a checagem acontece.
+type CheckState = 'idle' | 'checking' | 'current' | 'found';
+const checkState = ref<CheckState>('idle');
+
+const checkLabel = computed(() => ({
+  idle: '',
+  checking: 'Procurando…',
+  current: `Você está na versão mais recente (${appVersion}).`,
+  found: 'Versão nova encontrada. Ela entra assim que você sair desta tela.',
+}[checkState.value]));
+
+async function handleCheckUpdate() {
+  if (checkState.value === 'checking') return;
+  checkState.value = 'checking';
+  await pwa.checkForUpdate();
+  // update() resolve quando a busca termina, mas o service worker novo ainda
+  // pode estar instalando: vale como "encontrou".
+  checkState.value = pwa.updateReady.value || pwa.updateInstalling.value ? 'found' : 'current';
+}
 
 const saveState = computed(() => {
   if (pwa.persisted.value) return 'Progresso protegido neste aparelho.';
@@ -82,5 +104,19 @@ function toggleNotifications(value: boolean) {
       {{ saveState }}
       <span v-if="cacheSize"> Jogo guardado no aparelho: {{ cacheSize }}.</span>
     </p>
+
+    <div class="flex justify-between items-center gap-3">
+      <p class="text-sm text-amber-900/70">
+        {{ checkLabel || `Versão ${appVersion}.` }}
+      </p>
+      <BaseButton
+        variant="green"
+        size="sm"
+        :disabled="checkState === 'checking'"
+        @click="handleCheckUpdate"
+      >
+        Procurar atualizações
+      </BaseButton>
+    </div>
   </BaseInset>
 </template>

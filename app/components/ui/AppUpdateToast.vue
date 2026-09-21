@@ -1,13 +1,20 @@
 <script setup lang="ts">
-// A versão nova é aplicada sozinha (plugins/pwa.client.ts) assim que der:
-// fora de partida, sem modal aberto e com o jogo já carregado.
-// Este aviso só aparece para quem está no meio de uma run, explicando a espera —
-// recarregar ali perderia a partida.
-const { updateReady } = usePwa();
+// A versão nova é aplicada sozinha (plugins/pwa.client.ts) no primeiro momento
+// em que não custa nada: a tela de loading, ou fora de partida e sem modal aberto.
+//
+// Dois avisos, então:
+// - normal: só para quem está no meio de uma run, explicando a espera — recarregar
+//   ali perderia a partida;
+// - obrigatório: release marcado como incompatível (major, ou APP_MIN_VERSION no
+//   build). Esse não espera nada e reinicia o jogo em segundos, então o aviso
+//   aparece em qualquer tela e não pode ser dispensado.
+const { updateReady, updateRequired } = usePwa();
 const route = useRoute();
 const dismissed = ref(false);
 
-const show = computed(() => updateReady.value && route.path.startsWith('/play') && !dismissed.value);
+const inMatch = computed(() => route.path.startsWith('/play'));
+const required = computed(() => updateReady.value && updateRequired.value);
+const show = computed(() => required.value || (updateReady.value && inMatch.value && !dismissed.value));
 
 // Ao sair da partida o aviso perde o sentido (a troca acontece na hora)
 watch(() => route.path, () => { dismissed.value = false; });
@@ -15,9 +22,14 @@ watch(() => route.path, () => { dismissed.value = false; });
 
 <template>
   <Transition name="update-toast">
-    <div v-if="show" class="update-toast pointer-events-auto">
-      <p class="update-toast__text">Nova versão pronta. Ela entra quando você voltar ao lobby.</p>
-      <button class="update-toast__button" @click="dismissed = true">Ok</button>
+    <div v-if="show" class="update-toast pointer-events-auto" :class="{ 'update-toast--required': required }">
+      <p v-if="required" class="update-toast__text">
+        Atualização obrigatória. O jogo vai reiniciar em instantes.
+      </p>
+      <template v-else>
+        <p class="update-toast__text">Nova versão pronta. Ela entra assim que você sair da partida.</p>
+        <button class="update-toast__button" @click="dismissed = true">Ok</button>
+      </template>
     </div>
   </Transition>
 </template>
@@ -41,10 +53,19 @@ watch(() => route.path, () => { dismissed.value = false; });
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
+.update-toast--required {
+  border-color: rgba(255, 196, 124, 0.45);
+  background: rgba(38, 20, 6, 0.95);
+}
+
 .update-toast__text {
   flex: 1;
   font-size: 14px;
   color: #dceaff;
+}
+
+.update-toast--required .update-toast__text {
+  color: #ffe6c7;
 }
 
 .update-toast__button {

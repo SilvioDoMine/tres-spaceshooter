@@ -1,6 +1,10 @@
 <script setup lang="ts">
 // Mesmo layout de app/spa-loading-template.html, que aparece antes do JS subir
-const props = defineProps<{ progress: number }>();
+const props = defineProps<{
+  progress: number;
+  /** Versão que está entrando, quando o jogo segura o loading para trocar aqui. */
+  updatingTo?: string | null;
+}>();
 const percent = computed(() => `${Math.round(Math.min(Math.max(props.progress, 0), 1) * 100)}%`);
 </script>
 
@@ -10,6 +14,9 @@ const percent = computed(() => `${Math.round(Math.min(Math.max(props.progress, 0
     <div class="app-loading__track">
       <div class="app-loading__fill" :style="{ width: percent }" />
     </div>
+    <p v-if="props.updatingTo" class="app-loading__status">
+      Atualizando para {{ props.updatingTo }}
+    </p>
   </div>
 </template>
 
@@ -44,5 +51,13 @@ const percent = computed(() => `${Math.round(Math.min(Math.max(props.progress, 0
   border-radius: inherit;
   background: #fff;
   transition: width 0.2s ease-out;
+}
+
+.app-loading__status {
+  /* Encosta na barra: o gap de 28px da coluna é para o logo, não para a legenda */
+  margin-top: -16px;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.55);
 }
 </style>

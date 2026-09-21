@@ -19,7 +19,8 @@ guarda o progresso sem depender da limpeza automática do navegador.
 | `app/composables/useOrientationGuard.ts` | Aviso de girar o aparelho (retrato obrigatório). |
 | `app/components/lobby/AppSettings.vue` | Bloco "Aplicativo" nas Configurações. |
 | `app/components/lobby/InstallAppButton.vue` | Botão "Instalar" no HUD do lobby. |
-| `app/components/ui/AppUpdateToast.vue` | Aviso "Nova versão disponível". |
+| `app/components/ui/AppUpdateToast.vue` | Aviso de versão nova: espera a saída da partida, ou reinício obrigatório. |
+| `app/components/AppLoadingScreen.vue` | Tela de loading; mostra "Atualizando para vX.Y.Z" quando a troca acontece ali. |
 
 ## Como o cache funciona
 
@@ -29,28 +30,65 @@ guarda o progresso sem depender da limpeza automática do navegador.
    `__BUILD_REVISION__` dentro do `sw.js` publicado.
 2. **Primeira visita.** O service worker instala o shell. Os ~26 MB de assets
    entram no cache enquanto a tela de loading (`useAssetPreloader`) os baixa —
-   o `fetch` handler é cache-first e guarda o que vem da rede, então nada é
-   baixado duas vezes. Quando o preload termina, o app manda `PRECACHE_ALL` e o
-   service worker completa o que ficou faltando.
+   o `fetch` handler é cache-first e guarda o que vem da rede **com o `rev` do
+   arquivo carimbado no header `x-precache-rev`**, então nada é baixado duas
+   vezes. Quando o preload termina, o app manda `PRECACHE_ALL` e o service worker
+   completa o que ficou faltando.
 3. **Visitas seguintes.** Tudo sai do cache; o jogo abre sem rede.
 4. **Deploy novo.** Como o `sw.js` carrega a revisão do build, o navegador
-   reinstala o service worker. O precache rebaixa **apenas** os arquivos cujo
-   hash mudou e o `activate` apaga do cache o que saiu do manifesto.
+   reinstala o service worker:
+   - no `install`, ele baixa o shell e os arquivos **que ainda não existem** no
+     cache (`onlyMissing`). Não sobrescreve nada: a versão antiga ainda está
+     servindo a sessão aberta, e trocar um asset ali seria trocá-lo debaixo de
+     quem está jogando;
+   - no `activate`, já depois da troca, o `dropStale` apaga o que saiu do
+     manifesto **e o que continua nele com `rev` diferente**. Sem essa segunda
+     parte, cache-first serviria o `/models/x.glb` velho durante a sessão inteira
+     — o jogo rodaria código novo com assets antigos.
+
+O `x-precache-rev` substituiu um índice `url -> rev` guardado à parte no cache. O
+índice só era escrito pelo precache, nunca pelo fetch handler, então tudo o que a
+tela de loading baixava aparecia como ausente e era baixado uma segunda vez.
 
 ## Atualização automática
 
-O jogador não precisa fazer nada nem reinstalar: `plugins/pwa.client.ts` aplica
-a versão nova sozinho (`SKIP_WAITING` + reload) no primeiro momento seguro —
-fora de `/play`, sem modal aberto e com o preload concluído. Recarregar durante
-uma run perderia a partida, e durante um baú cortaria a animação; nesses casos a
-troca espera. Quem está no meio de uma partida vê apenas o aviso
-`AppUpdateToast` ("entra quando você voltar ao lobby").
+O jogador não precisa fazer nada nem reinstalar. `plugins/pwa.client.ts` aplica a
+versão nova sozinho (`SKIP_WAITING` + reload) no primeiro momento em que ela não
+custa nada:
 
-Além da checagem que o navegador faz em cada abertura, o jogo pergunta por
-versão nova ao voltar do segundo plano (`visibilitychange`) e a cada 15 minutos,
-para quem deixa o app aberto por horas.
+1. **Na tela de loading.** É o momento preferido: ali não existe partida para
+   perder e a troca não cobra um segundo carregamento. Enquanto uma versão nova
+   está baixando, `app.vue` segura a tela de loading (`pwa.updateInstalling`, com
+   teto de 5 s em `usePwa`) e mostra "Atualizando para vX.Y.Z". Sem isso o jogador
+   baixaria os 26 MB, chegaria ao lobby e levaria um reload imediato — dois
+   carregamentos seguidos.
+2. **Fora da partida.** Sem modal aberto e fora de `/play`, a troca acontece na
+   hora. Recarregar durante uma run perderia a partida, e durante um baú cortaria
+   a animação; nesses casos espera, e quem está jogando vê o `AppUpdateToast`.
 
-`npm run build` imprime `[pwa] precache-manifest: N do shell + M assets (X MB)`.
+A busca por versão nova acontece na abertura (registro do service worker), ao voltar
+do segundo plano (`visibilitychange`), **ao sair da partida** e a cada 15 minutos.
+Nas Configurações há um botão **Procurar atualizações** para conferir na hora.
+
+### Atualização obrigatória
+
+`precache-manifest.json` carrega, junto da `version`, um `minVersion`: a versão mais
+antiga que ainda pode jogar. Quando a versão em execução é anterior a ela
+(`pwa.updateRequired`), a troca deixa de esperar um momento conveniente — o aviso
+aparece em qualquer tela e o jogo reinicia em ~4 s, inclusive no meio de uma run.
+
+O padrão de `minVersion` é o **major da própria versão**: `scripts/next-version.sh`
+já promove a major todo commit marcado `feat!:`, `BREAKING CHANGE` ou `[major]`, e é
+lá que se declara que um release quebra save ou balanceamento. Para forçar o mesmo
+efeito sem um major bump, defina `APP_MIN_VERSION` no build (build arg, igual ao
+`APP_VERSION`). Build sem tag (`DEBUG`) nunca obriga nada.
+
+`npm run build` imprime as duas linhas:
+
+```
+[pwa] precache-manifest: N do shell + M assets (X MB)
+[pwa] versão v2.9.6 — obrigatória a partir de v2.0.0
+```
 
 Em desenvolvimento o service worker não é registrado (e qualquer registro
 antigo na mesma origem é removido), para não atrapalhar o HMR.
@@ -136,5 +174,11 @@ resolvido no build por causa do `ssr: false`.
 ## Testes
 
 `tests/precache.test.mjs` cobre o gerador do manifesto: separação shell/assets,
-hashes por conteúdo, exclusão do `sw.js`, revisão estável entre builds iguais e
-o carimbo no `sw.js`.
+hashes por conteúdo, exclusão do `sw.js`, revisão estável entre builds iguais, o
+carimbo no `sw.js` e a derivação do `minVersion` (major da versão, override por
+`APP_MIN_VERSION`, `DEBUG` sem obrigatoriedade).
+
+O comportamento do service worker em si se verifica com dois builds em sequência:
+publique `v1.0.0`, deixe o jogo carregar, troque o conteúdo de um asset, publique
+`v1.0.1` e recarregue. O asset novo tem de aparecer **nesta** sessão, com um único
+carregamento.
