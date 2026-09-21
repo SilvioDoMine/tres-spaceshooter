@@ -17,6 +17,7 @@ const runSource = readFileSync(new URL('../app/stores/currentRunStore.ts', impor
 const effectsSource = readFileSync(new URL('../app/stores/useEquipmentEffectsStore.ts', import.meta.url), 'utf8');
 const projectileSource = readFileSync(new URL('../app/stores/projectileStore.js', import.meta.url), 'utf8');
 const heartSource = readFileSync(new URL('../app/stores/useHeartStore.ts', import.meta.url), 'utf8');
+const statsSource = readFileSync(new URL('../app/stores/playerStats.ts', import.meta.url), 'utf8');
 
 test('player upgrade tables use final non-cumulative values', () => {
   assert.deepEqual(Object.values(SkillsList.health_percentage.levels).map(x => 250 * x.value), [300,350,425,525,650]);
@@ -28,6 +29,22 @@ test('player upgrade tables use final non-cumulative values', () => {
   assert.equal(SkillsList.exp_growth.rarity, 'uncommon');
   assert.equal(SkillsList.emergency_repair.rarity, 'uncommon');
   assert.deepEqual({ ...SkillsList.emergency_repair.levels[1], description: undefined }, { min: .25, max: .75, description: undefined });
+});
+
+test('short range trades reach for a single-level burst profile, all of it configurable in the catalog', () => {
+  const card = SkillsList.short_range_shot;
+  assert.equal(card.disabled, undefined, 'a carta está no sorteio');
+  assert.equal(card.rarity, 'legendary');
+  assert.deepEqual(Object.keys(card.levels), ['1'], 'nível único: nunca sobe para 2');
+  assert.deepEqual(card.levels[1], { range: .45, damage: 1.2, attackSpeed: 2, projectileSpeed: 1,
+    description: card.levels[1].description });
+  // Alcance base 11 encolhe para 4,95 e o círculo, a mira automática e o fim do projétil seguem o mesmo fator
+  assert.ok(Math.abs(11 * card.levels[1].range - 4.95) < 1e-12);
+  // Só a Cadência (e a Posição Firme) acopla no projétil pela raiz; o attackSpeed desta carta fica de
+  // fora, então projectileSpeed 1 mantém o projétil na velocidade normal apesar do dobro de cadência
+  assert.match(statsSource, /projectileSpeedMultiplier \* \(shortRange\.value\?\.projectileSpeed \|\| 1\) \* Math\.sqrt\(cadenceMultiplier\.value\)/);
+  assert.match(statsSource, /cadenceMultiplier\.value \* \(shortRange\.value\?\.attackSpeed \|\| 1\)/);
+  assert.match(statsSource, /rangeMultiplier \* \(shortRange\.value\?\.range \?\? 1\)/);
 });
 
 test('heart cards stay uncommon and pay off on every heart, full health included', () => {

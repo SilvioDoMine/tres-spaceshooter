@@ -142,6 +142,9 @@ export function usePlayerControls() {
     const frozen = Boolean(currentRun.getPlayerElements().freeze);
     const dx = frozen ? 0 : spatial.x * speed * delta;
     const dz = frozen ? 0 : spatial.z * speed * delta;
+    // Parada é o mesmo estado que libera o tiro: Posição Firme carrega exatamente enquanto a nave atira
+    const moving = dx !== 0 || dz !== 0;
+    usePlayerStats().trackStanding(delta, moving);
 
     // Verifica se pode mover, por exemplo está no limite do mapa
     // Resolve each horizontal axis independently so diagonal movement slides
@@ -194,7 +197,7 @@ export function usePlayerControls() {
     }
 
     // Se o jogador tiver parado, vamos atirar um projetil se estiver dentro do cd correto
-    if (!frozen && (dx !== 0 || dz !== 0) === false) {
+    if (!frozen && !moving) {
       // Aponta para o inimigo mais próximo e rotaciona o personagem nessa direção
       const nearestEnemy = projectileStore.nearestEnemyFromPlayer();
       // Os hardpoints disparam pela rotação lógica da nave: com o tiro pronto ela

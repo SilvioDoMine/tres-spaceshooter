@@ -139,6 +139,7 @@ onUnmounted(() => {
         <GameLootPickups />
         <GameEquipmentEffects />
         <GameHeartFuryAura />
+        <GameStandingGroundField />
         <GameHyperdriveBurst />
         
         <GameWorld :key="Number(route.params.id)" :chapter="Number(route.params.id)" />

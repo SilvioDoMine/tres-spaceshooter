@@ -4,11 +4,13 @@ import { SIMPLE_ITEMS, type SimpleItemId } from '~/data/items';
 import { getRandomEquipment, randomEquipmentSlotLabel, sanitizeDrop, type RandomEquipmentDrop } from '~/data/randomEquipment';
 import { formatTalentValue } from '~/utils/talents';
 import { formatStat, getEquipment, itemAbilities, itemMainStat, type OwnedEquipment } from '~/utils/equipment';
+import { skillLevelText, skillMaxLevel, skillRarity, type RunSkill } from '~/utils/skills';
 
 // Tooltip de item: envolve qualquer gatilho (o ícone/card que já está na tela) e descreve o que ele é.
-// Três variantes: `item` (equipamento) abre a ficha completa no estilo WoW — raridade, atributo principal,
+// Quatro variantes: `item` (equipamento) abre a ficha completa no estilo WoW — raridade, atributo principal,
 // descrição e habilidades; `drop` (equipamento ainda não sorteado: "Arma Aleatória") mostra raridade,
-// slot e o que vai acontecer no resgate; `resource` (ouro, gemas, exp, chaves...) abre a versão simples
+// slot e o que vai acontecer no resgate; `skill` (carta de habilidade da partida) mostra raridade, nível,
+// o efeito atual e o do próximo nível; `resource` (ouro, gemas, exp, chaves...) abre a versão simples
 // de nome + descrição.
 // Desktop abre no hover; touch abre no toque (e fecha ao tocar fora, rolar ou apertar Esc).
 const props = withDefaults(
@@ -17,6 +19,8 @@ const props = withDefaults(
     item?: OwnedEquipment | null;
     /** Sorteio de equipamento ainda não realizado (~/data/randomEquipment) */
     drop?: RandomEquipmentDrop | null;
+    /** Habilidade obtida na partida (~/stores/SkillStore): raridade, nível e efeitos */
+    skill?: RunSkill | null;
     /** Item simples do catálogo (~/data/items): variante enxuta */
     resource?: SimpleItemId | null;
     /** Desliga o tooltip e o realce do gatilho (ex.: card vazio) */
@@ -26,7 +30,7 @@ const props = withDefaults(
     /** Só hover: o toque não abre. Para onde tocar já faz outra coisa (abrir a ficha, comprar...) */
     noTap?: boolean;
   }>(),
-  { item: null, drop: null, resource: null, disabled: false, noHighlight: false, noTap: false },
+  { item: null, drop: null, skill: null, resource: null, disabled: false, noHighlight: false, noTap: false },
 );
 
 const GAP = 12;
@@ -51,8 +55,24 @@ const drop = computed(() => (props.drop ? sanitizeDrop(props.drop) : null));
 const dropDef = computed(() => (drop.value ? getRandomEquipment(drop.value.slot) : null));
 const dropRarity = computed(() => (drop.value ? EQUIPMENT_RARITIES[drop.value.rarity] : null));
 
+// Habilidade da partida: o efeito atual e o do próximo nível saem do catálogo da própria carta
+const skill = computed(() => props.skill ?? null);
+const skillRank = computed(() => skillRarity(skill.value));
+const skillTint = computed(() => EQUIPMENT_RARITIES[skillRank.value.frame].color);
+const skillLevel = computed(() => skill.value?.currentLevel ?? 0);
+const skillTop = computed(() => skillMaxLevel(skill.value));
+const skillNow = computed(() => skillLevelText(skill.value, skillLevel.value));
+const skillNext = computed(() => skillLevelText(skill.value, skillLevel.value + 1));
+const skillLevelLabel = computed(() => {
+  if (skill.value?.repeatable) return 'Instantânea';
+  if (!skillTop.value) return '';
+  return skillLevel.value >= skillTop.value ? `Nível máximo (${skillTop.value})` : `Nível ${skillLevel.value}/${skillTop.value}`;
+});
+
 const hasEquipment = computed(() => !!def.value && !!rarity.value && !!main.value);
-const available = computed(() => !props.disabled && (hasEquipment.value || !!dropDef.value || !!simple.value));
+const available = computed(
+  () => !props.disabled && (hasEquipment.value || !!dropDef.value || !!skill.value || !!simple.value),
+);
 
 const abilityText = (ability: (typeof abilities.value)[number]['ability']) =>
   ability.stat ? formatTalentValue(ability.stat, ability.value ?? 0) : (ability.text ?? '');
@@ -140,6 +160,7 @@ watch(open, (isOpen) => {
 // O item pode trocar com o tooltip aberto (fusão, navegação na mochila, marco seguinte)
 watch(() => props.item?.uid, hide);
 watch(() => props.resource, hide);
+watch(() => [props.skill?.id, props.skill?.currentLevel].join(), hide);
 watch(() => [props.drop?.slot, props.drop?.rarity].join(), hide);
 watch(available, (ok) => {
   if (!ok) hide();
@@ -222,6 +243,35 @@ onUnmounted(() => {
           </header>
 
           <p class="itip__description">{{ dropDef.description }}</p>
+        </div>
+
+        <!-- Habilidade da partida: raridade, nível e o que ela faz agora (e no próximo nível) -->
+        <div
+          v-else-if="open && skill"
+          ref="panel"
+          class="itip"
+          :class="[`is-arrow-${position.side}`, { 'is-touch': touchOpen }]"
+          role="tooltip"
+          :style="{ top: `${position.top}px`, left: `${position.left}px`, '--tint': skillTint, '--arrow': `${position.arrow}px` }"
+        >
+          <span class="itip__arrow" aria-hidden="true"></span>
+
+          <header class="itip__header">
+            <h3 :style="{ color: skillTint }">{{ skill.name }}</h3>
+            <p>
+              <span class="itip__rarity" :style="{ background: skillTint }">{{ skillRank.label }}</span>
+              <span v-if="skillLevelLabel">{{ skillLevelLabel }}</span>
+            </p>
+          </header>
+
+          <p v-if="skillNow" class="itip__skill-now">{{ skillNow }}</p>
+
+          <p v-if="skillNext" class="itip__skill-next">
+            <span>Próximo nível</span>
+            {{ skillNext }}
+          </p>
+
+          <p class="itip__description">{{ skill.description }}</p>
         </div>
 
         <!-- Item simples (ouro, gemas, exp, chaves...): só nome e descrição -->
@@ -375,6 +425,30 @@ onUnmounted(() => {
 }
 .itip__abilities li.is-locked i {
   filter: grayscale(1) brightness(0.7);
+}
+
+/* Habilidade: o efeito do nível atual em destaque e o do próximo logo abaixo, apagado */
+.itip__skill-now {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--tint) 20%, rgba(0, 0, 0, 0.35));
+  border-left: 3px solid var(--tint);
+  font: 13px/1.35 'Fredoka One', sans-serif;
+  color: #fff;
+}
+.itip__skill-next {
+  margin: 6px 0 0;
+  padding: 0 2px;
+  font: 11px/1.35 'Fredoka One', sans-serif;
+  color: #8e9abb;
+}
+.itip__skill-next span {
+  display: block;
+  font-size: 10px;
+  color: #6f7b9c;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 /* Variante simples: mais estreita, texto centralizado e um filete separando nome e descrição */

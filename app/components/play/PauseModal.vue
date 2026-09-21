@@ -2,6 +2,7 @@
 import { useModal } from '~/composables/useModal';
 import PlayModal from '~/components/play/PlayModal.vue';
 import BaseAbilityIcon from '~/components/base/AbilityIcon.vue';
+import { skillRarity } from '~/utils/skills';
 
 /**
  * Modal de Pausa do Jogo
@@ -58,22 +59,9 @@ defineExpose({ open, close, isOpen });
 
 const skillStore = useSkillStore();
 
+// Moldura do ícone: mesma tabela de raridade usada pelo tooltip e pelas cartas
 function getRarityFromSkill(skill) {
-  // Exemplo simples: mapear status para raridade
-  switch (skill.rarity) {
-    case 'common':
-      return 'gray';
-    case 'uncommon':
-      return 'green';
-    case 'rare':
-      return 'blue';
-    case 'epic':
-      return 'purple';
-    case 'legendary':
-      return 'orange';
-    default:
-      return 'gray';
-  }
+  return skillRarity(skill).frame;
 }
 
 // config
@@ -123,21 +111,26 @@ onUnmounted(() => window.removeEventListener('keydown', handlePauseKey));
       :text="skillStore.currentSkills.length > 0 ? 'Habilidades Obtidas' : 'Nenhuma habilidade obitida'"
     />
 
-    <!-- Grid de habilidades -->
+    <!-- Grid de habilidades: o tooltip abre no hover (PC) ou no toque (mobile) e descreve a carta -->
     <div class="abilities-grid">
-      <BaseAbilityIcon
+      <BaseItemTooltip
         v-for="(skill, index) in skillStore.currentSkills"
         :key="skill.id"
         class="pause-ability"
         :style="{ '--i': index }"
-        :status="skill.status"
-        :badge="`${skillStore.getSkillLevel(skill.id)}`"
-        :rarity="getRarityFromSkill(skill)"
-        size="md"
-        @click="handleAbilityClick(skill)"
+        :skill="skill"
+        no-highlight
       >
-        <SkillIcon :icon="skill.icon" />
-      </BaseAbilityIcon>
+        <BaseAbilityIcon
+          :status="skill.status"
+          :badge="`${skillStore.getSkillLevel(skill.id)}`"
+          :rarity="getRarityFromSkill(skill)"
+          size="md"
+          @click="handleAbilityClick(skill)"
+        >
+          <SkillIcon :icon="skill.icon" />
+        </BaseAbilityIcon>
+      </BaseItemTooltip>
     </div>
 
     <!-- Slot de actions para os botões grandes -->

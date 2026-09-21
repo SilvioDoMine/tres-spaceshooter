@@ -523,6 +523,20 @@ const PELLETS = [-50, -25, 0, 25, 50].map((angle) => ({
         <use :href="link('spark')" fill="#fff" transform="translate(26 22) scale(.8)" />
       </g>
 
+      <!-- Posição Firme: nave plantada dentro do medidor de ancoragem, cuspindo rajada contínua.
+           O anel de placas no chão é o mesmo medidor de carga do efeito em jogo. -->
+      <g v-else-if="icon === 'standing-ground'">
+        <circle cx="50" cy="52" r="42" :fill="u('glowFire')" stroke="none" />
+        <use :href="link('bolt')" transform="translate(50 12) scale(.5)" />
+        <use :href="link('ship')" transform="translate(50 50) scale(.7)" />
+        <use :href="link('spark')" fill="#ffd23f" transform="translate(50 26) scale(1.1)" />
+        <use :href="link('spark')" fill="#fff" transform="translate(50 26) scale(.6)" />
+        <ellipse cx="50" cy="78" rx="39" ry="13" fill="none" stroke="#1b2238" stroke-width="14" stroke-dasharray="12 8" />
+        <ellipse cx="50" cy="78" rx="39" ry="13" fill="none" :stroke="u('fire')" stroke-width="6.5" stroke-dasharray="12 8" />
+        <use :href="link('spark')" fill="#ffd23f" transform="translate(13 56) scale(.9)" />
+        <use :href="link('spark')" fill="#fff" transform="translate(88 40) scale(.65)" />
+      </g>
+
       <!-- Tiro de Curta Distância: estouro em cone com limite de alcance -->
       <g v-else-if="icon === 'shotgun'">
         <path d="M50 80L14 44Q50 14 86 44Z" :fill="u('fire')" opacity="0.35" />

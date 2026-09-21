@@ -189,7 +189,7 @@ Os hardpoints temporários devem parecer extensões do armamento equipado e usar
 | Cadência | Até +40% de velocidade de ataque | Recuo e flashes ficam mais frequentes; não adicionar bocas de fogo. |
 | Mira Precisa | Aumenta chance e dano crítico | Usar confirmação curta de mira ou brilho de impacto; não instalar sensores físicos temporários. |
 | Tiro Certeiro | Chance de eliminar imediatamente inimigos que não sejam chefes | Impacto especial inequívoco no alvo; não altera a arma antes do disparo. |
-| Tiro de Curta Distância | Planejado, atualmente desativado | Não reservar geometria obrigatória enquanto a mecânica estiver fora do sorteio. |
+| Tiro de Curta Distância | Alcance cai para 45% do normal; dano +20% e cadência +100%, com o projétil na velocidade normal | Nível único. O círculo de alcance encolhe junto e é a leitura principal da carta; a câmera não se aproxima, porque a altura mínima segura o enquadramento. Rastro curto e denso, boca de fogo mais frequente. Não adicionar canhões nem trocar a arma equipada. |
 
 ### Melhorias elementais
 
@@ -223,6 +223,7 @@ Estas cartas não exigem novas peças físicas permanentes. Sua comunicação de
 | Sifão | Chance de curar 5% da vida ao abater | Fluxo de energia do inimigo destruído até a nave. |
 | Núcleo Vital | Cada coração coletado soma vida máxima pelo resto da partida | Feedback na coleta e atualização da barra de vida. Nenhuma peça nova no casco. |
 | Fúria Carmesim | Cada coração coletado aumenta o dano por 30s | Elétrons vermelhos girando rentes ao casco, em planos cruzados, com rastro curto que apaga atrás deles. O raio vem do tamanho do modelo, então asas e naves diferentes mantêm os elétrons colados. Nunca um anel, domo ou casca parada em volta da nave: isso leria como campo de força. |
+| Posição Firme | Parada, a nave acelera o tiro até 7x em 30s; andar zera a carga e, carregada, ela recebe até o dobro de dano de projétil | Plataforma de ancoragem deitada no **chão**, embaixo da nave: doze placas âmbar que travam uma a uma como medidor da carga, espirais puxando energia para o núcleo e fissuras vermelhas abrindo para fora conforme a exposição cresce. Nenhuma peça nova no casco. A folga entre as placas é larga de propósito: mesmo com a carga cheia o desenho lê como piso travado, e não como anel, domo ou casca em volta da nave — isso leria como campo de força. |
 | Rastro de Fogo | Acende um rastro de fogo por onde a nave passa; quem encostar se queima | Reaproveita o rastro do Propulsor Cometa, depositado no chão atrás da nave. Nenhuma peça nova no casco ou no propulsor. |
 
 ### Compatibilidade obrigatória entre cartas

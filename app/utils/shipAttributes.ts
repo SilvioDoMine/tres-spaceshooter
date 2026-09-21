@@ -56,6 +56,25 @@ export function experienceBonus(level: { value: number; perRoom: number; max: nu
   return Math.min(level.max, level.value + level.perRoom * Math.max(0, roomsCleared));
 }
 
+/**
+ * Posição Firme: a nave parada ancora e acelera o tiro até o teto do nível.
+ * A cadência sobe devagar no começo e desabala no fim da carga (expoente > 1), então a carta
+ * só vira metralhadora para quem realmente segura a posição. A vulnerabilidade sobe reta: o
+ * risco já cobra desde os primeiros segundos, sem esperar a carga cheia.
+ */
+export const STANDING_GROUND_RAMP = 30; // segundos parado até a carga cheia
+const STANDING_GROUND_CURVE = 1.35;
+export type StandingGroundLevel = { value: number; vulnerability: number; ramp?: number };
+export function standingGroundCharge(level: StandingGroundLevel | null | undefined, stillTime: number) {
+  if (!level || !(stillTime > 0)) return { progress: 0, attackSpeed: 1, vulnerability: 0 };
+  const progress = Math.min(1, stillTime / (level.ramp || STANDING_GROUND_RAMP));
+  return {
+    progress,
+    attackSpeed: 1 + (level.value - 1) * Math.pow(progress, STANDING_GROUND_CURVE),
+    vulnerability: level.vulnerability * progress,
+  };
+}
+
 /** Reparo de Emergência: cura uma fração sorteada entre `min` e `max` da vida máxima. */
 export function emergencyRepairHeal(maxHealth: number, level: { min: number; max: number }, rng = Math.random) {
   return Math.round(Math.max(0, maxHealth) * (level.min + (level.max - level.min) * rng()));
@@ -70,11 +89,13 @@ export function outgoingHit(damage: number, stats: CombatAttributes, rng = Math.
   return { damage: Math.max(0, damage) * (critical ? stats.criticalDamage + criticalDamageBonus : 1), critical };
 }
 
-export function incomingHit(damage: number, source: DamageSource, stats: CombatAttributes, rng = Math.random) {
+/** `vulnerability` é a fração de dano extra que só os tiros inimigos cobram (Posição Firme carregada). */
+export function incomingHit(damage: number, source: DamageSource, stats: CombatAttributes, rng = Math.random, vulnerability = 0) {
   // Esquiva vale para tiros e colisões; dano de ambiente (queimadura, gelo, dilatação) nunca é esquivado
   const dodged = source !== 'environment' && damage > 0 && rng() < stats.dodgeChance;
+  const exposed = source === 'attack' ? Math.max(0, damage) * (1 + Math.max(0, vulnerability)) : damage;
   const reduced = source === 'collision'
     ? Math.max(0, damage - stats.collisionReductionFlat) * (1 - stats.collisionReductionFraction)
-    : damage;
+    : exposed;
   return { damage: dodged ? 0 : Math.max(0, reduced), dodged };
 }

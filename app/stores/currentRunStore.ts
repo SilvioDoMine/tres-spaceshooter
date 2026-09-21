@@ -315,7 +315,8 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
       ? { source: context, attackerId: undefined, elements: undefined, text: undefined }
       : context;
     const equipmentEffects = useEquipmentEffectsStore();
-    const hit = incomingHit(amount, source, playerStats.combatStats);
+    // Posição Firme carregada: o tiro inimigo cobra mais caro, a colisão e o ambiente não mudam
+    const hit = incomingHit(amount, source, playerStats.combatStats, Math.random, playerStats.projectileVulnerability);
     if (hit.dodged) {
       combatTextStore.emitForTarget(PlayerBaseStats.id, 'dodge', 'DESVIO');
       equipmentEffects.onDodge();

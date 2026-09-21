@@ -349,16 +349,39 @@ export const SkillsList ={
       2: { value: 0.4, description: 'Cada arma dispara 3 vezes.' },
     },
   },
+  standing_ground: {
+    id: 'standing_ground',
+    name: 'Posição Firme',
+    description: 'Parada, a nave ancora no lugar e vai acelerando o tiro até virar metralhadora em 30s. Qualquer movimento zera a carga; quanto mais carregada, mais dano de projétil ela recebe.',
+    icon: 'standing-ground',
+    rarity: 'epic',
+    // value: teto do multiplicador de cadência; vulnerability: dano extra de projétil com a carga cheia.
+    // O teto sobe por nível, o risco não: subir a carta melhora o prêmio, nunca a punição.
+    levels: {
+      1: { value: 4, vulnerability: 1, ramp: 30, description: 'Cadência até 4x depois de 30s parada; até +100% de dano de projétil recebido.' },
+      2: { value: 5.5, vulnerability: 1, ramp: 30, description: 'Cadência até 5,5x depois de 30s parada; até +100% de dano de projétil recebido.' },
+      3: { value: 7, vulnerability: 1, ramp: 30, description: 'Cadência até 7x depois de 30s parada; até +100% de dano de projétil recebido.' },
+    },
+  },
   short_range_shot: {
     id: 'short_range_shot',
-    // Ainda não implementada: fica fora do sorteio até o efeito existir
-    disabled: true,
     name: 'Tiro de Curta Distância',
-    description: 'Reduz seu alcance para corpo a corpo, mas aumenta muito o dano e a velocidade do projétil.',
+    description: 'Encurta o alcance para corpo a corpo e transforma a arma numa metralhadora de perto.',
     icon: 'shotgun',
     rarity: 'legendary',
+    // Nível único: a carta não sobe de nível, some do sorteio depois de pega.
     levels: {
-      1: { value: 1, description: 'ATK Range ↓↓, ATK Power ↑↑↑, ATK SPD ↑↑↑' },
+      // Cada campo é um multiplicador direto sobre a base da nave, para balancear mexendo só aqui.
+      // range também encolhe o círculo de alcance e a mira automática; a câmera acompanha sozinha.
+      // projectileSpeed é o fator final da carta: o acoplamento da Cadência com o projétil (raiz
+      // quadrada) ignora o attackSpeed desta carta, então o número aqui é o que vale na prática.
+      1: {
+        range: 0.45,
+        damage: 1.2,
+        attackSpeed: 2,
+        projectileSpeed: 1,
+        description: 'Alcance: 45% do normal. Em troca, dano +20% e cadência +100%.',
+      },
     },
   }
 };

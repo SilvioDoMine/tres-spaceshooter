@@ -23,7 +23,7 @@ registerHooks({
 const { TALENTS } = await import('../app/data/talents.ts');
 const { aggregateTalentBonuses, emptyTalentBonuses, pickTalent } = await import('../app/utils/talents.ts');
 const { computePlayerStats } = await import('../app/utils/equipment.ts');
-const { combatAttributes, incomingHit, outgoingHit, withRunSkills, adrenalineMultiplier, headshotKills, siphonHeal, experienceBonus, emergencyRepairHeal } = await import('../app/utils/shipAttributes.ts');
+const { combatAttributes, incomingHit, outgoingHit, withRunSkills, adrenalineMultiplier, headshotKills, siphonHeal, experienceBonus, emergencyRepairHeal, standingGroundCharge, STANDING_GROUND_RAMP } = await import('../app/utils/shipAttributes.ts');
 const elemental = await import('../app/utils/elementalStatus.js');
 const patterns = await import('../app/utils/combatPatterns.js');
 const base = { maxHealth: 250, maxHealthPerLevel: 50, moveSpeed: 7, projectiles: { damage: 50, shotCooldown: .85 } };
@@ -87,6 +87,65 @@ test('run skill cards feed combat stats, attack speed and adrenaline in the real
   assert.equal(stats.adrenalineDamageMultiplier(), 1);
   run.takeDamage(run.maxHealth * .8, 'environment');
   assert.ok(Math.abs(stats.adrenalineDamageMultiplier() - 1.3) < 1e-9);
+});
+
+test('standing ground ramps attack speed slowly, then explodes, and exposure grows in a straight line', () => {
+  const level = { value: 7, vulnerability: 1, ramp: STANDING_GROUND_RAMP };
+  assert.deepEqual(standingGroundCharge(level, 0), { progress: 0, attackSpeed: 1, vulnerability: 0 });
+  assert.deepEqual(standingGroundCharge(null, 30), { progress: 0, attackSpeed: 1, vulnerability: 0 });
+
+  const half = standingGroundCharge(level, 15);
+  assert.equal(half.progress, .5);
+  assert.ok(half.attackSpeed > 2 && half.attackSpeed < 4, 'metade do tempo não dá metade da cadência');
+  assert.ok(Math.abs(half.vulnerability - .5) < 1e-12, 'o risco sobe reto, sem curva');
+
+  const full = standingGroundCharge(level, 30);
+  assert.ok(Math.abs(full.attackSpeed - 7) < 1e-12);
+  assert.ok(Math.abs(full.vulnerability - 1) < 1e-12);
+  const over = standingGroundCharge(level, 300);
+  assert.deepEqual(over, full, 'a carga tem teto: esperar mais não acelera mais');
+});
+
+test('standing ground only makes enemy shots hurt more; collision and environment keep their price', () => {
+  const stats = attrs({});
+  assert.equal(incomingHit(100, 'attack', stats, () => 1, 1).damage, 200);
+  assert.equal(incomingHit(100, 'attack', stats, () => 1, .35).damage, 135);
+  assert.equal(incomingHit(100, 'collision', stats, () => 1, 1).damage, 100);
+  assert.equal(incomingHit(100, 'environment', stats, () => 1, 1).damage, 100);
+  assert.equal(incomingHit(100, 'attack', stats, () => 1).damage, 100, 'sem a carta nada muda');
+  const dodgy = attrs({ dodgePercent: 100 });
+  assert.deepEqual(incomingHit(100, 'attack', dodgy, () => 0, 1), { damage: 0, dodged: true }, 'desvio ainda zera o tiro');
+});
+
+test('standing ground charges while the ship holds still and dies on the first step, in the real stores', () => {
+  const { context, run, stats, skills } = runHarness();
+  stats.trackStanding(5, false);
+  assert.equal(stats.standingTime, 0, 'sem a carta o cronômetro não corre');
+  assert.equal(stats.getAttackSpeedMultiplier, 1);
+
+  skills.currentSkills.push({ ...context.SkillsList.standing_ground, currentLevel: 3 });
+  skills.currentSkills.push({ ...context.SkillsList.attack_speed, currentLevel: 5 });
+  stats.trackStanding(30, false);
+  assert.equal(stats.standingTime, 30);
+  assert.equal(stats.standingGroundProgress, 1);
+  // Cadência multiplica por cima: 1,4 × 7
+  assert.ok(Math.abs(stats.getAttackSpeedMultiplier - 9.8) < 1e-12);
+  assert.equal(stats.projectileVulnerability, 1);
+
+  const shots = run.shotCooldownTotal / stats.getAttackSpeedMultiplier;
+  assert.ok(shots < .1, `a carga cheia vira metralhadora (${shots.toFixed(3)}s entre tiros)`);
+
+  const before = run.currentHealth;
+  run.takeDamage(40, 'attack');
+  assert.equal(before - run.currentHealth, 80, 'carregada, a nave toma o dobro de um tiro');
+
+  stats.trackStanding(.016, true);
+  assert.equal(stats.standingTime, 0, 'o primeiro passo zera a carga');
+  assert.ok(Math.abs(stats.getAttackSpeedMultiplier - 1.4) < 1e-12);
+  assert.equal(stats.projectileVulnerability, 0);
+  const healthy = run.currentHealth;
+  run.takeDamage(40, 'attack');
+  assert.equal(healthy - run.currentHealth, 40, 'em movimento o tiro volta ao preço normal');
 });
 
 test('elemental shot cards build the projectile payload in the real stores', () => {
@@ -280,7 +339,8 @@ function runHarness(overrides = {}) {
   };
   const context = vm.createContext({
     ref, shallowRef, computed, Math, console: { log() {}, warn() {} },
-    computePlayerStats, emptyTalentBonuses, incomingHit, withRunSkills, adrenalineMultiplier, experienceBonus, emergencyRepairHeal, ...elemental, ...patterns,
+    computePlayerStats, emptyTalentBonuses, incomingHit, withRunSkills, adrenalineMultiplier, experienceBonus, emergencyRepairHeal,
+    standingGroundCharge, ...elemental, ...patterns,
     COMBAT_BASE: { heartDropChance: .1 },
     defineStore: (_id, setup) => { let store; return () => store ??= reactive(setup()); },
     useEquipmentStore: () => ({ stats: permanent }),
@@ -514,6 +574,39 @@ test('hearts fly to the ship once the room is cleared, nearest first, and still 
   run.loadStage(config.stages[0]);
   assert.equal(hearts.hearts.length, 0);
   assert.equal(run.currentHealth, 175, 'heart mid-flight still heals after leaving');
+});
+
+test('Tiro de Curta Distância troca alcance por dano, cadência e velocidade de projétil', () => {
+  const { context, stats, skills } = runHarness();
+  const card = context.SkillsList.short_range_shot;
+  assert.equal(card.disabled, undefined, 'a carta voltou para o sorteio');
+  assert.deepEqual(Object.keys(card.levels), ['1'], 'nível único');
+  assert.equal(stats.damage, 50);
+  assert.equal(stats.getRangeMultiplier, 1);
+  assert.equal(stats.getAttackSpeedMultiplier, 1);
+  assert.equal(stats.getProjectileSpeedMultiplier, 1);
+
+  skills.selectSkill({ ...card, currentLevel: 0 });
+  // Os números batem com o catálogo: rebalancear é mexer só em SkillsList.short_range_shot
+  assert.ok(Math.abs(stats.damage - 50 * card.levels[1].damage) < 1e-12);
+  assert.ok(Math.abs(stats.getRangeMultiplier - card.levels[1].range) < 1e-12);
+  assert.equal(stats.getAttackSpeedMultiplier, card.levels[1].attackSpeed);
+  assert.equal(stats.getProjectileSpeedMultiplier, card.levels[1].projectileSpeed,
+    'a cadência da própria carta não passa pela raiz: o projétil fica na velocidade normal');
+  assert.equal(skills.isOfferable(card), false, 'nível único some do sorteio depois de pega');
+});
+
+test('Curta Distância convive com Alcance Estendido e com Cadência', () => {
+  const { context, stats, skills } = runHarness();
+  skills.selectSkill({ ...context.SkillsList.short_range_shot, currentLevel: 0 });
+  skills.currentSkills.push({ ...context.SkillsList.range_extension, currentLevel: 5 });
+  skills.currentSkills.push({ ...context.SkillsList.attack_speed, currentLevel: 5 });
+  // Alcance Estendido leva o alcance a 25 e a carta encolhe para 45% disso
+  assert.ok(Math.abs(11 * stats.getRangeMultiplier - 11.25) < 1e-12);
+  // Cadência 1,4 multiplica por cima dos 2x da carta
+  assert.ok(Math.abs(stats.getAttackSpeedMultiplier - 2.8) < 1e-12);
+  // Só a Cadência acopla no projétil pela raiz; os 2x da carta ficam de fora: sqrt(1,4)
+  assert.ok(Math.abs(stats.getProjectileSpeedMultiplier - Math.sqrt(1.4)) < 1e-12);
 });
 
 test('Núcleo Vital soma vida máxima a cada coração e vale com a vida cheia', () => {

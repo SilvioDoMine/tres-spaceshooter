@@ -28,6 +28,7 @@ export const SKILL_ICON_KEYS = [
   'ice-crystal',
   'lightning',
   'burst',
+  'standing-ground',
   'shotgun',
 ] as const;
 

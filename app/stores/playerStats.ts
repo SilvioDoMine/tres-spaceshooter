@@ -3,7 +3,7 @@ import { PlayerBaseStats, useCurrentRunStore } from "~/stores/currentRunStore";
 import { useCombatTextStore } from "~/stores/useCombatTextStore";
 import { computePlayerStats, type PlayerStats } from '~/utils/equipment';
 import { emptyTalentBonuses } from '~/utils/talents';
-import { adrenalineMultiplier, experienceBonus, withRunSkills } from '~/utils/shipAttributes';
+import { adrenalineMultiplier, experienceBonus, standingGroundCharge, withRunSkills } from '~/utils/shipAttributes';
 
 const REGEN_TEXT_INTERVAL = 1; // segundos entre textos de regeneração
 
@@ -22,6 +22,7 @@ export const usePlayerStats = defineStore('playerStats', () => {
     regenTextTimer = 0;
     heartMaxHealthBonus.value = 0;
     heartFuryTime.value = 0;
+    standingTime.value = 0;
   }
   const amountToHeal = ref(0);
   const regenRate = ref(0); // Porcentagem da vida por segundo
@@ -30,6 +31,8 @@ export const usePlayerStats = defineStore('playerStats', () => {
   const heartMaxHealthBonus = ref(0);
   // Fúria Carmesim: segundos restantes do bônus de dano aceso pelo último coração
   const heartFuryTime = ref(0);
+  // Posição Firme: segundos com a nave parada (zera no primeiro passo)
+  const standingTime = ref(0);
   let pendingRegenText = 0;
   let regenTextTimer = 0;
 
@@ -145,8 +148,10 @@ export const usePlayerStats = defineStore('playerStats', () => {
     });
 
     // Cadência acelera o projétil pela raiz: os tiros não se amontoam quando a
-    // velocidade de ataque escala, mas o espaçamento ainda diminui aos poucos
-    return projectileSpeedMultiplier * Math.sqrt(getAttackSpeedMultiplier.value);
+    // velocidade de ataque escala, mas o espaçamento ainda diminui aos poucos.
+    // Tiro de Curta Distância fica fora da raiz: o catálogo já declara quanto o projétil acelera,
+    // e passar o attackSpeed dela pela raiz contaria o mesmo bônus duas vezes.
+    return projectileSpeedMultiplier * (shortRange.value?.projectileSpeed || 1) * Math.sqrt(cadenceMultiplier.value);
   });
 
   // Dados do nível atual de uma habilidade da partida (null se o jogador não tiver)
@@ -155,6 +160,13 @@ export const usePlayerStats = defineStore('playerStats', () => {
     return skill ? skill.levels[skill.currentLevel] ?? null : null;
   }
 
+  /**
+   * Tiro de Curta Distância: nível único que troca alcance por cadência, dano e velocidade de
+   * projétil. Os quatro fatores saem direto do catálogo (SkillsList.short_range_shot), então
+   * rebalancear é mexer só lá. Sem a carta, `null`, e nenhum multiplicador muda.
+   */
+  const shortRange = computed((): any => skillLevelData('short_range_shot'));
+
   // Atributos de combate com Mira Precisa e Manobra Evasiva somados aos permanentes
   const combatStats = computed(() => withRunSkills(attributes.value, {
     criticalChance: skillLevelData('precise_aim')?.value || 0,
@@ -162,8 +174,35 @@ export const usePlayerStats = defineStore('playerStats', () => {
     dodgeChance: skillLevelData('evasive_maneuver')?.value || 0,
   }));
 
-  // Cadência: divide o cooldown do tiro
-  const getAttackSpeedMultiplier = computed((): number => 1 + (skillLevelData('attack_speed')?.value || 0));
+  /**
+   * Posição Firme: carga acumulada pela nave parada. `usePlayerControls` chama isto a cada quadro
+   * com o mesmo `moving` que decide se a nave pode atirar — parar para mirar e carregar são o
+   * mesmo gesto. Congelada a nave também conta como parada: ela perde os tiros do congelamento,
+   * mas não perde a carga (e continua pagando a vulnerabilidade). Sem a carta o cronômetro fica
+   * zerado e nada muda.
+   */
+  function trackStanding(delta: number, moving: boolean) {
+    if (moving || !skillLevelData('standing_ground')) {
+      // Escrita condicionada: com a nave andando (ou sem a carta) o quadro não mexe na reatividade
+      if (standingTime.value !== 0) standingTime.value = 0;
+      return;
+    }
+    standingTime.value += Math.max(0, delta);
+  }
+
+  const standingGround = computed(() => standingGroundCharge(skillLevelData('standing_ground'), standingTime.value));
+  // 0..1 para a HUD e o campo de ancoragem: quanto da carga já foi acumulada
+  const standingGroundProgress = computed((): number => standingGround.value.progress);
+  // Dano extra que só os tiros inimigos cobram enquanto a carga está de pé
+  const projectileVulnerability = computed((): number => standingGround.value.vulnerability);
+
+  // Cadência: divide o cooldown do tiro. Posição Firme multiplica por cima do bônus da carta de Cadência.
+  // Só esta parte acopla no projétil pela raiz (veja getProjectileSpeedMultiplier).
+  const cadenceMultiplier = computed((): number =>
+    (1 + (skillLevelData('attack_speed')?.value || 0)) * standingGround.value.attackSpeed);
+
+  const getAttackSpeedMultiplier = computed((): number =>
+    cadenceMultiplier.value * (shortRange.value?.attackSpeed || 1));
 
   const headshotChance = computed((): number => skillLevelData('headshot')?.value || 0);
   const siphonChance = computed((): number => skillLevelData('siphon')?.value || 0);
@@ -262,7 +301,8 @@ export const usePlayerStats = defineStore('playerStats', () => {
       }
     });
 
-    return rangeMultiplier;
+    // Tiro de Curta Distância encolhe o que Alcance Estendido tiver dado: as duas cartas convivem
+    return rangeMultiplier * (shortRange.value?.range ?? 1);
   });
 
   const getBonusDamageFlat = computed((): number => {
@@ -272,7 +312,8 @@ export const usePlayerStats = defineStore('playerStats', () => {
   return {
     attributes,
     initialize,
-    damage: computed(() => attributes.value.damage * getDamageMultiplier.value * getHeartFuryMultiplier.value),
+    damage: computed(() => attributes.value.damage * getDamageMultiplier.value
+      * getHeartFuryMultiplier.value * (shortRange.value?.damage || 1)),
     maxHealth: computed(() => attributes.value.maxHealth * getHealthMultiplier.value + heartMaxHealthBonus.value),
     moveSpeed: computed(() => attributes.value.moveSpeed * getSpeedMultiplier.value),
     update, // Essencial para ser chamado pelo useGameLoop
@@ -308,6 +349,12 @@ export const usePlayerStats = defineStore('playerStats', () => {
     getHeartFuryMultiplier,
     fireTrail,
     homingRadius,
+
+    // Posição Firme
+    trackStanding,
+    standingTime,
+    standingGroundProgress,
+    projectileVulnerability,
   };
 });
 
