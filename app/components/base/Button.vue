@@ -147,7 +147,10 @@ export default {
     padding: 10px 28px;
   }
 
+  /* O `lg` tem 44px de padding de cada lado: o teto de 140px acima sobra só ~46px para o texto,
+     que transborda a caixa e encosta nas bordas. Aqui ele acompanha a largura disponível. */
   .glossy-button--lg {
+    max-width: 100%;
     font-size: 28px;
     padding: 18px 44px;
   }

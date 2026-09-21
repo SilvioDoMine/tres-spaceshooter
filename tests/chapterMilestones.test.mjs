@@ -8,7 +8,7 @@ import {
 } from '../app/utils/chapterMilestones.js';
 import { claimMilestone, emptyChapterProgress, recordClearedRooms } from '../app/utils/chapterProgress.js';
 
-const REWARD_KEYS = ['gold', 'exp', 'cash', 'keys', 'equipmentRarities'];
+const REWARD_KEYS = ['gold', 'exp', 'cash', 'keys', 'equipmentDrops'];
 
 test('milestones land every 5 rooms and always on the last room of the chapter', () => {
   assert.equal(MILESTONE_EVERY, 5);
@@ -38,7 +38,7 @@ test('every milestone hands out something, and only known rewards', () => {
     assert.deepEqual(Object.keys(rewards).sort(), [...REWARD_KEYS].sort());
     assert.deepEqual(Object.keys(rewards.keys).sort(), ['obsidian', 'silver']);
     const total = rewards.gold + rewards.exp + rewards.cash + rewards.keys.silver + rewards.keys.obsidian
-      + rewards.equipmentRarities.length;
+      + rewards.equipmentDrops.length;
     assert.ok(total > 0, `marco vazio em ${milestone.key}`);
     assert.ok([rewards.gold, rewards.exp, rewards.cash].every(v => Number.isInteger(v) && v >= 0));
   }
@@ -47,9 +47,12 @@ test('every milestone hands out something, and only known rewards', () => {
   for (let chapter = 1; chapter <= CHAPTER_COUNT; chapter++) {
     const milestones = chapterMilestones(chapter);
     const [end] = milestones.filter(m => m.isChapterEnd);
-    assert.equal(end.rewards.equipmentRarities.length, 1);
+    assert.equal(end.rewards.equipmentDrops.length, 1);
+    // O sorteio sempre sai com slot e raridade definidos (a UI monta nome e tooltip a partir deles)
+    assert.deepEqual(Object.keys(end.rewards.equipmentDrops[0]).sort(), ['rarity', 'slot']);
+    assert.ok(end.rewards.equipmentDrops[0].slot.length > 0);
     assert.equal(end.rewards.keys.obsidian, 1);
-    assert.ok(milestones.filter(m => !m.isChapterEnd).every(m => m.rewards.equipmentRarities.length === 0));
+    assert.ok(milestones.filter(m => !m.isChapterEnd).every(m => m.rewards.equipmentDrops.length === 0));
     assert.ok(milestones.filter(m => !m.isChapterEnd).every(m => m.rewards.keys.obsidian === 0));
     if (chapter > 1) assert.ok(end.rewards.gold > chapterMilestones(chapter - 1).at(-1).rewards.gold);
   }

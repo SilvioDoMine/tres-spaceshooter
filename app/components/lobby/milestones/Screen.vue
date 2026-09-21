@@ -8,21 +8,34 @@ const { milestones, currentIndex, current, currentCleared, allClaimed, claim } =
 
 // Quantos marcos aparecem de cada lado: o trilho ocupa a largura toda, então a fila é montada com
 // vizinhos suficientes para transbordar as bordas — continua sem navegação, os vizinhos só mostram
-// que há mais marcos antes e depois. `main` é a largura do escudo grande (Shield.vue) e `side` a do
-// slot dos vizinhos (`--side-w` do trilho); ambos espelham o CSS de cada faixa de tela.
+// que há mais marcos antes e depois.
+//
+// Os degraus vão do maior para o menor: quanto menor a tela, menor o escudo, para a fila e o painel
+// de recompensas caberem sem rolagem. `main` é a largura do escudo grande (Shield.vue) e `side` a do
+// slot dos vizinhos (`--side-w` do trilho); ambos espelham os media queries do CSS.
 const LAYOUTS = {
   base: { main: 168, side: 116, gap: 36 },
   narrow: { main: 148, side: 100, gap: 26 },
-  shortLandscape: { main: 90, side: 84, gap: 16 },
+  tight: { main: 124, side: 88, gap: 22 },
+  short: { main: 90, side: 84, gap: 16 },
 };
 
 const sideCount = ref(1);
+// Telas de pouca altura usam espaçamentos e botão menores (a classe liga o CSS ao mesmo limite)
+const compact = ref(false);
+
 function updateSideCount() {
   const { innerWidth: w, innerHeight: h } = window;
   // Paisagem baixa divide a tela em duas colunas: o trilho só tem metade da largura para preencher
-  const shortLandscape = h <= 560 && w > h;
-  const { main, side, gap } = shortLandscape ? LAYOUTS.shortLandscape : w <= 479 ? LAYOUTS.narrow : LAYOUTS.base;
-  const rail = shortLandscape ? w / 2 - 12 : w;
+  const twoColumns = h <= 560 && w > h;
+  compact.value = h <= 760;
+
+  const layout = h <= 560 ? LAYOUTS.short
+    : h <= 700 ? LAYOUTS.tight
+      : h <= 760 || w <= 479 ? LAYOUTS.narrow
+        : LAYOUTS.base;
+  const { main, side, gap } = layout;
+  const rail = twoColumns ? w / 2 - 12 : w;
   // Arredonda para cima para a fila sempre passar das bordas e ser cortada pelo `overflow: hidden`
   sideCount.value = Math.max(1, Math.ceil((rail - main) / (2 * (side + gap))));
 }
@@ -65,7 +78,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section class="ms" aria-label="Recompensas de conclusão de sala">
+  <section class="ms" :class="{ 'is-compact': compact }" aria-label="Recompensas de conclusão de sala">
     <div class="ms__head">
       <BaseRibbonTitle text="Recompensas de Conclusão" variant="yellow" />
     </div>
@@ -88,7 +101,7 @@ onBeforeUnmount(() => {
         </div>
       </Transition>
 
-      <div class="ms__panel allow-scroll">
+      <div class="ms__panel">
         <div class="ms__divider">
           <BaseSectionDivider text="Recompensas" />
         </div>
@@ -118,10 +131,8 @@ onBeforeUnmount(() => {
             </BaseAbilityIcon>
           </BaseItemTooltip>
 
-          <!-- Item ainda não sorteado: mostra só a moldura da raridade que vai sair -->
-          <BaseAbilityIcon v-for="(rarity, i) in rewards.equipmentRarities" :key="`eq-${i}`" :rarity="rarity" size="sm">
-            <SvgEquipmentIcon :size="28" />
-          </BaseAbilityIcon>
+          <!-- Item ainda não sorteado: a moldura mostra a raridade e o tooltip diz qual peça vai sair -->
+          <BaseRandomEquipmentIcon v-for="(eqDrop, i) in rewards.equipmentDrops" :key="`eq-${i}`" :drop="eqDrop" size="sm" />
         </div>
 
         <div class="ms__cta">
@@ -180,7 +191,8 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-bottom: 15px;
+  /* Reserva a faixa do rodapé: sem isso o gradiente passa por cima da base do botão */
+  padding-bottom: 60px;
 }
 
 /* Trilho na largura inteira: o script monta vizinhos suficientes para a fila passar das bordas,
@@ -282,10 +294,62 @@ onBeforeUnmount(() => {
   opacity: 0;
 }
 
+/* Pouca altura: escudos, espaçamentos e botão encolhem juntos para nada precisar de rolagem.
+   A classe vem do script, que usa os mesmos limites do CSS. */
+.ms.is-compact .ms__head {
+  padding-top: 56px;
+}
+.ms.is-compact .ms__rail {
+  --side-w: 100px;
+  --gap: 26px;
+}
+.ms.is-compact .ms__divider :deep(> div) {
+  margin-top: 0;
+  padding-block: 2px;
+}
+.ms.is-compact .ms__rewards {
+  min-height: 0;
+  gap: 10px;
+  padding: 0;
+}
+.ms.is-compact .ms__cta {
+  margin-top: 12px;
+}
+.ms.is-compact .ms__cta :deep(.glossy-button--lg) {
+  padding: 14px 40px;
+  font-size: 28px;
+}
+
+/* Altura apertada: os vizinhos acompanham o degrau menor do escudo */
+@media (max-height: 700px) {
+  .ms.is-compact .ms__rail {
+    --side-w: 88px;
+    --gap: 22px;
+  }
+}
+
 @media (max-width: 479px) {
   .ms__rail {
     --side-w: 100px;
     --gap: 26px;
+  }
+}
+
+/* Altura curta: último degrau, com cabeçalho e botão menores para o relevo não chegar no rodapé */
+@media (max-height: 560px) {
+  .ms.is-compact .ms__head {
+    padding-top: 44px;
+  }
+  .ms.is-compact .ms__rail {
+    --side-w: 84px;
+    --gap: 16px;
+  }
+  .ms.is-compact .ms__cta {
+    margin-top: 8px;
+  }
+  .ms.is-compact .ms__cta :deep(.glossy-button--lg) {
+    padding: 12px 34px;
+    font-size: 24px;
   }
 }
 
@@ -294,17 +358,18 @@ onBeforeUnmount(() => {
   .ms {
     bottom: 56px;
   }
-  .ms__head {
-    padding-top: 62px;
+  .ms.is-compact .ms__head {
+    padding-top: 44px;
   }
   .ms__body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     align-items: center;
     gap: 8px;
-    padding: 0 8px 36px;
+    /* Reserva o rodapé menor desta faixa, para o relevo do botão não encostar nele */
+    padding: 0 8px 48px;
   }
-  .ms__rail {
+  .ms.is-compact .ms__rail {
     --side-w: 84px;
     --gap: 16px;
     padding: 0;
@@ -321,8 +386,12 @@ onBeforeUnmount(() => {
     min-height: 0;
     padding: 0;
   }
-  .ms__cta {
+  .ms.is-compact .ms__cta {
     margin-top: 10px;
+  }
+  .ms.is-compact .ms__cta :deep(.glossy-button--lg) {
+    padding: 10px 30px;
+    font-size: 22px;
   }
   .ms__back {
     width: 54px;

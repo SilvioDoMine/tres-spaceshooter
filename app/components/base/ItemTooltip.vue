@@ -1,17 +1,22 @@
 <script setup lang="ts">
 import { EQUIPMENT_RARITIES, EQUIPMENT_SLOTS } from '~/data/equipment';
 import { SIMPLE_ITEMS, type SimpleItemId } from '~/data/items';
+import { getRandomEquipment, randomEquipmentSlotLabel, sanitizeDrop, type RandomEquipmentDrop } from '~/data/randomEquipment';
 import { formatTalentValue } from '~/utils/talents';
 import { formatStat, getEquipment, itemAbilities, itemMainStat, type OwnedEquipment } from '~/utils/equipment';
 
 // Tooltip de item: envolve qualquer gatilho (o ícone/card que já está na tela) e descreve o que ele é.
-// Duas variantes: `item` (equipamento) abre a ficha completa no estilo WoW — raridade, atributo principal,
-// descrição e habilidades; `resource` (ouro, gemas, exp, chaves...) abre a versão simples de nome + descrição.
+// Três variantes: `item` (equipamento) abre a ficha completa no estilo WoW — raridade, atributo principal,
+// descrição e habilidades; `drop` (equipamento ainda não sorteado: "Arma Aleatória") mostra raridade,
+// slot e o que vai acontecer no resgate; `resource` (ouro, gemas, exp, chaves...) abre a versão simples
+// de nome + descrição.
 // Desktop abre no hover; touch abre no toque (e fecha ao tocar fora, rolar ou apertar Esc).
 const props = withDefaults(
   defineProps<{
     /** Equipamento: variante completa */
     item?: OwnedEquipment | null;
+    /** Sorteio de equipamento ainda não realizado (~/data/randomEquipment) */
+    drop?: RandomEquipmentDrop | null;
     /** Item simples do catálogo (~/data/items): variante enxuta */
     resource?: SimpleItemId | null;
     /** Desliga o tooltip e o realce do gatilho (ex.: card vazio) */
@@ -21,7 +26,7 @@ const props = withDefaults(
     /** Só hover: o toque não abre. Para onde tocar já faz outra coisa (abrir a ficha, comprar...) */
     noTap?: boolean;
   }>(),
-  { item: null, resource: null, disabled: false, noHighlight: false, noTap: false },
+  { item: null, drop: null, resource: null, disabled: false, noHighlight: false, noTap: false },
 );
 
 const GAP = 12;
@@ -40,8 +45,14 @@ const main = computed(() => (props.item ? itemMainStat(props.item.defId, props.i
 const mainLabel = computed(() => (main.value?.stat === 'damageFlat' ? 'ATQ' : 'HP Máx.'));
 const abilities = computed(() => (props.item ? itemAbilities(props.item.defId, props.item.rarity) : []));
 const simple = computed(() => (props.resource ? SIMPLE_ITEMS[props.resource] : null));
+
+// Sorteio: o item ainda não existe, então o painel descreve a promessa (nome do slot + raridade)
+const drop = computed(() => (props.drop ? sanitizeDrop(props.drop) : null));
+const dropDef = computed(() => (drop.value ? getRandomEquipment(drop.value.slot) : null));
+const dropRarity = computed(() => (drop.value ? EQUIPMENT_RARITIES[drop.value.rarity] : null));
+
 const hasEquipment = computed(() => !!def.value && !!rarity.value && !!main.value);
-const available = computed(() => !props.disabled && (hasEquipment.value || !!simple.value));
+const available = computed(() => !props.disabled && (hasEquipment.value || !!dropDef.value || !!simple.value));
 
 const abilityText = (ability: (typeof abilities.value)[number]['ability']) =>
   ability.stat ? formatTalentValue(ability.stat, ability.value ?? 0) : (ability.text ?? '');
@@ -126,9 +137,10 @@ watch(open, (isOpen) => {
   }
 });
 
-// O item pode trocar com o tooltip aberto (fusão, navegação na mochila)
+// O item pode trocar com o tooltip aberto (fusão, navegação na mochila, marco seguinte)
 watch(() => props.item?.uid, hide);
 watch(() => props.resource, hide);
+watch(() => [props.drop?.slot, props.drop?.rarity].join(), hide);
 watch(available, (ok) => {
   if (!ok) hide();
 });
@@ -188,6 +200,28 @@ onUnmounted(() => {
               <small v-if="!entry.unlocked">Libera em {{ EQUIPMENT_RARITIES[entry.ability.unlock].label }}</small>
             </li>
           </ul>
+        </div>
+
+        <!-- Sorteio de equipamento: raridade e slot já são certos, o item é que ainda vai sair -->
+        <div
+          v-else-if="open && drop && dropDef && dropRarity"
+          ref="panel"
+          class="itip"
+          :class="[`is-arrow-${position.side}`, { 'is-touch': touchOpen }]"
+          role="tooltip"
+          :style="{ top: `${position.top}px`, left: `${position.left}px`, '--tint': dropRarity.color, '--arrow': `${position.arrow}px` }"
+        >
+          <span class="itip__arrow" aria-hidden="true"></span>
+
+          <header class="itip__header">
+            <h3 :style="{ color: dropRarity.color }">{{ dropDef.name }}</h3>
+            <p>
+              <span class="itip__rarity" :style="{ background: dropRarity.color }">{{ dropRarity.label }}</span>
+              {{ randomEquipmentSlotLabel(drop.slot) }}
+            </p>
+          </header>
+
+          <p class="itip__description">{{ dropDef.description }}</p>
         </div>
 
         <!-- Item simples (ouro, gemas, exp, chaves...): só nome e descrição -->

@@ -315,7 +315,8 @@ const id = (name: string) => `shield-${uid}-${name}`;
   50% { opacity: 1; scale: 1.04; }
 }
 
-@media (max-width: 479px) {
+/* Tela estreita ou de pouca altura: o escudo encolhe para o resto da tela continuar cabendo */
+@media (max-width: 479px), (max-height: 760px) {
   .shield {
     --w: 148px;
   }
@@ -327,8 +328,36 @@ const id = (name: string) => `shield-${uid}-${name}`;
   }
 }
 
-/* Paisagem baixa: a altura é o recurso escasso, então o escudo encolhe junto */
-@media (max-height: 560px) and (orientation: landscape) {
+/* Altura apertada: mais um degrau para baixo, para o painel de recompensas continuar inteiro */
+@media (max-height: 700px) {
+  .shield {
+    --w: 124px;
+    --plate-h: 30px;
+  }
+  .shield.is-sm {
+    --w: 88px;
+    --plate-h: 24px;
+  }
+  .shield__plate span {
+    font-size: 13px;
+  }
+  .shield__tag {
+    font-size: 11px;
+  }
+  .shield__room,
+  .shield.is-sm .shield__room {
+    font-size: 34px;
+    -webkit-text-stroke-width: 5px;
+  }
+  .shield__check,
+  .shield.is-sm .shield__check {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+/* Altura curta: o vertical é o recurso escasso, então o escudo encolhe de novo */
+@media (max-height: 560px) {
   .shield {
     --w: 90px;
     --plate-h: 22px;

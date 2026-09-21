@@ -188,15 +188,17 @@ const handleQuit = () => {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+/* Colunas do tamanho exato do item (4rem): o gap fica igual na horizontal e na vertical
+   e as peças ficam lado a lado em vez de espalhadas. O max-width limita a 5 por linha. */
 .abilities-grid {
+  --item-size: 4rem;
+  --grid-gap: 0.75rem;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 0.75rem;
-  justify-items: center;
-}
-
-.abilities-grid > *:nth-child(6) {
-  grid-column: 1;
+  grid-template-columns: repeat(auto-fit, var(--item-size));
+  gap: var(--grid-gap);
+  justify-content: center;
+  max-width: calc(5 * var(--item-size) + 4 * var(--grid-gap));
+  margin-inline: auto;
 }
 
 @media (max-width: 640px) {
@@ -219,12 +221,7 @@ const handleQuit = () => {
   }
 
   .abilities-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
-  }
-
-  .abilities-grid > *:nth-child(6) {
-    grid-column: auto;
+    --grid-gap: 0.5rem;
   }
 }
 </style>

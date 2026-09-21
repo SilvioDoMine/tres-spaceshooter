@@ -1,4 +1,3 @@
-import type { EquipmentRarity } from '~/data/equipment';
 import type { OwnedEquipment } from '~/utils/equipment';
 import { useCash } from '~/composables/useCash';
 import { useLevelAccount } from '~/composables/useLevelAccount';
@@ -65,11 +64,8 @@ export function useChapterMilestones() {
       if (amount > 0) shop.addKeys(type as 'silver' | 'obsidian', amount);
     }
 
-    const equipmentStore = useEquipmentStore();
-    for (const rarity of rewards.equipmentRarities) {
-      const item = equipmentStore.grantRandom(rarity as EquipmentRarity);
-      if (item) claimed.equipment.push(item);
-    }
+    // Os sorteios viram peças de verdade só agora (slot fixo ou livre, ver ~/data/randomEquipment)
+    claimed.equipment = useEquipmentStore().grantDrops(rewards.equipmentDrops);
 
     chapterProgress.markMilestoneClaimed(milestone.key);
     return claimed;

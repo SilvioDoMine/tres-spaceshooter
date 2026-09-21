@@ -225,6 +225,3 @@ export const EQUIPMENT_ITEMS: EquipmentDefinition[] = [
     ],
   },
 ];
-
-/** Equipamento aleatório ganho ao vencer uma partida */
-export const MATCH_END_EQUIPMENT_RARITY: EquipmentRarity = 'gray';

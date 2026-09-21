@@ -22,12 +22,19 @@ const {
   fusableUids,
   fuse,
   mechanicStorage,
+  rollEquipment,
   sanitizeInventory,
   sortEquipment,
   starterInventory,
   upgradeableUids,
 } = await import('../app/utils/equipment.ts');
 const { emptyTalentBonuses } = await import('../app/utils/talents.ts');
+const { EQUIPMENT_ITEMS, EQUIPMENT_SLOTS } = await import('../app/data/equipment.ts');
+const {
+  RANDOM_EQUIPMENT, RANDOM_EQUIPMENT_SLOTS, getRandomEquipment, randomEquipment,
+  randomEquipmentSlotLabel, sanitizeDrop,
+} = await import('../app/data/randomEquipment.ts');
+const { getEquipment } = await import('../app/utils/equipment.ts');
 
 const equipped = (overrides = {}) => ({
   weapon: null, wings: null, cockpit: null, generator: null, forcefield: null, thrusters: null, ...overrides,
@@ -171,4 +178,42 @@ test('epic equipment effects are active and mythic variants replace them', () =>
       mythic.vortexSlowPercent, mythic.vortexDamagePercent],
     [3, 2, 2, 1, 40, 4, 4, .5, 3, .3, .2, true, 2, true, 1.5, 5, 40, .5, 35, 10],
   );
+});
+
+test('random equipment reward: the roll respects the slot and the catalog covers every one', () => {
+  // Sorteio livre pode cair em qualquer item; percorrer o rng inteiro cobre o catálogo todo
+  const free = EQUIPMENT_ITEMS.map((_, i) => rollEquipment(() => i / EQUIPMENT_ITEMS.length, 'blue').defId);
+  assert.deepEqual(free, EQUIPMENT_ITEMS.map(item => item.id));
+  assert.equal(rollEquipment(() => 0.5, 'blue').rarity, 'blue');
+  assert.equal(rollEquipment(() => 0.5, 'blue', 'any').defId, rollEquipment(() => 0.5, 'blue').defId);
+
+  // Preso num slot, o sorteio nunca sai dele — nem nas pontas do rng
+  for (const slot of Object.keys(EQUIPMENT_SLOTS)) {
+    for (const roll of [0, 0.5, 0.999999]) {
+      const { defId, rarity } = rollEquipment(() => roll, 'purple', slot);
+      assert.equal(getEquipment(defId).slot, slot, `${slot} @ ${roll}`);
+      assert.equal(rarity, 'purple');
+    }
+  }
+
+  // Todo slot tem nome e descrição escritos à mão (gênero e número variam: "a arma", "os propulsores")
+  assert.deepEqual(RANDOM_EQUIPMENT_SLOTS.sort(), ['any', ...Object.keys(EQUIPMENT_SLOTS)].sort());
+  for (const slot of RANDOM_EQUIPMENT_SLOTS) {
+    const def = RANDOM_EQUIPMENT[slot];
+    assert.equal(def.slot, slot);
+    assert.ok(def.name.length > 0 && def.description.length > 0, slot);
+  }
+  assert.equal(getRandomEquipment('any').name, 'Equipamento Aleatório');
+  assert.equal(getRandomEquipment('weapon').name, 'Arma Aleatória');
+  assert.equal(getRandomEquipment('thrusters').name, 'Propulsores Aleatórios');
+  assert.equal(randomEquipmentSlotLabel('any'), 'Qualquer slot');
+  assert.equal(randomEquipmentSlotLabel('cockpit'), EQUIPMENT_SLOTS.cockpit.label);
+
+  // Catálogos em JS puro não são tipados: slot desconhecido vira sorteio livre, raridade inválida cai fora
+  assert.deepEqual(randomEquipment('green'), { slot: 'any', rarity: 'green' });
+  assert.deepEqual(randomEquipment('red', 'wings'), { slot: 'wings', rarity: 'red' });
+  assert.deepEqual(sanitizeDrop({ slot: 'weapon', rarity: 'blue' }), { slot: 'weapon', rarity: 'blue' });
+  assert.deepEqual(sanitizeDrop({ slot: 'motor', rarity: 'blue' }), { slot: 'any', rarity: 'blue' });
+  assert.equal(sanitizeDrop({ slot: 'weapon', rarity: 'dourada' }), null);
+  assert.equal(sanitizeDrop(null), null);
 });

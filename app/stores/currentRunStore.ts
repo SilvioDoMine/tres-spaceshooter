@@ -13,7 +13,7 @@ import { useCombatTextStore } from '~/stores/useCombatTextStore';
 import { useModal } from '~/composables/useModal';
 import { useLevelAccount } from '~/composables/useLevelAccount';
 import { playableRoomCount } from '~/utils/progression';
-import { MATCH_END_EQUIPMENT_RARITY } from '~/data/equipment';
+import { MATCH_END_EQUIPMENT_DROP } from '~/data/randomEquipment';
 import { useEquipmentStore } from '~/stores/useEquipmentStore';
 import type { OwnedEquipment } from '~/utils/equipment';
 import { incomingHit, type DamageContext, type DamageSource } from '~/utils/shipAttributes';
@@ -561,7 +561,7 @@ export const useCurrentRunStore = defineStore('currentRun', () => {
 
     // Só a vitória (capítulo concluído) dá um equipamento aleatório; derrota rende apenas ouro e EXP
     runEquipment.value = completedChapter
-      ? useEquipmentStore().grantRandom(MATCH_END_EQUIPMENT_RARITY)
+      ? useEquipmentStore().grantDrops([MATCH_END_EQUIPMENT_DROP])[0] ?? null
       : null;
 
     enemyManager.missionsOnComplete();

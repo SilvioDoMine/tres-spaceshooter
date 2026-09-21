@@ -3,7 +3,12 @@
 //
 // Os marcos são derivados de LEVELS, nunca escritos à mão: mudar o número de salas de um capítulo
 // reposiciona os marcos sozinho. O pacote segue o mesmo formato das missões diárias e do RewardsModal:
-// { gold, exp, cash, keys: { silver, obsidian }, equipmentRarities: [] }.
+// { gold, exp, cash, keys: { silver, obsidian }, equipmentDrops: [] }.
+//
+// `equipmentDrops` são sorteios de equipamento ainda não realizados, no formato { slot, rarity } de
+// ~/data/randomEquipment — 'any' sorteia entre todos os slots, um slot ('weapon', 'thrusters'...)
+// prende o sorteio àquela categoria. Quem entrega é useEquipmentStore.grantDrops, no resgate.
+// (Este arquivo é JS puro para rodar nos testes com `node --test`, por isso o formato é escrito à mão.)
 import { CHAPTER_COUNT, LEVELS } from '../games/levels/index.js';
 import { playableRoomCount } from './progression.js';
 
@@ -12,10 +17,13 @@ export const MILESTONE_EVERY = 5;
 /** Raridade do equipamento do marco de conclusão, por capítulo */
 const END_RARITY = { 1: 'green', 2: 'green', 3: 'blue', 4: 'blue', 5: 'purple' };
 
+/** Slot sorteado no marco de conclusão, por capítulo: cada capítulo fecha com uma peça diferente */
+const END_SLOT = { 1: 'weapon', 2: 'thrusters', 3: 'wings', 4: 'cockpit', 5: 'any' };
+
 export const milestoneKey = (chapter, room) => `${chapter}:${room}`;
 
 export function emptyRewards() {
-  return { gold: 0, exp: 0, cash: 0, keys: { silver: 0, obsidian: 0 }, equipmentRarities: [] };
+  return { gold: 0, exp: 0, cash: 0, keys: { silver: 0, obsidian: 0 }, equipmentDrops: [] };
 }
 
 /** Salas premiadas de um capítulo: 5, 10, 15... e sempre a última sala. */
@@ -40,7 +48,7 @@ export function milestoneRewards(chapter, index, isChapterEnd) {
     rewards.gold = 500 * c;
     rewards.cash = 100;
     rewards.keys.obsidian = 1;
-    rewards.equipmentRarities = [END_RARITY[c] ?? 'green'];
+    rewards.equipmentDrops = [{ slot: END_SLOT[c] ?? 'any', rarity: END_RARITY[c] ?? 'green' }];
     return rewards;
   }
 

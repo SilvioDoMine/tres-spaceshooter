@@ -282,9 +282,15 @@ export function starterInventory(): EquipmentInventory {
   };
 }
 
-/** Sorteia qual item de uma raridade o jogador ganha */
-export function rollEquipment(rng: () => number, rarity: EquipmentRarity) {
-  const def = EQUIPMENT_ITEMS[Math.floor(rng() * EQUIPMENT_ITEMS.length)] ?? EQUIPMENT_ITEMS[0]!;
+/**
+ * Sorteia qual item de uma raridade o jogador ganha. Com `slot`, o sorteio fica restrito àquele
+ * slot (recompensas do tipo "Arma Aleatória"); sem ele, vale o catálogo inteiro.
+ */
+export function rollEquipment(rng: () => number, rarity: EquipmentRarity, slot?: EquipmentSlot | 'any') {
+  const pool = slot && slot !== 'any' ? EQUIPMENT_ITEMS.filter(item => item.slot === slot) : EQUIPMENT_ITEMS;
+  // Slot sem nenhum item cadastrado cairia num sorteio vazio: melhor devolver qualquer peça do que nada
+  const list = pool.length ? pool : EQUIPMENT_ITEMS;
+  const def = list[Math.floor(rng() * list.length)] ?? list[0]!;
   return { defId: def.id, rarity };
 }
 

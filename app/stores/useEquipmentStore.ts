@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { EQUIPMENT_SLOTS, type EquipmentRarity, type EquipmentSlot } from '~/data/equipment';
+import { sanitizeDrop, type RandomEquipmentDrop, type RandomEquipmentSlot } from '~/data/randomEquipment';
 import { PlayerBaseStats } from '~/stores/currentRunStore';
 import { useTalentStore } from '~/stores/useTalentStore';
 import {
@@ -119,9 +120,25 @@ export const useEquipmentStore = defineStore('equipment', () => {
     return item;
   }
 
-  function grantRandom(rarity: EquipmentRarity) {
-    const rolled = rollEquipment(Math.random, rarity);
+  /** Sorteia e entrega uma peça. Com `slot`, o sorteio fica preso àquele slot ("Arma Aleatória"...) */
+  function grantRandom(rarity: EquipmentRarity, slot: RandomEquipmentSlot = 'any') {
+    const rolled = rollEquipment(Math.random, rarity, slot);
     return grant(rolled.defId, rolled.rarity)!;
+  }
+
+  /**
+   * Entrega uma lista de sorteios `{ slot, rarity }` — o formato que marcos, missões e fim de partida
+   * usam para prometer equipamento antes de ele existir (ver ~/data/randomEquipment).
+   */
+  function grantDrops(drops: readonly RandomEquipmentDrop[] | null | undefined): OwnedEquipment[] {
+    const granted: OwnedEquipment[] = [];
+    for (const raw of drops ?? []) {
+      const drop = sanitizeDrop(raw);
+      if (!drop) continue;
+      const item = grantRandom(drop.rarity, drop.slot);
+      if (item) granted.push(item);
+    }
+    return granted;
   }
 
   function resetEquipment() {
@@ -150,6 +167,7 @@ export const useEquipmentStore = defineStore('equipment', () => {
     fuse,
     grant,
     grantRandom,
+    grantDrops,
     resetEquipment,
   };
 });
